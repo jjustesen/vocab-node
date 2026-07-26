@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   Tokens do MegaInglês — extraídos dos mockups aprovados (mockups.html).
+   Fundo creme, cromo escuro, lilás como primária. Sem emoji: ícones Lucide.
+   ========================================================================== */
+@theme {
+  --color-areia: #f6f4ef; /* fundo das telas */
+  --color-tinta: #0a0a0a; /* cromo escuro / ação principal */
+
+  --radius-card: 1.5rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-areia text-neutral-900 antialiased;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  /* O aluno responde no celular: alvo de toque >= 44px (RNF-06). */
+  button {
+    @apply touch-manipulation;
+  }
+}

@@ -1,0 +1,1637 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MegaInglês — Mockups UI v0.2</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['"Plus Jakarta Sans"','system-ui','sans-serif']}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.276.0"></script>
+</head>
+<body class="bg-slate-200 text-neutral-800 antialiased font-sans">
+
+<!-- ════════════════════ CABEÇALHO DO DOCUMENTO ════════════════════ -->
+<header class="bg-neutral-950 text-white">
+  <div class="max-w-6xl mx-auto px-6 py-10">
+    <p class="text-violet-400 font-bold text-sm tracking-widest uppercase">MegaInglês · Mockups UI v0.2</p>
+    <h1 class="text-3xl font-extrabold mt-2">Fluxos de tela para aprovação</h1>
+    <p class="text-neutral-400 mt-2 max-w-2xl">HTML + Tailwind + Lucide icons, somente visual — nada funciona. Estilo: shell escuro, fundo creme, cards pastel, botões em pill.</p>
+    <nav class="flex flex-wrap gap-2 mt-6 text-sm font-semibold">
+      <a href="#professor" class="bg-violet-500 hover:bg-violet-400 text-white px-4 py-2 rounded-full">Fluxo do professor (P0–P8)</a>
+      <a href="#biblioteca" class="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-full">Biblioteca e reenvio (P9–P10)</a>
+      <a href="#trilhas" class="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-full">Trilhas (P11–P13)</a>
+      <a href="#aluno" class="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-full">Fluxo do aluno (A1–A7)</a>
+    </nav>
+    <div class="flex flex-wrap gap-4 mt-6 text-xs text-neutral-400">
+      <span><span class="inline-block w-3 h-3 rounded bg-neutral-900 border border-neutral-600 align-middle mr-1"></span>Pill preto = ação principal</span>
+      <span><span class="inline-block w-3 h-3 rounded bg-violet-300 align-middle mr-1"></span>Lilás = destaque</span>
+      <span><span class="inline-block w-3 h-3 rounded bg-emerald-200 align-middle mr-1"></span>Menta = acerto / positivo</span>
+      <span><span class="inline-block w-3 h-3 rounded bg-amber-200 align-middle mr-1"></span>Manteiga = atenção / streak</span>
+      <span><span class="inline-block w-3 h-3 rounded bg-rose-200 align-middle mr-1"></span>Rosa = erro</span>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-12 space-y-24">
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- FLUXO DO PROFESSOR                                              -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="professor" class="space-y-20">
+  <div>
+    <h2 class="text-2xl font-extrabold text-neutral-900">Fluxo do professor</h2>
+    <p class="text-neutral-600 mt-1">P1 Hoje → P4 Material → P5 Gerando → P6 Revisão → P7 Envio → P8 Resultado. Meta: primeira atividade enviada em menos de 3 minutos.</p>
+  </div>
+
+  <!-- ── P0 LOGIN ─────────────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P0</span>
+      <div>
+        <h3 class="font-bold text-lg">Login</h3>
+        <p class="text-sm text-neutral-600">Google em primeiro, e-mail como alternativa. Formas pastel no fundo dão o tom lúdico. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-01</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-02</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl max-w-4xl">
+      <div class="bg-[#F6F4EF] rounded-[2rem] py-16 relative overflow-hidden">
+        <span class="absolute -top-10 -left-10 w-48 h-48 bg-violet-200 rounded-full"></span>
+        <span class="absolute top-24 -right-14 w-56 h-56 bg-emerald-100 rounded-full"></span>
+        <span class="absolute -bottom-16 left-1/4 w-40 h-40 bg-amber-100 rounded-full"></span>
+        <div class="relative flex justify-center">
+          <div class="bg-white rounded-3xl shadow-lg p-8 w-80">
+            <div class="flex items-center gap-2 justify-center mb-6">
+              <span class="w-9 h-9 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+              <span class="font-extrabold text-lg text-neutral-900">MegaInglês</span>
+            </div>
+            <button class="w-full border-2 border-neutral-200 rounded-full py-2.5 text-sm font-semibold flex items-center justify-center gap-2">
+              <span class="font-extrabold text-sky-500">G</span> Continuar com Google
+            </button>
+            <div class="flex items-center gap-3 my-5 text-xs text-neutral-400"><span class="flex-1 h-px bg-neutral-200"></span>ou<span class="flex-1 h-px bg-neutral-200"></span></div>
+            <label class="text-xs font-semibold text-neutral-600">E-mail</label>
+            <div class="border-2 border-neutral-200 rounded-2xl px-3 py-2.5 text-sm text-neutral-400 mt-1 mb-3">ana@email.com</div>
+            <label class="text-xs font-semibold text-neutral-600">Senha</label>
+            <div class="border-2 border-neutral-200 rounded-2xl px-3 py-2.5 text-sm text-neutral-400 mt-1">••••••••</div>
+            <button class="w-full bg-neutral-900 text-white rounded-full py-3 text-sm font-bold mt-5">Entrar</button>
+            <p class="text-center text-xs text-neutral-500 mt-4">Esqueci minha senha · <span class="text-violet-600 font-semibold">Criar conta grátis</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P1 HOJE (HOME) ───────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P1</span>
+      <div>
+        <h3 class="font-bold text-lg">Hoje — home do professor</h3>
+        <p class="text-sm text-neutral-600">Contadores no topo como na referência; a próxima aula vira o card lilás de destaque. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-43</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-95</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <!-- topbar -->
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="sun" class="w-4 h-4"></i> Hoje</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="users" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="pencil" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+          <div class="text-xs leading-tight"><p class="font-bold">Teacher Ana</p><p class="text-neutral-400">Plano Pro</p></div>
+          <i data-lucide="chevron-down" class="w-4 h-4 text-neutral-400"></i>
+        </div>
+      </div>
+      <!-- content -->
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8 min-h-[480px]">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-2xl font-extrabold text-neutral-900">Boa tarde, Ana</h2>
+            <p class="text-sm text-neutral-500">Sexta-feira, 25 de julho</p>
+          </div>
+          <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-5 py-3 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova atividade</button>
+        </div>
+        <!-- contadores -->
+        <div class="flex gap-3 mt-6">
+          <div class="bg-white rounded-3xl px-6 py-4 text-center"><p class="text-2xl font-extrabold text-neutral-900">12</p><p class="text-xs text-neutral-500 font-medium">alunos</p></div>
+          <div class="bg-amber-100 rounded-3xl px-6 py-4 text-center"><p class="text-2xl font-extrabold text-amber-900">3</p><p class="text-xs text-amber-700 font-medium">aguardando</p></div>
+          <div class="bg-emerald-100 rounded-3xl px-6 py-4 text-center"><p class="text-2xl font-extrabold text-emerald-900">2</p><p class="text-xs text-emerald-700 font-medium">concluídas hoje</p></div>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mt-5">
+          <!-- aulas de hoje -->
+          <div>
+            <h4 class="text-sm font-bold text-neutral-900 mb-3 flex items-center gap-1.5"><i data-lucide="clock" class="w-4 h-4"></i> Aulas de hoje</h4>
+            <div class="bg-violet-200 rounded-3xl p-5">
+              <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-full bg-white grid place-items-center text-sm font-extrabold text-violet-700">J</span>
+                <div><p class="font-bold text-neutral-900">Júlia Santos</p><p class="text-xs text-violet-800">18:00 · online · B1</p></div>
+              </div>
+              <button class="bg-neutral-900 text-white text-xs font-bold rounded-full px-4 py-2 mt-4 flex items-center gap-1.5"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Anotar aula</button>
+            </div>
+            <div class="bg-white rounded-3xl p-4 mt-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-full bg-amber-200 grid place-items-center text-sm font-extrabold text-amber-800">M</span>
+              <div><p class="text-sm font-bold text-neutral-900">Marcos Lima</p><p class="text-xs text-neutral-400">19:30 · presencial · A2</p></div>
+            </div>
+          </div>
+          <!-- aguardando -->
+          <div>
+            <h4 class="text-sm font-bold text-neutral-900 mb-3 flex items-center gap-1.5"><i data-lucide="bell" class="w-4 h-4"></i> Aguardando resposta</h4>
+            <div class="bg-white rounded-3xl p-5 space-y-3.5">
+              <div class="flex items-center gap-2 text-sm">
+                <span class="w-7 h-7 rounded-full bg-amber-200 grid place-items-center text-xs font-extrabold text-amber-800">M</span>
+                <span class="flex-1 leading-tight"><span class="font-bold">Marcos</span><br><span class="text-neutral-400 text-xs">Simple present · há 2 dias</span></span>
+                <button class="bg-emerald-100 text-emerald-800 rounded-full p-2"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
+              </div>
+              <div class="flex items-center gap-2 text-sm">
+                <span class="w-7 h-7 rounded-full bg-pink-200 grid place-items-center text-xs font-extrabold text-pink-800">B</span>
+                <span class="flex-1 leading-tight"><span class="font-bold">Beatriz</span><br><span class="text-neutral-400 text-xs">Food vocab · há 1 dia</span></span>
+                <button class="bg-emerald-100 text-emerald-800 rounded-full p-2"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
+              </div>
+              <div class="flex items-center gap-2 text-sm">
+                <span class="w-7 h-7 rounded-full bg-sky-200 grid place-items-center text-xs font-extrabold text-sky-800">P</span>
+                <span class="flex-1 leading-tight"><span class="font-bold">Pedro</span><br><span class="text-neutral-400 text-xs">Listening 4 · hoje</span></span>
+                <button class="bg-emerald-100 text-emerald-800 rounded-full p-2"><i data-lucide="message-circle" class="w-4 h-4"></i></button>
+              </div>
+            </div>
+          </div>
+          <!-- concluídas -->
+          <div>
+            <h4 class="text-sm font-bold text-neutral-900 mb-3 flex items-center gap-1.5"><i data-lucide="check-circle" class="w-4 h-4"></i> Concluídas</h4>
+            <div class="bg-white rounded-3xl p-5 space-y-3.5">
+              <div class="flex items-center gap-2 text-sm">
+                <span class="w-7 h-7 rounded-full bg-sky-200 grid place-items-center text-xs font-extrabold text-sky-800">J</span>
+                <span class="flex-1 leading-tight"><span class="font-bold">Júlia</span><br><span class="text-neutral-400 text-xs">Travel vocabulary</span></span>
+                <span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">8/10</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm">
+                <span class="w-7 h-7 rounded-full bg-violet-200 grid place-items-center text-xs font-extrabold text-violet-800">C</span>
+                <span class="flex-1 leading-tight"><span class="font-bold">Carla</span><br><span class="text-neutral-400 text-xs">Past simple quiz</span></span>
+                <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full">6/10</span>
+              </div>
+              <p class="text-xs text-violet-700 font-bold flex items-center gap-1 pt-1">Ver todos os resultados <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P2 ALUNOS ────────────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P2</span>
+      <div>
+        <h3 class="font-bold text-lg">Alunos — lista</h3>
+        <p class="text-sm text-neutral-600">Cada aluno tem uma cor de avatar; nível e estado da conta em chips. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-10</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-12</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl max-w-4xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> Alunos</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="pencil" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-extrabold text-neutral-900">Alunos <span class="text-neutral-400 font-semibold text-lg">· 12</span></h2>
+          <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-5 py-3 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Novo aluno</button>
+        </div>
+        <div class="bg-white rounded-full px-5 py-3 text-sm text-neutral-400 mb-4 flex items-center gap-2"><i data-lucide="search" class="w-4 h-4"></i> Buscar aluno…</div>
+        <div class="space-y-2.5">
+          <div class="bg-white rounded-3xl flex items-center gap-4 px-5 py-4">
+            <span class="w-10 h-10 rounded-full bg-sky-200 text-sky-800 grid place-items-center text-sm font-extrabold">J</span>
+            <div class="flex-1"><p class="text-sm font-bold text-neutral-900">Júlia Santos</p><p class="text-xs text-neutral-400">Última atividade: ontem</p></div>
+            <span class="bg-violet-200 text-violet-900 text-xs font-extrabold px-2.5 py-1 rounded-full">B1</span>
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> conta ativa</span>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-neutral-300"></i>
+          </div>
+          <div class="bg-white rounded-3xl flex items-center gap-4 px-5 py-4">
+            <span class="w-10 h-10 rounded-full bg-amber-200 text-amber-800 grid place-items-center text-sm font-extrabold">M</span>
+            <div class="flex-1"><p class="text-sm font-bold text-neutral-900">Marcos Lima</p><p class="text-xs text-neutral-400">Tarefa pendente há 2 dias</p></div>
+            <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full">A2</span>
+            <span class="bg-neutral-100 text-neutral-500 text-xs font-semibold px-2.5 py-1 rounded-full">sem conta</span>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-neutral-300"></i>
+          </div>
+          <div class="bg-white rounded-3xl flex items-center gap-4 px-5 py-4">
+            <span class="w-10 h-10 rounded-full bg-pink-200 text-pink-800 grid place-items-center text-sm font-extrabold">B</span>
+            <div class="flex-1"><p class="text-sm font-bold text-neutral-900">Beatriz Nunes</p><p class="text-xs text-neutral-400">Última atividade: há 3 dias</p></div>
+            <span class="bg-sky-200 text-sky-900 text-xs font-extrabold px-2.5 py-1 rounded-full">B2</span>
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> conta ativa</span>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-neutral-300"></i>
+          </div>
+        </div>
+        <p class="text-xs text-neutral-400 mt-3 font-medium">Mostrar 2 alunos arquivados</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P3 FICHA DO ALUNO ────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P3</span>
+      <div>
+        <h3 class="font-bold text-lg">Ficha do aluno</h3>
+        <p class="text-sm text-neutral-600">Menu de contexto aberto mostrando <b>Resetar acesso</b> com registro de auditoria. Stats em tiles pastel. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-13</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-22</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-25/26</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> Alunos</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="pencil" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <p class="text-xs text-neutral-400 mb-3 font-medium">Alunos / <span class="text-neutral-700">Júlia Santos</span></p>
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-4">
+            <span class="w-16 h-16 rounded-3xl bg-sky-200 text-sky-800 grid place-items-center text-2xl font-extrabold">J</span>
+            <div>
+              <h2 class="text-xl font-extrabold text-neutral-900 flex items-center gap-2">Júlia Santos
+                <span class="bg-violet-200 text-violet-900 text-xs font-extrabold px-2.5 py-1 rounded-full">B1</span>
+                <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> conta ativa</span>
+              </h2>
+              <p class="text-sm text-neutral-500 mt-0.5">julia.s@email.com · qui e sex, 18:00 · R$ 240/mês</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2 relative">
+            <button class="bg-white text-sm font-bold rounded-full px-4 py-2.5 flex items-center gap-1.5"><i data-lucide="link" class="w-4 h-4"></i> Link de cadastro</button>
+            <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-4 py-2.5 flex items-center gap-1.5"><i data-lucide="plus" class="w-4 h-4"></i> Nova atividade</button>
+            <button class="bg-white rounded-full w-10 h-10 grid place-items-center text-neutral-500"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            <!-- dropdown aberto (estado demonstrado) -->
+            <div class="absolute right-0 top-12 bg-white rounded-2xl shadow-xl w-56 py-2 text-sm z-10">
+              <div class="px-4 py-2.5 flex items-center gap-2 font-medium"><i data-lucide="pencil" class="w-4 h-4 text-neutral-400"></i> Editar dados</div>
+              <div class="px-4 py-2.5 flex items-center gap-2 font-medium"><i data-lucide="archive" class="w-4 h-4 text-neutral-400"></i> Arquivar aluna</div>
+              <div class="px-4 py-2.5 flex items-center gap-2 font-bold text-rose-600"><i data-lucide="rotate-ccw" class="w-4 h-4"></i> Resetar acesso</div>
+              <p class="px-4 pt-2 mt-1 border-t border-neutral-100 text-xs text-neutral-400">Último reset: nunca</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-1.5 mt-6 text-sm font-bold">
+          <span class="bg-neutral-900 text-white rounded-full px-4 py-2">Resumo</span>
+          <span class="text-neutral-500 rounded-full px-4 py-2">Atividades</span>
+          <span class="text-neutral-500 rounded-full px-4 py-2">Aulas</span>
+          <span class="text-neutral-500 rounded-full px-4 py-2">Materiais</span>
+          <span class="text-neutral-500 rounded-full px-4 py-2">Pagamentos</span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mt-5">
+          <div class="bg-violet-200 rounded-3xl p-5"><p class="text-3xl font-extrabold text-neutral-900">82%</p><p class="text-xs text-violet-800 font-semibold mt-1">média de acertos</p></div>
+          <div class="bg-emerald-100 rounded-3xl p-5"><p class="text-3xl font-extrabold text-neutral-900">14<span class="text-emerald-600 text-xl">/17</span></p><p class="text-xs text-emerald-700 font-semibold mt-1">tarefas concluídas</p></div>
+          <div class="bg-amber-100 rounded-3xl p-5"><p class="text-3xl font-extrabold text-neutral-900">Julho</p><p class="text-xs text-amber-700 font-semibold mt-1 flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> mensalidade paga</p></div>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          <div class="bg-white rounded-3xl p-5">
+            <h4 class="text-sm font-bold mb-2 flex items-center gap-1.5"><i data-lucide="pencil" class="w-4 h-4 text-neutral-400"></i> Anotação da última aula <span class="text-xs text-neutral-400 font-medium">· 22/07</span></h4>
+            <p class="text-sm text-neutral-600">Trabalhamos past simple com o texto da unit 7. Ainda confunde verbos irregulares — revisar "go/went" e "see/saw" na próxima.</p>
+          </div>
+          <div class="bg-white rounded-3xl p-5">
+            <h4 class="text-sm font-bold mb-3 flex items-center gap-1.5"><i data-lucide="file-text" class="w-4 h-4 text-neutral-400"></i> Últimas atividades</h4>
+            <div class="space-y-2.5 text-sm">
+              <div class="flex items-center gap-2"><span class="flex-1 font-medium">Travel vocabulary</span><span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">8/10</span></div>
+              <div class="flex items-center gap-2"><span class="flex-1 font-medium">Past simple — irregular verbs</span><span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full">6/10</span></div>
+              <div class="flex items-center gap-2"><span class="flex-1 font-medium">Listening — At the airport</span><span class="bg-neutral-100 text-neutral-500 text-xs font-bold px-2.5 py-1 rounded-full">pendente</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P4 NOVA ATIVIDADE ────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P4</span>
+      <div>
+        <h3 class="font-bold text-lg">Nova atividade — material e parâmetros</h3>
+        <p class="text-sm text-neutral-600">Chips selecionados ficam pretos; habilidades ativas em lilás. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-50/51</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-60/61</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="users" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="pencil" class="w-4 h-4"></i> Atividades</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <h2 class="text-xl font-extrabold text-neutral-900">Nova atividade <span class="text-neutral-400 font-semibold">para</span> Júlia Santos</h2>
+        <div class="grid grid-cols-2 gap-5 mt-5">
+          <!-- material -->
+          <div class="bg-white rounded-3xl p-6">
+            <h4 class="text-sm font-bold mb-3 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-violet-200 text-violet-900 grid place-items-center text-xs font-extrabold">1</span> Material da aula</h4>
+            <div class="flex gap-1 bg-neutral-100 rounded-full p-1 text-xs font-bold mb-4">
+              <span class="flex-1 text-center bg-neutral-900 text-white rounded-full py-2 flex items-center justify-center gap-1.5"><i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i> Arquivo</span>
+              <span class="flex-1 text-center py-2 text-neutral-500 flex items-center justify-center gap-1.5"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Colar texto</span>
+              <span class="flex-1 text-center py-2 text-neutral-500 flex items-center justify-center gap-1.5"><i data-lucide="book-open" class="w-3.5 h-3.5"></i> Biblioteca</span>
+            </div>
+            <div class="border-2 border-dashed border-neutral-200 rounded-3xl p-5 text-center">
+              <div class="bg-emerald-100 rounded-2xl px-4 py-3.5 flex items-center gap-3 text-left">
+                <span class="w-9 h-9 rounded-xl bg-white grid place-items-center text-emerald-700"><i data-lucide="file-text" class="w-4 h-4"></i></span>
+                <div class="flex-1"><p class="text-sm font-bold text-neutral-900">unit-7-travel.pdf</p><p class="text-xs text-emerald-700 font-medium flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> 2,1 MB · texto extraído</p></div>
+                <i data-lucide="x" class="w-4 h-4 text-neutral-400"></i>
+              </div>
+              <p class="text-xs text-neutral-400 mt-3 font-medium">PDF, DOCX, foto ou áudio · até 25 MB</p>
+            </div>
+          </div>
+          <!-- parâmetros -->
+          <div class="bg-white rounded-3xl p-6">
+            <h4 class="text-sm font-bold mb-3 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-emerald-200 text-emerald-900 grid place-items-center text-xs font-extrabold">2</span> Parâmetros</h4>
+            <p class="text-xs font-bold text-neutral-600 mb-1.5">Nível <span class="text-neutral-400 font-medium">(sugerido pelo perfil)</span></p>
+            <div class="flex gap-1.5 mb-4">
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-extrabold rounded-full px-3.5 py-2">A1</span>
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-extrabold rounded-full px-3.5 py-2">A2</span>
+              <span class="bg-neutral-900 text-white text-xs font-extrabold rounded-full px-3.5 py-2">B1</span>
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-extrabold rounded-full px-3.5 py-2">B2</span>
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-extrabold rounded-full px-3.5 py-2">C1</span>
+            </div>
+            <p class="text-xs font-bold text-neutral-600 mb-1.5">Questões</p>
+            <div class="flex gap-1.5 mb-4">
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-extrabold rounded-full px-3.5 py-2">5</span>
+              <span class="bg-neutral-900 text-white text-xs font-extrabold rounded-full px-3.5 py-2">10</span>
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-extrabold rounded-full px-3.5 py-2">15</span>
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-extrabold rounded-full px-3.5 py-2">20</span>
+            </div>
+            <p class="text-xs font-bold text-neutral-600 mb-1.5">Habilidades</p>
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              <span class="bg-violet-200 text-violet-900 text-xs font-bold rounded-full px-3.5 py-2 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Leitura</span>
+              <span class="bg-violet-200 text-violet-900 text-xs font-bold rounded-full px-3.5 py-2 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Vocabulário</span>
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-bold rounded-full px-3.5 py-2">Escrita</span>
+              <span class="bg-neutral-100 text-neutral-500 text-xs font-bold rounded-full px-3.5 py-2">Listening</span>
+            </div>
+            <p class="text-xs font-bold text-neutral-600 mb-1.5">Foco <span class="text-neutral-400 font-medium">(opcional)</span></p>
+            <div class="bg-neutral-100 rounded-2xl px-4 py-3 text-sm font-medium text-neutral-700">vocabulário de viagem, past simple</div>
+          </div>
+        </div>
+        <div class="flex justify-end mt-5">
+          <button class="bg-neutral-900 text-white font-bold rounded-full px-8 py-3.5 flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i> Gerar atividade</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P5 GERANDO ───────────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P5</span>
+      <div>
+        <h3 class="font-bold text-lg">Gerando — estado de espera</h3>
+        <p class="text-sm text-neutral-600">Progresso honesto. Se falhar: nova tentativa sem consumir cota. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-65</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-73</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl max-w-4xl">
+      <div class="bg-[#F6F4EF] rounded-[2rem] py-16 flex justify-center relative overflow-hidden">
+        <span class="absolute -top-8 -right-8 w-40 h-40 bg-violet-200 rounded-full"></span>
+        <span class="absolute -bottom-10 -left-10 w-44 h-44 bg-emerald-100 rounded-full"></span>
+        <div class="bg-white rounded-3xl shadow-lg p-8 w-96 text-center relative">
+          <div class="w-14 h-14 rounded-2xl bg-violet-200 grid place-items-center mx-auto"><i data-lucide="sparkles" class="w-6 h-6 text-violet-700"></i></div>
+          <h4 class="font-extrabold text-neutral-900 mt-5">Gerando sua atividade…</h4>
+          <p class="text-sm text-neutral-500 mt-1">Lendo <b>unit-7-travel.pdf</b> e criando 10 questões nível B1</p>
+          <div class="bg-neutral-100 rounded-full h-2.5 mt-5 overflow-hidden"><div class="bg-neutral-900 h-full rounded-full" style="width:60%"></div></div>
+          <p class="text-xs text-neutral-400 mt-3 font-medium">Normalmente leva menos de 90 segundos</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P6 REVISÃO ───────────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P6</span>
+      <div>
+        <h3 class="font-bold text-lg">Revisão da atividade</h3>
+        <p class="text-sm text-neutral-600">A IA propõe, o professor decide. Q2 em modo de edição. Explicação em card manteiga. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-66/67</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-69/70</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="users" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="pencil" class="w-4 h-4"></i> Atividades</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <h2 class="text-xl font-extrabold text-neutral-900 flex items-center gap-2">Travel vocabulary — Unit 7 <i data-lucide="pencil" class="w-4 h-4 text-neutral-300"></i></h2>
+            <p class="text-sm text-neutral-500 flex items-center gap-1.5">10 questões · B1 · <span class="text-emerald-700 font-medium flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> rascunho salvo</span></p>
+          </div>
+          <div class="flex gap-2">
+            <button class="bg-white text-sm font-bold rounded-full px-4 py-2.5 flex items-center gap-1.5"><i data-lucide="eye" class="w-4 h-4"></i> Ver como aluno</button>
+            <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-5 py-2.5 flex items-center gap-1.5">Enviar <i data-lucide="send" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+        <div class="space-y-4 max-w-3xl">
+          <!-- Q1 normal -->
+          <div class="bg-white rounded-3xl p-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-extrabold text-neutral-400">Q1</span>
+              <span class="bg-violet-200 text-violet-900 text-xs font-bold px-2.5 py-1 rounded-full">múltipla escolha</span>
+              <span class="ml-auto flex gap-2 text-neutral-300"><i data-lucide="pencil" class="w-4 h-4"></i><i data-lucide="trash-2" class="w-4 h-4"></i><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+            </div>
+            <p class="text-sm font-bold text-neutral-900 mb-3">Last summer, we ______ to Portugal for two weeks.</p>
+            <div class="grid grid-cols-2 gap-2 text-sm font-medium">
+              <div class="bg-neutral-50 rounded-2xl px-4 py-2.5 text-neutral-600">go</div>
+              <div class="bg-emerald-100 rounded-2xl px-4 py-2.5 text-emerald-900 font-bold flex justify-between items-center">went <i data-lucide="check" class="w-4 h-4"></i></div>
+              <div class="bg-neutral-50 rounded-2xl px-4 py-2.5 text-neutral-600">gone</div>
+              <div class="bg-neutral-50 rounded-2xl px-4 py-2.5 text-neutral-600">going</div>
+            </div>
+            <div class="bg-amber-100 rounded-2xl px-4 py-3 mt-3 flex gap-2">
+              <i data-lucide="lightbulb" class="w-4 h-4 text-amber-700 shrink-0 mt-0.5"></i>
+              <p class="text-xs text-amber-900"><b>Explicação (mostrada ao aluno):</b> "went" é o passado simples de "go". Usamos past simple para ações concluídas no passado.</p>
+            </div>
+          </div>
+          <!-- Q2 em edição -->
+          <div class="bg-white rounded-3xl p-6 ring-2 ring-neutral-900">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xs font-extrabold text-neutral-400">Q2</span>
+              <span class="bg-sky-200 text-sky-900 text-xs font-bold px-2.5 py-1 rounded-full">completar lacuna</span>
+              <span class="ml-auto bg-neutral-900 text-white text-xs font-bold px-2.5 py-1 rounded-full">editando</span>
+            </div>
+            <label class="text-xs font-bold text-neutral-500">Enunciado</label>
+            <div class="bg-neutral-50 border-2 border-neutral-200 rounded-2xl px-4 py-2.5 text-sm mt-1 mb-3 text-neutral-900">They ______ (not / visit) the museum because it was closed.</div>
+            <label class="text-xs font-bold text-neutral-500">Resposta correta</label>
+            <div class="bg-neutral-50 border-2 border-neutral-200 rounded-2xl px-4 py-2.5 text-sm mt-1 mb-3 text-neutral-900">didn't visit</div>
+            <label class="text-xs font-bold text-neutral-500">Explicação</label>
+            <div class="bg-neutral-50 border-2 border-neutral-200 rounded-2xl px-4 py-2.5 text-sm mt-1 text-neutral-900">Depois de "didn't", o verbo fica no infinitivo sem "to".</div>
+            <div class="flex gap-2 mt-4">
+              <button class="bg-neutral-900 text-white text-xs font-bold rounded-full px-5 py-2.5">Salvar</button>
+              <button class="text-neutral-500 text-xs font-bold px-3 py-2.5">Cancelar</button>
+            </div>
+          </div>
+          <p class="text-center text-xs text-neutral-400 font-medium">… Q3 a Q10 …</p>
+          <div class="flex gap-3">
+            <button class="flex-1 border-2 border-dashed border-neutral-300 text-neutral-500 text-sm font-bold rounded-3xl py-3.5 flex items-center justify-center gap-1.5"><i data-lucide="plus" class="w-4 h-4"></i> Adicionar questão</button>
+            <button class="flex-1 border-2 border-dashed border-violet-300 text-violet-700 text-sm font-bold rounded-3xl py-3.5 flex items-center justify-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4"></i> Gerar mais 5 questões</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P7 MODAL DE ENVIO ────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P7</span>
+      <div>
+        <h3 class="font-bold text-lg">Envio — modal com link e WhatsApp</h3>
+        <p class="text-sm text-neutral-600">Um link por aluno, mensagem pronta em card manteiga. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-80/81</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-82</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl max-w-4xl">
+      <div class="bg-neutral-800/90 rounded-[2rem] py-12 flex justify-center">
+        <div class="bg-white rounded-3xl shadow-2xl w-[440px] p-7">
+          <h4 class="font-extrabold text-neutral-900 text-lg">Enviar atividade</h4>
+          <p class="text-sm text-neutral-500 mb-4">Travel vocabulary — Unit 7 · 10 questões</p>
+          <p class="text-xs font-bold text-neutral-600 mb-1.5">Enviar para</p>
+          <div class="flex flex-wrap gap-1.5 mb-4">
+            <span class="bg-neutral-900 text-white text-xs font-bold rounded-full pl-1.5 pr-3.5 py-1.5 flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-sky-300 text-neutral-900 grid place-items-center text-[10px] font-extrabold">J</span> Júlia <i data-lucide="check" class="w-3 h-3"></i></span>
+            <span class="bg-neutral-100 text-neutral-500 text-xs font-bold rounded-full px-3.5 py-1.5 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Marcos</span>
+            <span class="bg-neutral-100 text-neutral-500 text-xs font-bold rounded-full px-3.5 py-1.5 flex items-center gap-1"><i data-lucide="plus" class="w-3 h-3"></i> Beatriz</span>
+          </div>
+          <p class="text-xs font-bold text-neutral-600 mb-1.5">Prazo <span class="text-neutral-400 font-medium">(opcional)</span></p>
+          <div class="bg-neutral-100 rounded-2xl px-4 py-2.5 text-sm font-medium text-neutral-700 mb-4 w-44 flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4 text-neutral-400"></i> 28/07/2026</div>
+          <p class="text-xs font-bold text-neutral-600 mb-1.5">Link da Júlia</p>
+          <div class="flex gap-2 mb-4">
+            <div class="flex-1 bg-neutral-100 rounded-2xl px-4 py-2.5 text-xs text-neutral-500 truncate font-medium">megaingles.com/t/x7Kp2mQv9rTzW4…</div>
+            <button class="bg-neutral-100 rounded-2xl px-3.5 text-neutral-600"><i data-lucide="copy" class="w-4 h-4"></i></button>
+          </div>
+          <button class="w-full bg-emerald-400 text-emerald-950 font-extrabold rounded-full py-3.5 flex items-center justify-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> Enviar pelo WhatsApp</button>
+          <div class="bg-amber-100 rounded-2xl px-4 py-3 mt-3 text-xs text-amber-900 italic">"Oi Júlia! Sua tarefa de hoje já está pronta: Travel vocabulary (10 questões, ~8 min). É só abrir o link…"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P8 RESULTADO ─────────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P8</span>
+      <div>
+        <h3 class="font-bold text-lg">Resultado da tarefa</h3>
+        <p class="text-sm text-neutral-600">Padrão de erro detectado em card manteiga; anotação para a próxima aula fecha o ciclo. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-92/93</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-94</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="users" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="pencil" class="w-4 h-4"></i> Atividades</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="w-12 h-12 rounded-3xl bg-sky-200 text-sky-800 grid place-items-center font-extrabold">J</span>
+          <div class="flex-1">
+            <h2 class="text-lg font-extrabold text-neutral-900">Travel vocabulary — Júlia Santos</h2>
+            <p class="text-sm text-neutral-500">Concluída ontem às 21:14</p>
+          </div>
+          <span class="bg-emerald-200 text-emerald-950 font-extrabold px-5 py-2.5 rounded-full text-lg">8/10</span>
+        </div>
+        <div class="flex gap-3 mb-4">
+          <div class="bg-white rounded-3xl px-5 py-4 text-center min-w-[110px]"><i data-lucide="clock" class="w-4 h-4 mx-auto text-neutral-400"></i><p class="text-lg font-extrabold mt-1">7 min</p><p class="text-xs text-neutral-500 font-medium">tempo total</p></div>
+          <div class="bg-white rounded-3xl px-5 py-4 text-center min-w-[110px]"><i data-lucide="target" class="w-4 h-4 mx-auto text-neutral-400"></i><p class="text-lg font-extrabold mt-1">1ª</p><p class="text-xs text-neutral-500 font-medium">tentativa</p></div>
+          <div class="bg-amber-100 rounded-3xl px-5 py-4 text-center min-w-[110px]"><i data-lucide="flame" class="w-4 h-4 mx-auto text-amber-700"></i><p class="text-lg font-extrabold mt-1 text-amber-900">5</p><p class="text-xs text-amber-700 font-medium">melhor sequência</p></div>
+        </div>
+        <div class="bg-amber-100 rounded-3xl px-5 py-4 text-sm text-amber-900 mb-4 max-w-3xl flex gap-2.5">
+          <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 mt-0.5 text-amber-700"></i>
+          <span><b>Padrão de erro:</b> as 2 questões erradas envolvem <b>past simple de verbos irregulares</b> — mesmo tema da atividade anterior (6/10).</span>
+        </div>
+        <div class="bg-white rounded-3xl divide-y divide-neutral-100 max-w-3xl text-sm">
+          <div class="px-5 py-3.5 flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center shrink-0"><i data-lucide="check" class="w-3.5 h-3.5"></i></span><span class="flex-1 font-medium text-neutral-700">Q1 · Last summer, we ___ to Portugal…</span><span class="text-xs text-neutral-400 font-medium">went</span></div>
+          <div class="px-5 py-3.5 flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-rose-100 text-rose-600 grid place-items-center shrink-0"><i data-lucide="x" class="w-3.5 h-3.5"></i></span><span class="flex-1 font-medium text-neutral-700">Q4 · Yesterday she ___ a beautiful beach…</span><span class="text-xs font-medium"><span class="text-rose-500 line-through">seed</span> → <span class="text-emerald-700 font-bold">saw</span></span></div>
+          <div class="px-5 py-3.5 flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center shrink-0"><i data-lucide="check" class="w-3.5 h-3.5"></i></span><span class="flex-1 font-medium text-neutral-700">Q5 · Match: luggage → bagagem…</span><span class="text-xs text-neutral-400 font-medium">4/4 pares</span></div>
+          <div class="px-5 py-3.5 flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-rose-100 text-rose-600 grid place-items-center shrink-0"><i data-lucide="x" class="w-3.5 h-3.5"></i></span><span class="flex-1 font-medium text-neutral-700">Q8 · We ___ (buy) souvenirs at the market…</span><span class="text-xs font-medium"><span class="text-rose-500 line-through">buyed</span> → <span class="text-emerald-700 font-bold">bought</span></span></div>
+          <div class="px-5 py-3 text-center text-xs text-neutral-400 font-bold">ver as 10 questões</div>
+        </div>
+        <div class="max-w-3xl mt-4">
+          <div class="bg-white rounded-3xl p-5">
+            <p class="text-xs font-bold text-neutral-600 mb-2 flex items-center gap-1.5"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Anotar para a próxima aula</p>
+            <div class="bg-neutral-100 rounded-2xl px-4 py-3 text-sm font-medium text-neutral-700">Revisar verbos irregulares: see/saw, buy/bought. Montar drill rápido no começo da aula.</div>
+            <button class="bg-neutral-900 text-white text-xs font-bold rounded-full px-5 py-2.5 mt-3">Salvar na ficha da Júlia</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- BIBLIOTECA DE ATIVIDADES                                        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="biblioteca" class="space-y-20">
+  <div>
+    <h2 class="text-2xl font-extrabold text-neutral-900">Biblioteca e reenvio</h2>
+    <p class="text-neutral-600 mt-1">Toda atividade criada fica salva e pode ser reenviada para qualquer aluno, sem gerar de novo (sem consumir cota de IA).</p>
+  </div>
+
+  <!-- ── P9 ATIVIDADES ────────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P9</span>
+      <div>
+        <h3 class="font-bold text-lg">Atividades — biblioteca</h3>
+        <p class="text-sm text-neutral-600">Cards coloridos por habilidade. Cada um mostra quantas vezes já foi enviado e a média da turma — é isso que faz o professor reusar em vez de recriar. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-72</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-120</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="users" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="pencil" class="w-4 h-4"></i> Atividades</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-extrabold text-neutral-900">Atividades</h2>
+          <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-5 py-3 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova atividade</button>
+        </div>
+        <!-- abas -->
+        <div class="flex gap-1.5 mt-4 text-sm font-bold">
+          <span class="bg-neutral-900 text-white rounded-full px-4 py-2">Minhas atividades <span class="text-neutral-400 font-semibold">24</span></span>
+          <span class="text-neutral-500 rounded-full px-4 py-2">Rascunhos <span class="text-neutral-400 font-semibold">3</span></span>
+          <span class="text-neutral-500 rounded-full px-4 py-2 flex items-center gap-1.5"><i data-lucide="milestone" class="w-4 h-4"></i> Trilhas <span class="text-neutral-400 font-semibold">4</span></span>
+        </div>
+        <!-- filtros -->
+        <div class="flex items-center gap-2 mt-4 flex-wrap">
+          <div class="bg-white rounded-full px-4 py-2.5 text-sm text-neutral-400 flex items-center gap-2 w-64"><i data-lucide="search" class="w-4 h-4"></i> Buscar por título ou tema…</div>
+          <span class="bg-neutral-900 text-white text-xs font-bold rounded-full px-3.5 py-2">Todos os níveis</span>
+          <span class="bg-white text-neutral-600 text-xs font-bold rounded-full px-3.5 py-2">A1–A2</span>
+          <span class="bg-white text-neutral-600 text-xs font-bold rounded-full px-3.5 py-2">B1–B2</span>
+          <span class="bg-white text-neutral-600 text-xs font-bold rounded-full px-3.5 py-2 flex items-center gap-1.5"><i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i> Habilidade</span>
+        </div>
+        <!-- grid de atividades -->
+        <div class="grid grid-cols-3 gap-4 mt-5">
+          <!-- card 1 -->
+          <div class="bg-violet-200 rounded-3xl p-5 flex flex-col">
+            <div class="flex items-start justify-between">
+              <span class="w-9 h-9 rounded-2xl bg-white grid place-items-center text-violet-700"><i data-lucide="book-open" class="w-4 h-4"></i></span>
+              <span class="bg-white/70 text-violet-900 text-xs font-extrabold px-2.5 py-1 rounded-full">B1</span>
+            </div>
+            <h4 class="font-extrabold text-neutral-900 mt-3 leading-snug">Travel vocabulary — Unit 7</h4>
+            <p class="text-xs text-violet-900/70 font-medium mt-1">Leitura · Vocabulário · 10 questões</p>
+            <div class="flex items-center gap-3 mt-3 text-xs font-bold text-violet-900">
+              <span class="flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> 6 envios</span>
+              <span class="flex items-center gap-1"><i data-lucide="target" class="w-3.5 h-3.5"></i> 78% média</span>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button class="flex-1 bg-neutral-900 text-white text-xs font-bold rounded-full py-2.5 flex items-center justify-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Enviar</button>
+              <button class="bg-white/70 rounded-full w-9 h-9 grid place-items-center text-neutral-700"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+          <!-- card 2 -->
+          <div class="bg-white rounded-3xl p-5 flex flex-col">
+            <div class="flex items-start justify-between">
+              <span class="w-9 h-9 rounded-2xl bg-amber-100 grid place-items-center text-amber-700"><i data-lucide="type" class="w-4 h-4"></i></span>
+              <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full">A2</span>
+            </div>
+            <h4 class="font-extrabold text-neutral-900 mt-3 leading-snug">Past simple — irregular verbs</h4>
+            <p class="text-xs text-neutral-400 font-medium mt-1">Gramática · 15 questões</p>
+            <div class="flex items-center gap-3 mt-3 text-xs font-bold text-neutral-500">
+              <span class="flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> 11 envios</span>
+              <span class="flex items-center gap-1 text-rose-500"><i data-lucide="target" class="w-3.5 h-3.5"></i> 61% média</span>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button class="flex-1 bg-neutral-900 text-white text-xs font-bold rounded-full py-2.5 flex items-center justify-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Enviar</button>
+              <button class="bg-neutral-100 rounded-full w-9 h-9 grid place-items-center text-neutral-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+          <!-- card 3 -->
+          <div class="bg-white rounded-3xl p-5 flex flex-col">
+            <div class="flex items-start justify-between">
+              <span class="w-9 h-9 rounded-2xl bg-sky-100 grid place-items-center text-sky-700"><i data-lucide="headphones" class="w-4 h-4"></i></span>
+              <span class="bg-sky-100 text-sky-800 text-xs font-extrabold px-2.5 py-1 rounded-full">B1</span>
+            </div>
+            <h4 class="font-extrabold text-neutral-900 mt-3 leading-snug">Listening — At the airport</h4>
+            <p class="text-xs text-neutral-400 font-medium mt-1">Listening · 8 questões</p>
+            <div class="flex items-center gap-3 mt-3 text-xs font-bold text-neutral-500">
+              <span class="flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> 4 envios</span>
+              <span class="flex items-center gap-1"><i data-lucide="target" class="w-3.5 h-3.5"></i> 85% média</span>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button class="flex-1 bg-neutral-900 text-white text-xs font-bold rounded-full py-2.5 flex items-center justify-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Enviar</button>
+              <button class="bg-neutral-100 rounded-full w-9 h-9 grid place-items-center text-neutral-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+          <!-- card 4 -->
+          <div class="bg-white rounded-3xl p-5 flex flex-col">
+            <div class="flex items-start justify-between">
+              <span class="w-9 h-9 rounded-2xl bg-emerald-100 grid place-items-center text-emerald-700"><i data-lucide="utensils" class="w-4 h-4"></i></span>
+              <span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">A1</span>
+            </div>
+            <h4 class="font-extrabold text-neutral-900 mt-3 leading-snug">Food vocabulary quiz</h4>
+            <p class="text-xs text-neutral-400 font-medium mt-1">Vocabulário · 10 questões</p>
+            <div class="flex items-center gap-3 mt-3 text-xs font-bold text-neutral-500">
+              <span class="flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> 9 envios</span>
+              <span class="flex items-center gap-1"><i data-lucide="target" class="w-3.5 h-3.5"></i> 91% média</span>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button class="flex-1 bg-neutral-900 text-white text-xs font-bold rounded-full py-2.5 flex items-center justify-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Enviar</button>
+              <button class="bg-neutral-100 rounded-full w-9 h-9 grid place-items-center text-neutral-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+          <!-- card 5 -->
+          <div class="bg-white rounded-3xl p-5 flex flex-col">
+            <div class="flex items-start justify-between">
+              <span class="w-9 h-9 rounded-2xl bg-pink-100 grid place-items-center text-pink-700"><i data-lucide="message-square" class="w-4 h-4"></i></span>
+              <span class="bg-pink-100 text-pink-800 text-xs font-extrabold px-2.5 py-1 rounded-full">B2</span>
+            </div>
+            <h4 class="font-extrabold text-neutral-900 mt-3 leading-snug">Job interview — phrasal verbs</h4>
+            <p class="text-xs text-neutral-400 font-medium mt-1">Vocabulário · Escrita · 12 questões</p>
+            <div class="flex items-center gap-3 mt-3 text-xs font-bold text-neutral-500">
+              <span class="flex items-center gap-1"><i data-lucide="send" class="w-3.5 h-3.5"></i> 2 envios</span>
+              <span class="flex items-center gap-1"><i data-lucide="target" class="w-3.5 h-3.5"></i> 74% média</span>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button class="flex-1 bg-neutral-900 text-white text-xs font-bold rounded-full py-2.5 flex items-center justify-center gap-1.5"><i data-lucide="send" class="w-3.5 h-3.5"></i> Enviar</button>
+              <button class="bg-neutral-100 rounded-full w-9 h-9 grid place-items-center text-neutral-600"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+          <!-- card novo -->
+          <div class="border-2 border-dashed border-neutral-300 rounded-3xl p-5 grid place-items-center text-center">
+            <div>
+              <span class="w-11 h-11 rounded-2xl bg-white grid place-items-center text-neutral-400 mx-auto"><i data-lucide="sparkles" class="w-5 h-5"></i></span>
+              <p class="text-sm font-bold text-neutral-600 mt-2">Gerar nova atividade</p>
+              <p class="text-xs text-neutral-400 font-medium">a partir de um material</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P10 DETALHE + REENVIO ────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P10</span>
+      <div>
+        <h3 class="font-bold text-lg">Enviar atividade já cadastrada</h3>
+        <p class="text-sm text-neutral-600">Detalhe da atividade com o histórico de quem já fez, e o modal de reenvio com seleção múltipla — inclusive para quem já fez antes (reforço). <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-80</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-121</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-122</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="users" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="pencil" class="w-4 h-4"></i> Atividades</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8 relative">
+        <!-- conteúdo por trás -->
+        <p class="text-xs text-neutral-400 mb-3 font-medium">Atividades / <span class="text-neutral-700">Travel vocabulary — Unit 7</span></p>
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-extrabold text-neutral-900">Travel vocabulary — Unit 7</h2>
+            <div class="flex gap-1.5 mt-2">
+              <span class="bg-violet-200 text-violet-900 text-xs font-extrabold px-2.5 py-1 rounded-full">B1</span>
+              <span class="bg-white text-neutral-600 text-xs font-bold px-2.5 py-1 rounded-full">10 questões</span>
+              <span class="bg-white text-neutral-600 text-xs font-bold px-2.5 py-1 rounded-full">Leitura · Vocabulário</span>
+              <span class="bg-white text-neutral-600 text-xs font-bold px-2.5 py-1 rounded-full">criada em 20/07</span>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button class="bg-white text-sm font-bold rounded-full px-4 py-2.5 flex items-center gap-1.5"><i data-lucide="copy" class="w-4 h-4"></i> Duplicar</button>
+            <button class="bg-white text-sm font-bold rounded-full px-4 py-2.5 flex items-center gap-1.5"><i data-lucide="pencil" class="w-4 h-4"></i> Editar</button>
+            <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-5 py-2.5 flex items-center gap-1.5"><i data-lucide="send" class="w-4 h-4"></i> Enviar para aluno</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mt-5">
+          <div class="bg-white rounded-3xl p-5"><p class="text-2xl font-extrabold text-neutral-900">6</p><p class="text-xs text-neutral-500 font-semibold mt-1">envios</p></div>
+          <div class="bg-emerald-100 rounded-3xl p-5"><p class="text-2xl font-extrabold text-neutral-900">78%</p><p class="text-xs text-emerald-700 font-semibold mt-1">média de acertos</p></div>
+          <div class="bg-amber-100 rounded-3xl p-5"><p class="text-sm font-extrabold text-neutral-900 leading-tight mt-1">Q4 e Q8</p><p class="text-xs text-amber-700 font-semibold mt-1">questões que mais erram</p></div>
+        </div>
+        <h4 class="text-sm font-bold text-neutral-900 mt-6 mb-2 flex items-center gap-1.5"><i data-lucide="history" class="w-4 h-4"></i> Quem já fez</h4>
+        <div class="bg-white rounded-3xl divide-y divide-neutral-100 text-sm max-w-3xl">
+          <div class="px-5 py-3.5 flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-sky-200 text-sky-800 grid place-items-center text-xs font-extrabold">J</span><span class="flex-1 font-bold text-neutral-800">Júlia Santos</span><span class="text-xs text-neutral-400 font-medium">ontem</span><span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">8/10</span></div>
+          <div class="px-5 py-3.5 flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-violet-200 text-violet-800 grid place-items-center text-xs font-extrabold">C</span><span class="flex-1 font-bold text-neutral-800">Carla Reis</span><span class="text-xs text-neutral-400 font-medium">há 4 dias</span><span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">9/10</span></div>
+          <div class="px-5 py-3.5 flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-amber-200 text-amber-800 grid place-items-center text-xs font-extrabold">M</span><span class="flex-1 font-bold text-neutral-800">Marcos Lima</span><span class="text-xs text-neutral-400 font-medium">enviada há 2 dias</span><span class="bg-neutral-100 text-neutral-500 text-xs font-bold px-2.5 py-1 rounded-full">pendente</span></div>
+        </div>
+        <!-- overlay do modal -->
+        <div class="absolute inset-0 bg-neutral-900/60 rounded-[2rem] grid place-items-center">
+          <div class="bg-white rounded-3xl shadow-2xl w-[440px] p-7">
+            <div class="flex items-start justify-between">
+              <div>
+                <h4 class="font-extrabold text-neutral-900 text-lg">Enviar atividade</h4>
+                <p class="text-sm text-neutral-500">Travel vocabulary — Unit 7 · B1</p>
+              </div>
+              <i data-lucide="x" class="w-5 h-5 text-neutral-400"></i>
+            </div>
+            <div class="bg-emerald-100 rounded-2xl px-4 py-2.5 mt-4 flex items-center gap-2 text-xs text-emerald-900 font-semibold">
+              <i data-lucide="zap" class="w-4 h-4 shrink-0"></i> Reenvio não consome cota de geração
+            </div>
+            <p class="text-xs font-bold text-neutral-600 mt-4 mb-2">Escolha os alunos</p>
+            <div class="bg-neutral-100 rounded-full px-4 py-2.5 text-sm text-neutral-400 flex items-center gap-2 mb-2"><i data-lucide="search" class="w-4 h-4"></i> Buscar aluno…</div>
+            <div class="space-y-1.5 max-h-52 overflow-hidden">
+              <div class="bg-neutral-900 rounded-2xl px-4 py-2.5 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-amber-300 text-neutral-900 grid place-items-center text-xs font-extrabold">M</span>
+                <span class="flex-1 text-sm font-bold text-white">Marcos Lima <span class="text-neutral-400 font-medium">· A2</span></span>
+                <span class="w-5 h-5 rounded-full bg-white grid place-items-center"><i data-lucide="check" class="w-3.5 h-3.5 text-neutral-900"></i></span>
+              </div>
+              <div class="bg-neutral-900 rounded-2xl px-4 py-2.5 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-xs font-extrabold">B</span>
+                <span class="flex-1 text-sm font-bold text-white">Beatriz Nunes <span class="text-neutral-400 font-medium">· B2</span></span>
+                <span class="w-5 h-5 rounded-full bg-white grid place-items-center"><i data-lucide="check" class="w-3.5 h-3.5 text-neutral-900"></i></span>
+              </div>
+              <div class="bg-neutral-100 rounded-2xl px-4 py-2.5 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-sky-200 text-sky-800 grid place-items-center text-xs font-extrabold">J</span>
+                <span class="flex-1 text-sm font-bold text-neutral-700">Júlia Santos <span class="text-neutral-400 font-medium">· B1</span></span>
+                <span class="bg-amber-200 text-amber-900 text-[10px] font-extrabold px-2 py-1 rounded-full">já fez · 8/10</span>
+              </div>
+              <div class="bg-neutral-100 rounded-2xl px-4 py-2.5 flex items-center gap-3">
+                <span class="w-7 h-7 rounded-full bg-violet-200 text-violet-800 grid place-items-center text-xs font-extrabold">P</span>
+                <span class="flex-1 text-sm font-bold text-neutral-700">Pedro Alves <span class="text-neutral-400 font-medium">· A2</span></span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 mt-4">
+              <div class="bg-neutral-100 rounded-2xl px-4 py-2.5 text-sm font-medium text-neutral-700 flex items-center gap-2 flex-1"><i data-lucide="calendar" class="w-4 h-4 text-neutral-400"></i> Prazo: 30/07</div>
+              <div class="bg-neutral-100 rounded-2xl px-4 py-2.5 text-sm font-medium text-neutral-700 flex items-center gap-2 flex-1"><i data-lucide="milestone" class="w-4 h-4 text-neutral-400"></i> Sem trilha</div>
+            </div>
+            <button class="w-full bg-neutral-900 text-white font-extrabold rounded-full py-3.5 mt-4 flex items-center justify-center gap-2"><i data-lucide="send" class="w-4 h-4"></i> Enviar para 2 alunos</button>
+            <p class="text-xs text-neutral-400 text-center mt-3 font-medium">Cada aluno recebe um link próprio</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TRILHAS                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="trilhas" class="space-y-20">
+  <div>
+    <h2 class="text-2xl font-extrabold text-neutral-900">Trilhas</h2>
+    <p class="text-neutral-600 mt-1">Uma trilha é uma sequência ordenada de atividades que você já tem na biblioteca. O aluno avança etapa por etapa — e o professor para de ter que lembrar de mandar a próxima lição.</p>
+  </div>
+
+  <!-- ── P11 TRILHAS (LISTA) ──────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P11</span>
+      <div>
+        <h3 class="font-bold text-lg">Trilhas — lista</h3>
+        <p class="text-sm text-neutral-600">Cada trilha mostra quantas etapas tem e quais alunos estão nela, com o progresso de cada um. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-130</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-136</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="users" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="pencil" class="w-4 h-4"></i> Atividades</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <div class="flex items-center justify-between">
+          <h2 class="text-2xl font-extrabold text-neutral-900">Atividades</h2>
+          <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-5 py-3 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova trilha</button>
+        </div>
+        <div class="flex gap-1.5 mt-4 text-sm font-bold">
+          <span class="text-neutral-500 rounded-full px-4 py-2">Minhas atividades <span class="text-neutral-400 font-semibold">24</span></span>
+          <span class="text-neutral-500 rounded-full px-4 py-2">Rascunhos <span class="text-neutral-400 font-semibold">3</span></span>
+          <span class="bg-neutral-900 text-white rounded-full px-4 py-2 flex items-center gap-1.5"><i data-lucide="milestone" class="w-4 h-4"></i> Trilhas <span class="text-neutral-400 font-semibold">4</span></span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-5">
+          <!-- trilha 1 -->
+          <div class="bg-violet-200 rounded-3xl p-6">
+            <div class="flex items-start justify-between">
+              <span class="w-10 h-10 rounded-2xl bg-white grid place-items-center text-violet-700"><i data-lucide="plane" class="w-5 h-5"></i></span>
+              <span class="bg-white/70 text-violet-900 text-xs font-extrabold px-2.5 py-1 rounded-full">B1</span>
+            </div>
+            <h4 class="font-extrabold text-neutral-900 text-lg mt-3">Inglês para viagem</h4>
+            <p class="text-sm text-violet-900/70 font-medium">6 etapas · ~48 min no total</p>
+            <div class="flex items-center gap-2 mt-4">
+              <div class="flex -space-x-2">
+                <span class="w-7 h-7 rounded-full bg-sky-300 border-2 border-violet-200 grid place-items-center text-[10px] font-extrabold text-sky-900">J</span>
+                <span class="w-7 h-7 rounded-full bg-amber-300 border-2 border-violet-200 grid place-items-center text-[10px] font-extrabold text-amber-900">M</span>
+                <span class="w-7 h-7 rounded-full bg-pink-300 border-2 border-violet-200 grid place-items-center text-[10px] font-extrabold text-pink-900">B</span>
+              </div>
+              <span class="text-xs font-bold text-violet-900">3 alunos nesta trilha</span>
+            </div>
+            <div class="bg-white/60 rounded-2xl p-3 mt-4 space-y-2">
+              <div class="flex items-center gap-2 text-xs"><span class="w-16 font-bold text-violet-900">Júlia</span><div class="flex-1 bg-white rounded-full h-2 overflow-hidden"><div class="bg-violet-600 h-full" style="width:66%"></div></div><span class="font-extrabold text-violet-900">4/6</span></div>
+              <div class="flex items-center gap-2 text-xs"><span class="w-16 font-bold text-violet-900">Marcos</span><div class="flex-1 bg-white rounded-full h-2 overflow-hidden"><div class="bg-violet-600 h-full" style="width:33%"></div></div><span class="font-extrabold text-violet-900">2/6</span></div>
+              <div class="flex items-center gap-2 text-xs"><span class="w-16 font-bold text-violet-900">Beatriz</span><div class="flex-1 bg-white rounded-full h-2 overflow-hidden"><div class="bg-violet-600 h-full" style="width:16%"></div></div><span class="font-extrabold text-violet-900">1/6</span></div>
+            </div>
+            <button class="bg-neutral-900 text-white text-xs font-bold rounded-full px-5 py-2.5 mt-4">Abrir trilha</button>
+          </div>
+          <!-- trilha 2 -->
+          <div class="bg-white rounded-3xl p-6">
+            <div class="flex items-start justify-between">
+              <span class="w-10 h-10 rounded-2xl bg-emerald-100 grid place-items-center text-emerald-700"><i data-lucide="briefcase" class="w-5 h-5"></i></span>
+              <span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">B2</span>
+            </div>
+            <h4 class="font-extrabold text-neutral-900 text-lg mt-3">Business English — básico</h4>
+            <p class="text-sm text-neutral-400 font-medium">8 etapas · ~1h10 no total</p>
+            <div class="flex items-center gap-2 mt-4">
+              <div class="flex -space-x-2">
+                <span class="w-7 h-7 rounded-full bg-violet-300 border-2 border-white grid place-items-center text-[10px] font-extrabold text-violet-900">C</span>
+                <span class="w-7 h-7 rounded-full bg-pink-300 border-2 border-white grid place-items-center text-[10px] font-extrabold text-pink-900">B</span>
+              </div>
+              <span class="text-xs font-bold text-neutral-500">2 alunos nesta trilha</span>
+            </div>
+            <div class="bg-neutral-50 rounded-2xl p-3 mt-4 space-y-2">
+              <div class="flex items-center gap-2 text-xs"><span class="w-16 font-bold text-neutral-700">Carla</span><div class="flex-1 bg-neutral-200 rounded-full h-2 overflow-hidden"><div class="bg-emerald-500 h-full" style="width:87%"></div></div><span class="font-extrabold text-neutral-700">7/8</span></div>
+              <div class="flex items-center gap-2 text-xs"><span class="w-16 font-bold text-neutral-700">Beatriz</span><div class="flex-1 bg-neutral-200 rounded-full h-2 overflow-hidden"><div class="bg-emerald-500 h-full" style="width:25%"></div></div><span class="font-extrabold text-neutral-700">2/8</span></div>
+            </div>
+            <button class="bg-neutral-900 text-white text-xs font-bold rounded-full px-5 py-2.5 mt-4">Abrir trilha</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P12 MONTAR TRILHA ────────────────────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P12</span>
+      <div>
+        <h3 class="font-bold text-lg">Montar trilha</h3>
+        <p class="text-sm text-neutral-600">Biblioteca à esquerda, trilha à direita. Arrasta a atividade para a sequência — nada é criado do zero aqui. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-131</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-132</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-133</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="users" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="milestone" class="w-4 h-4"></i> Trilha</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <div class="flex items-start justify-between mb-5">
+          <div>
+            <h2 class="text-xl font-extrabold text-neutral-900 flex items-center gap-2">Inglês para viagem <i data-lucide="pencil" class="w-4 h-4 text-neutral-300"></i></h2>
+            <p class="text-sm text-neutral-500">6 etapas · nível B1 · <span class="text-emerald-700 font-medium">rascunho salvo</span></p>
+          </div>
+          <div class="flex gap-2">
+            <button class="bg-white text-sm font-bold rounded-full px-4 py-2.5 flex items-center gap-1.5"><i data-lucide="eye" class="w-4 h-4"></i> Ver como aluno</button>
+            <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-5 py-2.5 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i> Atribuir a alunos</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-5 gap-5">
+          <!-- biblioteca -->
+          <div class="col-span-2">
+            <h4 class="text-sm font-bold text-neutral-900 mb-2 flex items-center gap-1.5"><i data-lucide="library" class="w-4 h-4"></i> Suas atividades</h4>
+            <div class="bg-white rounded-full px-4 py-2.5 text-sm text-neutral-400 flex items-center gap-2 mb-2"><i data-lucide="search" class="w-4 h-4"></i> Buscar…</div>
+            <div class="space-y-2">
+              <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-3">
+                <i data-lucide="grip-vertical" class="w-4 h-4 text-neutral-300 shrink-0"></i>
+                <span class="w-8 h-8 rounded-xl bg-pink-100 grid place-items-center text-pink-700 shrink-0"><i data-lucide="message-square" class="w-4 h-4"></i></span>
+                <div class="flex-1 min-w-0"><p class="text-sm font-bold text-neutral-800 truncate">Job interview — phrasal verbs</p><p class="text-xs text-neutral-400 font-medium">B2 · 12 questões</p></div>
+                <button class="bg-neutral-100 rounded-full w-7 h-7 grid place-items-center text-neutral-600 shrink-0"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+              </div>
+              <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-3">
+                <i data-lucide="grip-vertical" class="w-4 h-4 text-neutral-300 shrink-0"></i>
+                <span class="w-8 h-8 rounded-xl bg-emerald-100 grid place-items-center text-emerald-700 shrink-0"><i data-lucide="utensils" class="w-4 h-4"></i></span>
+                <div class="flex-1 min-w-0"><p class="text-sm font-bold text-neutral-800 truncate">Food vocabulary quiz</p><p class="text-xs text-neutral-400 font-medium">A1 · 10 questões</p></div>
+                <button class="bg-neutral-100 rounded-full w-7 h-7 grid place-items-center text-neutral-600 shrink-0"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+              </div>
+              <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 opacity-40">
+                <i data-lucide="grip-vertical" class="w-4 h-4 text-neutral-300 shrink-0"></i>
+                <span class="w-8 h-8 rounded-xl bg-violet-100 grid place-items-center text-violet-700 shrink-0"><i data-lucide="book-open" class="w-4 h-4"></i></span>
+                <div class="flex-1 min-w-0"><p class="text-sm font-bold text-neutral-800 truncate">Travel vocabulary — Unit 7</p><p class="text-xs text-neutral-400 font-medium">já está na trilha</p></div>
+                <i data-lucide="check" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+              </div>
+              <div class="border-2 border-dashed border-neutral-300 rounded-2xl px-4 py-3 flex items-center gap-2 text-neutral-500">
+                <i data-lucide="sparkles" class="w-4 h-4"></i><span class="text-sm font-bold">Gerar nova para esta trilha</span>
+              </div>
+            </div>
+          </div>
+          <!-- sequência -->
+          <div class="col-span-3">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-sm font-bold text-neutral-900 flex items-center gap-1.5"><i data-lucide="milestone" class="w-4 h-4"></i> Sequência da trilha</h4>
+              <span class="bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full px-3 py-1.5 flex items-center gap-1.5"><i data-lucide="unlock" class="w-3.5 h-3.5"></i> Todas liberadas para o aluno</span>
+            </div>
+            <div class="bg-white rounded-3xl p-5">
+              <!-- etapa 1 -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-violet-300 grid place-items-center text-xs font-extrabold text-violet-900">1</span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+                </div>
+                <div class="flex-1 bg-neutral-50 rounded-2xl px-4 py-3 mb-2 flex items-center gap-3">
+                  <div class="flex-1"><p class="text-sm font-bold text-neutral-800">Travel vocabulary — Unit 7</p><p class="text-xs text-neutral-400 font-medium">B1 · 10 questões · Leitura</p></div>
+                  <i data-lucide="grip-vertical" class="w-4 h-4 text-neutral-300"></i>
+                  <i data-lucide="x" class="w-4 h-4 text-neutral-300"></i>
+                </div>
+              </div>
+              <!-- etapa 2 -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-violet-300 grid place-items-center text-xs font-extrabold text-violet-900">2</span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+                </div>
+                <div class="flex-1 bg-neutral-50 rounded-2xl px-4 py-3 mb-2 flex items-center gap-3">
+                  <div class="flex-1"><p class="text-sm font-bold text-neutral-800">Listening — At the airport</p><p class="text-xs text-neutral-400 font-medium">B1 · 8 questões · Listening</p></div>
+                  <i data-lucide="grip-vertical" class="w-4 h-4 text-neutral-300"></i>
+                  <i data-lucide="x" class="w-4 h-4 text-neutral-300"></i>
+                </div>
+              </div>
+              <!-- etapa 3 sendo arrastada -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-neutral-900 grid place-items-center text-xs font-extrabold text-white">3</span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+                </div>
+                <div class="flex-1 border-2 border-dashed border-violet-400 bg-violet-50 rounded-2xl px-4 py-3 mb-2 flex items-center gap-3">
+                  <div class="flex-1"><p class="text-sm font-bold text-violet-900">Solte aqui para inserir a etapa 3</p><p class="text-xs text-violet-500 font-medium">as etapas seguintes são renumeradas</p></div>
+                  <i data-lucide="move-vertical" class="w-4 h-4 text-violet-400"></i>
+                </div>
+              </div>
+              <!-- etapa 4 -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-violet-300 grid place-items-center text-xs font-extrabold text-violet-900">4</span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+                </div>
+                <div class="flex-1 bg-neutral-50 rounded-2xl px-4 py-3 mb-2 flex items-center gap-3">
+                  <div class="flex-1"><p class="text-sm font-bold text-neutral-800">Hotel check-in — role play</p><p class="text-xs text-neutral-400 font-medium">B1 · 8 questões · Escrita</p></div>
+                  <i data-lucide="grip-vertical" class="w-4 h-4 text-neutral-300"></i>
+                  <i data-lucide="x" class="w-4 h-4 text-neutral-300"></i>
+                </div>
+              </div>
+              <!-- etapa 5 -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-violet-300 grid place-items-center text-xs font-extrabold text-violet-900">5</span>
+                </div>
+                <div class="flex-1 bg-neutral-50 rounded-2xl px-4 py-3 flex items-center gap-3">
+                  <div class="flex-1"><p class="text-sm font-bold text-neutral-800">Asking for directions</p><p class="text-xs text-neutral-400 font-medium">B1 · 12 questões · Vocabulário</p></div>
+                  <i data-lucide="grip-vertical" class="w-4 h-4 text-neutral-300"></i>
+                  <i data-lucide="x" class="w-4 h-4 text-neutral-300"></i>
+                </div>
+              </div>
+            </div>
+            <div class="bg-amber-100 rounded-2xl px-4 py-3 mt-3 flex gap-2.5 text-xs text-amber-900">
+              <i data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5 text-amber-700"></i>
+              <span><b>A ordem é um roteiro, não uma trava.</b> O aluno recebe a trilha inteira liberada e faz uma etapa por vez, na ordem sugerida — mas pode emendar tudo numa sentada ou pular uma etapa se quiser. Você não precisa liberar nada.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── P13 TRILHA DO ALUNO (PROFESSOR) ──────────────────────── -->
+  <div>
+    <div class="mb-4 flex items-start gap-3">
+      <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">P13</span>
+      <div>
+        <h3 class="font-bold text-lg">Trilha na ficha do aluno</h3>
+        <p class="text-sm text-neutral-600">O professor acompanha onde a aluna está — mas não controla o avanço: as etapas 5 e 6 já estão disponíveis para ela. Layout mais próximo da referência "My Learning Plan". <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-136</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-137</span></p>
+      </div>
+    </div>
+    <div class="bg-neutral-950 rounded-[2.5rem] p-3 shadow-2xl">
+      <div class="flex items-center justify-between px-5 py-3 text-white">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+          <span class="font-extrabold">MegaInglês</span>
+        </div>
+        <nav class="flex items-center gap-1.5">
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="sun" class="w-4 h-4"></i></span>
+          <span class="bg-white/15 rounded-full px-4 py-2 text-sm font-semibold flex items-center gap-2"><i data-lucide="users" class="w-4 h-4"></i> Alunos</span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="pencil" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="calendar" class="w-4 h-4"></i></span>
+          <span class="rounded-full p-2.5 text-neutral-400"><i data-lucide="wallet" class="w-4 h-4"></i></span>
+        </nav>
+        <span class="w-8 h-8 rounded-full bg-pink-300 text-neutral-900 grid place-items-center text-sm font-extrabold">A</span>
+      </div>
+      <div class="bg-[#F6F4EF] rounded-[2rem] p-8">
+        <p class="text-xs text-neutral-400 mb-3 font-medium">Alunos / Júlia Santos / <span class="text-neutral-700">Trilha</span></p>
+        <div class="flex items-center gap-4">
+          <span class="w-12 h-12 rounded-3xl bg-sky-200 text-sky-800 grid place-items-center font-extrabold">J</span>
+          <div class="flex-1">
+            <h2 class="text-xl font-extrabold text-neutral-900">Inglês para viagem</h2>
+            <p class="text-sm text-neutral-500">Júlia Santos · etapa 4 de 6 · começou em 02/07</p>
+          </div>
+          <div class="bg-white rounded-3xl px-5 py-3 text-center"><p class="text-xl font-extrabold text-neutral-900">66%</p><p class="text-xs text-neutral-500 font-semibold">concluído</p></div>
+          <button class="bg-neutral-900 text-white text-sm font-bold rounded-full px-5 py-3 flex items-center gap-2"><i data-lucide="message-circle" class="w-4 h-4"></i> Falar com a Júlia</button>
+        </div>
+        <div class="grid grid-cols-3 gap-5 mt-6">
+          <!-- coluna trilha -->
+          <div class="col-span-2 bg-white rounded-3xl p-6">
+            <!-- etapa 1 concluída -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center shrink-0">
+                <span class="w-8 h-8 rounded-full bg-emerald-300 grid place-items-center text-emerald-900"><i data-lucide="check" class="w-4 h-4"></i></span>
+                <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+              </div>
+              <div class="flex-1 pb-4">
+                <div class="flex items-center gap-2">
+                  <p class="font-bold text-neutral-800">Travel vocabulary — Unit 7</p>
+                  <span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">8/10</span>
+                </div>
+                <p class="text-xs text-neutral-400 font-medium mt-0.5">Concluída em 05/07 · 7 min</p>
+              </div>
+            </div>
+            <!-- etapa 2 concluída -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center shrink-0">
+                <span class="w-8 h-8 rounded-full bg-emerald-300 grid place-items-center text-emerald-900"><i data-lucide="check" class="w-4 h-4"></i></span>
+                <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+              </div>
+              <div class="flex-1 pb-4">
+                <div class="flex items-center gap-2">
+                  <p class="font-bold text-neutral-800">Listening — At the airport</p>
+                  <span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">7/8</span>
+                </div>
+                <p class="text-xs text-neutral-400 font-medium mt-0.5">Concluída em 12/07 · 9 min</p>
+              </div>
+            </div>
+            <!-- etapa 3 concluída com nota baixa -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center shrink-0">
+                <span class="w-8 h-8 rounded-full bg-amber-300 grid place-items-center text-amber-900"><i data-lucide="check" class="w-4 h-4"></i></span>
+                <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+              </div>
+              <div class="flex-1 pb-4">
+                <div class="flex items-center gap-2">
+                  <p class="font-bold text-neutral-800">Past simple — irregular verbs</p>
+                  <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full">6/10</span>
+                </div>
+                <p class="text-xs text-neutral-400 font-medium mt-0.5">Concluída em 19/07 · sugerido reforço</p>
+              </div>
+            </div>
+            <!-- etapa 4 atual -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center shrink-0">
+                <span class="w-8 h-8 rounded-full bg-neutral-900 grid place-items-center text-white"><i data-lucide="play" class="w-3.5 h-3.5"></i></span>
+                <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+              </div>
+              <div class="flex-1 pb-4">
+                <div class="bg-violet-200 rounded-3xl p-5 relative overflow-hidden">
+                  <span class="absolute -top-8 -right-8 w-24 h-24 bg-violet-300/60 rounded-full"></span>
+                  <span class="bg-white text-violet-900 text-xs font-extrabold px-2.5 py-1 rounded-full relative">ETAPA ATUAL</span>
+                  <p class="font-extrabold text-neutral-900 text-lg mt-2 relative">Hotel check-in — role play</p>
+                  <p class="text-xs text-violet-900/70 font-medium relative">B1 · 8 questões · enviada há 2 dias · não iniciada</p>
+                  <div class="flex gap-2 mt-3 relative">
+                    <button class="bg-neutral-900 text-white text-xs font-bold rounded-full px-4 py-2 flex items-center gap-1.5"><i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Cobrar no WhatsApp</button>
+                    <button class="bg-white/70 text-neutral-800 text-xs font-bold rounded-full px-4 py-2">Ver atividade</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- etapa 5 disponível -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center shrink-0">
+                <span class="w-8 h-8 rounded-full bg-white border-2 border-neutral-200 grid place-items-center text-xs font-extrabold text-neutral-400">5</span>
+                <span class="flex-1 border-l-2 border-dashed border-neutral-200 my-1"></span>
+              </div>
+              <div class="flex-1 pb-4">
+                <p class="font-bold text-neutral-500">Asking for directions</p>
+                <p class="text-xs text-neutral-400 font-medium mt-0.5">B1 · 12 questões · disponível, não iniciada</p>
+              </div>
+            </div>
+            <!-- etapa 6 disponível -->
+            <div class="flex gap-4">
+              <div class="flex flex-col items-center shrink-0">
+                <span class="w-8 h-8 rounded-full bg-amber-100 grid place-items-center text-amber-700"><i data-lucide="trophy" class="w-3.5 h-3.5"></i></span>
+              </div>
+              <div class="flex-1">
+                <p class="font-bold text-neutral-500">Travel — revisão final</p>
+                <p class="text-xs text-neutral-400 font-medium mt-0.5">B1 · 15 questões · disponível, não iniciada</p>
+              </div>
+            </div>
+          </div>
+          <!-- coluna lateral -->
+          <div class="space-y-4">
+            <div class="bg-amber-100 rounded-3xl p-5">
+              <h4 class="text-sm font-extrabold text-amber-900 flex items-center gap-1.5"><i data-lucide="alert-triangle" class="w-4 h-4"></i> Atenção</h4>
+              <p class="text-xs text-amber-900 mt-2">A etapa atual está parada há 2 dias. A Júlia costuma responder no mesmo dia.</p>
+            </div>
+            <div class="bg-white rounded-3xl p-5">
+              <h4 class="text-sm font-extrabold text-neutral-900 flex items-center gap-1.5"><i data-lucide="trending-up" class="w-4 h-4"></i> Desempenho na trilha</h4>
+              <p class="text-3xl font-extrabold text-neutral-900 mt-2">77%</p>
+              <p class="text-xs text-neutral-500 font-medium">média das 3 etapas concluídas</p>
+              <div class="border-t border-neutral-100 mt-3 pt-3">
+                <p class="text-xs font-bold text-neutral-600">Ponto fraco recorrente</p>
+                <p class="text-xs text-neutral-500 mt-1">Past simple de verbos irregulares</p>
+                <button class="bg-neutral-900 text-white text-xs font-bold rounded-full px-4 py-2 mt-3 w-full flex items-center justify-center gap-1.5"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Gerar reforço</button>
+              </div>
+            </div>
+            <div class="bg-white rounded-3xl p-5">
+              <h4 class="text-sm font-extrabold text-neutral-900 flex items-center gap-1.5"><i data-lucide="settings" class="w-4 h-4"></i> Ajustes da trilha</h4>
+              <div class="space-y-2 mt-3 text-xs font-bold text-neutral-600">
+                <p class="flex items-center gap-2"><i data-lucide="plus" class="w-3.5 h-3.5 text-neutral-400"></i> Adicionar etapa à trilha</p>
+                <p class="flex items-center gap-2"><i data-lucide="pause" class="w-3.5 h-3.5 text-neutral-400"></i> Pausar trilha da Júlia</p>
+                <p class="flex items-center gap-2"><i data-lucide="repeat" class="w-3.5 h-3.5 text-neutral-400"></i> Reenviar etapa 3</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- FLUXO DO ALUNO                                                  -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="aluno" class="space-y-20">
+  <div>
+    <h2 class="text-2xl font-extrabold text-neutral-900">Fluxo do aluno</h2>
+    <p class="text-neutral-600 mt-1">Mobile-first, uma questão por tela, zero cadastro obrigatório. A2 mostra os dois estados de feedback (acerto e erro).</p>
+  </div>
+
+  <div class="flex flex-wrap gap-10 items-start">
+
+    <!-- ── A1 ABERTURA DO LINK ─────────────────────────────────── -->
+    <div>
+      <div class="mb-4 max-w-[340px]">
+        <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">A1</span>
+        <h3 class="font-bold mt-2">Abertura do link</h3>
+        <p class="text-sm text-neutral-600">Nome do professor em destaque no bloco lilás; primeiro nome já lembrado. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-20/21</span></p>
+      </div>
+      <div class="w-[340px] bg-neutral-950 rounded-[2.8rem] p-[10px] shadow-xl">
+        <div class="bg-[#F6F4EF] rounded-[2.2rem] overflow-hidden">
+          <div class="h-7 flex justify-center items-end pb-1"><span class="w-24 h-4 bg-neutral-950 rounded-full"></span></div>
+          <div class="bg-violet-200 px-6 pt-8 pb-14 text-center relative overflow-hidden">
+            <span class="absolute -top-6 -right-6 w-24 h-24 bg-violet-300/60 rounded-full"></span>
+            <span class="absolute top-16 -left-8 w-20 h-20 bg-white/40 rounded-full"></span>
+            <span class="w-16 h-16 rounded-3xl bg-white grid place-items-center text-2xl font-extrabold text-violet-700 mx-auto relative">A</span>
+            <p class="text-violet-900 text-sm mt-3 relative">A <b>teacher Ana</b> enviou<br>uma tarefa para você</p>
+          </div>
+          <div class="px-6 -mt-8 pb-8">
+            <div class="bg-white rounded-3xl shadow-lg p-6 text-center relative">
+              <h4 class="font-extrabold text-neutral-900 text-lg">Travel vocabulary</h4>
+              <div class="flex justify-center gap-1.5 mt-2">
+                <span class="bg-neutral-100 text-neutral-600 text-xs font-bold px-2.5 py-1 rounded-full">10 questões</span>
+                <span class="bg-neutral-100 text-neutral-600 text-xs font-bold px-2.5 py-1 rounded-full">~8 min</span>
+                <span class="bg-violet-200 text-violet-900 text-xs font-extrabold px-2.5 py-1 rounded-full">B1</span>
+              </div>
+              <div class="mt-4 text-left">
+                <label class="text-xs font-bold text-neutral-600">Seu primeiro nome</label>
+                <div class="bg-neutral-100 rounded-2xl px-4 py-3 text-sm font-bold text-neutral-900 mt-1 flex justify-between items-center">Júlia <span class="text-xs text-emerald-700 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> lembrado</span></div>
+              </div>
+              <button class="w-full bg-neutral-900 text-white font-extrabold rounded-full py-3.5 mt-4 text-base flex items-center justify-center gap-2"><i data-lucide="play" class="w-4 h-4"></i> Começar</button>
+              <p class="text-xs text-neutral-400 mt-3 font-medium">Sem cadastro, sem instalar nada</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── A2a QUESTÃO — ACERTO ────────────────────────────────── -->
+    <div>
+      <div class="mb-4 max-w-[340px]">
+        <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">A2</span>
+        <h3 class="font-bold mt-2">Questão — estado de acerto</h3>
+        <p class="text-sm text-neutral-600">Progresso no topo, chip de sequência com chama, feedback em card menta. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-83/84</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-87</span></p>
+      </div>
+      <div class="w-[340px] bg-neutral-950 rounded-[2.8rem] p-[10px] shadow-xl">
+        <div class="bg-[#F6F4EF] rounded-[2.2rem] overflow-hidden">
+          <div class="h-7 flex justify-center items-end pb-1"><span class="w-24 h-4 bg-neutral-950 rounded-full"></span></div>
+          <div class="px-5 pt-3 pb-8">
+            <div class="flex items-center gap-3">
+              <i data-lucide="x" class="w-4 h-4 text-neutral-400"></i>
+              <div class="flex-1 bg-white rounded-full h-3 overflow-hidden"><div class="bg-violet-400 h-full rounded-full" style="width:30%"></div></div>
+              <span class="bg-amber-200 text-amber-900 text-xs font-extrabold px-2.5 py-1.5 rounded-full flex items-center gap-1"><i data-lucide="flame" class="w-3.5 h-3.5"></i> 2</span>
+            </div>
+            <p class="text-xs text-neutral-400 mt-2 font-bold">Questão 3 de 10</p>
+            <h4 class="font-extrabold text-neutral-900 text-lg mt-4 leading-snug">Last summer, we ______ to Portugal for two weeks.</h4>
+            <div class="space-y-2.5 mt-5">
+              <div class="bg-white rounded-2xl px-4 py-3.5 text-sm font-bold text-neutral-600">go</div>
+              <div class="bg-emerald-200 rounded-2xl px-4 py-3.5 text-sm font-extrabold text-emerald-950 flex justify-between items-center">went <span class="w-5 h-5 rounded-full bg-white grid place-items-center"><i data-lucide="check" class="w-3.5 h-3.5 text-emerald-700"></i></span></div>
+              <div class="bg-white rounded-2xl px-4 py-3.5 text-sm font-bold text-neutral-600">gone</div>
+              <div class="bg-white rounded-2xl px-4 py-3.5 text-sm font-bold text-neutral-600">going</div>
+            </div>
+            <div class="bg-emerald-100 rounded-2xl px-4 py-3 mt-4 flex gap-2.5">
+              <span class="w-6 h-6 rounded-full bg-white grid place-items-center shrink-0"><i data-lucide="party-popper" class="w-3.5 h-3.5 text-emerald-700"></i></span>
+              <div>
+                <p class="text-sm font-extrabold text-emerald-900">Boa!</p>
+                <p class="text-xs text-emerald-800 mt-0.5">"went" é o passado de "go" — ação concluída no passado.</p>
+              </div>
+            </div>
+            <button class="w-full bg-neutral-900 text-white font-extrabold rounded-full py-3.5 mt-4 flex items-center justify-center gap-2">Próxima <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── A2b QUESTÃO — ERRO ──────────────────────────────────── -->
+    <div>
+      <div class="mb-4 max-w-[340px]">
+        <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">A2</span>
+        <h3 class="font-bold mt-2">Questão — estado de erro</h3>
+        <p class="text-sm text-neutral-600">Mostra a correta e explica em português. O tom nunca é punitivo. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-66</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-84</span></p>
+      </div>
+      <div class="w-[340px] bg-neutral-950 rounded-[2.8rem] p-[10px] shadow-xl">
+        <div class="bg-[#F6F4EF] rounded-[2.2rem] overflow-hidden">
+          <div class="h-7 flex justify-center items-end pb-1"><span class="w-24 h-4 bg-neutral-950 rounded-full"></span></div>
+          <div class="px-5 pt-3 pb-8">
+            <div class="flex items-center gap-3">
+              <i data-lucide="x" class="w-4 h-4 text-neutral-400"></i>
+              <div class="flex-1 bg-white rounded-full h-3 overflow-hidden"><div class="bg-violet-400 h-full rounded-full" style="width:40%"></div></div>
+              <span class="bg-white text-neutral-400 text-xs font-extrabold px-2.5 py-1.5 rounded-full flex items-center gap-1"><i data-lucide="flame" class="w-3.5 h-3.5"></i> 0</span>
+            </div>
+            <p class="text-xs text-neutral-400 mt-2 font-bold">Questão 4 de 10</p>
+            <h4 class="font-extrabold text-neutral-900 text-lg mt-4 leading-snug">Complete:</h4>
+            <p class="text-neutral-700 mt-2 text-base font-medium">They ______ <span class="text-neutral-400 text-sm">(not / visit)</span> the museum because it was closed.</p>
+            <div class="space-y-2.5 mt-5">
+              <div class="bg-rose-200 rounded-2xl px-4 py-3.5 text-sm font-extrabold text-rose-950 flex justify-between items-center">didn't visited <span class="w-5 h-5 rounded-full bg-white grid place-items-center"><i data-lucide="x" class="w-3.5 h-3.5 text-rose-600"></i></span></div>
+              <div class="bg-emerald-100 rounded-2xl px-4 py-3.5 text-sm font-bold text-emerald-900 flex justify-between items-center">didn't visit <span class="text-xs font-semibold">correta</span></div>
+              <div class="bg-white rounded-2xl px-4 py-3.5 text-sm font-bold text-neutral-600">not visited</div>
+            </div>
+            <div class="bg-rose-100 rounded-2xl px-4 py-3 mt-4 flex gap-2.5">
+              <span class="w-6 h-6 rounded-full bg-white grid place-items-center shrink-0"><i data-lucide="lightbulb" class="w-3.5 h-3.5 text-rose-600"></i></span>
+              <div>
+                <p class="text-sm font-extrabold text-rose-900">Quase!</p>
+                <p class="text-xs text-rose-800 mt-0.5">Depois de "didn't", o verbo fica no infinitivo sem "to": <b>didn't visit</b>.</p>
+              </div>
+            </div>
+            <button class="w-full bg-neutral-900 text-white font-extrabold rounded-full py-3.5 mt-4 flex items-center justify-center gap-2">Entendi, próxima <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── A3 TELA FINAL ───────────────────────────────────────── -->
+    <div>
+      <div class="mb-4 max-w-[340px]">
+        <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">A3</span>
+        <h3 class="font-bold mt-2">Tela final</h3>
+        <p class="text-sm text-neutral-600">Celebração com formas pastel + refazer só os erros. Confirma que o professor já recebeu. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-86</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-92</span></p>
+      </div>
+      <div class="w-[340px] bg-neutral-950 rounded-[2.8rem] p-[10px] shadow-xl">
+        <div class="bg-[#F6F4EF] rounded-[2.2rem] overflow-hidden relative">
+          <span class="absolute top-10 -left-8 w-24 h-24 bg-violet-200 rounded-full"></span>
+          <span class="absolute top-24 -right-10 w-28 h-28 bg-emerald-100 rounded-full"></span>
+          <span class="absolute top-56 left-6 w-10 h-10 bg-amber-200 rounded-full"></span>
+          <div class="h-7 flex justify-center items-end pb-1 relative"><span class="w-24 h-4 bg-neutral-950 rounded-full"></span></div>
+          <div class="px-6 pt-10 pb-8 text-center relative">
+            <span class="w-16 h-16 rounded-3xl bg-emerald-200 grid place-items-center mx-auto"><i data-lucide="party-popper" class="w-7 h-7 text-emerald-800"></i></span>
+            <p class="text-5xl font-extrabold text-neutral-900 mt-5">8<span class="text-neutral-300 text-3xl">/10</span></p>
+            <p class="font-extrabold text-neutral-900 mt-2 text-lg">Mandou bem, Júlia!</p>
+            <div class="flex justify-center gap-2.5 mt-5">
+              <div class="bg-white rounded-2xl px-4 py-3"><i data-lucide="clock" class="w-3.5 h-3.5 mx-auto text-neutral-400"></i><p class="font-extrabold text-neutral-900 text-sm mt-1">7 min</p></div>
+              <div class="bg-amber-100 rounded-2xl px-4 py-3"><i data-lucide="flame" class="w-3.5 h-3.5 mx-auto text-amber-700"></i><p class="font-extrabold text-amber-900 text-sm mt-1">5 seguidas</p></div>
+              <div class="bg-emerald-100 rounded-2xl px-4 py-3"><i data-lucide="trending-up" class="w-3.5 h-3.5 mx-auto text-emerald-700"></i><p class="font-extrabold text-emerald-900 text-sm mt-1">82% no mês</p></div>
+            </div>
+            <button class="w-full bg-neutral-900 text-white font-extrabold rounded-full py-3.5 mt-6 flex items-center justify-center gap-2"><i data-lucide="rotate-ccw" class="w-4 h-4"></i> Refazer os 2 erros</button>
+            <button class="w-full text-neutral-500 font-bold rounded-full py-3 mt-1 text-sm">Concluir</button>
+            <p class="text-xs text-emerald-700 font-semibold mt-3 flex items-center justify-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> A teacher Ana já recebeu seu resultado</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── A4 CONVITE DE CADASTRO ──────────────────────────────── -->
+    <div>
+      <div class="mb-4 max-w-[340px]">
+        <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">A4</span>
+        <h3 class="font-bold mt-2">Convite de cadastro</h3>
+        <p class="text-sm text-neutral-600">Aberto pelo link único gerado na ficha (P3). O aluno define o próprio e-mail; o histórico é mantido. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-22/23/24</span></p>
+      </div>
+      <div class="w-[340px] bg-neutral-950 rounded-[2.8rem] p-[10px] shadow-xl">
+        <div class="bg-[#F6F4EF] rounded-[2.2rem] overflow-hidden">
+          <div class="h-7 flex justify-center items-end pb-1"><span class="w-24 h-4 bg-neutral-950 rounded-full"></span></div>
+          <div class="px-6 pt-8 pb-8">
+            <div class="text-center">
+              <span class="w-14 h-14 rounded-3xl bg-violet-200 text-violet-800 grid place-items-center text-xl font-extrabold mx-auto">A</span>
+              <p class="text-sm text-neutral-500 mt-2 font-medium">Convite da <b class="text-neutral-900">teacher Ana</b></p>
+              <h4 class="font-extrabold text-neutral-900 text-xl mt-1">Crie sua conta, Júlia</h4>
+            </div>
+            <div class="bg-white rounded-3xl p-5 mt-5 space-y-3 text-sm">
+              <p class="flex items-center gap-2.5 font-medium text-neutral-700"><span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center shrink-0"><i data-lucide="check" class="w-3.5 h-3.5"></i></span> Todas as suas tarefas em um lugar</p>
+              <p class="flex items-center gap-2.5 font-medium text-neutral-700"><span class="w-7 h-7 rounded-full bg-violet-200 text-violet-700 grid place-items-center shrink-0"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i></span> Seu progresso e histórico completo</p>
+              <p class="flex items-center gap-2.5 font-medium text-neutral-700"><span class="w-7 h-7 rounded-full bg-amber-100 text-amber-700 grid place-items-center shrink-0"><i data-lucide="bell" class="w-3.5 h-3.5"></i></span> Lembretes de tarefas com prazo</p>
+            </div>
+            <label class="text-xs font-bold text-neutral-600 block mt-5">Seu e-mail</label>
+            <div class="bg-white rounded-2xl px-4 py-3 text-sm text-neutral-400 mt-1 flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"></i> julia.s@email.com</div>
+            <button class="w-full bg-neutral-900 text-white font-extrabold rounded-full py-3.5 mt-4">Criar minha conta</button>
+            <p class="text-xs text-neutral-400 text-center mt-3 font-medium">Link de uso único · expira em 7 dias<br>Seu histórico com a teacher Ana será mantido</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── A5 PAINEL DO ALUNO ──────────────────────────────────── -->
+    <div>
+      <div class="mb-4 max-w-[340px]">
+        <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">A5</span>
+        <h3 class="font-bold mt-2">Painel do aluno (logado)</h3>
+        <p class="text-sm text-neutral-600">A tarefa pendente é o card preto de destaque; histórico em cards brancos. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-28</span></p>
+      </div>
+      <div class="w-[340px] bg-neutral-950 rounded-[2.8rem] p-[10px] shadow-xl">
+        <div class="bg-[#F6F4EF] rounded-[2.2rem] overflow-hidden">
+          <div class="h-7 flex justify-center items-end pb-1"><span class="w-24 h-4 bg-neutral-950 rounded-full"></span></div>
+          <div class="px-5 pt-4 pb-8">
+            <div class="flex items-center justify-between">
+              <div><h4 class="font-extrabold text-neutral-900 text-lg">Oi, Júlia</h4><p class="text-xs text-neutral-500 font-medium">com a teacher Ana</p></div>
+              <span class="bg-amber-200 text-amber-900 text-xs font-extrabold px-3 py-2 rounded-full flex items-center gap-1"><i data-lucide="flame" class="w-3.5 h-3.5"></i> 4 dias</span>
+            </div>
+            <p class="text-xs font-extrabold text-neutral-400 uppercase tracking-wider mt-6 mb-2">Para fazer</p>
+            <div class="bg-neutral-900 rounded-3xl p-5 text-white relative overflow-hidden">
+              <span class="absolute -top-6 -right-6 w-20 h-20 bg-violet-500/30 rounded-full"></span>
+              <p class="font-extrabold relative">Listening — At the airport</p>
+              <p class="text-xs text-neutral-400 mt-1 flex items-center gap-1.5 relative"><i data-lucide="clock" class="w-3.5 h-3.5"></i> 8 questões · prazo amanhã</p>
+              <button class="bg-white text-neutral-900 text-sm font-extrabold rounded-full px-5 py-2.5 mt-4 flex items-center gap-1.5 relative"><i data-lucide="play" class="w-3.5 h-3.5"></i> Começar</button>
+            </div>
+            <p class="text-xs font-extrabold text-neutral-400 uppercase tracking-wider mt-6 mb-2">Concluídas</p>
+            <div class="space-y-2 text-sm">
+              <div class="bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between"><span class="font-bold text-neutral-800">Travel vocabulary</span><span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">8/10</span></div>
+              <div class="bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between"><span class="font-bold text-neutral-800">Past simple — irregular verbs</span><span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full">6/10</span></div>
+              <div class="bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between"><span class="font-bold text-neutral-800">Food vocabulary quiz</span><span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">9/10</span></div>
+            </div>
+            <div class="bg-violet-200 rounded-3xl px-5 py-4 mt-5">
+              <p class="text-xs text-violet-900 font-bold mb-2 flex items-center gap-1.5"><i data-lucide="trending-up" class="w-3.5 h-3.5"></i> Seu mês: 84% de acerto</p>
+              <div class="bg-white/60 rounded-full h-2.5 overflow-hidden"><div class="bg-violet-600 h-full rounded-full" style="width:84%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── A6 TRILHA DO ALUNO ──────────────────────────────────── -->
+    <div>
+      <div class="mb-4 max-w-[340px]">
+        <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">A6</span>
+        <h3 class="font-bold mt-2">Trilha — visão do aluno</h3>
+        <p class="text-sm text-neutral-600"><b>Nada é bloqueado.</b> A etapa atual fica em destaque, mas todas as seguintes estão disponíveis — o aluno pode emendar a trilha inteira numa sentada. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-132</span> <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-138</span></p>
+      </div>
+      <div class="w-[340px] bg-neutral-950 rounded-[2.8rem] p-[10px] shadow-xl">
+        <div class="bg-[#F6F4EF] rounded-[2.2rem] overflow-hidden">
+          <div class="h-7 flex justify-center items-end pb-1"><span class="w-24 h-4 bg-neutral-950 rounded-full"></span></div>
+          <div class="px-5 pt-4 pb-8">
+            <div class="flex items-center gap-2">
+              <i data-lucide="chevron-left" class="w-5 h-5 text-neutral-400"></i>
+              <span class="text-sm font-bold text-neutral-500">Minha trilha</span>
+            </div>
+            <!-- cabeçalho da trilha -->
+            <div class="bg-violet-200 rounded-3xl p-5 mt-3 relative overflow-hidden">
+              <span class="absolute -top-8 -right-6 w-24 h-24 bg-violet-300/60 rounded-full"></span>
+              <span class="w-10 h-10 rounded-2xl bg-white grid place-items-center text-violet-700 relative"><i data-lucide="plane" class="w-5 h-5"></i></span>
+              <h4 class="font-extrabold text-neutral-900 text-lg mt-2 relative">Inglês para viagem</h4>
+              <p class="text-xs text-violet-900/70 font-semibold relative">com a teacher Ana · nível B1</p>
+              <div class="flex items-center gap-2 mt-3 relative">
+                <div class="flex-1 bg-white/60 rounded-full h-2.5 overflow-hidden"><div class="bg-violet-600 h-full rounded-full" style="width:50%"></div></div>
+                <span class="text-xs font-extrabold text-violet-900">3/6</span>
+              </div>
+              <p class="text-xs font-semibold text-violet-900/70 mt-2 flex items-center gap-1.5 relative"><i data-lucide="unlock" class="w-3.5 h-3.5"></i> Todas as etapas liberadas — faça no seu ritmo</p>
+            </div>
+            <!-- etapas -->
+            <div class="mt-5">
+              <!-- 1 -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-emerald-300 grid place-items-center text-emerald-900"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-300 my-1"></span>
+                </div>
+                <div class="flex-1 pb-2.5">
+                  <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-2">
+                    <div class="flex-1"><p class="text-sm font-bold text-neutral-800">Travel vocabulary</p><p class="text-xs text-neutral-400 font-medium">concluída</p></div>
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">8/10</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 2 -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-emerald-300 grid place-items-center text-emerald-900"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-300 my-1"></span>
+                </div>
+                <div class="flex-1 pb-2.5">
+                  <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-2">
+                    <div class="flex-1"><p class="text-sm font-bold text-neutral-800">At the airport</p><p class="text-xs text-neutral-400 font-medium">concluída</p></div>
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-extrabold px-2.5 py-1 rounded-full">7/8</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 3 -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-amber-300 grid place-items-center text-amber-900"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-300 my-1"></span>
+                </div>
+                <div class="flex-1 pb-2.5">
+                  <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-2">
+                    <div class="flex-1"><p class="text-sm font-bold text-neutral-800">Irregular verbs</p><p class="text-xs text-amber-700 font-semibold">dá pra melhorar — refazer?</p></div>
+                    <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded-full">6/10</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 4 atual -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-neutral-900 grid place-items-center text-white"><i data-lucide="play" class="w-3 h-3"></i></span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-300 my-1"></span>
+                </div>
+                <div class="flex-1 pb-2.5">
+                  <div class="bg-neutral-900 rounded-3xl p-5 text-white relative overflow-hidden">
+                    <span class="absolute -top-6 -right-6 w-20 h-20 bg-violet-500/30 rounded-full"></span>
+                    <span class="bg-white/15 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full relative">SUA VEZ</span>
+                    <p class="font-extrabold text-base mt-2 relative">Hotel check-in</p>
+                    <p class="text-xs text-neutral-400 font-medium mt-0.5 flex items-center gap-1.5 relative"><i data-lucide="clock" class="w-3.5 h-3.5"></i> 8 questões · ~6 min</p>
+                    <button class="bg-white text-neutral-900 text-sm font-extrabold rounded-full px-5 py-2.5 mt-3 flex items-center gap-1.5 relative"><i data-lucide="play" class="w-3.5 h-3.5"></i> Começar</button>
+                  </div>
+                </div>
+              </div>
+              <!-- 5 disponível -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-white border-2 border-neutral-200 grid place-items-center text-xs font-extrabold text-neutral-400">5</span>
+                  <span class="flex-1 border-l-2 border-dashed border-neutral-300 my-1"></span>
+                </div>
+                <div class="flex-1 pb-2.5">
+                  <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-2">
+                    <div class="flex-1"><p class="text-sm font-bold text-neutral-800">Asking for directions</p><p class="text-xs text-neutral-400 font-medium">12 questões · ~9 min</p></div>
+                    <span class="bg-neutral-100 text-neutral-600 text-xs font-extrabold px-3 py-1.5 rounded-full">Fazer</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 6 disponível (última) -->
+              <div class="flex gap-3">
+                <div class="flex flex-col items-center shrink-0">
+                  <span class="w-7 h-7 rounded-full bg-amber-200 grid place-items-center text-amber-800"><i data-lucide="trophy" class="w-3 h-3"></i></span>
+                </div>
+                <div class="flex-1">
+                  <div class="bg-white rounded-2xl px-4 py-3 flex items-center gap-2">
+                    <div class="flex-1"><p class="text-sm font-bold text-neutral-800">Revisão final</p><p class="text-xs text-neutral-400 font-medium">última etapa · 15 questões</p></div>
+                    <span class="bg-neutral-100 text-neutral-600 text-xs font-extrabold px-3 py-1.5 rounded-full">Fazer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── A7 FIM DE ETAPA DENTRO DA TRILHA ────────────────────── -->
+    <div>
+      <div class="mb-4 max-w-[340px]">
+        <span class="bg-neutral-900 text-white text-sm font-bold px-3 py-1 rounded-lg">A7</span>
+        <h3 class="font-bold mt-2">Fim de etapa (dentro da trilha)</h3>
+        <p class="text-sm text-neutral-600">Variante do A3 quando a atividade faz parte de uma trilha. A ação principal é <b>continuar</b> — é isso que permite fazer a trilha inteira de uma vez. <span class="font-mono text-xs bg-slate-300 px-1.5 py-0.5 rounded">RF-139</span></p>
+      </div>
+      <div class="w-[340px] bg-neutral-950 rounded-[2.8rem] p-[10px] shadow-xl">
+        <div class="bg-[#F6F4EF] rounded-[2.2rem] overflow-hidden relative">
+          <span class="absolute top-12 -left-8 w-24 h-24 bg-violet-200 rounded-full"></span>
+          <span class="absolute top-28 -right-10 w-28 h-28 bg-emerald-100 rounded-full"></span>
+          <div class="h-7 flex justify-center items-end pb-1 relative"><span class="w-24 h-4 bg-neutral-950 rounded-full"></span></div>
+          <div class="px-6 pt-8 pb-8 text-center relative">
+            <span class="w-14 h-14 rounded-3xl bg-emerald-200 grid place-items-center mx-auto"><i data-lucide="party-popper" class="w-6 h-6 text-emerald-800"></i></span>
+            <p class="text-4xl font-extrabold text-neutral-900 mt-4">7<span class="text-neutral-300 text-2xl">/8</span></p>
+            <p class="font-extrabold text-neutral-900 mt-1">Etapa 4 concluída!</p>
+            <!-- progresso da trilha -->
+            <div class="bg-white rounded-3xl p-4 mt-5 text-left">
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-2xl bg-violet-200 grid place-items-center text-violet-700 shrink-0"><i data-lucide="plane" class="w-4 h-4"></i></span>
+                <div class="flex-1 min-w-0"><p class="text-xs font-extrabold text-neutral-900 truncate">Inglês para viagem</p><p class="text-xs text-neutral-400 font-medium">faltam 2 etapas</p></div>
+                <span class="text-xs font-extrabold text-violet-700">4/6</span>
+              </div>
+              <div class="flex gap-1 mt-3">
+                <span class="flex-1 h-2 rounded-full bg-emerald-400"></span>
+                <span class="flex-1 h-2 rounded-full bg-emerald-400"></span>
+                <span class="flex-1 h-2 rounded-full bg-amber-300"></span>
+                <span class="flex-1 h-2 rounded-full bg-emerald-400"></span>
+                <span class="flex-1 h-2 rounded-full bg-neutral-200"></span>
+                <span class="flex-1 h-2 rounded-full bg-neutral-200"></span>
+              </div>
+            </div>
+            <!-- próxima etapa: ação principal -->
+            <div class="bg-neutral-900 rounded-3xl p-4 mt-3 text-left relative overflow-hidden">
+              <span class="absolute -top-6 -right-6 w-20 h-20 bg-violet-500/30 rounded-full"></span>
+              <p class="text-[10px] font-extrabold text-neutral-400 relative">PRÓXIMA ETAPA</p>
+              <p class="font-extrabold text-white text-sm mt-0.5 relative">Asking for directions</p>
+              <p class="text-xs text-neutral-400 font-medium mt-0.5 flex items-center gap-1.5 relative"><i data-lucide="clock" class="w-3.5 h-3.5"></i> 12 questões · ~9 min</p>
+              <button class="w-full bg-white text-neutral-900 font-extrabold rounded-full py-3 mt-3 flex items-center justify-center gap-2 relative"><i data-lucide="arrow-right" class="w-4 h-4"></i> Continuar agora</button>
+            </div>
+            <button class="w-full text-neutral-500 font-bold rounded-full py-3 mt-1 text-sm">Parar por aqui</button>
+            <p class="text-xs text-neutral-400 font-medium">Você pode voltar quando quiser</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="text-center text-sm text-slate-500 pb-4">
+  MegaInglês · mockups v0.2 · estático (HTML + Tailwind + Lucide) — nada aqui funciona de verdade.<br>
+  Documentos: PRD.md · FLUXOS.md
+</footer>
+
+</main>
+<script>lucide.createIcons();</script>
+</body>
+</html>

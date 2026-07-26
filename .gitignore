@@ -1,0 +1,29 @@
+# Dependências e build
+node_modules/
+dist/
+dist-ssr/
+
+# Ambiente — a anon key vive no host, nunca no repositório
+.env
+.env.*
+!.env.example
+*.local
+
+# Supabase CLI (estado local do link — contém a connection string do banco)
+**/supabase/.temp/
+.branches/
+
+# Claude Code
+.claude/settings.local.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Editores / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
