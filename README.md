@@ -1,4 +1,4 @@
-# MegaInglês
+# Vocab Node
 
 Plataforma para professores autônomos de inglês: gestão de alunos e aulas, atividades interativas geradas por IA a partir do material da aula, e trilhas de estudo.
 

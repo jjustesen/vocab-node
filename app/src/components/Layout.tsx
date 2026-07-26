@@ -39,7 +39,7 @@ export function Layout() {
             <span className="grid h-8 w-8 place-items-center rounded-2xl bg-violet-300 text-neutral-900">
               <GraduationCap className="h-5 w-5" />
             </span>
-            <span className="hidden font-extrabold sm:inline">MegaInglês</span>
+            <span className="hidden font-extrabold sm:inline">Vocab Node</span>
           </div>
 
           <nav className="flex min-w-0 flex-1 items-center justify-center gap-0.5 overflow-x-auto">

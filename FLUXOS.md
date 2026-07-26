@@ -1,4 +1,4 @@
-# MegaInglês — Fluxos de Tela (v0.1)
+# Vocab Node — Fluxos de Tela (v0.1)
 
 Complementa o [PRD.md](PRD.md). Os mockups visuais estão em [mockups.html](mockups.html).
 

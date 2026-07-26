@@ -50,7 +50,7 @@ export function LoginPage() {
           <span className="grid h-9 w-9 place-items-center rounded-2xl bg-violet-300 text-neutral-900">
             <GraduationCap className="h-5 w-5" />
           </span>
-          <span className="text-lg font-extrabold">MegaInglês</span>
+          <span className="text-lg font-extrabold">Vocab Node</span>
         </div>
 
         <form

@@ -1,4 +1,4 @@
-# MegaInglês — Documento de Requisitos (PRD)
+# Vocab Node — Documento de Requisitos (PRD)
 
 **Versão:** 0.1 (rascunho para validação)
 **Data:** 25/07/2026
@@ -441,7 +441,7 @@ Regra de acesso que decorre disso: **o RLS serve apenas ao professor. Todo acess
 1. Preço do plano pago — pesquisar disposição a pagar com 10 professores.
 2. Teto de custo por atividade — os R$ 0,40 foram estimados com outra tabela de preços; as medições reais (texto: US$ 0,0062; foto: US$ 0,0095) sugerem folga, mas rode o conjunto de avaliação completo (docs/PROMPT-GERACAO.md §6) antes de fechar o número.
 3. Speaking (RF-64) é o principal diferencial pedagógico — vale antecipar para o MVP se o custo permitir?
-4. Nome do produto (o diretório está como "MegaIngles" — placeholder).
+4. Nome do produto (o diretório está como "Vocab Node" — placeholder).
 
 ---
 
