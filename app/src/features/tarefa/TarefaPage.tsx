@@ -328,7 +328,11 @@ function TelaIntro({ dados, aoComecar }: { dados: TarefaObterResposta; aoComecar
         </div>
 
         <div className="px-5">
-          <div className="-mt-8 rounded-3xl bg-white p-6 text-center shadow-lg">
+          {/* `relative` é o que faz o card aparecer POR CIMA do lilás. Sem ele o
+              card é estático, o bloco lilás acima é posicionado, e elemento
+              posicionado pinta sobre estático mesmo vindo antes no DOM — os
+              32px de -mt-8 continuam existindo, só ficam escondidos. */}
+          <div className="relative -mt-8 rounded-3xl bg-white p-6 text-center shadow-lg">
             <h1 className="text-lg font-extrabold text-neutral-900">{dados.atividade.titulo}</h1>
             <div className="mt-2 flex justify-center gap-1.5">
               <Chip>
