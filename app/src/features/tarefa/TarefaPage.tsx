@@ -311,10 +311,10 @@ function TelaIntro({ dados, aoComecar }: { dados: TarefaObterResposta; aoComecar
   return (
     <div className="min-h-dvh bg-areia pb-10">
       <div className="mx-auto max-w-sm">
-        {/* Sem arredondar a base: o card branco sobe só 32px (-mt-8) sobre este
-            bloco, e qualquer raio maior que isso curva o lilás justamente na
-            faixa onde o card se apoia, descolando os cantos superiores dele. */}
-        <div className="relative overflow-hidden bg-violet-200 px-6 pb-14 pt-10 text-center">
+        {/* Raio de 32px na base — igual à sobreposição do card (-mt-8), que é o
+            máximo que cabe: acima disso a curva sobe além da faixa coberta pelo
+            card e abre falhas de fundo areia ao lado dos cantos dele. */}
+        <div className="relative overflow-hidden rounded-b-[2rem] bg-violet-200 px-6 pb-14 pt-10 text-center">
           <span className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-300/60" />
           <span className="absolute -left-8 top-16 h-20 w-20 rounded-full bg-white/40" />
           <span className="relative mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-white text-2xl font-extrabold text-violet-700">
