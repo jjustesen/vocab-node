@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { gerarTokenDeAcesso } from '@/lib/token'
 import { base64ParaBytes } from '@/lib/arquivo'
+import { chavesAlunos } from '@/features/alunos/api'
 import type { Atividade, AtividadeStatus, Aluno, QuestaoRow } from '@/types/db'
 import type { Questao } from '@/types/questao'
 
@@ -425,7 +426,18 @@ export function useEnviarAtividade(atividadeId: string) {
 
       return resultados
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: chavesAtividades.envios(atividadeId) }),
+    // Enviar mexe em duas árvores de cache, não uma: os envios da atividade e o
+    // histórico de cada aluno que recebeu. Invalidar só a primeira funcionava
+    // enquanto o envio começava sempre pela atividade; com o envio a partir da
+    // ficha do aluno, "Últimas atividades" ficava desatualizada na tela em que
+    // o professor acabou de clicar.
+    onSuccess: (_resultados, { alunos }) => {
+      qc.invalidateQueries({ queryKey: chavesAtividades.envios(atividadeId) })
+      qc.invalidateQueries({ queryKey: chavesAtividades.todas })
+      for (const aluno of alunos) {
+        qc.invalidateQueries({ queryKey: chavesAlunos.historico(aluno.id) })
+      }
+    },
   })
 }
 

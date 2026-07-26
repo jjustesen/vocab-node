@@ -168,7 +168,8 @@ export function EnvioModal({
   )
 }
 
-function LinkDoAluno({
+/** Também usado ao enviar da biblioteca pela ficha do aluno. */
+export function LinkDoAluno({
   resultado,
   atividadeTitulo,
 }: {

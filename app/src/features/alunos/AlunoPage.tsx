@@ -139,7 +139,7 @@ export function AlunoPage() {
               <Link2 className="h-4 w-4" /> Gerar link de cadastro
             </button>
           )}
-          <BotaoNovaAtividade compacto />
+          <BotaoNovaAtividade compacto aluno={aluno} />
           <button
             onClick={() => setMenuAberto((v) => !v)}
             className="grid h-9 w-9 place-items-center rounded-full border border-neutral-300 bg-white text-neutral-500"

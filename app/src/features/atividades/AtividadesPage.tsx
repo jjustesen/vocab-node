@@ -2,9 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   BookOpen,
-  Headphones,
   Loader2,
-  MessageSquare,
   Milestone,
   MoreHorizontal,
   Pencil,
@@ -13,38 +11,16 @@ import {
   Send,
   Sparkles,
   Target,
-  Type,
 } from 'lucide-react'
 import { BotaoNovaAtividade } from './BotaoNovaAtividade'
 import { EnvioModal } from './EnvioModal'
 import { useAtividades } from './api'
+import { CORES_NIVEL, visualDaHabilidade } from './visual-atividade'
 import { PainelTrilhas } from '@/features/trilhas/PainelTrilhas'
 import { useTrilhas } from '@/features/trilhas/api'
 import { Chip } from '@/components/Chip'
 import { ROTULO_HABILIDADE } from '@/types/questao'
 import type { AtividadeComEnvio } from './api'
-import type { LucideIcon } from 'lucide-react'
-
-const CORES_NIVEL: Record<string, string> = {
-  A1: 'bg-emerald-100 text-emerald-800',
-  A2: 'bg-amber-100 text-amber-800',
-  B1: 'bg-violet-200 text-violet-900',
-  B2: 'bg-pink-100 text-pink-800',
-  C1: 'bg-sky-100 text-sky-800',
-}
-
-/**
- * Ícone e cor por habilidade principal (a primeira marcada), para a biblioteca
- * ser varrida pelo olho em vez de lida card a card. Sem habilidade marcada
- * cai no livro neutro.
- */
-const VISUAL_HABILIDADE: Record<string, { Icone: LucideIcon; cor: string }> = {
-  leitura: { Icone: BookOpen, cor: 'bg-violet-100 text-violet-700' },
-  gramatica: { Icone: Type, cor: 'bg-amber-100 text-amber-700' },
-  listening: { Icone: Headphones, cor: 'bg-sky-100 text-sky-700' },
-  vocabulario: { Icone: Target, cor: 'bg-emerald-100 text-emerald-700' },
-  escrita: { Icone: MessageSquare, cor: 'bg-pink-100 text-pink-700' },
-}
 
 const GRUPOS_NIVEL = [
   { rotulo: 'Todos os níveis', niveis: [] as string[] },
@@ -247,10 +223,7 @@ function CartaoAtividade({ atividade }: { atividade: AtividadeComEnvio }) {
   const [menuAberto, setMenuAberto] = useState(false)
   const [envioAberto, setEnvioAberto] = useState(false)
 
-  const visual = VISUAL_HABILIDADE[atividade.habilidades[0]] ?? {
-    Icone: BookOpen,
-    cor: 'bg-neutral-100 text-neutral-600',
-  }
+  const visual = visualDaHabilidade(atividade.habilidades)
   const rotuloHabilidades = atividade.habilidades
     .map((h) => ROTULO_HABILIDADE[h as keyof typeof ROTULO_HABILIDADE] ?? h)
     .join(' · ')
