@@ -5,15 +5,19 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Copy,
   FileText,
   Link2,
   Loader2,
   Milestone,
   MoreHorizontal,
   Pencil,
+  RefreshCw,
   RotateCcw,
 } from 'lucide-react'
 import { BotaoNovaAtividade } from '@/features/atividades/BotaoNovaAtividade'
+import { useRegerarLinkDaTarefa } from '@/features/atividades/api'
+import { linkLembrado } from '@/lib/links-lembrados'
 import {
   useAluno,
   useAtualizarAluno,
@@ -371,6 +375,9 @@ export function AlunoPage() {
                   )}
                 </>
               )
+              // O botão de link só entra nas pendentes: numa tarefa já
+              // concluída a linha inteira é um atalho para o resultado, e
+              // reabrir o link só serviria para o aluno reler o gabarito.
               return h.concluidaEm ? (
                 <Link
                   key={h.atribuicaoId}
@@ -382,6 +389,7 @@ export function AlunoPage() {
               ) : (
                 <div key={h.atribuicaoId} className="flex items-center gap-3 px-5 py-3.5 text-sm">
                   {conteudo}
+                  <BotaoLinkDaTarefa atribuicaoId={h.atribuicaoId} alunoId={aluno.id} />
                 </div>
               )
             })}
@@ -456,6 +464,80 @@ function Painel({
       </h2>
       <div className="mt-2.5">{children}</div>
     </section>
+  )
+}
+
+/**
+ * Recupera o link de uma tarefa pendente.
+ *
+ * O rótulo muda conforme o que o botão realmente vai fazer, em vez de dizer
+ * sempre "copiar": o banco guarda só o hash do token (RNF-09), então o link
+ * original só existe se ESTE navegador presenciou o envio. Sem ele, a única
+ * saída é emitir outro — e isso derruba o anterior, que é o oposto de copiar.
+ * Por isso o segundo caminho pede confirmação antes.
+ */
+function BotaoLinkDaTarefa({ atribuicaoId, alunoId }: { atribuicaoId: string; alunoId: string }) {
+  const regerar = useRegerarLinkDaTarefa(alunoId)
+  const [link, setLink] = useState(() => linkLembrado(atribuicaoId))
+  const [copiado, setCopiado] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
+
+  async function copiar(valor: string) {
+    await navigator.clipboard.writeText(valor)
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2000)
+  }
+
+  if (link) {
+    return (
+      <button
+        onClick={() => copiar(link)}
+        title="Copiar o link enviado a este aluno"
+        className="flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-bold text-neutral-600 transition hover:bg-neutral-50"
+      >
+        {copiado ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+        {copiado ? 'Copiado' : 'Copiar link'}
+      </button>
+    )
+  }
+
+  if (confirmando) {
+    return (
+      <span className="flex shrink-0 items-center gap-1.5">
+        <span className="hidden text-xs font-medium text-neutral-400 sm:inline">
+          Derruba o link anterior.
+        </span>
+        <button
+          onClick={async () => {
+            const novo = await regerar.mutateAsync(atribuicaoId)
+            setLink(novo)
+            setConfirmando(false)
+            await copiar(novo)
+          }}
+          disabled={regerar.isPending}
+          className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+        >
+          {regerar.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          Confirmar
+        </button>
+        <button
+          onClick={() => setConfirmando(false)}
+          className="rounded-full px-2 py-1.5 text-xs font-bold text-neutral-500"
+        >
+          Cancelar
+        </button>
+      </span>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setConfirmando(true)}
+      title="Este navegador não guardou o link deste envio — só é possível emitir um novo"
+      className="flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-bold text-neutral-600 transition hover:bg-neutral-50"
+    >
+      <RefreshCw className="h-3.5 w-3.5" /> Gerar novo link
+    </button>
   )
 }
 

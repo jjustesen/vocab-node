@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { gerarTokenDeAcesso } from '@/lib/token'
 import { base64ParaBytes } from '@/lib/arquivo'
+import { lembrarToken } from '@/lib/links-lembrados'
 import { chavesAlunos } from '@/features/alunos/api'
 import type { Atividade, AtividadeStatus, Aluno, QuestaoRow } from '@/types/db'
 import type { Questao } from '@/types/questao'
@@ -412,15 +413,20 @@ export function useEnviarAtividade(atividadeId: string) {
 
         const { token, hash } = await gerarTokenDeAcesso()
 
-        const { error } = await supabase.from('atribuicoes').insert({
-          atividade_id: atividadeId,
-          aluno_id: aluno.id,
-          token_hash: hash,
-          tentativa: (count ?? 0) + 1,
-          prazo: prazo || null,
-        })
+        const { data: criada, error } = await supabase
+          .from('atribuicoes')
+          .insert({
+            atividade_id: atividadeId,
+            aluno_id: aluno.id,
+            token_hash: hash,
+            tentativa: (count ?? 0) + 1,
+            prazo: prazo || null,
+          })
+          .select('id')
+          .single()
         if (error) throw error
 
+        lembrarToken(criada.id, token)
         resultados.push({ aluno, link: `${window.location.origin}/t/${token}` })
       }
 
@@ -438,6 +444,33 @@ export function useEnviarAtividade(atividadeId: string) {
         qc.invalidateQueries({ queryKey: chavesAlunos.historico(aluno.id) })
       }
     },
+  })
+}
+
+/**
+ * Emite um token NOVO para uma atribuição que já existe e devolve o link.
+ *
+ * É o plano B de quando este navegador não tem o link guardado: como o banco só
+ * tem o hash, não dá para recuperar o original — dá para substituí-lo. Troca
+ * apenas o `token_hash`, então tentativa, respostas e progresso do aluno ficam
+ * de pé; o que morre é o link anterior, que passa a não casar com hash nenhum.
+ * Na prática é o RF-30 (revogar link) pela porta dos fundos.
+ */
+export function useRegerarLinkDaTarefa(alunoId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (atribuicaoId: string): Promise<string> => {
+      const { token, hash } = await gerarTokenDeAcesso()
+      const { error } = await supabase
+        .from('atribuicoes')
+        .update({ token_hash: hash })
+        .eq('id', atribuicaoId)
+      if (error) throw error
+
+      lembrarToken(atribuicaoId, token)
+      return `${window.location.origin}/t/${token}`
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesAlunos.historico(alunoId) }),
   })
 }
 

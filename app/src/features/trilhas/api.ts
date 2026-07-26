@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { gerarTokenDeAcesso } from '@/lib/token'
+import { lembrarToken } from '@/lib/links-lembrados'
 import type { Aluno, NivelCefr, Trilha, TrilhaAluno, TrilhaAlunoStatus, TrilhaEtapa } from '@/types/db'
 
 export const chavesTrilhas = {
@@ -494,14 +495,19 @@ export function useReenviarEtapa(trilhaId: string, alunoId: string) {
         .eq('aluno_id', alunoId)
 
       const { token, hash } = await gerarTokenDeAcesso()
-      const { error } = await supabase.from('atribuicoes').insert({
-        atividade_id: etapa.atividadeId,
-        aluno_id: alunoId,
-        trilha_etapa_id: etapa.etapaId,
-        token_hash: hash,
-        tentativa: (count ?? 0) + 1,
-      })
+      const { data: criada, error } = await supabase
+        .from('atribuicoes')
+        .insert({
+          atividade_id: etapa.atividadeId,
+          aluno_id: alunoId,
+          trilha_etapa_id: etapa.etapaId,
+          token_hash: hash,
+          tentativa: (count ?? 0) + 1,
+        })
+        .select('id')
+        .single()
       if (error) throw error
+      lembrarToken(criada.id, token)
       return `${window.location.origin}/t/${token}`
     },
     onSuccess: () => {
@@ -694,6 +700,7 @@ export function useAtribuirTrilha(trilhaId: string) {
 
       const links: LinkDaEtapa[] = []
       const linhas = []
+      const tokenPorChave = new Map<string, string>()
       for (const aluno of alunos) {
         for (const etapa of etapas) {
           const chave = `${etapa.atividade_id}|${aluno.id}`
@@ -701,6 +708,10 @@ export function useAtribuirTrilha(trilhaId: string) {
           tentativaPorPar.set(chave, tentativa)
 
           const { token, hash } = await gerarTokenDeAcesso()
+          // O insert é em lote, então os ids só aparecem depois. Guardamos o
+          // token pela chave única da tabela (atividade+aluno+tentativa) para
+          // casar com as linhas devolvidas — sem depender da ordem do retorno.
+          tokenPorChave.set(`${etapa.atividade_id}|${aluno.id}|${tentativa}`, token)
           linhas.push({
             atividade_id: etapa.atividade_id,
             aluno_id: aluno.id,
@@ -718,8 +729,16 @@ export function useAtribuirTrilha(trilhaId: string) {
         }
       }
 
-      const { error: erroInsert } = await supabase.from('atribuicoes').insert(linhas)
+      const { data: criadas, error: erroInsert } = await supabase
+        .from('atribuicoes')
+        .insert(linhas)
+        .select('id, atividade_id, aluno_id, tentativa')
       if (erroInsert) throw erroInsert
+
+      for (const c of criadas ?? []) {
+        const token = tokenPorChave.get(`${c.atividade_id}|${c.aluno_id}|${c.tentativa}`)
+        if (token) lembrarToken(c.id, token)
+      }
 
       // ignoreDuplicates: reatribuir a um aluno que já estava na trilha manda
       // as etapas de novo (nova tentativa) sem estourar o unique do vínculo.
