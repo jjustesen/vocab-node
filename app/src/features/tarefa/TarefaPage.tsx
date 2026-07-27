@@ -664,7 +664,7 @@ function TelaQuestao({
               já vêm misturadas em `opcoes`. */}
           {questao.tipo === 'ordenar_audio' && (
             <div className="space-y-3">
-              <BotaoOuvir frase={questao.resposta_correta} />
+              <BotaoOuvir frase={questao.resposta_correta} audioUrl={questao.audio_url} />
               <RespostaOrdenarPalavras questao={questao} feedback={feedback} aoResponder={aoResponder} />
             </div>
           )}

@@ -45,7 +45,7 @@ professor: nível CEFR, número de questões, habilidades e foco.
 8. Varie os tipos de questão ao longo da atividade. Não entregue dez
    múltiplas escolhas seguidas.
 
-8b. Use `pronuncia` e `ordenar_audio` com parcimônia: no máximo 2 de cada por
+8b. Use "pronuncia" e "ordenar_audio" com parcimônia: no máximo 2 de cada por
    atividade, e só quando o professor pedir as habilidades "fala" ou
    "listening". Cada uma custa uma geração de áudio ou uma chamada de
    avaliação a mais — não são intercambiáveis com os tipos de texto.

@@ -191,6 +191,8 @@ export type QuestaoRow = {
   respostas_aceitas: string[]
   pares: Par[] | null
   explicacao: string
+  /** TTS de `ordenar_audio`, gerado ao salvar. Nulo nos demais tipos, ou se a geração falhou. */
+  audio_path: string | null
 }
 
 export type Resposta = {

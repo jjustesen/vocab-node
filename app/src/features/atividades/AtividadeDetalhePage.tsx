@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Loader2, Pencil, Send } from 'lucide-react'
-import { useAtividade, useQuestoesDaAtividade, useEnviosDaAtividade } from './api'
+import { AlertTriangle, Loader2, Pencil, Send, Volume2 } from 'lucide-react'
+import { useAtividade, useQuestoesDaAtividade, useEnviosDaAtividade, useGerarAudioAtividade } from './api'
 import { EnvioModal } from './EnvioModal'
 import { EtiquetaTipo, QuestaoLeitura } from './QuestaoLeitura'
 import { ROTULO_HABILIDADE } from '@/types/questao'
@@ -13,6 +13,12 @@ export function AtividadeDetalhePage() {
   const { data: questoes, isLoading: carregandoQuestoes } = useQuestoesDaAtividade(id)
   const { data: envios } = useEnviosDaAtividade(id)
   const [modalAberto, setModalAberto] = useState(false)
+  const gerarAudio = useGerarAudioAtividade(id ?? '')
+
+  // A geração dispara sozinha ao salvar (gerarAudioSeNecessario em api.ts);
+  // isto é o retry para quando aquela chamada falhou — rede caiu, Gemini fora
+  // do ar — e sobrou ordenar_audio sem audio_path.
+  const semAudio = (questoes ?? []).filter((q) => q.tipo === 'ordenar_audio' && !q.audio_path)
 
   if (carregandoAtividade || carregandoQuestoes) {
     return (
@@ -74,6 +80,24 @@ export function AtividadeDetalhePage() {
           </button>
         </div>
       </div>
+
+      {semAudio.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3">
+          <p className="flex items-center gap-2 text-xs font-bold text-amber-900">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+            {semAudio.length} {semAudio.length === 1 ? 'questão' : 'questões'} de "ouvir e ordenar" sem áudio —
+            a geração falhou ao salvar.
+          </p>
+          <button
+            onClick={() => gerarAudio.mutate()}
+            disabled={gerarAudio.isPending}
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-amber-900 px-3.5 py-1.5 text-xs font-extrabold text-white disabled:opacity-50"
+          >
+            {gerarAudio.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Volume2 className="h-3.5 w-3.5" />}
+            Gerar áudio
+          </button>
+        </div>
+      )}
 
       {/* Questões à esquerda, envios numa coluna estreita à direita: a lista de
           alunos é curta e antes empurrava tudo para baixo de uma página inteira

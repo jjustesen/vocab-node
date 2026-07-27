@@ -24,6 +24,8 @@ export type QuestaoTarefa = {
   resposta_correta: string
   respostas_aceitas: string[]
   explicacao: string
+  /** URL assinada (1h) do TTS de `ordenar_audio`. Nulo nos outros tipos, ou se a geração falhou ao salvar. */
+  audio_url: string | null
   respondida: boolean
   resposta_dada: string | null
   correta: boolean | null

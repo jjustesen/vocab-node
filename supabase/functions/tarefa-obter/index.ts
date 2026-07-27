@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     db.from('atividades').select('titulo, nivel, professor_id').eq('id', atribuicao.atividade_id).single(),
     db
       .from('questoes')
-      .select('id, ordem, tipo, enunciado, opcoes, pares, resposta_correta, respostas_aceitas, explicacao')
+      .select('id, ordem, tipo, enunciado, opcoes, pares, resposta_correta, respostas_aceitas, explicacao, audio_path')
       .eq('atividade_id', atribuicao.atividade_id)
       .order('ordem'),
     db.from('respostas').select('questao_id, valor, correta').eq('atribuicao_id', atribuicao.id),
@@ -52,6 +52,19 @@ Deno.serve(async (req) => {
 
   const respostaPorQuestao = new Map((respostas ?? []).map((r) => [r.questao_id, r]))
 
+  // Assinatura em lote: uma chamada para todos os áudios da tarefa, não uma por
+  // questão — o aluno nunca fala com o Storage direto (RNF-10), então isto é o
+  // único jeito de ele tocar o áudio sem ver o bucket. 1h cobre com folga
+  // qualquer tarefa: a mais longa do produto é minutos, não horas.
+  const caminhosDeAudio = (questoesRaw ?? [])
+    .map((q) => q.audio_path)
+    .filter((p): p is string => Boolean(p))
+  const { data: assinadas } =
+    caminhosDeAudio.length > 0
+      ? await db.storage.from('audio-questoes').createSignedUrls(caminhosDeAudio, 3600)
+      : { data: [] as { path: string | null; signedUrl: string }[] | null }
+  const urlPorCaminho = new Map((assinadas ?? []).map((a) => [a.path, a.signedUrl]))
+
   const questoes = (questoesRaw ?? []).map((q) => {
     const dada = respostaPorQuestao.get(q.id)
     return {
@@ -64,6 +77,10 @@ Deno.serve(async (req) => {
       resposta_correta: q.resposta_correta,
       respostas_aceitas: q.respostas_aceitas,
       explicacao: q.explicacao,
+      // Nulo tanto quando a questão não é ordenar_audio quanto quando a
+      // geração de áudio falhou ao salvar — os dois casos tratados do mesmo
+      // jeito no cliente: sem URL, cai no fallback de texto.
+      audio_url: q.audio_path ? (urlPorCaminho.get(q.audio_path) ?? null) : null,
       respondida: Boolean(dada),
       resposta_dada: dada?.valor ?? null,
       correta: dada?.correta ?? null,

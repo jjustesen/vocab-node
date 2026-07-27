@@ -3,9 +3,28 @@ import { supabase } from '@/lib/supabase'
 import { gerarTokenDeAcesso } from '@/lib/token'
 import { base64ParaBytes } from '@/lib/arquivo'
 import { lembrarToken } from '@/lib/links-lembrados'
+import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
 import { chavesAlunos } from '@/features/alunos/api'
 import type { Atividade, AtividadeStatus, Aluno, QuestaoRow } from '@/types/db'
 import type { Questao } from '@/types/questao'
+
+/**
+ * Dispara `atividade-gerar-audio` quando a atividade tem questão
+ * `ordenar_audio` — é fire-and-forget de propósito: a atividade JÁ FOI salva
+ * com sucesso quando isto roda, e falha de TTS não pode derrubar esse
+ * resultado. A questão fica com `audio_path` nulo e o aluno cai no fallback
+ * de texto (ver RespostaOrdenarAudio); o professor pode gerar de novo depois
+ * pela ficha da atividade.
+ */
+async function gerarAudioSeNecessario(atividadeId: string, questoes: { tipo: string }[]): Promise<void> {
+  if (!questoes.some((q) => q.tipo === 'ordenar_audio')) return
+  try {
+    await supabase.functions.invoke('atividade-gerar-audio', { body: { atividade_id: atividadeId } })
+  } catch {
+    // Sem retry aqui — mesma lógica de tarefa-responder: falha silenciosa,
+    // recuperável depois, não vale travar a tela por causa dela.
+  }
+}
 
 export const chavesAtividades = {
   todas: ['atividades'] as const,
@@ -124,6 +143,27 @@ export function useAtividade(id: string | undefined) {
   })
 }
 
+/**
+ * Retry manual de `atividade-gerar-audio` — para quando o disparo automático
+ * de `gerarAudioSeNecessario` falhou ao salvar (rede caiu, Gemini fora do ar)
+ * e sobrou `ordenar_audio` sem áudio. A função só processa o que ainda tem
+ * `audio_path` nulo, então chamar de novo é seguro mesmo com questões que já
+ * geraram — não gasta chamada duplicada.
+ */
+export function useGerarAudioAtividade(atividadeId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (): Promise<{ gerados: number; falharam: number }> => {
+      const { data, error } = await supabase.functions.invoke('atividade-gerar-audio', {
+        body: { atividade_id: atividadeId },
+      })
+      if (error) throw new Error(await extrairMensagemDeErro(error))
+      return data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesAtividades.questoes(atividadeId) }),
+  })
+}
+
 export function useQuestoesDaAtividade(atividadeId: string | undefined) {
   return useQuery({
     queryKey: chavesAtividades.questoes(atividadeId!),
@@ -235,6 +275,7 @@ export function useCriarAtividade() {
         throw erroQuestoes
       }
 
+      await gerarAudioSeNecessario(atividade.id, linhas)
       return atividade
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: chavesAtividades.todas }),
@@ -324,6 +365,7 @@ export function useAtualizarAtividadeCompleta() {
       const { error: erroInsert } = await supabase.from('questoes').insert(linhas)
       if (erroInsert) throw erroInsert
 
+      await gerarAudioSeNecessario(id, linhas)
       return atividade
     },
     onSuccess: (atividade) => {

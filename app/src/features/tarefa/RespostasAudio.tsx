@@ -1,68 +1,60 @@
-import { useEffect, useState } from 'react'
-import { AlertTriangle, Volume2 } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { AlertTriangle, Loader2, Volume2 } from 'lucide-react'
 
 /**
- * Fala a frase com o sintetizador do próprio navegador.
+ * Toca o áudio pré-gerado da frase (TTS do Gemini, gerado quando o professor
+ * salva a atividade — ver `atividade-gerar-audio`).
  *
- * Decisão de 26/07/2026: não geramos nem guardamos áudio. A frase já viaja
- * para o cliente em `resposta_correta` (CONTRATO-QUESTOES.md §7), então o
- * `speechSynthesis` resolve sem bucket, sem TTS pago e sem URL assinada. O
- * preço é a voz variar por aparelho — e, em aparelho sem voz em inglês, não
- * haver voz nenhuma. Daí o caminho de degradação logo abaixo.
+ * Decisão de 26/07/2026, revertendo `speechSynthesis`: em teste real, boa
+ * parte dos aparelhos não tinha voz em inglês instalada, tornando o exercício
+ * impossível. Pré-gerar troca "às vezes funciona" por "sempre soa igual" — ao
+ * custo de uma chamada de TTS por questão, uma vez, no momento de salvar (não
+ * por aluno, não por tentativa).
+ *
+ * `audioUrl` nulo cobre os dois casos em que não há o que tocar — questão não
+ * é `ordenar_audio`, ou a geração falhou ao salvar — e os dois caem no mesmo
+ * fallback: revelar o texto em vez de tocar.
  */
-function vozEmIngles(): SpeechSynthesisVoice | null {
-  const vozes = window.speechSynthesis.getVoices()
-  return vozes.find((v) => v.lang?.toLowerCase().startsWith('en')) ?? null
-}
-
-export function BotaoOuvir({ frase }: { frase: string }) {
-  const [falando, setFalando] = useState(false)
-  const [semVoz, setSemVoz] = useState(false)
+export function BotaoOuvir({ frase, audioUrl }: { frase: string; audioUrl: string | null }) {
+  const [tocando, setTocando] = useState(false)
+  const [carregando, setCarregando] = useState(false)
+  const [falhou, setFalhou] = useState(false)
   const [revelada, setRevelada] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // A lista de vozes chega assíncrona no Chrome: na primeira renderização ela
-  // costuma vir vazia, e só depois de `voiceschanged` é que dá para saber se
-  // existe voz em inglês. Sem esperar por isso, todo aparelho parece "sem voz".
-  useEffect(() => {
-    if (!('speechSynthesis' in window)) {
-      setSemVoz(true)
-      return
-    }
-    const conferir = () => setSemVoz(window.speechSynthesis.getVoices().length > 0 && !vozEmIngles())
-    conferir()
-    window.speechSynthesis.addEventListener('voiceschanged', conferir)
-    return () => {
-      window.speechSynthesis.removeEventListener('voiceschanged', conferir)
-      window.speechSynthesis.cancel()
-    }
-  }, [])
+  function tocar() {
+    if (!audioUrl) return
+    if (!audioRef.current) audioRef.current = new Audio(audioUrl)
+    const audio = audioRef.current
 
-  function falar() {
-    if (!('speechSynthesis' in window)) return setSemVoz(true)
-    window.speechSynthesis.cancel()
-
-    const fala = new SpeechSynthesisUtterance(frase)
-    fala.lang = 'en-US'
-    // Um pouco mais devagar que o padrão: é material de estudo, e o aluno
-    // precisa distinguir palavra por palavra para conseguir ordenar.
-    fala.rate = 0.85
-    const voz = vozEmIngles()
-    if (voz) fala.voice = voz
-    fala.onstart = () => setFalando(true)
-    fala.onend = () => setFalando(false)
-    fala.onerror = () => {
-      setFalando(false)
-      setSemVoz(true)
+    audio.currentTime = 0
+    setCarregando(true)
+    audio.onplaying = () => {
+      setCarregando(false)
+      setTocando(true)
     }
-    window.speechSynthesis.speak(fala)
+    audio.onended = () => setTocando(false)
+    audio.onerror = () => {
+      // URL assinada expira em 1h (tarefa-obter) — se o aluno demorar mais que
+      // isso para chegar nesta questão, o áudio para de carregar. Cai no
+      // mesmo fallback de "geração falhou": não há diferença prática para o
+      // aluno entre os dois motivos.
+      setCarregando(false)
+      setTocando(false)
+      setFalhou(true)
+    }
+    audio.play().catch(() => {
+      setCarregando(false)
+      setFalhou(true)
+    })
   }
 
-  if (semVoz) {
+  if (!audioUrl || falhou) {
     return (
       <div className="rounded-2xl bg-amber-50 px-4 py-3">
         <p className="flex items-center gap-2 text-xs font-bold text-amber-900">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-          Este aparelho não tem voz em inglês instalada.
+          Não consegui carregar o áudio desta questão.
         </p>
         {/* Sem áudio o exercício seria impossível. Em vez de travar o aluno,
             viramos um "ordenar palavras" com a frase à vista — ele ainda
@@ -83,12 +75,16 @@ export function BotaoOuvir({ frase }: { frase: string }) {
 
   return (
     <button
-      onClick={falar}
-      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-100 py-4 text-sm font-extrabold text-indigo-900 transition active:scale-[0.99]"
+      onClick={tocar}
+      disabled={carregando}
+      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-100 py-4 text-sm font-extrabold text-indigo-900 transition active:scale-[0.99] disabled:opacity-70"
     >
-      <Volume2 className={`h-5 w-5 ${falando ? 'animate-pulse' : ''}`} />
-      {falando ? 'Falando...' : 'Ouvir a frase'}
+      {carregando ? (
+        <Loader2 className="h-5 w-5 animate-spin" />
+      ) : (
+        <Volume2 className={`h-5 w-5 ${tocando ? 'animate-pulse' : ''}`} />
+      )}
+      {carregando ? 'Carregando...' : tocando ? 'Tocando...' : 'Ouvir a frase'}
     </button>
   )
 }
-
