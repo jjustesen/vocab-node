@@ -1,4 +1,4 @@
-import { MARCADOR_LACUNA } from '@/types/questao'
+import { MARCADOR_LACUNA, palavrasDaFrase } from '@/types/questao'
 import { embaralhar } from '@/lib/embaralhar'
 import type { QuestaoTipo, Par, QuestaoRow } from '@/types/db'
 
@@ -64,6 +64,30 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
         pares: [],
         explicacao: '',
       }
+    // Em `ordenar_audio` o professor digita a frase em `resposta_correta` e as
+    // palavras DISTRATORAS em `opcoes` — só as extras. As fichas da frase são
+    // derivadas na conversão, pelo mesmo motivo de `ordenar_palavras`: guardar
+    // as duas coisas deixa o rascunho divergir da frase quando ela é editada.
+    case 'ordenar_audio':
+      return {
+        tipo,
+        enunciado: 'Ouça e monte a frase na ordem em que foi falada.',
+        opcoes: ['', ''],
+        resposta_correta: '',
+        respostas_aceitas: [],
+        pares: [],
+        explicacao: '',
+      }
+    case 'pronuncia':
+      return {
+        tipo,
+        enunciado: 'Leia a frase em voz alta.',
+        opcoes: [],
+        resposta_correta: '',
+        respostas_aceitas: [],
+        pares: [],
+        explicacao: '',
+      }
     case 'ordenar_palavras':
     case 'resposta_curta':
       return {
@@ -78,6 +102,16 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
   }
 }
 
+/** Remove de `todas` uma ocorrência de cada palavra de `aRemover`. */
+function subtrairPalavras(todas: string[], aRemover: string[]): string[] {
+  const restante = [...todas]
+  for (const palavra of aRemover) {
+    const i = restante.findIndex((p) => p.trim().toLowerCase() === palavra.trim().toLowerCase())
+    if (i !== -1) restante.splice(i, 1)
+  }
+  return restante
+}
+
 /**
  * Converte o rascunho para o formato do contrato antes de validar/salvar.
  * `ordenar_palavras`: o professor digita a frase correta; as palavras
@@ -86,11 +120,39 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
  */
 export function paraQuestaoContrato(r: QuestaoRascunho) {
   if (r.tipo === 'ordenar_palavras') {
-    const palavras = r.resposta_correta.trim().split(/\s+/).filter(Boolean)
+    const palavras = palavrasDaFrase(r.resposta_correta)
     return {
       tipo: r.tipo,
       enunciado: r.enunciado.trim() || 'Coloque as palavras na ordem correta.',
       opcoes: embaralhar(palavras),
+      resposta_correta: r.resposta_correta.trim(),
+      respostas_aceitas: [],
+      pares: [],
+      explicacao: r.explicacao.trim(),
+    }
+  }
+
+  // As distratoras entram misturadas às fichas da frase: se fossem concatenadas
+  // no fim, a ordem de `opcoes` já entregaria quais palavras sobram.
+  if (r.tipo === 'ordenar_audio') {
+    const palavras = palavrasDaFrase(r.resposta_correta)
+    const distratoras = r.opcoes.map((o) => o.trim()).filter(Boolean)
+    return {
+      tipo: r.tipo,
+      enunciado: r.enunciado.trim() || 'Ouça e monte a frase na ordem em que foi falada.',
+      opcoes: embaralhar([...palavras, ...distratoras]),
+      resposta_correta: r.resposta_correta.trim(),
+      respostas_aceitas: [],
+      pares: [],
+      explicacao: r.explicacao.trim(),
+    }
+  }
+
+  if (r.tipo === 'pronuncia') {
+    return {
+      tipo: r.tipo,
+      enunciado: r.enunciado.trim() || 'Leia a frase em voz alta.',
+      opcoes: [],
       resposta_correta: r.resposta_correta.trim(),
       respostas_aceitas: [],
       pares: [],
@@ -116,7 +178,12 @@ export function questaoRowParaRascunho(q: QuestaoRow): QuestaoRascunho {
   return {
     tipo: q.tipo,
     enunciado: q.enunciado,
-    opcoes: q.opcoes ?? [],
+    // Em `ordenar_audio` o rascunho guarda só as distratoras, então voltamos
+    // tirando de `opcoes` as fichas que a própria frase explica.
+    opcoes:
+      q.tipo === 'ordenar_audio'
+        ? subtrairPalavras(q.opcoes ?? [], palavrasDaFrase(q.resposta_correta))
+        : (q.opcoes ?? []),
     resposta_correta: q.resposta_correta,
     respostas_aceitas: q.respostas_aceitas,
     pares: q.pares ?? [],

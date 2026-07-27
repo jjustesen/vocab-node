@@ -23,6 +23,16 @@ export function normalizar(texto: string): string {
  * enviou `pares` (a coluna esquerda nunca muda de ordem; só a direita é
  * embaralhada na tela — ver CONTRATO-QUESTOES.md §3).
  */
+/**
+ * Corte de nota de fala para contar como acerto. Espelha CORTE_PRONUNCIA em
+ * app/src/types/questao.ts — se mudar lá, muda aqui.
+ */
+export const CORTE_PRONUNCIA = 70
+
+export function corretaPorPontuacao(pontuacao: number): boolean {
+  return pontuacao >= CORTE_PRONUNCIA
+}
+
 export function corrigir(
   tipo: string,
   respostaCorreta: string,
@@ -30,9 +40,19 @@ export function corrigir(
   valorDado: string,
   pares?: Par[] | null,
 ): boolean {
+  // `pronuncia` não se corrige por comparação de texto — a nota vem da IA em
+  // `tarefa-pronuncia`, que grava a resposta por conta própria. Se chegou aqui,
+  // alguém mandou uma resposta de fala pela rota de texto.
+  if (tipo === 'pronuncia') {
+    throw new Error('pronuncia é pontuada em tarefa-pronuncia, não por comparação de texto')
+  }
+
   if (tipo === 'multipla_escolha' || tipo === 'verdadeiro_falso') {
     return valorDado === respostaCorreta
   }
+
+  // `ordenar_audio` usa a mesma regra de `ordenar_palavras`: comparação da
+  // frase montada, normalizada (as fichas distratoras simplesmente sobram).
 
   if (tipo === 'ligar_colunas') {
     if (!pares || pares.length === 0) return false

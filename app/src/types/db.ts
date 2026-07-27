@@ -24,6 +24,8 @@ export type QuestaoTipo =
   | 'ligar_colunas'
   | 'verdadeiro_falso'
   | 'resposta_curta'
+  | 'pronuncia'
+  | 'ordenar_audio'
 
 export type Professor = {
   id: string
@@ -189,6 +191,8 @@ export type QuestaoRow = {
   respostas_aceitas: string[]
   pares: Par[] | null
   explicacao: string
+  /** TTS da frase, em `ordenar_audio`. Nulo até a geração de áudio rodar. */
+  audio_path: string | null
 }
 
 export type Resposta = {
@@ -197,6 +201,10 @@ export type Resposta = {
   questao_id: string
   valor: string
   correta: boolean
+  /** 0–100, só em `pronuncia`; nos demais tipos `correta` é a única verdade. */
+  pontuacao: number | null
+  /** Gravação do aluno em `pronuncia`, no bucket `audio-respostas`. */
+  audio_path: string | null
   tempo_ms: number | null
   respondida_em: string
 }
