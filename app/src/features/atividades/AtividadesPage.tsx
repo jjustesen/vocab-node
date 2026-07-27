@@ -11,9 +11,11 @@ import {
   Send,
   Sparkles,
   Target,
+  Trash2,
 } from 'lucide-react'
 import { BotaoNovaAtividade } from './BotaoNovaAtividade'
 import { EnvioModal } from './EnvioModal'
+import { ExcluirAtividadeModal } from './ExcluirAtividadeModal'
 import { useAtividades } from './api'
 import { CORES_NIVEL, visualDaHabilidade } from './visual-atividade'
 import { PainelTrilhas } from '@/features/trilhas/PainelTrilhas'
@@ -222,6 +224,7 @@ function AbaBiblioteca({
 function CartaoAtividade({ atividade }: { atividade: AtividadeComEnvio }) {
   const [menuAberto, setMenuAberto] = useState(false)
   const [envioAberto, setEnvioAberto] = useState(false)
+  const [excluirAberto, setExcluirAberto] = useState(false)
 
   const visual = visualDaHabilidade(atividade.habilidades)
   const rotuloHabilidades = atividade.habilidades
@@ -309,6 +312,15 @@ function CartaoAtividade({ atividade }: { atividade: AtividadeComEnvio }) {
               >
                 <Pencil className="h-3.5 w-3.5" /> Editar
               </Link>
+              <button
+                onClick={() => {
+                  setMenuAberto(false)
+                  setExcluirAberto(true)
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-rose-700 hover:bg-rose-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" /> Excluir atividade
+              </button>
             </div>
           </>
         )}
@@ -319,6 +331,15 @@ function CartaoAtividade({ atividade }: { atividade: AtividadeComEnvio }) {
           atividadeId={atividade.id}
           atividadeTitulo={atividade.titulo}
           aoFechar={() => setEnvioAberto(false)}
+        />
+      )}
+
+      {excluirAberto && (
+        <ExcluirAtividadeModal
+          atividadeId={atividade.id}
+          atividadeTitulo={atividade.titulo}
+          envios={atividade.envios}
+          aoFechar={() => setExcluirAberto(false)}
         />
       )}
     </div>

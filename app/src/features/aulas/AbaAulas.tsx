@@ -1,6 +1,15 @@
 import { useState } from 'react'
-import { Loader2, Pencil, Plus, Trash2, X } from 'lucide-react'
-import { useAtualizarAula, useAulasDoAluno, useCriarAula, useExcluirAula, ROTULO_STATUS_AULA } from './api'
+import { AlertTriangle, Loader2, Pencil, Plus, Repeat, Trash2, X } from 'lucide-react'
+import {
+  useAtualizarAula,
+  useAulasDaSerie,
+  useAulasDoAluno,
+  useCriarAula,
+  useExcluirAula,
+  rotuloRecorrencia,
+  ROTULO_STATUS_AULA,
+  type EscopoSerie,
+} from './api'
 import type { Aula, AulaStatus } from '@/types/db'
 
 const COR_STATUS: Record<AulaStatus, string> = {
@@ -9,6 +18,12 @@ const COR_STATUS: Record<AulaStatus, string> = {
   cancelada: 'bg-neutral-100 text-neutral-500',
   falta: 'bg-rose-100 text-rose-700',
 }
+
+const OPCOES_ESCOPO: { valor: EscopoSerie; rotulo: string }[] = [
+  { valor: 'uma', rotulo: 'Só esta aula' },
+  { valor: 'futuras', rotulo: 'Esta e as próximas' },
+  { valor: 'todas', rotulo: 'Todas da série' },
+]
 
 function formatarDataHora(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
@@ -58,6 +73,11 @@ export function AbaAulas({ alunoId, alunoNome }: { alunoId: string; alunoNome: s
                 <div>
                   <p className="text-sm font-bold capitalize text-neutral-800">{formatarDataHora(aula.data_hora)}</p>
                   <p className="text-xs text-neutral-400">{aula.duracao_min} min</p>
+                  {aula.serie_id && (
+                    <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-700">
+                      <Repeat className="h-3 w-3" /> {rotuloRecorrencia(aula.data_hora)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${COR_STATUS[aula.status]}`}>
@@ -115,9 +135,24 @@ export function ModalAula({
   const [status, setStatus] = useState<AulaStatus>(aula?.status ?? 'agendada')
   const [anotacao, setAnotacao] = useState(aula?.anotacao ?? '')
   const [repetirSemanas, setRepetirSemanas] = useState(0)
+  const [escopo, setEscopo] = useState<EscopoSerie>('uma')
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
+
+  // Só busca quando a aula veio de uma repetição; serve para dizer quantas
+  // aulas cada escopo afeta antes do professor confirmar.
+  const { data: aulasDaSerie } = useAulasDaSerie(aula?.serie_id)
+  const emSerie = Boolean(aula?.serie_id)
+  const totalNaSerie = aulasDaSerie?.length ?? 0
+  const totalFuturas = aula
+    ? (aulasDaSerie ?? []).filter((a) => new Date(a.data_hora) >= new Date(aula.data_hora)).length
+    : 0
+  const afetadas = escopo === 'todas' ? totalNaSerie : escopo === 'futuras' ? totalFuturas : 1
 
   const emAndamento = criar.isPending || atualizar.isPending || excluir.isPending
-  const erro = (criar.error as Error | null)?.message ?? (atualizar.error as Error | null)?.message
+  const erro =
+    (criar.error as Error | null)?.message ??
+    (atualizar.error as Error | null)?.message ??
+    (excluir.error as Error | null)?.message
 
   async function salvar(evento: React.FormEvent) {
     evento.preventDefault()
@@ -125,8 +160,9 @@ export function ModalAula({
 
     if (editando) {
       await atualizar.mutateAsync({
-        id: aula!.id,
+        aula: aula!,
         campos: { data_hora: dataHoraISO, duracao_min: duracao, status, anotacao: anotacao.trim() || null },
+        escopo,
       })
     } else {
       await criar.mutateAsync({
@@ -143,7 +179,13 @@ export function ModalAula({
 
   async function excluirAula() {
     if (!aula) return
-    await excluir.mutateAsync(aula.id)
+    // Apagar a série inteira por engano é irreversível — só o escopo de uma
+    // aula (o comportamento antigo do botão) segue direto.
+    if (emSerie && escopo !== 'uma' && !confirmandoExclusao) {
+      setConfirmandoExclusao(true)
+      return
+    }
+    await excluir.mutateAsync({ aula, escopo })
     aoFechar()
   }
 
@@ -174,10 +216,15 @@ export function ModalAula({
           </label>
           <label className="block">
             <span className="text-xs font-bold text-neutral-600">Duração (min)</span>
+            {/* Passo de 1: aula de 50, 45 ou 20 min é comum e o passo de 15
+                barrava o envio do formulário. O teto de 1440 (um dia) não é
+                regra de negócio, só evita que um dedo escorregado vire uma
+                aula de 9999 min na agenda. */}
             <input
               type="number"
-              min={15}
-              step={15}
+              min={1}
+              max={1440}
+              step={1}
               value={duracao}
               onChange={(e) => setDuracao(Number(e.target.value))}
               className="mt-1 w-full rounded-2xl border border-neutral-300 px-4 py-2.5 text-sm outline-none focus:border-neutral-900"
@@ -230,6 +277,81 @@ export function ModalAula({
           </label>
         )}
 
+        {editando && emSerie && (
+          <div className="mt-4 rounded-2xl bg-violet-50 p-3.5">
+            <p className="flex items-center gap-1.5 text-xs font-extrabold text-violet-900">
+              <Repeat className="h-3.5 w-3.5 shrink-0" /> Aula em série · {rotuloRecorrencia(aula!.data_hora)}
+            </p>
+            <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-violet-700/70">
+              Aplicar horário e duração a
+            </p>
+            <div className="mt-1.5 space-y-1">
+              {OPCOES_ESCOPO.map((o) => {
+                const marcado = escopo === o.valor
+                const contagem = o.valor === 'todas' ? totalNaSerie : o.valor === 'futuras' ? totalFuturas : 1
+                return (
+                  <button
+                    key={o.valor}
+                    type="button"
+                    onClick={() => {
+                      setEscopo(o.valor)
+                      setConfirmandoExclusao(false)
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold transition ${
+                      marcado ? 'bg-violet-700 text-white' : 'bg-white text-violet-900 hover:bg-violet-100'
+                    }`}
+                  >
+                    <span
+                      className={`grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full border-2 ${
+                        marcado ? 'border-white' : 'border-violet-300'
+                      }`}
+                    >
+                      {marcado && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                    </span>
+                    {o.rotulo}
+                    <span className={marcado ? 'ml-auto text-violet-200' : 'ml-auto text-violet-400'}>
+                      {contagem} {contagem === 1 ? 'aula' : 'aulas'}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="mt-2 text-[11px] text-violet-700/70">
+              Status e anotação valem só para esta aula.
+            </p>
+          </div>
+        )}
+
+        {confirmandoExclusao && (
+          <div className="mt-4 rounded-2xl bg-rose-50 p-3.5">
+            <p className="flex items-center gap-1.5 text-xs font-extrabold text-rose-800">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              Excluir {afetadas} {afetadas === 1 ? 'aula' : 'aulas'} desta série?
+            </p>
+            <p className="mt-0.5 text-[11px] text-rose-700">
+              O histórico dessas aulas some junto e não dá para desfazer.
+            </p>
+            <div className="mt-2.5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmandoExclusao(false)}
+                className="flex-1 rounded-full bg-white py-2 text-xs font-bold text-neutral-600"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={excluirAula}
+                disabled={emAndamento}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-rose-600 py-2 text-xs font-extrabold text-white disabled:opacity-50"
+              >
+                {emAndamento && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Excluir {afetadas}
+              </button>
+            </div>
+          </div>
+        )}
+
         {erro && <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">{erro}</p>}
 
         <div className="mt-6 flex gap-2">
@@ -239,7 +361,11 @@ export function ModalAula({
               onClick={excluirAula}
               disabled={emAndamento}
               className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-rose-200 text-rose-600 disabled:opacity-50"
-              title="Excluir aula"
+              title={
+                emSerie && escopo !== 'uma'
+                  ? `Excluir ${afetadas} ${afetadas === 1 ? 'aula' : 'aulas'} da série`
+                  : 'Excluir aula'
+              }
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -257,7 +383,7 @@ export function ModalAula({
             className="flex flex-1 items-center justify-center gap-2 rounded-full bg-neutral-900 px-5 py-3 text-sm font-extrabold text-white disabled:opacity-50"
           >
             {emAndamento && <Loader2 className="h-4 w-4 animate-spin" />}
-            Salvar
+            {emSerie && escopo !== 'uma' ? `Salvar ${afetadas} aulas` : 'Salvar'}
           </button>
         </div>
       </form>

@@ -87,6 +87,12 @@ export type Aula = {
   duracao_min: number
   status: AulaStatus
   anotacao: string | null
+  /**
+   * Carimbo das aulas criadas juntas por "repetir semanalmente" (RF-42).
+   * Null em aula avulsa. Só dá o vínculo — cada ocorrência segue editável
+   * sozinha (ver 0007_aulas_serie.sql).
+   */
+  serie_id: string | null
   criada_em: string
 }
 
@@ -278,7 +284,20 @@ export type Database = {
       >
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      /** Desloca uma série de aulas no tempo — ver 0007_aulas_serie.sql. */
+      mover_aulas_da_serie: {
+        Args: {
+          p_serie_id: string
+          /** ISO; null = a série toda. */
+          p_a_partir_de: string | null
+          p_delta_segundos: number
+          /** null = mantém a duração de cada aula. */
+          p_duracao_min: number | null
+        }
+        Returns: number
+      }
+    }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }

@@ -13,6 +13,26 @@ export const chavesAulas = {
   todas: ['aulas'] as const,
   doAluno: (alunoId: string) => ['aulas', 'aluno', alunoId] as const,
   entre: (inicioISO: string, fimISO: string) => ['aulas', 'entre', inicioISO, fimISO] as const,
+  serie: (serieId: string) => ['aulas', 'serie', serieId] as const,
+}
+
+/**
+ * A que uma edição se aplica quando a aula veio de "repetir semanalmente".
+ * Mesmos três escopos do Google Calendar, porque é o modelo que o professor
+ * já conhece de outras agendas.
+ */
+export type EscopoSerie = 'uma' | 'futuras' | 'todas'
+
+/**
+ * "toda qua., 22:29" — o padrão semanal lido da própria ocorrência, já que a
+ * recorrência não é gravada como regra (ver 0007_aulas_serie.sql).
+ */
+export function rotuloRecorrencia(dataHoraISO: string): string {
+  const d = new Date(dataHoraISO)
+  const fimDeSemana = d.getDay() === 0 || d.getDay() === 6
+  const dia = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')
+  const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return `${fimDeSemana ? 'todo' : 'toda'} ${dia}., ${hora}`
 }
 
 export function useAulasDoAluno(alunoId: string | undefined) {
@@ -87,12 +107,17 @@ export function useCriarAula() {
         datas.push(d.toISOString())
       }
 
+      // O carimbo só existe se houver repetição: aula avulsa com `serie_id`
+      // faria a UI oferecer "esta e as próximas" sem haver próximas.
+      const serieId = repeticoes > 0 ? crypto.randomUUID() : null
+
       const linhas = datas.map((data_hora) => ({
         aluno_id: entrada.alunoId,
         data_hora,
         duracao_min: entrada.duracaoMin,
         status: entrada.status,
         anotacao: entrada.anotacao?.trim() || null,
+        serie_id: serieId,
       }))
       const { error } = await supabase.from('aulas').insert(linhas)
       if (error) throw error
@@ -101,18 +126,68 @@ export function useCriarAula() {
   })
 }
 
+/** As outras ocorrências da mesma série — usado para dizer quantas aulas um escopo afeta. */
+export function useAulasDaSerie(serieId: string | null | undefined) {
+  return useQuery({
+    queryKey: chavesAulas.serie(serieId!),
+    enabled: Boolean(serieId),
+    queryFn: async (): Promise<Pick<Aula, 'id' | 'data_hora'>[]> => {
+      const { data, error } = await supabase
+        .from('aulas')
+        .select('id, data_hora')
+        .eq('serie_id', serieId!)
+        .order('data_hora')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+/**
+ * Horário e duração respeitam o escopo; status e anotação NUNCA propagam —
+ * são o registro do que aconteceu naquela aula, e marcar uma como realizada
+ * não pode marcar as futuras.
+ *
+ * A mudança de horário viaja como DELTA, não como valor absoluto: mover a
+ * aula de quarta 22:29 para segunda 19:00 desloca as seguintes pelos mesmos
+ * -2 dias -3h29, preservando a cadência semanal em vez de empilhar a série
+ * toda no mesmo instante.
+ */
 export function useAtualizarAula() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({
-      id,
+      aula,
       campos,
+      escopo = 'uma',
     }: {
-      id: string
+      aula: Aula
       campos: Partial<Pick<Aula, 'status' | 'anotacao' | 'data_hora' | 'duracao_min'>>
+      escopo?: EscopoSerie
     }) => {
-      const { error } = await supabase.from('aulas').update(campos).eq('id', id)
-      if (error) throw error
+      const emSerie = Boolean(aula.serie_id) && escopo !== 'uma'
+      const { data_hora, duracao_min, ...soDestaAula } = campos
+
+      if (emSerie) {
+        const deltaSegundos = data_hora
+          ? (new Date(data_hora).getTime() - new Date(aula.data_hora).getTime()) / 1000
+          : 0
+        const { error } = await supabase.rpc('mover_aulas_da_serie', {
+          p_serie_id: aula.serie_id!,
+          // O corte usa o horário ANTIGO — a própria aula editada entra no
+          // deslocamento, então ela não pode ser movida antes da chamada.
+          p_a_partir_de: escopo === 'futuras' ? aula.data_hora : null,
+          p_delta_segundos: deltaSegundos,
+          p_duracao_min: duracao_min ?? null,
+        })
+        if (error) throw error
+      }
+
+      const camposDestaAula = emSerie ? soDestaAula : campos
+      if (Object.keys(camposDestaAula).length > 0) {
+        const { error } = await supabase.from('aulas').update(camposDestaAula).eq('id', aula.id)
+        if (error) throw error
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: chavesAulas.todas }),
   })
@@ -121,8 +196,15 @@ export function useAtualizarAula() {
 export function useExcluirAula() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('aulas').delete().eq('id', id)
+    mutationFn: async ({ aula, escopo = 'uma' }: { aula: Aula; escopo?: EscopoSerie }) => {
+      if (aula.serie_id && escopo !== 'uma') {
+        let consulta = supabase.from('aulas').delete().eq('serie_id', aula.serie_id)
+        if (escopo === 'futuras') consulta = consulta.gte('data_hora', aula.data_hora)
+        const { error } = await consulta
+        if (error) throw error
+        return
+      }
+      const { error } = await supabase.from('aulas').delete().eq('id', aula.id)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: chavesAulas.todas }),

@@ -516,6 +516,35 @@ export function useRegerarLinkDaTarefa(alunoId: string) {
   })
 }
 
+/**
+ * `trilha_etapas.atividade_id` é `on delete restrict` (0001_init.sql) — uma
+ * atividade usada numa trilha não pode ser apagada direto, senão o professor
+ * perderia a sequência da trilha sem perceber; o Postgres barra com erro
+ * 23503, que a gente traduz aqui. `questoes`, `atribuicoes` e `respostas`
+ * cascateiam sozinhos, então apagar a atividade já apaga o histórico (envios
+ * e respostas) de todo aluno que a recebeu — é o próprio mecanismo, não algo
+ * que esta função precise fazer manualmente.
+ */
+export function useExcluirAtividade() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (atividadeId: string) => {
+      const { error } = await supabase.from('atividades').delete().eq('id', atividadeId)
+      if (error) {
+        if (error.code === '23503') {
+          throw new Error('Esta atividade faz parte de uma trilha — remova-a da trilha antes de excluir.')
+        }
+        throw error
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: chavesAtividades.todas })
+      qc.invalidateQueries({ queryKey: ['alunos'] })
+      qc.invalidateQueries({ queryKey: ['trilhas'] })
+    },
+  })
+}
+
 export type EnvioComResultado = {
   id: string
   aluno_id: string

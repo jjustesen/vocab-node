@@ -1,18 +1,21 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { AlertTriangle, Loader2, Pencil, Send, Volume2 } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { AlertTriangle, Loader2, Pencil, Send, Trash2, Volume2 } from 'lucide-react'
 import { useAtividade, useQuestoesDaAtividade, useEnviosDaAtividade, useGerarAudioAtividade } from './api'
 import { EnvioModal } from './EnvioModal'
+import { ExcluirAtividadeModal } from './ExcluirAtividadeModal'
 import { EtiquetaTipo, QuestaoLeitura } from './QuestaoLeitura'
 import { ROTULO_HABILIDADE } from '@/types/questao'
 import type { QuestaoRow } from '@/types/db'
 
 export function AtividadeDetalhePage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const { data: atividade, isLoading: carregandoAtividade } = useAtividade(id)
   const { data: questoes, isLoading: carregandoQuestoes } = useQuestoesDaAtividade(id)
   const { data: envios } = useEnviosDaAtividade(id)
   const [modalAberto, setModalAberto] = useState(false)
+  const [excluirAberto, setExcluirAberto] = useState(false)
   const gerarAudio = useGerarAudioAtividade(id ?? '')
 
   // A geração dispara sozinha ao salvar (gerarAudioSeNecessario em api.ts);
@@ -77,6 +80,13 @@ export function AtividadeDetalhePage() {
             className="flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-extrabold text-white"
           >
             <Send className="h-4 w-4" /> Enviar para aluno
+          </button>
+          <button
+            onClick={() => setExcluirAberto(true)}
+            title="Excluir atividade"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-neutral-300 bg-white text-rose-700"
+          >
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -154,6 +164,16 @@ export function AtividadeDetalhePage() {
 
       {modalAberto && (
         <EnvioModal atividadeId={atividade.id} atividadeTitulo={atividade.titulo} aoFechar={() => setModalAberto(false)} />
+      )}
+
+      {excluirAberto && (
+        <ExcluirAtividadeModal
+          atividadeId={atividade.id}
+          atividadeTitulo={atividade.titulo}
+          envios={envios?.length ?? 0}
+          aoFechar={() => setExcluirAberto(false)}
+          aoExcluir={() => navigate('/atividades')}
+        />
       )}
     </div>
   )
