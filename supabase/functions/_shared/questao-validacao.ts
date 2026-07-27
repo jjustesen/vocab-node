@@ -29,7 +29,7 @@ function opcoesCobremAFrase(opcoes: string[], frase: string): boolean {
 }
 
 export const NIVEIS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
-export const HABILIDADES = ['leitura', 'escrita', 'listening', 'vocabulario', 'gramatica'] as const
+export const HABILIDADES = ['leitura', 'escrita', 'listening', 'fala', 'vocabulario', 'gramatica'] as const
 export const MARCADOR_LACUNA = '______'
 
 const parSchema = z.object({

@@ -11,7 +11,7 @@ export const ATIVIDADE_GERADA_SCHEMA = {
     nivel: { type: 'string', enum: ['A1', 'A2', 'B1', 'B2', 'C1'] },
     habilidades: {
       type: 'array',
-      items: { type: 'string', enum: ['leitura', 'escrita', 'listening', 'vocabulario', 'gramatica'] },
+      items: { type: 'string', enum: ['leitura', 'escrita', 'listening', 'fala', 'vocabulario', 'gramatica'] },
     },
     questoes: {
       type: 'array',
@@ -21,7 +21,16 @@ export const ATIVIDADE_GERADA_SCHEMA = {
         properties: {
           tipo: {
             type: 'string',
-            enum: ['multipla_escolha', 'lacuna', 'ordenar_palavras', 'ligar_colunas', 'verdadeiro_falso', 'resposta_curta'],
+            enum: [
+              'multipla_escolha',
+              'lacuna',
+              'ordenar_palavras',
+              'ligar_colunas',
+              'verdadeiro_falso',
+              'resposta_curta',
+              'pronuncia',
+              'ordenar_audio',
+            ],
           },
           enunciado: { type: 'string' },
           opcoes: { type: 'array', items: { type: 'string' } },

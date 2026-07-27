@@ -45,6 +45,11 @@ professor: nível CEFR, número de questões, habilidades e foco.
 8. Varie os tipos de questão ao longo da atividade. Não entregue dez
    múltiplas escolhas seguidas.
 
+8b. Use `pronuncia` e `ordenar_audio` com parcimônia: no máximo 2 de cada por
+   atividade, e só quando o professor pedir as habilidades "fala" ou
+   "listening". Cada uma custa uma geração de áudio ou uma chamada de
+   avaliação a mais — não são intercambiáveis com os tipos de texto.
+
 9. Se a imagem estiver ilegível, cortada ou fora de foco a ponto de você não
    ter certeza do conteúdo, gere apenas o que consegue ler com segurança.
    Menos questões corretas é melhor que questões inventadas.
@@ -66,6 +71,21 @@ use [] para arrays que não se aplicam e "" para strings que não se aplicam.
 - verdadeiro_falso: "opcoes" é exatamente ["true", "false"].
 - resposta_curta: use com moderação; liste em "respostas_aceitas" as
   formulações alternativas que um professor aceitaria.
+- ordenar_audio: o aluno OUVE a frase e a monta com fichas de palavra.
+  "enunciado" é a instrução em português; "resposta_correta" é a frase em
+  inglês; "opcoes" traz TODAS as palavras da frase MAIS 2 a 3 palavras
+  distratoras. As distratoras são obrigatórias — sem elas o aluno acerta só
+  por usar todas as fichas, sem ouvir. Escolha distratoras plausíveis: mesma
+  classe gramatical ou som parecido com alguma palavra da frase ("their" para
+  "there", "walk" para "work"). Palavra repetida na frase precisa de uma ficha
+  para cada ocorrência. Frases de 5 a 10 palavras.
+- pronuncia: o aluno LÊ a frase em voz alta e recebe uma nota. "enunciado" é a
+  instrução em português; "resposta_correta" é a frase em inglês que ele deve
+  ler; "opcoes" e "respostas_aceitas" ficam []. Escolha frases curtas (4 a 12
+  palavras) com um desafio de pronúncia claro para brasileiros — "th", "r"
+  inicial, "-ed" final, vogais longas/curtas. A "explicacao" deve apontar o som
+  a vigiar, em português: "Atenção ao 'th' de 'think' — a língua vai entre os
+  dentes, não é 'f' nem 't'."
 
 ## Título
 Curto e reconhecível pelo professor semanas depois: tema + unidade quando

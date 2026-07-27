@@ -1,4 +1,4 @@
-import { BookOpen, Headphones, MessageSquare, Target, Type } from 'lucide-react'
+import { BookOpen, Headphones, MessageSquare, Mic, Target, Type } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 /**
@@ -24,6 +24,7 @@ const VISUAL_HABILIDADE: Record<string, { Icone: LucideIcon; cor: string }> = {
   leitura: { Icone: BookOpen, cor: 'bg-violet-100 text-violet-700' },
   gramatica: { Icone: Type, cor: 'bg-amber-100 text-amber-700' },
   listening: { Icone: Headphones, cor: 'bg-sky-100 text-sky-700' },
+  fala: { Icone: Mic, cor: 'bg-rose-100 text-rose-700' },
   vocabulario: { Icone: Target, cor: 'bg-emerald-100 text-emerald-700' },
   escrita: { Icone: MessageSquare, cor: 'bg-pink-100 text-pink-700' },
 }
