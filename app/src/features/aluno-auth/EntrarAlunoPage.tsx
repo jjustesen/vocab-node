@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { GraduationCap, Loader2 } from 'lucide-react'
 import { supabaseAluno } from '@/lib/supabase-aluno'
 import { useAlunoAuth } from './AlunoAuthProvider'
@@ -69,6 +69,15 @@ export function EntrarAlunoPage() {
           {entrando && <Loader2 className="h-4 w-4 animate-spin" />}
           Entrar
         </button>
+
+        {/* Volta para o login do professor — sem isto, quem cai aqui por
+            engano fica sem saída visível. */}
+        <p className="mt-5 text-center text-xs text-neutral-400">
+          É professor?{' '}
+          <Link to="/entrar" className="font-bold text-violet-700">
+            Entrar na sua área
+          </Link>
+        </p>
       </form>
     </div>
   )

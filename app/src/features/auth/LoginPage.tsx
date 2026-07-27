@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
-import { GraduationCap, Loader2 } from 'lucide-react'
+import { Link, Navigate } from 'react-router-dom'
+import { BookOpen, GraduationCap, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './AuthProvider'
 
@@ -136,6 +136,20 @@ export function LoginPage() {
             </button>
           </p>
         </form>
+
+        {/* Fora do card, e contornado em vez de sólido: é a porta do OUTRO
+            público (o aluno tem sessão própria, ver AlunoAuthProvider), não
+            mais uma opção do formulário do professor. */}
+        <Link
+          to="/entrar-aluno"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 bg-white py-3.5 text-sm font-bold text-neutral-700 transition hover:border-neutral-400 hover:bg-neutral-50"
+        >
+          <BookOpen className="h-4 w-4" />
+          Entrar como aluno
+        </Link>
+        <p className="mt-2 text-center text-xs text-neutral-400">
+          Para ver suas tarefas e seu progresso
+        </p>
       </div>
     </div>
   )
