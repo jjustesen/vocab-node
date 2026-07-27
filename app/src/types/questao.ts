@@ -28,14 +28,66 @@ export const TIPOS_QUESTAO = [
  */
 export const CORTE_PRONUNCIA = 70
 
+/** Normalização da fala: além do `normalizar()`, tira pontuação. */
+function normalizarFala(texto: string): string[] {
+  return normalizar(texto)
+    .replace(/[.,!?;:"()]/g, '')
+    .split(/\s+/)
+    .filter(Boolean)
+}
+
+/** Palavras em comum, NA ORDEM (subsequência comum máxima). */
+function palavrasEmComum(a: string[], b: string[]): number {
+  const tabela: number[][] = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0))
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      tabela[i][j] = a[i - 1] === b[j - 1] ? tabela[i - 1][j - 1] + 1 : Math.max(tabela[i - 1][j], tabela[i][j - 1])
+    }
+  }
+  return tabela[a.length][b.length]
+}
+
 /**
- * `pronuncia` é o único tipo que o navegador não consegue corrigir sozinho:
- * a nota sai de uma chamada à IA, com chave de API, do lado do servidor.
- * Todo lugar que hoje assume correção local (CONTRATO-QUESTOES.md §7) precisa
- * checar isto antes de chamar `corrigir()`.
+ * Nota de leitura em voz alta a partir do que o RECONHECEDOR DE FALA do
+ * navegador transcreveu (`SpeechRecognition`), comparado com a frase-alvo.
+ *
+ * O que isto mede, e é importante não confundir: se o motor de reconhecimento
+ * ENTENDEU o aluno — não a qualidade fonética dele. O reconhecedor tem um
+ * modelo de linguagem que puxa para o inglês plausível, então sotaque
+ * carregado passa mais fácil do que passaria com um avaliador de fonema.
+ * Trocamos precisão por custo zero e resposta instantânea, de olhos abertos.
+ *
+ * A média harmônica pune os dois lados: engolir palavra da frase derruba, e
+ * despejar palavra que não existe também. Só um dos dois deixaria a nota
+ * enganar — "the" sozinho não pode valer 100 numa frase de dez palavras.
  */
-export function correcaoEhLocal(tipo: string): boolean {
-  return tipo !== 'pronuncia'
+export function pontuarPronuncia(
+  fraseAlvo: string,
+  transcricao: string,
+): { pontuacao: number; faltando: string[] } {
+  const alvo = normalizarFala(fraseAlvo)
+  const dito = normalizarFala(transcricao)
+  if (alvo.length === 0 || dito.length === 0) return { pontuacao: 0, faltando: alvo }
+
+  const comuns = palavrasEmComum(alvo, dito)
+  const cobertura = comuns / alvo.length
+  const precisao = comuns / dito.length
+  const pontuacao =
+    comuns === 0 ? 0 : Math.round(((2 * cobertura * precisao) / (cobertura + precisao)) * 100)
+
+  // Palavras da frase que não apareceram na transcrição — é o feedback possível
+  // sem análise fonética: dizemos QUAIS palavras saíram diferentes, nunca qual
+  // som corrigir. Essa é a perda real de não usar um avaliador de pronúncia.
+  const restante = [...dito]
+  const faltando = normalizarFala(fraseAlvo).filter((palavra, i) => {
+    const pos = restante.indexOf(palavra)
+    if (pos === -1) return true
+    restante.splice(pos, 1)
+    void i
+    return false
+  })
+
+  return { pontuacao, faltando }
 }
 
 export const NIVEIS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
@@ -182,11 +234,11 @@ export function corrigir(
   questao: Pick<Questao, 'tipo' | 'resposta_correta' | 'respostas_aceitas' | 'pares'>,
   resposta: string,
 ): boolean {
-  // `pronuncia` não passa por aqui: a nota vem da Edge Function `tarefa-pronuncia`
-  // e chega pronta. Devolver `false` calado esconderia a chamada errada, então
-  // ela é ruidosa — quem chamar deve ter checado `correcaoEhLocal()` antes.
+  // `resposta` aqui é a TRANSCRIÇÃO que o navegador ouviu, não texto digitado.
+  // Voltou a caber na correção local como todo o resto (§7) desde que a nota
+  // deixou de depender de uma chamada a IA.
   if (questao.tipo === 'pronuncia') {
-    throw new Error('pronuncia é corrigida no servidor — cheque correcaoEhLocal() antes de chamar corrigir()')
+    return pontuarPronuncia(questao.resposta_correta, resposta).pontuacao >= CORTE_PRONUNCIA
   }
 
   if (questao.tipo === 'multipla_escolha' || questao.tipo === 'verdadeiro_falso') {

@@ -20,16 +20,16 @@ import {
 import { apiTarefa, mensagemDeErro } from '@/lib/api-tarefa'
 import { embaralhar } from '@/lib/embaralhar'
 import { inicial } from '@/lib/avatar'
-import { corrigir } from '@/types/questao'
+import { CORTE_PRONUNCIA, corrigir, pontuarPronuncia } from '@/types/questao'
 import { useAlunoAuthOpcional } from '@/features/aluno-auth/AlunoAuthProvider'
 import { minutosEstimados } from './formato'
 import { BotaoPrincipal, Chip, TelaAluno } from './visual'
-import { BotaoOuvir, RespostaPronuncia } from './RespostasAudio'
+import { BotaoOuvir } from './RespostasAudio'
+import { RespostaPronuncia } from './RespostaPronuncia'
 import type {
   ConcluirResposta,
   FeedbackLocal,
   IdentificadorTarefa,
-  PronunciaResposta,
   QuestaoTarefa,
   TarefaObterResposta,
 } from './tipos'
@@ -190,41 +190,55 @@ export function TarefaPage() {
   }
 
   /**
-   * O caminho da fala. Diferente de `responder()`, aqui a tela ESPERA: a nota
-   * só existe depois de `tarefa-pronuncia` ouvir a gravação (§7 do contrato).
-   * Por isso também não há resultado local a registrar antes da volta.
+   * O caminho da fala. Voltou a ser correção LOCAL como todos os outros tipos
+   * (§7) desde que a nota deixou de depender de IA: o navegador transcreve,
+   * pontuamos aqui e o feedback aparece na hora. A chamada ao servidor vai em
+   * segundo plano — ela existe para guardar o áudio e para RECALCULAR a nota,
+   * porque o registro que o professor vê nunca sai do que o cliente mandou.
    */
-  async function responderPronuncia(audioBase64: string, mimeType: string) {
+  function responderPronuncia(transcricao: string, audioBase64: string | null, mimeType: string | null) {
     if (!identificador) return
     const questao = dados!.questoes[indice]
-    const tempoMs = Date.now() - inicioQuestaoRef.current
-
-    const { data } = await apiTarefa.post<PronunciaResposta>('/tarefa-pronuncia', {
-      ...identificador,
-      questao_id: questao.id,
-      audio_base64: audioBase64,
-      mime_type: mimeType,
-      tempo_ms: tempoMs,
-    })
+    const { pontuacao, faltando } = pontuarPronuncia(questao.resposta_correta, transcricao)
+    const correta = pontuacao >= CORTE_PRONUNCIA
 
     setFeedback({
-      correta: data.correta,
+      correta,
       resposta_correta: questao.resposta_correta,
       pares_corretos: null,
-      // O comentário da IA é específico do que o aluno falou, então substitui a
-      // explicação genérica da questão — que fica de reserva se a IA não vier.
-      explicacao: data.comentario || questao.explicacao,
-      pontuacao: data.pontuacao,
-      transcricao: data.transcricao,
-      tentativasRestantes: data.tentativas_restantes,
+      // Sem análise fonética não dá para dizer QUAL som corrigir, só quais
+      // palavras não foram reconhecidas — a explicação da questão continua
+      // sendo o conteúdo de ensino.
+      explicacao:
+        faltando.length > 0 && pontuacao > 0
+          ? `${questao.explicacao} (Não reconheci: ${faltando.join(', ')}.)`
+          : questao.explicacao,
+      pontuacao,
+      transcricao,
     })
     setSequencia((s) => {
-      const nova = data.correta ? s + 1 : 0
+      const nova = correta ? s + 1 : 0
       setMelhorSequencia((m) => Math.max(m, nova))
       return nova
     })
-    // A própria Edge Function já gravou a resposta; nada a enfileirar aqui.
-    if (!indicesParaRefazer) resultadosLocais.current.set(questao.id, data.correta)
+
+    if (indicesParaRefazer) return
+    resultadosLocais.current.set(questao.id, correta)
+
+    const promessa = apiTarefa
+      .post('/tarefa-pronuncia', {
+        ...identificador,
+        questao_id: questao.id,
+        transcricao,
+        audio_base64: audioBase64,
+        mime_type: mimeType,
+        tempo_ms: Date.now() - inicioQuestaoRef.current,
+      })
+      .catch(() => {
+        // Mesma regra de tarefa-responder: sem retry aqui — se faltar resposta
+        // ao concluir, o servidor recusa e a tela oferece recarregar.
+      })
+    pendentesRef.current.push(promessa)
   }
 
   function proxima() {
@@ -342,7 +356,7 @@ export function TarefaPage() {
       feedback={feedback}
       repassandoErros={Boolean(indicesParaRefazer)}
       aoResponder={responder}
-      aoEnviarAudio={responderPronuncia}
+      aoFalar={responderPronuncia}
       aoAvancar={proxima}
       aoSair={aoSair}
     />
@@ -573,7 +587,7 @@ function TelaQuestao({
   feedback,
   repassandoErros,
   aoResponder,
-  aoEnviarAudio,
+  aoFalar,
   aoAvancar,
   aoSair,
 }: {
@@ -582,7 +596,7 @@ function TelaQuestao({
   total: number
   sequencia: number
   feedback: FeedbackLocal | null
-  aoEnviarAudio: (audioBase64: string, mimeType: string) => Promise<void>
+  aoFalar: (transcricao: string, audioBase64: string | null, mimeType: string | null) => void
   repassandoErros: boolean
   aoResponder: (valor: string) => void
   aoAvancar: () => void
@@ -655,7 +669,7 @@ function TelaQuestao({
             </div>
           )}
           {questao.tipo === 'pronuncia' && (
-            <RespostaPronuncia questao={questao} feedback={feedback} aoEnviarAudio={aoEnviarAudio} />
+            <RespostaPronuncia questao={questao} feedback={feedback} aoFalar={aoFalar} />
           )}
           {questao.tipo === 'ligar_colunas' && (
             <RespostaLigarColunas questao={questao} feedback={feedback} aoResponder={aoResponder} />

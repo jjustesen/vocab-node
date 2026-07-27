@@ -33,6 +33,39 @@ export function corretaPorPontuacao(pontuacao: number): boolean {
   return pontuacao >= CORTE_PRONUNCIA
 }
 
+function normalizarFala(texto: string): string[] {
+  return normalizar(texto)
+    .replace(/[.,!?;:"()]/g, '')
+    .split(/\s+/)
+    .filter(Boolean)
+}
+
+function palavrasEmComum(a: string[], b: string[]): number {
+  const tabela: number[][] = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0))
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      tabela[i][j] = a[i - 1] === b[j - 1] ? tabela[i - 1][j - 1] + 1 : Math.max(tabela[i - 1][j], tabela[i][j - 1])
+    }
+  }
+  return tabela[a.length][b.length]
+}
+
+/**
+ * Espelha pontuarPronuncia de app/src/types/questao.ts. O cliente calcula a
+ * mesma nota para dar feedback na hora; esta cópia existe porque a nota que o
+ * professor vê nunca sai do que o cliente mandou — só a transcrição sai.
+ */
+export function pontuarPronuncia(fraseAlvo: string, transcricao: string): number {
+  const alvo = normalizarFala(fraseAlvo)
+  const dito = normalizarFala(transcricao)
+  if (alvo.length === 0 || dito.length === 0) return 0
+  const comuns = palavrasEmComum(alvo, dito)
+  if (comuns === 0) return 0
+  const cobertura = comuns / alvo.length
+  const precisao = comuns / dito.length
+  return Math.round(((2 * cobertura * precisao) / (cobertura + precisao)) * 100)
+}
+
 export function corrigir(
   tipo: string,
   respostaCorreta: string,
@@ -40,11 +73,9 @@ export function corrigir(
   valorDado: string,
   pares?: Par[] | null,
 ): boolean {
-  // `pronuncia` não se corrige por comparação de texto — a nota vem da IA em
-  // `tarefa-pronuncia`, que grava a resposta por conta própria. Se chegou aqui,
-  // alguém mandou uma resposta de fala pela rota de texto.
+  // `valorDado` de pronuncia é a TRANSCRIÇÃO que o navegador do aluno ouviu.
   if (tipo === 'pronuncia') {
-    throw new Error('pronuncia é pontuada em tarefa-pronuncia, não por comparação de texto')
+    return corretaPorPontuacao(pontuarPronuncia(respostaCorreta, valorDado))
   }
 
   if (tipo === 'multipla_escolha' || tipo === 'verdadeiro_falso') {
