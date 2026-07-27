@@ -38,12 +38,31 @@ export type TarefaObterResposta = {
   questoes: QuestaoTarefa[]
 }
 
-/** O que a UI mostra ao aluno — calculado no cliente, não vem mais do servidor. */
+/**
+ * O que a UI mostra ao aluno — calculado no cliente, não vem mais do servidor.
+ * Com uma exceção: em `pronuncia` os três últimos campos vêm de
+ * `tarefa-pronuncia`, porque a nota depende de uma chamada à IA.
+ */
 export type FeedbackLocal = {
   correta: boolean
   resposta_correta: string
   pares_corretos: Par[] | null
   explicacao: string
+  /** 0–100, só em `pronuncia`. */
+  pontuacao?: number
+  /** O que a IA ouviu de verdade — pode divergir da frase-alvo. */
+  transcricao?: string
+  tentativasRestantes?: number
+}
+
+/** Resposta de `tarefa-pronuncia`. */
+export type PronunciaResposta = {
+  ok: boolean
+  correta: boolean
+  pontuacao: number
+  transcricao: string
+  comentario: string
+  tentativas_restantes: number
 }
 
 /**

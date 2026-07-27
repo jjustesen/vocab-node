@@ -24,7 +24,15 @@ import { corrigir } from '@/types/questao'
 import { useAlunoAuthOpcional } from '@/features/aluno-auth/AlunoAuthProvider'
 import { minutosEstimados } from './formato'
 import { BotaoPrincipal, Chip, TelaAluno } from './visual'
-import type { ConcluirResposta, FeedbackLocal, IdentificadorTarefa, QuestaoTarefa, TarefaObterResposta } from './tipos'
+import { BotaoOuvir, RespostaPronuncia } from './RespostasAudio'
+import type {
+  ConcluirResposta,
+  FeedbackLocal,
+  IdentificadorTarefa,
+  PronunciaResposta,
+  QuestaoTarefa,
+  TarefaObterResposta,
+} from './tipos'
 
 type Tela = 'carregando' | 'erro' | 'intro' | 'respondendo' | 'concluindo' | 'final'
 
@@ -181,6 +189,44 @@ export function TarefaPage() {
     pendentesRef.current.push(promessa)
   }
 
+  /**
+   * O caminho da fala. Diferente de `responder()`, aqui a tela ESPERA: a nota
+   * só existe depois de `tarefa-pronuncia` ouvir a gravação (§7 do contrato).
+   * Por isso também não há resultado local a registrar antes da volta.
+   */
+  async function responderPronuncia(audioBase64: string, mimeType: string) {
+    if (!identificador) return
+    const questao = dados!.questoes[indice]
+    const tempoMs = Date.now() - inicioQuestaoRef.current
+
+    const { data } = await apiTarefa.post<PronunciaResposta>('/tarefa-pronuncia', {
+      ...identificador,
+      questao_id: questao.id,
+      audio_base64: audioBase64,
+      mime_type: mimeType,
+      tempo_ms: tempoMs,
+    })
+
+    setFeedback({
+      correta: data.correta,
+      resposta_correta: questao.resposta_correta,
+      pares_corretos: null,
+      // O comentário da IA é específico do que o aluno falou, então substitui a
+      // explicação genérica da questão — que fica de reserva se a IA não vier.
+      explicacao: data.comentario || questao.explicacao,
+      pontuacao: data.pontuacao,
+      transcricao: data.transcricao,
+      tentativasRestantes: data.tentativas_restantes,
+    })
+    setSequencia((s) => {
+      const nova = data.correta ? s + 1 : 0
+      setMelhorSequencia((m) => Math.max(m, nova))
+      return nova
+    })
+    // A própria Edge Function já gravou a resposta; nada a enfileirar aqui.
+    if (!indicesParaRefazer) resultadosLocais.current.set(questao.id, data.correta)
+  }
+
   function proxima() {
     setFeedback(null)
     inicioQuestaoRef.current = Date.now()
@@ -296,6 +342,7 @@ export function TarefaPage() {
       feedback={feedback}
       repassandoErros={Boolean(indicesParaRefazer)}
       aoResponder={responder}
+      aoEnviarAudio={responderPronuncia}
       aoAvancar={proxima}
       aoSair={aoSair}
     />
@@ -526,6 +573,7 @@ function TelaQuestao({
   feedback,
   repassandoErros,
   aoResponder,
+  aoEnviarAudio,
   aoAvancar,
   aoSair,
 }: {
@@ -534,6 +582,7 @@ function TelaQuestao({
   total: number
   sequencia: number
   feedback: FeedbackLocal | null
+  aoEnviarAudio: (audioBase64: string, mimeType: string) => Promise<void>
   repassandoErros: boolean
   aoResponder: (valor: string) => void
   aoAvancar: () => void
@@ -596,6 +645,18 @@ function TelaQuestao({
           {questao.tipo === 'ordenar_palavras' && (
             <RespostaOrdenarPalavras questao={questao} feedback={feedback} aoResponder={aoResponder} />
           )}
+          {/* Mesma montagem de `ordenar_palavras` — o que muda é a origem do
+              estímulo (o navegador fala a frase) e as fichas distratoras, que
+              já vêm misturadas em `opcoes`. */}
+          {questao.tipo === 'ordenar_audio' && (
+            <div className="space-y-3">
+              <BotaoOuvir frase={questao.resposta_correta} />
+              <RespostaOrdenarPalavras questao={questao} feedback={feedback} aoResponder={aoResponder} />
+            </div>
+          )}
+          {questao.tipo === 'pronuncia' && (
+            <RespostaPronuncia questao={questao} feedback={feedback} aoEnviarAudio={aoEnviarAudio} />
+          )}
           {questao.tipo === 'ligar_colunas' && (
             <RespostaLigarColunas questao={questao} feedback={feedback} aoResponder={aoResponder} />
           )}
@@ -624,10 +685,21 @@ function TelaQuestao({
                   }`}
                 >
                   {feedback.correta ? 'Boa!' : 'Quase!'}
+                  {/* Em pronúncia o aluno merece o número, não só o veredito:
+                      45 e 68 são os dois "quase", e a diferença entre eles é o
+                      que mostra que ele está evoluindo entre as tentativas. */}
+                  {feedback.pontuacao !== undefined && (
+                    <span className="ml-1.5 font-bold">{feedback.pontuacao}/100</span>
+                  )}
                 </p>
                 <p className={`mt-0.5 text-xs ${feedback.correta ? 'text-emerald-800' : 'text-rose-800'}`}>
                   {feedback.explicacao}
                 </p>
+                {feedback.transcricao && (
+                  <p className={`mt-1.5 text-xs ${feedback.correta ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    Ouvi: <i>“{feedback.transcricao}”</i>
+                  </p>
+                )}
               </div>
             </div>
 

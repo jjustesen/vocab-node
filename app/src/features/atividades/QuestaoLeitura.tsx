@@ -68,9 +68,11 @@ export function QuestaoLeitura({ valor }: { valor: QuestaoParaLeitura }) {
           </div>
         )}
 
-        {(valor.tipo === 'lacuna' || valor.tipo === 'resposta_curta' || valor.tipo === 'ordenar_palavras') && (
-          <Alternativa texto={valor.resposta_correta} correta />
-        )}
+        {(valor.tipo === 'lacuna' ||
+          valor.tipo === 'resposta_curta' ||
+          valor.tipo === 'ordenar_palavras' ||
+          valor.tipo === 'ordenar_audio' ||
+          valor.tipo === 'pronuncia') && <Alternativa texto={valor.resposta_correta} correta />}
       </div>
 
       {valor.explicacao && (

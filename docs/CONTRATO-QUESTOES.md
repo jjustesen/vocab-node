@@ -39,7 +39,7 @@ Ganho colateral: trocar de provedor de IA não mexe no contrato.
 
 ---
 
-## 3. Os seis tipos do MVP
+## 3. Os oito tipos
 
 | `tipo` | `enunciado` | `opcoes` | `resposta_correta` | `respostas_aceitas` | `pares` |
 |---|---|---|---|---|---|
@@ -49,6 +49,8 @@ Ganho colateral: trocar de provedor de IA não mexe no contrato.
 | `ligar_colunas` | instrução em pt-BR | `[]` | `""` | `[]` | 3–6 pares |
 | `verdadeiro_falso` | a afirmação | `["true", "false"]` | `"true"` ou `"false"` | `[]` | `[]` |
 | `resposta_curta` | a pergunta | `[]` | resposta modelo | outras formulações aceitas | `[]` |
+| `ordenar_audio` | instrução em pt-BR | palavras da frase **+ 2–3 distratoras**, embaralhadas | a frase correta montada | `[]` | `[]` |
+| `pronuncia` | instrução em pt-BR | `[]` | a frase em inglês a ler em voz alta | `[]` | `[]` |
 
 **Regras que valem para todos:**
 
@@ -56,6 +58,12 @@ Ganho colateral: trocar de provedor de IA não mexe no contrato.
 - `resposta_correta` de múltipla escolha precisa bater **caractere a caractere** com um item de `opcoes`. Não é índice, é o texto.
 - Lacuna usa exatamente **seis underscores** (`______`) — o app procura esse marcador para renderizar o campo.
 - `pares` só existe em `ligar_colunas`: `[{"esquerda": "luggage", "direita": "bagagem"}]`. O app embaralha a coluna direita na renderização.
+
+**Os dois tipos com áudio (adicionados em 26/07/2026):**
+
+- `ordenar_audio` **exige** palavras distratoras: `opcoes.length` tem que ser maior que o número de palavras da frase, e toda palavra da frase precisa de uma ficha própria (contando repetição — "the cat saw the" pede duas fichas de "the"). Sem distratora o aluno acerta usando todas as fichas, sem ouvir nada; sem ficha suficiente o exercício é insolúvel. As duas regras são `refine` do Zod, não convenção.
+- O áudio de `ordenar_audio` **não é armazenado**: o `speechSynthesis` do navegador fala `resposta_correta`, que já viaja ao cliente (§7). Sem bucket, sem TTS pago. Em aparelho sem voz em inglês instalada a tela oferece ler a frase em vez de ouvir — degrada para `ordenar_palavras` em vez de travar o aluno.
+- `pronuncia` guarda a gravação do aluno no bucket `audio-respostas` e a nota em `respostas.pontuacao` (0–100). `valor` guarda um JSON `{transcricao, tentativas}` — a transcrição é o que a IA **ouviu**, que pode divergir da frase-alvo, e `tentativas` é o que limita o custo (teto de 4 por questão).
 
 ---
 
@@ -67,6 +75,8 @@ Ganho colateral: trocar de provedor de IA não mexe no contrato.
 | `lacuna`, `resposta_curta` | normaliza (minúsculas, sem acento, sem espaço nas bordas, apóstrofo unificado) e compara com `resposta_correta` + `respostas_aceitas` |
 | `ordenar_palavras` | compara a frase montada, normalizada |
 | `ligar_colunas` | acerto por par; a questão conta como correta só com todos os pares certos |
+| `ordenar_audio` | idêntica a `ordenar_palavras` — compara a frase montada, normalizada. As fichas distratoras simplesmente sobram |
+| `pronuncia` | **no servidor**: a IA ouve e dá 0–100; `correta` é derivada (nota ≥ 70, `CORTE_PRONUNCIA`) |
 
 `resposta_curta` é a única que pode precisar de revisão humana (RF-91): quando não bate com nenhuma resposta aceita, marca como errada **mas sinaliza para o professor revisar** — a IA erra mais aqui do que o aluno.
 
@@ -95,7 +105,7 @@ Passe este schema ao provedor de IA. Mantém-se dentro do subconjunto que Gemini
         "properties": {
           "tipo": {
             "type": "string",
-            "enum": ["multipla_escolha", "lacuna", "ordenar_palavras", "ligar_colunas", "verdadeiro_falso", "resposta_curta"]
+            "enum": ["multipla_escolha", "lacuna", "ordenar_palavras", "ligar_colunas", "verdadeiro_falso", "resposta_curta", "pronuncia", "ordenar_audio"]
           },
           "enunciado": { "type": "string" },
           "opcoes": { "type": "array", "items": { "type": "string" } },
@@ -132,6 +142,7 @@ import { z } from 'zod'
 export const TIPOS_QUESTAO = [
   'multipla_escolha', 'lacuna', 'ordenar_palavras',
   'ligar_colunas', 'verdadeiro_falso', 'resposta_curta',
+  'pronuncia', 'ordenar_audio',
 ] as const
 
 const parSchema = z.object({
@@ -180,6 +191,8 @@ export type AtividadeGerada = z.infer<typeof atividadeGeradaSchema>
 ## 7. O que o aluno pode ver, e quando
 
 **Atualizado em 26/07/2026 — decisão de produto, não limitação técnica.**
+
+> **A exceção: `pronuncia`.** Tudo abaixo vale para os outros sete tipos. Nota de fala não tem como sair do navegador — depende de chave de API — então esse tipo, e só ele, faz a tela do aluno ESPERAR uma volta ao servidor (`tarefa-pronuncia`), que já grava a resposta por conta própria. `corrigir()` lança erro se receber `pronuncia`, dos dois lados, em vez de devolver `false` calado; use `correcaoEhLocal(tipo)` antes de chamar. E o custo dela é por RESPOSTA, não por geração — cada gravação é uma chamada paga, daí o teto de tentativas.
 
 A primeira chamada a `tarefa-obter` já devolve o gabarito **completo** de todas as questões — `resposta_correta`, `respostas_aceitas`, `pares` e `explicacao` — não só das que o aluno já respondeu. A correção acontece no navegador do aluno, na hora, com `corrigir()` (duplicada em `app/src/types/questao.ts` e `supabase/functions/_shared/correcao.ts`). O servidor grava a resposta em segundo plano, sem bloquear a tela.
 

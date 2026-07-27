@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { EtiquetaTipo, QuestaoLeitura } from './QuestaoLeitura'
-import { CORES_TIPO, MARCADOR_LACUNA, ROTULO_TIPO, TIPOS_QUESTAO } from '@/types/questao'
+import { CORES_TIPO, MARCADOR_LACUNA, ROTULO_TIPO, TIPOS_QUESTAO, palavrasDaFrase } from '@/types/questao'
 import type { QuestaoRascunho } from './questaoRascunho'
 import { questaoVazia } from './questaoRascunho'
 
@@ -131,6 +131,8 @@ export function QuestaoEditor({
         {valor.tipo === 'verdadeiro_falso' && <CamposVerdadeiroFalso valor={valor} onMudar={onMudar} />}
         {valor.tipo === 'ligar_colunas' && <CamposLigarColunas valor={valor} onMudar={onMudar} />}
         {valor.tipo === 'ordenar_palavras' && <CamposOrdenarPalavras valor={valor} onMudar={onMudar} />}
+        {valor.tipo === 'ordenar_audio' && <CamposOrdenarAudio valor={valor} onMudar={onMudar} />}
+        {valor.tipo === 'pronuncia' && <CamposPronuncia valor={valor} onMudar={onMudar} />}
         {(valor.tipo === 'lacuna' || valor.tipo === 'resposta_curta') && (
           <CamposRespostaTexto valor={valor} onMudar={onMudar} />
         )}
@@ -317,6 +319,68 @@ function CamposOrdenarPalavras({ valor, onMudar }: CamposProps) {
         placeholder="They went to the beach yesterday."
         className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
       />
+    </label>
+  )
+}
+
+/**
+ * As distratoras ficam num campo SEPARADO da frase, e não numa lista única de
+ * fichas: assim o professor edita a frase sem reescrever as fichas, e nunca
+ * consegue publicar uma questão a que falte ficha para alguma palavra — as da
+ * frase são derivadas em `paraQuestaoContrato`.
+ */
+function CamposOrdenarAudio({ valor, onMudar }: CamposProps) {
+  const palavras = palavrasDaFrase(valor.resposta_correta)
+  const distratoras = valor.opcoes.map((o) => o.trim()).filter(Boolean)
+
+  return (
+    <div className="space-y-2">
+      <label className="block">
+        <span className="text-xs font-bold text-neutral-600">
+          Frase falada <span className="font-normal text-neutral-400">— o aparelho do aluno lê em voz alta</span>
+        </span>
+        <input
+          value={valor.resposta_correta}
+          onChange={(e) => onMudar({ ...valor, resposta_correta: e.target.value })}
+          placeholder="They went to the beach yesterday."
+          className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+        />
+      </label>
+      <label className="block">
+        <span className="text-xs font-bold text-neutral-600">
+          Palavras distratoras <span className="font-normal text-neutral-400">(separadas por vírgula)</span>
+        </span>
+        <input
+          value={valor.opcoes.join(', ')}
+          onChange={(e) => onMudar({ ...valor, opcoes: e.target.value.split(',').map((s) => s.trim()) })}
+          placeholder="their, walk, was"
+          className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+        />
+      </label>
+      <p className={`text-xs ${distratoras.length === 0 ? 'font-bold text-rose-600' : 'text-neutral-400'}`}>
+        {distratoras.length === 0
+          ? 'Adicione ao menos uma distratora — sem elas o aluno acerta só usando todas as fichas.'
+          : `${palavras.length} fichas da frase + ${distratoras.length} distratora${distratoras.length > 1 ? 's' : ''}, embaralhadas na tela do aluno.`}
+      </p>
+    </div>
+  )
+}
+
+function CamposPronuncia({ valor, onMudar }: CamposProps) {
+  return (
+    <label className="block">
+      <span className="text-xs font-bold text-neutral-600">
+        Frase a ler em voz alta <span className="font-normal text-neutral-400">— a IA dá a nota de 0 a 100</span>
+      </span>
+      <input
+        value={valor.resposta_correta}
+        onChange={(e) => onMudar({ ...valor, resposta_correta: e.target.value })}
+        placeholder="I think this weather is terrible."
+        className="mt-1 w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+      />
+      <span className="mt-1 block text-xs text-neutral-400">
+        Frases curtas com um desafio claro (th, r inicial, -ed final). Na explicação, diga qual som vigiar.
+      </span>
     </label>
   )
 }

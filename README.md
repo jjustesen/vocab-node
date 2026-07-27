@@ -49,6 +49,7 @@ npm run dev
    supabase functions deploy convite-concluir --no-verify-jwt
    supabase functions deploy gerar-atividade
    supabase functions deploy painel-aluno-obter
+   supabase functions deploy tarefa-pronuncia --no-verify-jwt
    ```
    `--no-verify-jwt` é obrigatório nas quatro primeiras: quem chama é o navegador do aluno sem sessão (tarefa-\*) ou ainda sem conta (convite-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade` e `painel-aluno-obter` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
 6. Gere uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e configure o secret (nunca entra no `.env` do front — só a Edge Function enxerga):
@@ -257,5 +258,9 @@ Três decisões de produto tomadas nesse redesign, por não haver dado que suste
 - **Sem notificação por e-mail (RF-92)** — o professor só vê o resultado se voltar à plataforma; adiado a pedido, sem provedor de e-mail escolhido.
 - **Aluno não troca o próprio e-mail (RF-29, P2)** — só o professor reseta o acesso; o aluno logado não tem uma tela de "trocar e-mail" própria.
 - **Cadastro exige "Confirm email" desligado no projeto Supabase** — `CadastroAlunoPage` assume que `signUp` já devolve uma sessão ativa na hora. Com confirmação de e-mail ligada, o fluxo pararia no meio (o token do convite não sobrevive até o clique no e-mail); ajustar isso é trabalho futuro caso o projeto vá para produção com confirmação obrigatória.
+- **A pronúncia custa por RESPOSTA, não por geração** — a cota mensal cobre `gerar-atividade`; cada gravação enviada a `tarefa-pronuncia` é uma chamada paga à parte, hoje contida só pelo teto de 4 tentativas por questão e pelo limite de ~30s de áudio. Se o tipo pegar, isso precisa de cota própria antes de virar conta.
+- **A nota de pronúncia é julgamento de um LLM ouvindo, não análise fonética.** Serve para lição de casa ("dá para entender?"), não como nota de prova. Nota de fonema exigiria um serviço dedicado (Azure Speech e afins).
+- **`ordenar_audio` depende de haver voz em inglês no aparelho** — usamos o `speechSynthesis` do navegador em vez de TTS armazenado. Em aparelho sem voz em inglês a tela degrada para "ler a frase em vez de ouvir", virando um `ordenar_palavras`. Já vi acontecer em teste: nem todo navegador traz voz en-US.
+- **`ordenar_palavras` não valida solvabilidade** — diferente de `ordenar_audio`, ele não checa se as fichas cobrem a frase. Bug pré-existente, não tocado ao adicionar os tipos novos.
 - **Sem cobrança (RF-113)** — sem gateway integrado, o professor não assina nem cancela o plano pago pela própria plataforma; troca de plano é manual, direto no banco.
 - **Cota de alunos é só do lado do cliente** — dá pra burlar chamando o Postgrest direto (confirmado em teste). A cota de gerações por IA, essa sim, é aplicada no servidor de verdade (é a que custa dinheiro de verdade a cada chamada).
