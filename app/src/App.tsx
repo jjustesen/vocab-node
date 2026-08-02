@@ -9,6 +9,7 @@ import { AlunoPage } from '@/features/alunos/AlunoPage'
 import { AtividadesPage } from '@/features/atividades/AtividadesPage'
 import { NovaAtividadePage } from '@/features/atividades/NovaAtividadePage'
 import { GerarAtividadePage } from '@/features/atividades/GerarAtividadePage'
+import { GerarLotePage } from '@/features/atividades/GerarLotePage'
 import { ResultadoAtribuicaoPage } from '@/features/resultados/ResultadoAtribuicaoPage'
 import { AtividadeDetalhePage } from '@/features/atividades/AtividadeDetalhePage'
 import { EditarAtividadePage } from '@/features/atividades/EditarAtividadePage'
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="/atividades" element={<AtividadesPage />} />
             <Route path="/atividades/nova" element={<NovaAtividadePage />} />
             <Route path="/atividades/gerar" element={<GerarAtividadePage />} />
+            <Route path="/atividades/lote" element={<GerarLotePage />} />
             <Route path="/atividades/:id" element={<AtividadeDetalhePage />} />
             <Route path="/atividades/:id/editar" element={<EditarAtividadePage />} />
             <Route path="/resultados/:atribuicaoId" element={<ResultadoAtribuicaoPage />} />

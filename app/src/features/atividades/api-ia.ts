@@ -30,24 +30,24 @@ export type AtividadeGeradaIA = {
  * Gemini nunca sai dele). Diferente de tarefa-*, esta função verifica o JWT:
  * `supabase.functions.invoke` já manda o Authorization do professor logado.
  */
-export function useGerarAtividadeIA() {
-  return useMutation({
-    mutationFn: async (parametros: ParametrosGeracaoIA): Promise<AtividadeGeradaIA> => {
-      const { data, error } = await supabase.functions.invoke('gerar-atividade', {
-        body: {
-          material: parametros.material,
-          nivel: parametros.nivel,
-          quantidade: parametros.quantidade,
-          habilidades: parametros.habilidades,
-          foco: parametros.foco,
-          erros_recorrentes: parametros.errosRecorrentes,
-        },
-      })
-      if (error) {
-        const mensagem = await extrairMensagemDeErro(error)
-        throw new Error(mensagem)
-      }
-      return data as AtividadeGeradaIA
+export async function gerarAtividadeIA(parametros: ParametrosGeracaoIA): Promise<AtividadeGeradaIA> {
+  const { data, error } = await supabase.functions.invoke('gerar-atividade', {
+    body: {
+      material: parametros.material,
+      nivel: parametros.nivel,
+      quantidade: parametros.quantidade,
+      habilidades: parametros.habilidades,
+      foco: parametros.foco,
+      erros_recorrentes: parametros.errosRecorrentes,
     },
   })
+  if (error) {
+    const mensagem = await extrairMensagemDeErro(error)
+    throw new Error(mensagem)
+  }
+  return data as AtividadeGeradaIA
+}
+
+export function useGerarAtividadeIA() {
+  return useMutation({ mutationFn: gerarAtividadeIA })
 }

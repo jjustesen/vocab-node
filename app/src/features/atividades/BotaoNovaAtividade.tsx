@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Library, PencilLine, Plus, Sparkles } from 'lucide-react'
+import { Layers, Library, PencilLine, Plus, Sparkles } from 'lucide-react'
 import { EscolherDaBibliotecaModal } from './EscolherDaBibliotecaModal'
 import type { Aluno } from '@/types/db'
 
@@ -41,6 +41,14 @@ export function BotaoNovaAtividade({ compacto = false, aluno }: { compacto?: boo
               cor="bg-violet-100 text-violet-700"
               titulo="Gerar com IA"
               descricao="A partir do material da aula"
+              aoIr={() => setAberto(false)}
+            />
+            <Opcao
+              para="/atividades/lote"
+              Icone={Layers}
+              cor="bg-violet-100 text-violet-700"
+              titulo="Gerar em lote"
+              descricao="Vários materiais de uma vez"
               aoIr={() => setAberto(false)}
             />
             <Opcao

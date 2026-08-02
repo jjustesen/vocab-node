@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vocab Node — Gerar atividades em lote</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['"Plus Jakarta Sans"','system-ui','sans-serif']}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.276.0"></script>
+</head>
+<body class="bg-slate-200 text-neutral-800 antialiased font-sans">
+
+<header class="bg-neutral-950 text-white">
+  <div class="max-w-5xl mx-auto px-6 py-10">
+    <p class="text-violet-400 font-bold text-sm tracking-widest uppercase">Vocab Node · Proposta de fluxo</p>
+    <h1 class="text-3xl font-extrabold mt-2">Gerar atividades em lote com IA</h1>
+    <p class="text-neutral-400 mt-2 max-w-2xl">Sobe N arquivos → cada um vira uma atividade. Uma configuração padrão vale para todos, e cada arquivo pode sobrescrever o que quiser. Somente visual — nada funciona.</p>
+    <nav class="flex flex-wrap gap-2 mt-6 text-sm font-semibold">
+      <a href="#l1" class="bg-violet-500 hover:bg-violet-400 text-white px-4 py-2 rounded-full">L1 · Soltar arquivos</a>
+      <a href="#l2" class="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-full">L2 · Configurar</a>
+      <a href="#l2b" class="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-full">L2b · Personalizar um</a>
+      <a href="#l3" class="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-full">L3 · Gerando</a>
+      <a href="#l4" class="bg-neutral-800 hover:bg-neutral-700 px-4 py-2 rounded-full">L4 · Revisar e salvar</a>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-6 py-10 space-y-14">
+
+<!-- ══════════════════ L1 ══════════════════ -->
+<section id="l1">
+  <div class="flex items-baseline gap-3 mb-1">
+    <h2 class="text-xl font-extrabold">L1 · Soltar os arquivos</h2>
+    <span class="text-xs font-bold text-neutral-500">entrada pelo botão “Nova atividade → Em lote”</span>
+  </div>
+  <p class="text-sm text-neutral-600 mb-4 max-w-3xl">Estado vazio. Uma área de drop grande e só isso — sem pedir configuração antes de o professor ver o que subiu. A regra de negócio (quantas gerações restam no plano) aparece já aqui, antes de ele investir tempo.</p>
+
+  <div class="bg-[#faf7f2] rounded-3xl p-6">
+    <div class="flex items-center gap-2">
+      <span class="grid h-9 w-9 place-items-center rounded-2xl bg-violet-100 text-violet-700"><i data-lucide="layers" class="h-4 w-4"></i></span>
+      <h1 class="text-2xl font-extrabold">Gerar atividades em lote</h1>
+    </div>
+    <p class="mt-1.5 text-sm text-neutral-500">Envie vários materiais de uma vez — cada arquivo vira uma atividade separada. A IA usa só o que está no arquivo, nunca inventa conteúdo novo.</p>
+
+    <p class="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">Você tem <b>12 de 30</b> gerações restantes este mês — cada arquivo do lote consome uma.</p>
+
+    <div class="mt-5 bg-white rounded-3xl p-5">
+      <label class="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-neutral-300 px-4 py-16 text-center transition hover:border-neutral-400">
+        <i data-lucide="upload-cloud" class="h-7 w-7 text-neutral-400"></i>
+        <span class="text-base font-extrabold text-neutral-700">Arraste os arquivos aqui</span>
+        <span class="text-sm font-bold text-neutral-500">ou clique para escolher — até 20 por lote</span>
+        <span class="text-xs text-neutral-400 mt-1">PDF até 15MB · JPG/PNG até 32MB · .txt e .docx</span>
+      </label>
+      <div class="mt-3 flex justify-center">
+        <button class="text-xs font-bold text-neutral-500 hover:text-neutral-800 flex items-center gap-1.5"><i data-lucide="folder" class="h-3.5 w-3.5"></i> Escolher da biblioteca de materiais</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ L2 ══════════════════ -->
+<section id="l2">
+  <div class="flex items-baseline gap-3 mb-1">
+    <h2 class="text-xl font-extrabold">L2 · Configuração padrão + lista</h2>
+    <span class="text-xs font-bold text-neutral-500">a tela central da feature</span>
+  </div>
+  <p class="text-sm text-neutral-600 mb-4 max-w-3xl">A ideia inteira em uma tela: <b>o painel de cima define tudo para todos</b>; a lista de baixo mostra cada arquivo herdando esse padrão (“Padrão”) ou com ajuste próprio (“Personalizado”). O professor que quer o caso simples só olha o topo e clica em Gerar — o caso avançado está à mão sem estorvar.</p>
+
+  <div class="bg-[#faf7f2] rounded-3xl p-6">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="grid h-9 w-9 place-items-center rounded-2xl bg-violet-100 text-violet-700"><i data-lucide="layers" class="h-4 w-4"></i></span>
+          <h1 class="text-2xl font-extrabold">Gerar atividades em lote</h1>
+        </div>
+        <p class="mt-1.5 text-sm text-neutral-500">10 arquivos prontos · 10 gerações serão usadas</p>
+      </div>
+      <button class="text-xs font-bold text-neutral-500 hover:text-neutral-800 flex items-center gap-1.5 bg-white rounded-full px-4 py-2.5"><i data-lucide="plus" class="h-3.5 w-3.5"></i> Adicionar mais arquivos</button>
+    </div>
+
+    <!-- painel de config padrão -->
+    <section class="mt-5 rounded-3xl bg-white p-5">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <h2 class="flex items-center gap-2 text-sm font-bold text-neutral-900">
+          <span class="grid h-6 w-6 place-items-center rounded-full bg-emerald-200 text-emerald-800 text-xs font-extrabold">1</span>
+          Configuração padrão <span class="font-medium text-neutral-400">— vale para todos os arquivos</span>
+        </h2>
+        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 rounded-full px-3 py-1.5">aplicada a 8 de 10</span>
+      </div>
+
+      <div class="grid gap-5 md:grid-cols-2 mt-4">
+        <div>
+          <span class="text-xs font-bold text-neutral-600">Nível</span>
+          <div class="mt-1.5 flex flex-wrap gap-1.5">
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">A1</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">A2</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-900 text-white">B1</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">B2</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">C1</span>
+          </div>
+          <span class="text-xs font-bold text-neutral-600 block mt-4">Questões por atividade</span>
+          <div class="mt-1.5 flex flex-wrap gap-1.5">
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">5</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-900 text-white">10</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">15</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">20</span>
+          </div>
+        </div>
+        <div>
+          <span class="text-xs font-bold text-neutral-600">Habilidades</span>
+          <div class="mt-1.5 flex flex-wrap gap-1.5">
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-violet-200 text-violet-800 flex items-center gap-1"><i data-lucide="check" class="h-3 w-3"></i> Vocabulário</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-violet-200 text-violet-800 flex items-center gap-1"><i data-lucide="check" class="h-3 w-3"></i> Gramática</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">Leitura</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">Escuta</span>
+            <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">Pronúncia</span>
+          </div>
+          <label class="block mt-4">
+            <span class="text-xs font-bold text-neutral-600">Foco <span class="font-medium text-neutral-400">(opcional)</span></span>
+            <input value="past simple" class="mt-1.5 w-full rounded-2xl bg-neutral-100 px-4 py-3 text-sm outline-none" readonly>
+          </label>
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center gap-2 rounded-2xl bg-neutral-100 px-4 py-3">
+        <i data-lucide="type" class="h-4 w-4 text-neutral-400 shrink-0"></i>
+        <span class="text-xs font-bold text-neutral-600">Título de cada atividade:</span>
+        <span class="text-xs font-bold text-neutral-900 bg-white rounded-full px-3 py-1">A IA sugere pelo conteúdo</span>
+        <span class="text-xs font-medium text-neutral-400">·</span>
+        <button class="text-xs font-bold text-neutral-500 hover:text-neutral-800">usar nome do arquivo</button>
+      </div>
+    </section>
+
+    <!-- lista de arquivos -->
+    <section class="mt-4 rounded-3xl bg-white p-5">
+      <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
+        <h2 class="flex items-center gap-2 text-sm font-bold text-neutral-900">
+          <span class="grid h-6 w-6 place-items-center rounded-full bg-violet-200 text-violet-800 text-xs font-extrabold">2</span>
+          Arquivos do lote <span class="font-medium text-neutral-400">— 10</span>
+        </h2>
+        <span class="text-xs font-medium text-neutral-400">Clique em um arquivo para personalizar só ele</span>
+      </div>
+
+      <ul class="space-y-2">
+        <!-- item herdando o padrão -->
+        <li class="flex items-center gap-3 rounded-2xl bg-neutral-50 px-4 py-3 hover:bg-neutral-100 cursor-pointer transition">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-neutral-500"><i data-lucide="file-text" class="h-4 w-4"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-bold text-neutral-900">Unit 3 — Travel vocabulary.pdf</span>
+            <span class="text-xs font-medium text-neutral-500">1,2 MB · 4 páginas</span>
+          </span>
+          <span class="hidden sm:flex items-center gap-1.5 text-xs font-bold text-neutral-500">
+            <span class="bg-white rounded-full px-2.5 py-1">B1</span>
+            <span class="bg-white rounded-full px-2.5 py-1">10 questões</span>
+            <span class="bg-white rounded-full px-2.5 py-1">Vocab + Gram</span>
+          </span>
+          <span class="shrink-0 text-xs font-bold text-neutral-400 bg-neutral-200/60 rounded-full px-3 py-1.5">Padrão</span>
+          <button class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-neutral-400 hover:bg-white hover:text-neutral-700"><i data-lucide="x" class="h-4 w-4"></i></button>
+        </li>
+
+        <!-- item personalizado -->
+        <li class="flex items-center gap-3 rounded-2xl bg-violet-50 ring-1 ring-violet-200 px-4 py-3 cursor-pointer transition">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-violet-600"><i data-lucide="image" class="h-4 w-4"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-bold text-neutral-900">quadro-aula-05.jpg</span>
+            <span class="text-xs font-medium text-violet-700">foto reduzida para envio</span>
+          </span>
+          <span class="hidden sm:flex items-center gap-1.5 text-xs font-bold text-violet-800">
+            <span class="bg-white rounded-full px-2.5 py-1">A2</span>
+            <span class="bg-white rounded-full px-2.5 py-1">5 questões</span>
+            <span class="bg-white rounded-full px-2.5 py-1">Escuta</span>
+          </span>
+          <span class="shrink-0 text-xs font-bold text-violet-800 bg-violet-200 rounded-full px-3 py-1.5">Personalizado</span>
+          <button class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-violet-400 hover:bg-white hover:text-violet-700"><i data-lucide="x" class="h-4 w-4"></i></button>
+        </li>
+
+        <!-- item com aviso -->
+        <li class="flex items-center gap-3 rounded-2xl bg-amber-50 ring-1 ring-amber-200 px-4 py-3 cursor-pointer transition">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-amber-600"><i data-lucide="alert-triangle" class="h-4 w-4"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-bold text-neutral-900">anotacoes.pdf</span>
+            <span class="text-xs font-bold text-amber-800">Pouco texto legível — a IA pode gerar poucas questões</span>
+          </span>
+          <span class="shrink-0 text-xs font-bold text-neutral-400 bg-white rounded-full px-3 py-1.5">Padrão</span>
+          <button class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-amber-500 hover:bg-white hover:text-amber-700"><i data-lucide="x" class="h-4 w-4"></i></button>
+        </li>
+
+        <li class="flex items-center gap-3 rounded-2xl bg-neutral-50 px-4 py-3 hover:bg-neutral-100 cursor-pointer transition">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-neutral-500"><i data-lucide="file-text" class="h-4 w-4"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-bold text-neutral-900">Unit 4 — Present perfect.pdf</span>
+            <span class="text-xs font-medium text-neutral-500">890 KB · 3 páginas</span>
+          </span>
+          <span class="shrink-0 text-xs font-bold text-neutral-400 bg-neutral-200/60 rounded-full px-3 py-1.5">Padrão</span>
+          <button class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-neutral-400 hover:bg-white hover:text-neutral-700"><i data-lucide="x" class="h-4 w-4"></i></button>
+        </li>
+
+        <li class="text-center text-xs font-bold text-neutral-400 py-2">+ 6 arquivos</li>
+      </ul>
+    </section>
+
+    <!-- barra de ação fixa -->
+    <div class="mt-4 sticky bottom-4">
+      <div class="flex items-center justify-between gap-4 flex-wrap rounded-full bg-neutral-900 text-white px-6 py-3.5 shadow-xl">
+        <span class="text-xs font-bold text-neutral-300">10 atividades serão geradas · usa 10 das suas 12 gerações</span>
+        <button class="flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-extrabold text-neutral-900"><i data-lucide="sparkles" class="h-4 w-4"></i> Gerar 10 atividades</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ L2b ══════════════════ -->
+<section id="l2b">
+  <div class="flex items-baseline gap-3 mb-1">
+    <h2 class="text-xl font-extrabold">L2b · Personalizar um arquivo</h2>
+    <span class="text-xs font-bold text-neutral-500">painel lateral, não sai da tela</span>
+  </div>
+  <p class="text-sm text-neutral-600 mb-4 max-w-3xl">Abre por cima da lista. Cada campo mostra explicitamente “herdando do padrão” até ser tocado — assim o professor entende <i>por que</i> aquele valor está ali e como voltar atrás. É esse detalhe que faz o modelo “um padrão + exceções” ficar intuitivo.</p>
+
+  <div class="bg-[#faf7f2] rounded-3xl p-6 flex justify-end">
+    <div class="w-full max-w-md rounded-3xl bg-white p-5 shadow-xl">
+      <div class="flex items-start gap-3">
+        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-100 text-violet-600"><i data-lucide="image" class="h-4 w-4"></i></span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-extrabold text-neutral-900">quadro-aula-05.jpg</span>
+          <span class="text-xs font-medium text-neutral-500">Arquivo 2 de 10</span>
+        </span>
+        <button class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"><i data-lucide="x" class="h-4 w-4"></i></button>
+      </div>
+
+      <div class="mt-4 flex items-center justify-between rounded-2xl bg-violet-50 px-4 py-3">
+        <span class="text-xs font-bold text-violet-800">Configuração própria</span>
+        <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-violet-600"><span class="inline-block h-4 w-4 translate-x-6 rounded-full bg-white"></span></span>
+      </div>
+
+      <div class="mt-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-neutral-600">Nível</span>
+          <button class="text-[11px] font-bold text-violet-600 hover:underline">voltar ao padrão (B1)</button>
+        </div>
+        <div class="mt-1.5 flex flex-wrap gap-1.5">
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">A1</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-900 text-white">A2</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">B1</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">B2</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">C1</span>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-neutral-600">Questões</span>
+          <span class="text-[11px] font-bold text-neutral-400">herdando do padrão</span>
+        </div>
+        <div class="mt-1.5 flex flex-wrap gap-1.5 opacity-60">
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">5</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-900 text-white">10</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">15</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">20</span>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-neutral-600">Habilidades</span>
+          <button class="text-[11px] font-bold text-violet-600 hover:underline">voltar ao padrão</button>
+        </div>
+        <div class="mt-1.5 flex flex-wrap gap-1.5">
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">Vocabulário</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">Gramática</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">Leitura</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-violet-200 text-violet-800 flex items-center gap-1"><i data-lucide="check" class="h-3 w-3"></i> Escuta</span>
+          <span class="rounded-full px-3.5 py-1.5 text-xs font-bold bg-neutral-100 text-neutral-600">Pronúncia</span>
+        </div>
+      </div>
+
+      <label class="block mt-4">
+        <span class="text-xs font-bold text-neutral-600">Foco <span class="font-medium text-neutral-400">(opcional)</span></span>
+        <input placeholder="herdando: past simple" class="mt-1.5 w-full rounded-2xl bg-neutral-100 px-4 py-3 text-sm outline-none placeholder:text-neutral-400" readonly>
+      </label>
+
+      <div class="mt-5 flex items-center gap-2">
+        <button class="flex-1 rounded-full bg-neutral-900 py-3 text-sm font-extrabold text-white">Salvar e ir ao próximo</button>
+        <button class="rounded-full bg-neutral-100 px-5 py-3 text-sm font-bold text-neutral-600">Fechar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ L3 ══════════════════ -->
+<section id="l3">
+  <div class="flex items-baseline gap-3 mb-1">
+    <h2 class="text-xl font-extrabold">L3 · Gerando</h2>
+    <span class="text-xs font-bold text-neutral-500">o momento mais frágil da feature</span>
+  </div>
+  <p class="text-sm text-neutral-600 mb-4 max-w-3xl">10 arquivos × até 90s cada é uma espera longa demais para prender o professor na tela. Duas defesas: <b>progresso item a item</b> (ele vê que está andando, não travado) e <b>“pode sair desta tela”</b> — o lote continua no servidor e ele é avisado ao terminar. Uma falha isolada não derruba o lote: fica marcada e é reprocessável sozinha.</p>
+
+  <div class="bg-[#faf7f2] rounded-3xl p-6">
+    <div class="rounded-3xl bg-white p-6">
+      <div class="flex items-center gap-3">
+        <i data-lucide="loader-2" class="h-5 w-5 text-violet-600 animate-spin"></i>
+        <h2 class="text-lg font-extrabold">Gerando 10 atividades…</h2>
+      </div>
+      <div class="mt-4 h-2.5 w-full rounded-full bg-neutral-100 overflow-hidden">
+        <div class="h-full w-[40%] rounded-full bg-violet-500"></div>
+      </div>
+      <p class="mt-2 text-xs font-bold text-neutral-500">4 de 10 prontas · cerca de 6 minutos restantes</p>
+
+      <div class="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 flex items-center gap-2">
+        <i data-lucide="bell" class="h-4 w-4 text-emerald-700 shrink-0"></i>
+        <p class="text-sm font-medium text-emerald-800">Pode fechar esta tela — a geração continua e você recebe um aviso quando terminar.</p>
+      </div>
+
+      <ul class="mt-4 space-y-1.5">
+        <li class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-50">
+          <i data-lucide="check-circle-2" class="h-4 w-4 text-emerald-600 shrink-0"></i>
+          <span class="flex-1 min-w-0 truncate text-sm font-bold text-neutral-800">Unit 3 — Travel vocabulary.pdf</span>
+          <span class="text-xs font-bold text-emerald-700">10 questões</span>
+        </li>
+        <li class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-50">
+          <i data-lucide="check-circle-2" class="h-4 w-4 text-emerald-600 shrink-0"></i>
+          <span class="flex-1 min-w-0 truncate text-sm font-bold text-neutral-800">quadro-aula-05.jpg</span>
+          <span class="text-xs font-bold text-emerald-700">5 questões</span>
+        </li>
+        <li class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-rose-50">
+          <i data-lucide="alert-circle" class="h-4 w-4 text-rose-600 shrink-0"></i>
+          <span class="flex-1 min-w-0 truncate text-sm font-bold text-neutral-800">anotacoes.pdf</span>
+          <span class="text-xs font-bold text-rose-700">texto insuficiente</span>
+          <button class="text-xs font-extrabold text-rose-700 bg-white rounded-full px-3 py-1">Tentar de novo</button>
+        </li>
+        <li class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-violet-50">
+          <i data-lucide="loader-2" class="h-4 w-4 text-violet-600 shrink-0 animate-spin"></i>
+          <span class="flex-1 min-w-0 truncate text-sm font-bold text-neutral-800">Unit 4 — Present perfect.pdf</span>
+          <span class="text-xs font-bold text-violet-700">gerando…</span>
+        </li>
+        <li class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-neutral-50">
+          <i data-lucide="circle" class="h-4 w-4 text-neutral-300 shrink-0"></i>
+          <span class="flex-1 min-w-0 truncate text-sm font-bold text-neutral-400">Unit 5 — Food and drink.pdf</span>
+          <span class="text-xs font-bold text-neutral-400">na fila</span>
+        </li>
+        <li class="text-center text-xs font-bold text-neutral-400 py-2">+ 5 na fila</li>
+      </ul>
+
+      <div class="mt-5 flex justify-end">
+        <button class="rounded-full bg-neutral-100 px-5 py-2.5 text-sm font-bold text-neutral-600">Cancelar os que faltam</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════ L4 ══════════════════ -->
+<section id="l4">
+  <div class="flex items-baseline gap-3 mb-1">
+    <h2 class="text-xl font-extrabold">L4 · Revisar e salvar</h2>
+    <span class="text-xs font-bold text-neutral-500">lista com preview + aprovação em massa</span>
+  </div>
+  <p class="text-sm text-neutral-600 mb-4 max-w-3xl">Nada foi para aluno nenhum: são rascunhos aguardando decisão. O professor pode <b>expandir</b> uma para ver as questões ali mesmo, <b>abrir</b> no editor completo, ou <b>descartar</b>. O botão principal salva tudo o que está marcado de uma vez — e o que a IA considerou frágil já vem sinalizado, para a atenção ir onde importa.</p>
+
+  <div class="bg-[#faf7f2] rounded-3xl p-6">
+    <div class="flex items-center gap-2">
+      <span class="grid h-9 w-9 place-items-center rounded-2xl bg-emerald-100 text-emerald-700"><i data-lucide="check-check" class="h-4 w-4"></i></span>
+      <h1 class="text-2xl font-extrabold">9 atividades geradas</h1>
+    </div>
+    <p class="mt-1.5 text-sm text-neutral-500">Revise antes de salvar. Elas serão salvas como rascunho — nada vai para o aluno até você atribuir.</p>
+
+    <div class="mt-4 flex items-center gap-3 rounded-2xl bg-white px-4 py-3">
+      <span class="grid h-5 w-5 place-items-center rounded-md bg-neutral-900 text-white shrink-0"><i data-lucide="check" class="h-3.5 w-3.5"></i></span>
+      <span class="text-sm font-bold text-neutral-800">9 selecionadas</span>
+      <span class="flex-1"></span>
+      <button class="text-xs font-bold text-neutral-500 hover:text-neutral-800">Desmarcar todas</button>
+    </div>
+
+    <ul class="mt-3 space-y-2">
+      <!-- card recolhido -->
+      <li class="rounded-3xl bg-white p-4">
+        <div class="flex items-center gap-3">
+          <span class="grid h-5 w-5 place-items-center rounded-md bg-neutral-900 text-white shrink-0"><i data-lucide="check" class="h-3.5 w-3.5"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-extrabold text-neutral-900">Travel Vocabulary — Unit 3</span>
+            <span class="text-xs font-medium text-neutral-500">de <i>Unit 3 — Travel vocabulary.pdf</i> · B1 · 10 questões · Vocabulário, Gramática</span>
+          </span>
+          <button class="rounded-full bg-neutral-100 px-4 py-2 text-xs font-bold text-neutral-600 flex items-center gap-1.5"><i data-lucide="eye" class="h-3.5 w-3.5"></i> Ver questões</button>
+          <button class="rounded-full bg-neutral-100 px-4 py-2 text-xs font-bold text-neutral-600 flex items-center gap-1.5"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Editar</button>
+        </div>
+      </li>
+
+      <!-- card expandido -->
+      <li class="rounded-3xl bg-white p-4 ring-2 ring-neutral-900">
+        <div class="flex items-center gap-3">
+          <span class="grid h-5 w-5 place-items-center rounded-md bg-neutral-900 text-white shrink-0"><i data-lucide="check" class="h-3.5 w-3.5"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-extrabold text-neutral-900">Classroom Listening — Aula 05</span>
+            <span class="text-xs font-medium text-neutral-500">de <i>quadro-aula-05.jpg</i> · A2 · 5 questões · Escuta</span>
+          </span>
+          <button class="rounded-full bg-neutral-900 px-4 py-2 text-xs font-bold text-white flex items-center gap-1.5"><i data-lucide="chevron-up" class="h-3.5 w-3.5"></i> Fechar</button>
+          <button class="rounded-full bg-neutral-100 px-4 py-2 text-xs font-bold text-neutral-600 flex items-center gap-1.5"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Editar</button>
+        </div>
+        <div class="mt-3 space-y-2 border-t border-neutral-100 pt-3">
+          <div class="rounded-2xl bg-neutral-50 px-4 py-3">
+            <p class="text-sm font-bold text-neutral-800">1. Listen and choose: “She ____ to school every day.”</p>
+            <div class="mt-2 flex flex-wrap gap-1.5 text-xs font-bold">
+              <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1">goes ✓</span>
+              <span class="rounded-full bg-white text-neutral-500 px-3 py-1">go</span>
+              <span class="rounded-full bg-white text-neutral-500 px-3 py-1">going</span>
+              <span class="rounded-full bg-white text-neutral-500 px-3 py-1">gone</span>
+            </div>
+          </div>
+          <div class="rounded-2xl bg-neutral-50 px-4 py-3">
+            <p class="text-sm font-bold text-neutral-800">2. Complete: “What time ____ the class start?”</p>
+            <div class="mt-2 flex flex-wrap gap-1.5 text-xs font-bold">
+              <span class="rounded-full bg-emerald-100 text-emerald-800 px-3 py-1">does ✓</span>
+              <span class="rounded-full bg-white text-neutral-500 px-3 py-1">do</span>
+              <span class="rounded-full bg-white text-neutral-500 px-3 py-1">is</span>
+            </div>
+          </div>
+          <p class="text-center text-xs font-bold text-neutral-400 py-1">+ 3 questões</p>
+        </div>
+      </li>
+
+      <!-- card com alerta -->
+      <li class="rounded-3xl bg-white p-4 ring-1 ring-amber-200">
+        <div class="flex items-center gap-3">
+          <span class="grid h-5 w-5 place-items-center rounded-md bg-neutral-900 text-white shrink-0"><i data-lucide="check" class="h-3.5 w-3.5"></i></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-extrabold text-neutral-900">Present Perfect — Unit 4</span>
+            <span class="text-xs font-bold text-amber-800 flex items-center gap-1"><i data-lucide="alert-triangle" class="h-3 w-3"></i> 3 questões foram descartadas — saiu com 7 em vez de 10</span>
+          </span>
+          <button class="rounded-full bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 flex items-center gap-1.5"><i data-lucide="eye" class="h-3.5 w-3.5"></i> Revisar</button>
+          <button class="rounded-full bg-neutral-100 px-4 py-2 text-xs font-bold text-neutral-600 flex items-center gap-1.5"><i data-lucide="pencil" class="h-3.5 w-3.5"></i> Editar</button>
+        </div>
+      </li>
+
+      <!-- card desmarcado -->
+      <li class="rounded-3xl bg-white/60 p-4">
+        <div class="flex items-center gap-3 opacity-50">
+          <span class="h-5 w-5 rounded-md border-2 border-neutral-300 shrink-0"></span>
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-extrabold text-neutral-900">Food and Drink — Unit 5</span>
+            <span class="text-xs font-medium text-neutral-500">não será salva</span>
+          </span>
+          <button class="rounded-full bg-neutral-100 px-4 py-2 text-xs font-bold text-neutral-600">Ver questões</button>
+        </div>
+      </li>
+
+      <li class="text-center text-xs font-bold text-neutral-400 py-2">+ 5 atividades</li>
+    </ul>
+
+    <div class="mt-4 sticky bottom-4">
+      <div class="flex items-center justify-between gap-4 flex-wrap rounded-full bg-neutral-900 text-white px-6 py-3.5 shadow-xl">
+        <span class="text-xs font-bold text-neutral-300">1 arquivo falhou · <button class="underline">rever</button></span>
+        <button class="flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-extrabold text-neutral-900"><i data-lucide="save" class="h-4 w-4"></i> Salvar 9 como rascunho</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- notas -->
+<section class="rounded-3xl bg-neutral-950 text-white p-8">
+  <h2 class="text-lg font-extrabold">Decisões embutidas neste desenho</h2>
+  <ul class="mt-4 space-y-3 text-sm text-neutral-300">
+    <li><b class="text-white">Configuração depois dos arquivos, não antes.</b> O professor vê o que subiu e só então decide os parâmetros — reduz a chance de configurar para o material errado.</li>
+    <li><b class="text-white">Herança visível.</b> Todo arquivo carrega o rótulo “Padrão” ou “Personalizado”, e cada campo do painel lateral diz se está herdando. Sem isso, o modelo de override vira uma caixa-preta.</li>
+    <li><b class="text-white">Custo antes do clique.</b> O saldo de gerações aparece em L1, em L2 e na barra de ação. Nenhuma surpresa de “acabou o plano no arquivo 7”.</li>
+    <li><b class="text-white">Falha isolada, lote inteiro sobrevive.</b> Um PDF ilegível vira um item vermelho reprocessável, nunca um erro que apaga o trabalho dos outros nove.</li>
+    <li><b class="text-white">Espera não bloqueante.</b> Processamento no servidor, o professor pode sair da tela — é a diferença entre a feature ser usável com 10 arquivos ou só com 2.</li>
+    <li><b class="text-white">Revisão preservada.</b> Salvar em lote cria rascunhos. A regra de “nada chega ao aluno sem revisão do professor” continua valendo, porque o passo de atribuir segue separado.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>lucide.createIcons()</script>
+</body>
+</html>
