@@ -7,7 +7,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
-import { appUrl, clienteStripe, priceDoPlano, PLANOS_PAGOS, type PlanoPago } from '../_shared/stripe.ts'
+import { appUrlDaRequisicao, clienteStripe, priceDoPlano, PLANOS_PAGOS, type PlanoPago } from '../_shared/stripe.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -42,52 +42,62 @@ Deno.serve(async (req) => {
     .single()
   if (erroProfessor) return respostaErro(erroProfessor.message, 500)
 
-  const stripe = clienteStripe()
-  // admin (service_role): a linha de assinaturas é escrita só pelo servidor —
-  // o professor não tem policy de escrita nela, de propósito.
-  const admin = clienteAdmin()
+  // Tudo que segue fala com a API do Stripe (rede, price ID errado, chave
+  // test/live trocada) — sem isso, qualquer falha vira 500 cru sem corpo,
+  // que é exatamente o sintoma que motivou este try/catch: opaco no Network
+  // tab, sem pista nenhuma pro professor nem pra quem depura depois.
+  try {
+    const stripe = clienteStripe()
+    // admin (service_role): a linha de assinaturas é escrita só pelo servidor —
+    // o professor não tem policy de escrita nela, de propósito.
+    const admin = clienteAdmin()
 
-  const { data: assinatura, error: erroAssinatura } = await admin
-    .from('assinaturas')
-    .select('*')
-    .eq('professor_id', professorId)
-    .maybeSingle()
-  if (erroAssinatura) return respostaErro(erroAssinatura.message, 500)
+    const { data: assinatura, error: erroAssinatura } = await admin
+      .from('assinaturas')
+      .select('*')
+      .eq('professor_id', professorId)
+      .maybeSingle()
+    if (erroAssinatura) return respostaErro(erroAssinatura.message, 500)
 
-  // Já assina? Troca de plano e cartão é papel do portal, não de um segundo
-  // checkout — dois subscriptions ativos cobrariam duas vezes.
-  if (assinatura?.stripe_subscription_id && ['active', 'trialing', 'past_due'].includes(assinatura.status)) {
-    return respostaErro('Você já tem uma assinatura ativa. Use "Gerenciar assinatura" para trocar de plano.', 409)
-  }
+    // Já assina? Troca de plano e cartão é papel do portal, não de um segundo
+    // checkout — dois subscriptions ativos cobrariam duas vezes.
+    if (assinatura?.stripe_subscription_id && ['active', 'trialing', 'past_due'].includes(assinatura.status)) {
+      return respostaErro('Você já tem uma assinatura ativa. Use "Gerenciar assinatura" para trocar de plano.', 409)
+    }
 
-  let customerId = assinatura?.stripe_customer_id as string | null | undefined
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: sessao.user.email ?? undefined,
-      name: professor.nome,
-      metadata: { professor_id: professorId },
+    let customerId = assinatura?.stripe_customer_id as string | null | undefined
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: sessao.user.email ?? undefined,
+        name: professor.nome,
+        metadata: { professor_id: professorId },
+      })
+      customerId = customer.id
+      const { error: erroUpsert } = await admin.from('assinaturas').upsert({
+        professor_id: professorId,
+        stripe_customer_id: customerId,
+        atualizado_em: new Date().toISOString(),
+      })
+      if (erroUpsert) return respostaErro(erroUpsert.message, 500)
+    }
+
+    const base = appUrlDaRequisicao(req)
+    const sessaoCheckout = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: customerId,
+      line_items: [{ price: priceDoPlano(plano as PlanoPago), quantity: 1 }],
+      success_url: `${base}/plano?checkout=sucesso`,
+      cancel_url: `${base}/plano`,
+      allow_promotion_codes: true,
+      // O webhook lê este metadata para saber de quem é a assinatura — é o elo
+      // entre o mundo Stripe e o professor, então vai nos dois lugares.
+      subscription_data: { metadata: { professor_id: professorId, plano } },
+      metadata: { professor_id: professorId, plano },
     })
-    customerId = customer.id
-    const { error: erroUpsert } = await admin.from('assinaturas').upsert({
-      professor_id: professorId,
-      stripe_customer_id: customerId,
-      atualizado_em: new Date().toISOString(),
-    })
-    if (erroUpsert) return respostaErro(erroUpsert.message, 500)
+
+    return respostaJson({ url: sessaoCheckout.url })
+  } catch (e) {
+    console.error('stripe-checkout:', e)
+    return respostaErro(e instanceof Error ? e.message : 'Falha ao iniciar o checkout do Stripe.', 502)
   }
-
-  const sessaoCheckout = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    customer: customerId,
-    line_items: [{ price: priceDoPlano(plano as PlanoPago), quantity: 1 }],
-    success_url: `${appUrl()}/plano?checkout=sucesso`,
-    cancel_url: `${appUrl()}/plano`,
-    allow_promotion_codes: true,
-    // O webhook lê este metadata para saber de quem é a assinatura — é o elo
-    // entre o mundo Stripe e o professor, então vai nos dois lugares.
-    subscription_data: { metadata: { professor_id: professorId, plano } },
-    metadata: { professor_id: professorId, plano },
-  })
-
-  return respostaJson({ url: sessaoCheckout.url })
 })

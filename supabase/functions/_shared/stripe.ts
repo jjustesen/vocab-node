@@ -46,3 +46,24 @@ export function appUrl(): string {
   if (!url) throw new Error('Secret APP_URL não configurado.')
   return url.replace(/\/$/, '')
 }
+
+const ORIGEM_LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
+
+/**
+ * Pra onde o Stripe deve devolver o navegador depois do checkout/portal.
+ *
+ * Em produção é sempre a secret APP_URL. Mas `npm run dev` roda em
+ * localhost, e o navegador manda isso no cabeçalho Origin em toda chamada —
+ * então, se a chamada veio de localhost, usamos esse Origin em vez da
+ * secret. Assim dá pra testar o fluxo de pagamento local sem nunca precisar
+ * trocar a APP_URL de produção pra trás e pra frente.
+ *
+ * Restrito a localhost/127.0.0.1 de propósito: aceitar qualquer Origin
+ * abriria um open-redirect (o Stripe devolveria o pagador pra um domínio
+ * arbitrário depois do checkout).
+ */
+export function appUrlDaRequisicao(req: Request): string {
+  const origem = req.headers.get('origin')
+  if (origem && ORIGEM_LOCAL.test(origem)) return origem.replace(/\/$/, '')
+  return appUrl()
+}

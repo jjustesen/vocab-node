@@ -5,7 +5,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
-import { appUrl, clienteStripe } from '../_shared/stripe.ts'
+import { appUrlDaRequisicao, clienteStripe } from '../_shared/stripe.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -31,10 +31,14 @@ Deno.serve(async (req) => {
     return respostaErro('Você ainda não tem assinatura — escolha um plano primeiro.', 404)
   }
 
-  const portal = await clienteStripe().billingPortal.sessions.create({
-    customer: assinatura.stripe_customer_id,
-    return_url: `${appUrl()}/plano`,
-  })
-
-  return respostaJson({ url: portal.url })
+  try {
+    const portal = await clienteStripe().billingPortal.sessions.create({
+      customer: assinatura.stripe_customer_id,
+      return_url: `${appUrlDaRequisicao(req)}/plano`,
+    })
+    return respostaJson({ url: portal.url })
+  } catch (e) {
+    console.error('stripe-portal:', e)
+    return respostaErro(e instanceof Error ? e.message : 'Falha ao abrir o portal de cobrança.', 502)
+  }
 })
