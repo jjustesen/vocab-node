@@ -65,12 +65,20 @@ export function Layout() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            <span
-              title={nome}
-              className="grid h-8 w-8 place-items-center rounded-full bg-pink-300 text-sm font-extrabold text-neutral-900"
+            {/* O avatar leva para Plano e cobrança — como no mockup, o plano
+                mora junto do perfil, não na navegação principal. */}
+            <NavLink
+              to="/plano"
+              title={`${nome} · Plano e cobrança`}
+              className={({ isActive }) =>
+                [
+                  'grid h-8 w-8 place-items-center rounded-full bg-pink-300 text-sm font-extrabold text-neutral-900 transition',
+                  isActive ? 'ring-2 ring-violet-400' : 'hover:ring-2 hover:ring-white/40',
+                ].join(' ')
+              }
             >
               {inicial}
-            </span>
+            </NavLink>
             <button
               onClick={sair}
               title="Sair"

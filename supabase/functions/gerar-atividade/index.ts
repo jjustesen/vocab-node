@@ -87,9 +87,9 @@ Deno.serve(async (req) => {
   const limite = limiteGeracoes(professor.plano)
   if ((geracoesDoMes ?? 0) >= limite) {
     return respostaErro(
-      professor.plano === 'pro'
+      professor.plano === 'ilimitado'
         ? `Você atingiu o limite de ${limite} gerações por IA este mês.`
-        : `Você atingiu o limite de ${limite} gerações por IA do plano gratuito este mês. Faça upgrade para gerar mais.`,
+        : `Você atingiu o limite de ${limite} gerações por IA do seu plano este mês. Faça upgrade para gerar mais.`,
       429,
     )
   }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronRight, Loader2, Plus, Search, UserPlus } from 'lucide-react'
 import { useAlunos, useAlunosComConta, useCriarAluno } from './api'
 import { useUsoDoMes } from '@/features/planos/api'
+import { PLANOS } from '@/lib/planos'
 import { NIVEIS } from '@/types/questao'
 import type { NivelCefr } from '@/types/db'
 
@@ -40,14 +41,14 @@ export function AlunosPage() {
           </h1>
           {uso && uso.limiteAlunos !== null && (
             <p className="mt-0.5 text-xs font-medium text-neutral-400">
-              {uso.alunosAtivos}/{uso.limiteAlunos} alunos · plano gratuito
+              {uso.alunosAtivos}/{uso.limiteAlunos} alunos · plano {PLANOS[uso.plano].nome.toLowerCase()}
             </p>
           )}
         </div>
         <button
           onClick={() => setAbrindoNovo(true)}
           disabled={noLimite}
-          title={noLimite ? 'Limite do plano gratuito atingido' : undefined}
+          title={noLimite ? 'Limite de alunos do plano atingido' : undefined}
           className="flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
         >
           <Plus className="h-4 w-4" /> Novo aluno
@@ -56,8 +57,11 @@ export function AlunosPage() {
 
       {noLimite && (
         <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-          Você atingiu o limite de {uso!.limiteAlunos} alunos do plano gratuito. Arquive um aluno ou faça upgrade
-          para adicionar mais.
+          Você atingiu o limite de {uso!.limiteAlunos} alunos do seu plano.{' '}
+          <Link to="/plano" className="font-bold underline">
+            Fazer upgrade
+          </Link>{' '}
+          ou arquive um aluno para adicionar mais.
         </p>
       )}
 

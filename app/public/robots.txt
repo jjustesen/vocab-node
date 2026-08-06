@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /entrar
+Disallow: /entrar-aluno
+Disallow: /hoje
+Disallow: /alunos
+Disallow: /atividades
+Disallow: /trilhas
+Disallow: /agenda
+Disallow: /financeiro
+Disallow: /plano
+Disallow: /painel
+Disallow: /t/
+Disallow: /cadastro/
+Disallow: /resultados/

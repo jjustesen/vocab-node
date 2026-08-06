@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Check, FileText, Image as ImageIcon, Loader2, Pencil, Sparkles, Upload, X } from 'lucide-react'
 import { useGerarAtividadeIA, type AtividadeGeradaIA, type MaterialGeracaoIA } from './api-ia'
 import { useCriarAtividade, type MaterialParaSalvar } from './api'
@@ -164,9 +164,16 @@ export function GerarAtividadePage() {
             noLimite ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-800'
           }`}
         >
-          {noLimite
-            ? `Você atingiu o limite de ${uso.limiteGeracoes} gerações por IA ${uso.plano === 'pro' ? 'este mês' : 'do plano gratuito este mês'}.`
-            : `${uso.geracoesDoMes}/${uso.limiteGeracoes} gerações usadas este mês — você está perto do limite.`}
+          {noLimite ? (
+            <>
+              Você atingiu o limite de {uso.limiteGeracoes} gerações por IA do seu plano este mês.{' '}
+              <Link to="/plano" className="font-bold underline">
+                Fazer upgrade
+              </Link>
+            </>
+          ) : (
+            `${uso.geracoesDoMes}/${uso.limiteGeracoes} gerações usadas este mês — você está perto do limite.`
+          )}
         </p>
       )}
 

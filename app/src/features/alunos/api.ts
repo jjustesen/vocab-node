@@ -67,8 +67,8 @@ export function useCriarAluno() {
       const { data: sessao } = await supabase.auth.getUser()
       if (!sessao.user) throw new Error('Sessão expirada. Entre novamente.')
 
-      // RF-110: plano gratuito trava em 3 alunos ativos. Checado aqui (não só
-      // na UI) para não depender do botão já vir desabilitado.
+      // RF-110: o plano trava a quantidade de alunos ativos. Checado aqui (não
+      // só na UI) para não depender do botão já vir desabilitado.
       const { data: professor, error: erroProfessor } = await supabase
         .from('professores')
         .select('plano')
@@ -85,7 +85,7 @@ export function useCriarAluno() {
         if (erroContagem) throw erroContagem
         if ((count ?? 0) >= limite) {
           throw new Error(
-            `O plano gratuito permite até ${limite} alunos ativos. Arquive um aluno ou faça upgrade para adicionar mais.`,
+            `Seu plano permite até ${limite} alunos ativos. Arquive um aluno ou faça upgrade para adicionar mais.`,
           )
         }
       }

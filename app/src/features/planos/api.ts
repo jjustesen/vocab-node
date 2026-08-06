@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
 import { limiteAlunos as limiteAlunosPorPlano, limiteGeracoes as limiteGeracoesPorPlano } from '@/lib/planos'
-import type { Professor } from '@/types/db'
+import type { Assinatura, Professor } from '@/types/db'
 
 export function useProfessor() {
   return useQuery({
@@ -51,6 +52,53 @@ export function useUsoDoMes() {
         geracoesDoMes: geracoesDoMes ?? 0,
         limiteGeracoes: limiteGeracoesPorPlano(professor!.plano),
       }
+    },
+  })
+}
+
+/**
+ * Espelho do Stripe (migration 0008) — só leitura: quem escreve é o webhook.
+ * `null` = nunca iniciou uma assinatura.
+ */
+export function useAssinatura() {
+  return useQuery({
+    queryKey: ['assinatura'],
+    queryFn: async (): Promise<Assinatura | null> => {
+      const { data, error } = await supabase.from('assinaturas').select('*').maybeSingle()
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+/**
+ * Chama stripe-checkout e leva o professor para a página de pagamento do
+ * Stripe. A volta é por redirect (/plano?checkout=sucesso); a troca de plano
+ * de verdade acontece quando o webhook confirma o pagamento.
+ */
+export function useIniciarCheckout() {
+  return useMutation({
+    mutationFn: async (plano: 'pro' | 'ilimitado') => {
+      const { data, error } = await supabase.functions.invoke('stripe-checkout', { body: { plano } })
+      if (error) throw new Error(await extrairMensagemDeErro(error))
+      return data as { url: string }
+    },
+    onSuccess: ({ url }) => {
+      window.location.assign(url)
+    },
+  })
+}
+
+/** Billing Portal: trocar plano/cartão, baixar fatura e cancelar vivem lá. */
+export function useAbrirPortal() {
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('stripe-portal', { body: {} })
+      if (error) throw new Error(await extrairMensagemDeErro(error))
+      return data as { url: string }
+    },
+    onSuccess: ({ url }) => {
+      window.location.assign(url)
     },
   })
 }

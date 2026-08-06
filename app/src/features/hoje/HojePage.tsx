@@ -7,6 +7,7 @@ import { useAuth } from '@/features/auth/AuthProvider'
 import { useAulasEntre } from '@/features/aulas/api'
 import { ModalAula } from '@/features/aulas/AbaAulas'
 import { useUsoDoMes } from '@/features/planos/api'
+import { PLANOS } from '@/lib/planos'
 import { useAtribuicoesPendentes, useConcluidasRecentes, useContagemConcluidasHoje } from './api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import { linkWhatsapp } from '@/lib/whatsapp'
@@ -195,11 +196,14 @@ export function HojePage() {
 
       {uso && (
         <div className="mt-4 rounded-3xl bg-white p-5">
-          <div className="flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-violet-600" />
-            <h2 className="text-sm font-bold text-neutral-900">
-              Plano {uso.plano === 'pro' ? 'pago' : 'gratuito'}
-            </h2>
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-violet-600" />
+              <h2 className="text-sm font-bold text-neutral-900">Plano {PLANOS[uso.plano].nome}</h2>
+            </div>
+            <Link to="/plano" className="text-xs font-bold text-violet-700">
+              Gerenciar plano
+            </Link>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {uso.limiteAlunos !== null && (

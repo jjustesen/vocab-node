@@ -1,13 +1,525 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vocab Node</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vocab Node — Lição de casa que se faz sozinha</title>
+<meta name="description" content="Transforme o material da sua aula em atividades interativas que o aluno faz pelo celular. Sem app, sem senha, direto pelo WhatsApp. Planos a partir de R$ 0.">
+<meta name="robots" content="index, follow">
+<!-- rel="canonical" fica para quando o domínio final estiver decidido — um
+     href="/" aqui faz o bundler de HTML tentar resolver como asset local e
+     quebra o build (lê "/" como diretório). -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="theme-color" content="#0a0a0a">
+
+<!-- Open Graph / compartilhamento -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Vocab Node">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Vocab Node — Lição de casa que se faz sozinha">
+<meta property="og:description" content="Transforme o material da sua aula em atividades interativas que o aluno faz pelo celular. Sem app, sem senha, direto pelo WhatsApp.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Vocab Node — Lição de casa que se faz sozinha">
+<meta name="twitter:description" content="Transforme o material da sua aula em atividades interativas que o aluno faz pelo celular. Sem app, sem senha, direto pelo WhatsApp.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Vocab Node",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "description": "Gere atividades de inglês por IA a partir do material da sua aula e envie para seus alunos pelo WhatsApp — sem app e sem senha para o aluno.",
+  "offers": [
+    { "@type": "Offer", "name": "Gratuito", "price": "0", "priceCurrency": "BRL" },
+    { "@type": "Offer", "name": "Pro", "price": "100", "priceCurrency": "BRL" },
+    { "@type": "Offer", "name": "Ilimitado", "price": "300", "priceCurrency": "BRL" }
+  ]
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['"Plus Jakarta Sans"','system-ui','sans-serif']},colors:{areia:'#F6F4EF'}}}}</script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.276.0"></script>
+<style>
+  html{scroll-behavior:smooth}
+  body{overflow-x:hidden}
+
+  /* ── blobs flutuantes ─────────────────────────────── */
+  @keyframes float1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(14px,-18px) scale(1.06)}}
+  @keyframes float2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-16px,12px) scale(.95)}}
+  @keyframes float3{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(10px,14px) rotate(8deg)}}
+  .float-1{animation:float1 9s ease-in-out infinite}
+  .float-2{animation:float2 11s ease-in-out infinite}
+  .float-3{animation:float3 13s ease-in-out infinite}
+
+  /* ── reveal no scroll ─────────────────────────────── */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal-d1{transition-delay:.1s}.reveal-d2{transition-delay:.2s}.reveal-d3{transition-delay:.3s}.reveal-d4{transition-delay:.4s}
+
+  /* ── marquee de palavras ──────────────────────────── */
+  @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .marquee{animation:marquee 28s linear infinite}
+
+  /* ── celular do hero ──────────────────────────────── */
+  @keyframes phoneIn{from{opacity:0;transform:translateY(48px) rotate(4deg)}to{opacity:1;transform:translateY(0) rotate(-2deg)}}
+  .phone{animation:phoneIn 1s .3s cubic-bezier(.22,1,.36,1) both}
+  @keyframes bob{0%,100%{transform:rotate(-2deg) translateY(0)}50%{transform:rotate(-1.4deg) translateY(-8px)}}
+  .phone.bob{animation:bob 6s 1.4s ease-in-out infinite}
+
+  /* resposta correta pulsando no mockup */
+  @keyframes pickPulse{0%,55%,100%{transform:scale(1)}62%{transform:scale(1.05)}70%{transform:scale(1)}}
+  .pick{animation:pickPulse 5s 2s ease-in-out infinite}
+  @keyframes popIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+  .pop{animation:popIn .5s 2.6s cubic-bezier(.34,1.56,.64,1) both}
+
+  /* selo girando devagar */
+  @keyframes spinSlow{to{transform:rotate(360deg)}}
+  .spin-slow{animation:spinSlow 18s linear infinite}
+
+  /* ── entradas do hero ─────────────────────────────── */
+  @keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+  .rise{animation:rise .8s cubic-bezier(.22,1,.36,1) both}
+  .rise-1{animation-delay:.05s}.rise-2{animation-delay:.15s}.rise-3{animation-delay:.25s}.rise-4{animation-delay:.35s}
+
+  /* rabisco sob a palavra destacada */
+  .squiggle{background:linear-gradient(120deg,#c4b5fd 0%,#c4b5fd 100%);background-repeat:no-repeat;background-size:100% .38em;background-position:0 90%;padding:0 .08em;border-radius:.2em}
+
+  /* hover fofinho */
+  .bounce-hover{transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s}
+  .bounce-hover:hover{transform:translateY(-4px) scale(1.02)}
+  .tilt-hover{transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+  .tilt-hover:hover{transform:rotate(-1.5deg) scale(1.02)}
+  @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+  .group:hover .wiggle-icon{animation:wiggle .5s ease-in-out}
+
+  /* barrinha de progresso do passo 3 */
+  @keyframes fillBar{from{width:8%}to{width:86%}}
+  .in .fill-bar{animation:fillBar 1.6s .4s cubic-bezier(.22,1,.36,1) both}
+
+  /* pontinhos "digitando" */
+  @keyframes blinkDot{0%,60%,100%{opacity:.25}30%{opacity:1}}
+  .dot{animation:blinkDot 1.2s infinite}
+  .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body class="bg-areia text-neutral-900 antialiased font-sans">
+
+<!-- ════════════ NAV ════════════ -->
+<header class="sticky top-0 z-50 px-3 pt-3">
+  <div class="max-w-5xl mx-auto bg-neutral-950/95 backdrop-blur text-white rounded-full pl-4 pr-2 py-2 flex items-center justify-between shadow-xl shadow-neutral-900/10">
+    <a href="/" class="flex items-center gap-2">
+      <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+      <span class="font-extrabold text-sm sm:text-base">Vocab Node</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-1 text-sm font-semibold text-neutral-300">
+      <a href="#como-funciona" class="px-4 py-2 rounded-full hover:bg-white/10 hover:text-white transition">Como funciona</a>
+      <a href="#recursos" class="px-4 py-2 rounded-full hover:bg-white/10 hover:text-white transition">Recursos</a>
+      <a href="#precos" class="px-4 py-2 rounded-full hover:bg-white/10 hover:text-white transition">Preços</a>
+    </nav>
+    <a href="/entrar?modo=criar" class="bg-violet-300 hover:bg-violet-200 text-neutral-900 text-xs sm:text-sm font-bold rounded-full px-4 sm:px-5 py-2.5 transition bounce-hover">Começar grátis</a>
+  </div>
+</header>
+
+<!-- ════════════ HERO ════════════ -->
+<section class="relative overflow-hidden">
+  <span class="absolute -top-16 -left-16 w-56 h-56 sm:w-72 sm:h-72 bg-violet-200 rounded-full float-1"></span>
+  <span class="absolute top-40 -right-20 w-64 h-64 sm:w-80 sm:h-80 bg-emerald-100 rounded-full float-2"></span>
+  <span class="absolute bottom-0 left-1/3 w-44 h-44 bg-amber-100 rounded-full float-3"></span>
+  <span class="absolute top-24 right-1/4 w-6 h-6 bg-rose-200 rounded-full float-2 hidden sm:block"></span>
+
+  <div class="relative max-w-5xl mx-auto px-5 pt-14 sm:pt-20 pb-8 text-center">
+    <p class="rise rise-1 inline-flex items-center gap-2 bg-white rounded-full pl-2 pr-4 py-1.5 text-xs sm:text-sm font-semibold text-neutral-600 shadow-sm">
+      <span class="bg-violet-300 text-neutral-900 rounded-full px-2.5 py-0.5 text-[11px] font-extrabold">novo</span>
+      Feito para o professor autônomo de inglês
+    </p>
+
+    <h1 class="rise rise-2 text-4xl sm:text-6xl font-extrabold leading-[1.08] tracking-tight mt-6">
+      A lição de casa<br>que <span class="squiggle">se monta sozinha</span>
+    </h1>
+
+    <p class="rise rise-3 text-neutral-600 text-base sm:text-lg max-w-xl mx-auto mt-5 leading-relaxed">
+      Envie o material que você já usa na aula — PDF, foto do livro, texto — e a IA transforma em uma atividade interativa que seu aluno faz pelo celular. <strong class="text-neutral-900 font-bold">Em menos de 3 minutos.</strong>
+    </p>
+
+    <div class="rise rise-4 flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+      <a href="/entrar?modo=criar" class="w-full sm:w-auto bg-neutral-900 text-white font-bold rounded-full px-8 py-4 text-sm sm:text-base flex items-center justify-center gap-2 bounce-hover shadow-lg shadow-neutral-900/15">
+        Criar minha primeira atividade <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </a>
+      <a href="#como-funciona" class="w-full sm:w-auto bg-white text-neutral-900 font-bold rounded-full px-8 py-4 text-sm sm:text-base flex items-center justify-center gap-2 bounce-hover border-2 border-neutral-200">
+        Ver como funciona
+      </a>
+    </div>
+    <p class="rise rise-4 text-xs text-neutral-400 mt-4">Grátis para começar · sem cartão de crédito</p>
+  </div>
+
+  <!-- celular -->
+  <div class="relative max-w-5xl mx-auto px-5 pb-4 flex justify-center">
+    <div class="phone bob relative w-[290px] sm:w-[320px]">
+      <span class="absolute -left-10 top-16 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full px-3 py-1.5 shadow-sm rotate-[-6deg] pop hidden sm:inline-flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> Correto!</span>
+      <span class="absolute -right-12 top-40 bg-amber-100 text-amber-800 text-xs font-bold rounded-full px-3 py-1.5 shadow-sm rotate-[5deg] pop hidden sm:inline-flex items-center gap-1"><i data-lucide="flame" class="w-3.5 h-3.5"></i> 5 dias seguidos</span>
+
+      <div class="bg-neutral-950 rounded-[2.5rem] p-2.5 shadow-2xl shadow-neutral-900/25">
+        <div class="bg-areia rounded-[2rem] overflow-hidden">
+          <div class="px-5 pt-5 pb-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-full bg-pink-300 grid place-items-center text-xs font-extrabold text-neutral-900">A</span>
+                <p class="text-xs font-bold text-neutral-700">Teacher Ana</p>
+              </div>
+              <span class="text-[11px] font-bold text-neutral-400">2 de 6</span>
+            </div>
+            <div class="h-1.5 bg-neutral-200 rounded-full mt-3 overflow-hidden"><span class="block h-full w-1/3 bg-violet-400 rounded-full"></span></div>
+          </div>
+          <div class="px-5 pb-6">
+            <p class="text-[11px] font-bold text-violet-600 uppercase tracking-wide">Simple Present</p>
+            <p class="text-sm font-bold text-neutral-900 mt-1 leading-snug">She ____ to work every day.</p>
+            <div class="space-y-2 mt-4 text-sm font-semibold">
+              <div class="bg-white rounded-2xl px-4 py-3 border-2 border-transparent">go</div>
+              <div class="pick bg-emerald-100 rounded-2xl px-4 py-3 border-2 border-emerald-300 flex items-center justify-between text-emerald-900">goes <i data-lucide="check-circle-2" class="w-4 h-4"></i></div>
+              <div class="bg-white rounded-2xl px-4 py-3 border-2 border-transparent">going</div>
+            </div>
+            <div class="pop bg-violet-100 rounded-2xl px-4 py-3 mt-3 text-xs text-violet-900 leading-relaxed"><strong>Boa!</strong> Com <em>she/he/it</em>, o verbo ganha <strong>-es</strong>.</div>
+            <button class="w-full bg-neutral-900 text-white rounded-full py-3 text-sm font-bold mt-4">Próxima</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- marquee -->
+  <div class="relative py-5 overflow-hidden">
+    <div class="marquee flex gap-3 w-max">
+      <!-- bloco duplicado para loop -->
+      <div class="flex gap-3 pr-3" id="chips"></div>
+      <div class="flex gap-3 pr-3" id="chips2"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ DOR ════════════ -->
+<section class="max-w-5xl mx-auto px-5 py-14 sm:py-20">
+  <div class="reveal text-center max-w-2xl mx-auto">
+    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Você já perde <span class="squiggle">horas demais</span> montando exercício</h2>
+    <p class="text-neutral-600 mt-4 leading-relaxed">Professor autônomo não tem equipe. Tem WhatsApp, PDF fotografado e 2 a 5 horas por semana indo embora em lição de casa que metade dos alunos nem responde.</p>
+  </div>
+  <div class="grid sm:grid-cols-3 gap-4 mt-10">
+    <div class="reveal reveal-d1 group bg-white rounded-3xl p-6 tilt-hover">
+      <span class="w-11 h-11 rounded-2xl bg-rose-200 grid place-items-center text-rose-800"><i data-lucide="clock" class="w-5 h-5 wiggle-icon"></i></span>
+      <p class="font-bold mt-4">Montar exercício à mão</p>
+      <p class="text-sm text-neutral-500 mt-1.5 leading-relaxed">40 minutos por aluno digitando questão no Word ou no Google Forms.</p>
+    </div>
+    <div class="reveal reveal-d2 group bg-white rounded-3xl p-6 tilt-hover">
+      <span class="w-11 h-11 rounded-2xl bg-amber-100 grid place-items-center text-amber-800"><i data-lucide="message-circle-question" class="w-5 h-5 wiggle-icon"></i></span>
+      <p class="font-bold mt-4">Cobrar no WhatsApp</p>
+      <p class="text-sm text-neutral-500 mt-1.5 leading-relaxed">"Fez a lição?" — visto às 14:32, sem resposta. O PDF se perdeu na conversa.</p>
+    </div>
+    <div class="reveal reveal-d3 group bg-white rounded-3xl p-6 tilt-hover">
+      <span class="w-11 h-11 rounded-2xl bg-violet-200 grid place-items-center text-violet-800"><i data-lucide="file-question" class="w-5 h-5 wiggle-icon"></i></span>
+      <p class="font-bold mt-4">Sem histórico</p>
+      <p class="text-sm text-neutral-500 mt-1.5 leading-relaxed">Na hora de renovar, não há como mostrar a evolução do aluno. Fica só na memória.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ COMO FUNCIONA ════════════ -->
+<section id="como-funciona" class="relative overflow-hidden bg-neutral-950 text-white rounded-[2.5rem] mx-3 sm:mx-5 max-w-6xl xl:mx-auto">
+  <span class="absolute -top-20 -right-20 w-64 h-64 bg-violet-500/20 rounded-full float-1"></span>
+  <span class="absolute bottom-0 -left-16 w-52 h-52 bg-emerald-400/10 rounded-full float-2"></span>
+
+  <div class="relative max-w-5xl mx-auto px-6 sm:px-10 py-14 sm:py-20">
+    <div class="reveal text-center max-w-xl mx-auto">
+      <p class="text-violet-400 font-bold text-xs tracking-widest uppercase">Como funciona</p>
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-3">Da aula para o celular do aluno em 3 passos</h2>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-4 mt-12">
+      <!-- passo 1 -->
+      <div class="reveal reveal-d1 bg-neutral-900 rounded-3xl p-6 border border-neutral-800">
+        <span class="bg-violet-300 text-neutral-900 text-sm font-extrabold w-8 h-8 rounded-full grid place-items-center">1</span>
+        <p class="font-bold text-lg mt-4">Solte o material</p>
+        <p class="text-sm text-neutral-400 mt-1.5 leading-relaxed">PDF, foto do livro ou texto colado. O que você já usa na aula, do jeito que está.</p>
+        <div class="bg-neutral-800 rounded-2xl p-4 mt-5 border-2 border-dashed border-neutral-700 text-center">
+          <i data-lucide="upload-cloud" class="w-6 h-6 mx-auto text-violet-400"></i>
+          <p class="text-xs text-neutral-500 mt-2">unit-7-simple-present.pdf</p>
+        </div>
+      </div>
+      <!-- passo 2 -->
+      <div class="reveal reveal-d2 bg-neutral-900 rounded-3xl p-6 border border-neutral-800">
+        <span class="bg-emerald-300 text-neutral-900 text-sm font-extrabold w-8 h-8 rounded-full grid place-items-center">2</span>
+        <p class="font-bold text-lg mt-4">A IA propõe, você decide</p>
+        <p class="text-sm text-neutral-400 mt-1.5 leading-relaxed">Questões prontas em até 90 segundos. Edite, remova, reordene. Nada vai ao aluno sem você aprovar.</p>
+        <div class="bg-neutral-800 rounded-2xl p-4 mt-5 space-y-2">
+          <div class="flex items-center gap-2 text-xs"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-violet-400"></i><span class="text-neutral-300">Gerando questões</span><span class="flex gap-0.5 ml-1"><span class="dot w-1 h-1 rounded-full bg-violet-400"></span><span class="dot w-1 h-1 rounded-full bg-violet-400"></span><span class="dot w-1 h-1 rounded-full bg-violet-400"></span></span></div>
+          <div class="bg-neutral-700/60 rounded-lg h-2 w-full"></div>
+          <div class="bg-neutral-700/60 rounded-lg h-2 w-4/5"></div>
+          <div class="bg-neutral-700/60 rounded-lg h-2 w-3/5"></div>
+        </div>
+      </div>
+      <!-- passo 3 -->
+      <div class="reveal reveal-d3 bg-neutral-900 rounded-3xl p-6 border border-neutral-800">
+        <span class="bg-amber-300 text-neutral-900 text-sm font-extrabold w-8 h-8 rounded-full grid place-items-center">3</span>
+        <p class="font-bold text-lg mt-4">Envie pelo WhatsApp</p>
+        <p class="text-sm text-neutral-400 mt-1.5 leading-relaxed">O aluno abre o link e responde na hora. Sem instalar app, sem criar senha. Você vê o resultado corrigido.</p>
+        <div class="bg-neutral-800 rounded-2xl p-4 mt-5">
+          <div class="flex items-center justify-between text-xs text-neutral-300"><span class="font-bold">Júlia · Simple Present</span><span class="text-emerald-400 font-bold">86%</span></div>
+          <div class="h-2 bg-neutral-700 rounded-full mt-2 overflow-hidden"><span class="fill-bar block h-full bg-emerald-400 rounded-full" style="width:8%"></span></div>
+          <p class="text-[11px] text-neutral-500 mt-2">respondida hoje às 21:14</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ RECURSOS ════════════ -->
+<section id="recursos" class="max-w-5xl mx-auto px-5 py-14 sm:py-20">
+  <div class="reveal text-center max-w-xl mx-auto">
+    <p class="text-violet-600 font-bold text-xs tracking-widest uppercase">Recursos</p>
+    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-3">Tudo que a sua aula particular precisa. <span class="text-neutral-400">E nada além.</span></h2>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-10">
+    <div class="reveal group bg-violet-200 rounded-3xl p-5 sm:p-6 tilt-hover col-span-2 lg:col-span-1">
+      <i data-lucide="wand-2" class="w-6 h-6 text-violet-800 wiggle-icon"></i>
+      <p class="font-bold mt-3 text-violet-950">Atividade por IA</p>
+      <p class="text-sm text-violet-800/80 mt-1 leading-relaxed">Múltipla escolha, complete a frase, ordenar palavras, ditado por áudio e leitura — a partir do seu material.</p>
+    </div>
+    <div class="reveal reveal-d1 group bg-white rounded-3xl p-5 sm:p-6 tilt-hover">
+      <i data-lucide="check-check" class="w-6 h-6 text-emerald-600 wiggle-icon"></i>
+      <p class="font-bold mt-3">Correção automática</p>
+      <p class="text-sm text-neutral-500 mt-1 leading-relaxed">Feedback na hora para o aluno, resultado detalhado para você.</p>
+    </div>
+    <div class="reveal reveal-d2 group bg-white rounded-3xl p-5 sm:p-6 tilt-hover">
+      <i data-lucide="mic" class="w-6 h-6 text-rose-500 wiggle-icon"></i>
+      <p class="font-bold mt-3">Pronúncia e áudio</p>
+      <p class="text-sm text-neutral-500 mt-1 leading-relaxed">O aluno escuta, fala e treina listening direto do navegador.</p>
+    </div>
+    <div class="reveal reveal-d1 group bg-emerald-100 rounded-3xl p-5 sm:p-6 tilt-hover">
+      <i data-lucide="library" class="w-6 h-6 text-emerald-800 wiggle-icon"></i>
+      <p class="font-bold mt-3 text-emerald-950">Biblioteca e trilhas</p>
+      <p class="text-sm text-emerald-800/80 mt-1 leading-relaxed">Tudo que você cria fica salvo. Monte sequências e reenvie para qualquer aluno.</p>
+    </div>
+    <div class="reveal reveal-d2 group bg-white rounded-3xl p-5 sm:p-6 tilt-hover">
+      <i data-lucide="calendar-days" class="w-6 h-6 text-violet-600 wiggle-icon"></i>
+      <p class="font-bold mt-3">Agenda e anotações</p>
+      <p class="text-sm text-neutral-500 mt-1 leading-relaxed">Suas aulas do dia e o que foi dado em cada uma, num lugar só.</p>
+    </div>
+    <div class="reveal reveal-d3 group bg-amber-100 rounded-3xl p-5 sm:p-6 tilt-hover">
+      <i data-lucide="wallet" class="w-6 h-6 text-amber-800 wiggle-icon"></i>
+      <p class="font-bold mt-3 text-amber-950">Controle de mensalidade</p>
+      <p class="text-sm text-amber-800/80 mt-1 leading-relaxed">Quem pagou, quem está pendente. Adeus, planilha.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ PARA O ALUNO ════════════ -->
+<section class="max-w-5xl mx-auto px-5 pb-14 sm:pb-20">
+  <div class="relative overflow-hidden bg-violet-200 rounded-[2.5rem] px-6 sm:px-12 py-12 sm:py-16">
+    <span class="absolute -top-12 -right-12 w-44 h-44 bg-white/40 rounded-full float-1"></span>
+    <span class="absolute -bottom-14 left-10 w-36 h-36 bg-violet-300/60 rounded-full float-2"></span>
+    <div class="relative grid sm:grid-cols-2 gap-8 items-center">
+      <div class="reveal">
+        <p class="text-violet-800 font-bold text-xs tracking-widest uppercase">Para o seu aluno</p>
+        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-violet-950 mt-3 leading-tight">O link abre.<br>E simplesmente funciona.</h2>
+        <p class="text-violet-900/80 mt-4 leading-relaxed">Sem baixar app, sem criar conta, sem senha. O aluno toca no link do WhatsApp, confirma o nome e já está respondendo — à noite, no ônibus, em 5 a 15 minutos.</p>
+        <ul class="mt-6 space-y-3 text-sm font-semibold text-violet-950">
+          <li class="flex items-center gap-2.5"><span class="w-6 h-6 rounded-full bg-white grid place-items-center"><i data-lucide="check" class="w-3.5 h-3.5 text-violet-700"></i></span>Feedback imediato a cada questão</li>
+          <li class="flex items-center gap-2.5"><span class="w-6 h-6 rounded-full bg-white grid place-items-center"><i data-lucide="check" class="w-3.5 h-3.5 text-violet-700"></i></span>Progresso salvo se fechar o navegador</li>
+          <li class="flex items-center gap-2.5"><span class="w-6 h-6 rounded-full bg-white grid place-items-center"><i data-lucide="check" class="w-3.5 h-3.5 text-violet-700"></i></span>Sequência de dias para manter o ritmo</li>
+        </ul>
+      </div>
+      <div class="reveal reveal-d2 flex justify-center">
+        <div class="bg-white rounded-3xl shadow-xl shadow-violet-900/10 p-5 w-full max-w-[300px] rotate-2 tilt-hover">
+          <div class="flex items-center gap-2 text-xs text-neutral-400 font-semibold"><i data-lucide="message-circle" class="w-4 h-4 text-emerald-500"></i> WhatsApp · hoje 18:42</div>
+          <div class="bg-emerald-50 rounded-2xl rounded-tl-md p-3.5 mt-3 text-sm leading-relaxed">
+            Oi Júlia! Sua lição de hoje está pronta 📚<br>
+            <span class="text-violet-600 font-semibold underline decoration-violet-300">vocabnode.app/t/x7k2</span>
+          </div>
+          <div class="bg-neutral-100 rounded-2xl rounded-tr-md p-3.5 mt-2 text-sm ml-8">Feito, teacher! ✅</div>
+          <div class="flex items-center gap-2 bg-emerald-100 rounded-2xl p-3 mt-3">
+            <i data-lucide="party-popper" class="w-4 h-4 text-emerald-700"></i>
+            <p class="text-xs font-bold text-emerald-900">Júlia acertou 5 de 6 · 21:14</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ NÚMEROS ════════════ -->
+<section class="max-w-5xl mx-auto px-5 pb-14 sm:pb-20">
+  <div class="grid grid-cols-3 gap-3 sm:gap-4 text-center">
+    <div class="reveal bg-white rounded-3xl py-6 sm:py-8 bounce-hover">
+      <p class="text-3xl sm:text-4xl font-extrabold"><span class="count" data-to="3" data-suffix=" min">0</span></p>
+      <p class="text-xs sm:text-sm text-neutral-500 font-medium mt-1">da aula ao envio</p>
+    </div>
+    <div class="reveal reveal-d1 bg-white rounded-3xl py-6 sm:py-8 bounce-hover">
+      <p class="text-3xl sm:text-4xl font-extrabold"><span class="count" data-to="90" data-suffix=" s">0</span></p>
+      <p class="text-xs sm:text-sm text-neutral-500 font-medium mt-1">para a IA gerar</p>
+    </div>
+    <div class="reveal reveal-d2 bg-white rounded-3xl py-6 sm:py-8 bounce-hover">
+      <p class="text-3xl sm:text-4xl font-extrabold"><span class="count" data-to="5" data-suffix="h">0</span></p>
+      <p class="text-xs sm:text-sm text-neutral-500 font-medium mt-1">de volta na sua semana</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ PREÇOS ════════════ -->
+<section id="precos" class="max-w-5xl mx-auto px-5 pb-14 sm:pb-20">
+  <div class="reveal text-center max-w-xl mx-auto">
+    <p class="text-violet-600 font-bold text-xs tracking-widest uppercase">Preços</p>
+    <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mt-3">Menos que <span class="squiggle">uma aula sua</span> por mês</h2>
+    <p class="text-neutral-600 mt-4">Comece grátis. Faça o upgrade quando o Vocab Node já estiver economizando suas horas.</p>
+  </div>
+
+  <div class="grid sm:grid-cols-3 gap-4 mt-10 items-stretch">
+    <!-- gratuito -->
+    <div class="reveal reveal-d1 bg-white rounded-[2rem] p-6 sm:p-7 flex flex-col bounce-hover">
+      <p class="font-extrabold text-lg">Gratuito</p>
+      <p class="text-sm text-neutral-500 mt-1">Para testar com seus primeiros alunos.</p>
+      <p class="mt-5"><span class="text-4xl font-extrabold">R$ 0</span><span class="text-neutral-400 font-semibold text-sm"> /mês</span></p>
+      <ul class="mt-6 space-y-3 text-sm font-medium text-neutral-700 flex-1">
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>Até 3 alunos ativos</li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>5 atividades geradas por IA / mês</li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>Envio por WhatsApp e correção automática</li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-emerald-600 mt-0.5 shrink-0"></i>Agenda e anotações de aula</li>
+      </ul>
+      <a href="/entrar?modo=criar" class="mt-7 w-full border-2 border-neutral-900 text-neutral-900 font-bold rounded-full py-3.5 text-sm text-center hover:bg-neutral-900 hover:text-white transition">Criar conta grátis</a>
+    </div>
+
+    <!-- pro -->
+    <div class="reveal reveal-d2 relative bg-neutral-950 text-white rounded-[2rem] p-6 sm:p-7 flex flex-col bounce-hover overflow-hidden">
+      <span class="absolute -top-10 -right-10 w-36 h-36 bg-violet-500/25 rounded-full float-1"></span>
+      <span class="absolute top-5 right-5 bg-violet-300 text-neutral-900 text-[11px] font-extrabold rounded-full px-3 py-1">mais popular</span>
+      <p class="relative font-extrabold text-lg">Pro</p>
+      <p class="relative text-sm text-neutral-400 mt-1">Para quem vive de dar aula.</p>
+      <p class="relative mt-5"><span class="text-4xl font-extrabold">R$ 100</span><span class="text-neutral-400 font-semibold text-sm"> /mês</span></p>
+      <ul class="relative mt-6 space-y-3 text-sm font-medium text-neutral-200 flex-1">
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-400 mt-0.5 shrink-0"></i><span><strong>Até 20 alunos ativos</strong></span></li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-400 mt-0.5 shrink-0"></i>30 atividades geradas por IA / mês</li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-400 mt-0.5 shrink-0"></i>Trilhas de estudo e biblioteca completa</li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-400 mt-0.5 shrink-0"></i>Questões de áudio, ditado e pronúncia</li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-400 mt-0.5 shrink-0"></i>Geração em lote e controle de mensalidades</li>
+      </ul>
+      <a href="/entrar?modo=criar" class="relative mt-7 w-full bg-violet-300 text-neutral-900 font-bold rounded-full py-3.5 text-sm text-center hover:bg-violet-200 transition">Assinar o Pro</a>
+      <p class="relative text-center text-[11px] text-neutral-500 mt-3">cancele quando quiser</p>
+    </div>
+
+    <!-- ilimitado -->
+    <div class="reveal reveal-d3 relative bg-violet-200 rounded-[2rem] p-6 sm:p-7 flex flex-col bounce-hover overflow-hidden">
+      <span class="absolute -bottom-12 -right-10 w-36 h-36 bg-white/40 rounded-full float-2"></span>
+      <p class="relative font-extrabold text-lg text-violet-950">Ilimitado</p>
+      <p class="relative text-sm text-violet-800/80 mt-1">Para agendas cheias, sem teto de alunos.</p>
+      <p class="relative mt-5 text-violet-950"><span class="text-4xl font-extrabold">R$ 300</span><span class="text-violet-800/60 font-semibold text-sm"> /mês</span></p>
+      <ul class="relative mt-6 space-y-3 text-sm font-medium text-violet-950 flex-1">
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-700 mt-0.5 shrink-0"></i><span><strong>Alunos sem limite</strong></span></li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-700 mt-0.5 shrink-0"></i>100 atividades geradas por IA / mês</li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-700 mt-0.5 shrink-0"></i>Tudo do Pro, sem se preocupar com teto</li>
+        <li class="flex items-start gap-2.5"><i data-lucide="check" class="w-4 h-4 text-violet-700 mt-0.5 shrink-0"></i>Prioridade no suporte</li>
+      </ul>
+      <a href="/entrar?modo=criar" class="relative mt-7 w-full bg-neutral-900 text-white font-bold rounded-full py-3.5 text-sm text-center hover:bg-neutral-800 transition">Assinar o Ilimitado</a>
+      <p class="relative text-center text-[11px] text-violet-800/60 mt-3">cancele quando quiser</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FAQ ════════════ -->
+<section class="max-w-2xl mx-auto px-5 pb-14 sm:pb-20">
+  <h2 class="reveal text-3xl font-extrabold tracking-tight text-center">Perguntas frequentes</h2>
+  <div class="mt-8 space-y-3">
+    <details class="reveal group bg-white rounded-3xl px-6 py-5 [&_summary::-webkit-details-marker]:hidden">
+      <summary class="flex items-center justify-between gap-3 cursor-pointer font-bold text-sm sm:text-base">Meu aluno precisa instalar alguma coisa?<i data-lucide="plus" class="w-5 h-5 text-neutral-400 shrink-0 transition-transform duration-300 group-open:rotate-45"></i></summary>
+      <p class="text-sm text-neutral-500 leading-relaxed mt-3">Não. O aluno recebe um link pelo WhatsApp, abre no navegador do celular e responde. Sem app, sem cadastro, sem senha — na primeira vez ele só confirma o nome.</p>
+    </details>
+    <details class="reveal reveal-d1 group bg-white rounded-3xl px-6 py-5 [&_summary::-webkit-details-marker]:hidden">
+      <summary class="flex items-center justify-between gap-3 cursor-pointer font-bold text-sm sm:text-base">A IA pode enviar algo errado para o aluno?<i data-lucide="plus" class="w-5 h-5 text-neutral-400 shrink-0 transition-transform duration-300 group-open:rotate-45"></i></summary>
+      <p class="text-sm text-neutral-500 leading-relaxed mt-3">Nunca. A IA propõe, você decide: toda atividade passa pela sua revisão antes do envio. Você edita enunciados, troca alternativas, remove ou reordena questões.</p>
+    </details>
+    <details class="reveal reveal-d2 group bg-white rounded-3xl px-6 py-5 [&_summary::-webkit-details-marker]:hidden">
+      <summary class="flex items-center justify-between gap-3 cursor-pointer font-bold text-sm sm:text-base">Que tipo de material posso usar?<i data-lucide="plus" class="w-5 h-5 text-neutral-400 shrink-0 transition-transform duration-300 group-open:rotate-45"></i></summary>
+      <p class="text-sm text-neutral-500 leading-relaxed mt-3">PDF, foto do livro ou apostila, e texto colado. O Vocab Node lê o material e gera questões alinhadas exatamente ao que você ensinou naquela aula.</p>
+    </details>
+    <details class="reveal reveal-d3 group bg-white rounded-3xl px-6 py-5 [&_summary::-webkit-details-marker]:hidden">
+      <summary class="flex items-center justify-between gap-3 cursor-pointer font-bold text-sm sm:text-base">Funciona para escola de idiomas?<i data-lucide="plus" class="w-5 h-5 text-neutral-400 shrink-0 transition-transform duration-300 group-open:rotate-45"></i></summary>
+      <p class="text-sm text-neutral-500 leading-relaxed mt-3">O Vocab Node foi desenhado para o professor autônomo, com aulas 1:1 ou em dupla. Escolas com coordenação e turmas grandes ainda não são o nosso foco.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ════════════ CTA FINAL ════════════ -->
+<section class="max-w-5xl mx-auto px-5 pb-16">
+  <div class="reveal relative overflow-hidden bg-neutral-950 rounded-[2.5rem] px-6 sm:px-12 py-14 sm:py-20 text-center text-white">
+    <span class="absolute -top-16 left-8 w-44 h-44 bg-violet-500/25 rounded-full float-1"></span>
+    <span class="absolute -bottom-20 -right-10 w-56 h-56 bg-emerald-400/15 rounded-full float-2"></span>
+    <span class="absolute top-10 right-16 w-8 h-8 bg-amber-300/60 rounded-full float-3 hidden sm:block"></span>
+    <div class="relative">
+      <span class="inline-grid w-14 h-14 rounded-3xl bg-violet-300 place-items-center text-neutral-900 mb-6 spin-slow"><i data-lucide="sparkles" class="w-7 h-7"></i></span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">Sua próxima aula termina.<br>A lição já está pronta.</h2>
+      <p class="text-neutral-400 mt-4 max-w-md mx-auto">Crie sua conta grátis e envie a primeira atividade em menos de 3 minutos.</p>
+      <a href="/entrar?modo=criar" class="inline-flex items-center gap-2 bg-violet-300 text-neutral-900 font-bold rounded-full px-8 py-4 mt-8 bounce-hover text-sm sm:text-base">
+        Começar agora, é grátis <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FOOTER ════════════ -->
+<footer class="max-w-5xl mx-auto px-5 pb-10">
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-neutral-500">
+    <div class="flex items-center gap-2">
+      <span class="w-7 h-7 rounded-xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-4 h-4"></i></span>
+      <span class="font-extrabold text-neutral-900">Vocab Node</span>
+    </div>
+    <p class="text-xs text-center">Feito com carinho para professores autônomos de inglês · © 2026 Vocab Node</p>
+    <div class="flex items-center gap-4 text-xs font-semibold">
+      <a href="#" class="hover:text-neutral-900 transition">Termos</a>
+      <a href="#" class="hover:text-neutral-900 transition">Privacidade</a>
+      <a href="#" class="hover:text-neutral-900 transition">Contato</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // chips do marquee
+  const WORDS=[
+    ['book-open','Reading','bg-white text-neutral-700'],
+    ['headphones','Listening','bg-violet-200 text-violet-900'],
+    ['mic','Speaking','bg-rose-200 text-rose-900'],
+    ['pencil','Complete a frase','bg-white text-neutral-700'],
+    ['shuffle','Ordenar palavras','bg-emerald-100 text-emerald-900'],
+    ['list-checks','Múltipla escolha','bg-amber-100 text-amber-900'],
+    ['volume-2','Ditado por áudio','bg-white text-neutral-700'],
+    ['flame','Streak diário','bg-violet-200 text-violet-900'],
+  ];
+  const chipHTML=WORDS.map(([ic,label,cls])=>
+    `<span class="${cls} rounded-full pl-3 pr-4 py-2 text-sm font-bold flex items-center gap-2 shadow-sm whitespace-nowrap"><i data-lucide="${ic}" class="w-4 h-4"></i>${label}</span>`).join('');
+  document.getElementById('chips').innerHTML=chipHTML;
+  document.getElementById('chips2').innerHTML=chipHTML;
+  lucide.createIcons();
+
+  // reveal no scroll (fallback: tudo visível se não houver IntersectionObserver)
+  if(!('IntersectionObserver' in window)){document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'))}
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.15});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // contadores animados
+  const cio=new IntersectionObserver(es=>es.forEach(e=>{
+    if(!e.isIntersecting)return;cio.unobserve(e.target);
+    const el=e.target,to=+el.dataset.to,suf=el.dataset.suffix||'',t0=performance.now(),dur=1200;
+    (function tick(t){const p=Math.min((t-t0)/dur,1),ease=1-Math.pow(1-p,3);
+      el.textContent=Math.round(to*ease)+suf;
+      if(p<1)requestAnimationFrame(tick)})(t0);
+  }),{threshold:.6});
+  document.querySelectorAll('.count').forEach(el=>cio.observe(el));
+</script>
+</body>
 </html>

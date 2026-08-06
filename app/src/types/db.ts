@@ -10,7 +10,7 @@
  * e apague este arquivo — não mantenha as duas fontes.
  */
 
-export type PlanoTipo = 'gratuito' | 'pro'
+export type PlanoTipo = 'gratuito' | 'pro' | 'ilimitado'
 export type AlunoStatus = 'ativo' | 'arquivado'
 export type NivelCefr = 'A1' | 'A2' | 'B1' | 'B2' | 'C1'
 export type AulaStatus = 'agendada' | 'realizada' | 'cancelada' | 'falta'
@@ -33,6 +33,18 @@ export type Professor = {
   foto_url: string | null
   plano: PlanoTipo
   criado_em: string
+}
+
+/** Espelho do estado no Stripe (migration 0008). Só o webhook escreve. */
+export type Assinatura = {
+  professor_id: string
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  plano: PlanoTipo
+  status: string
+  periodo_fim: string | null
+  cancela_no_fim: boolean
+  atualizado_em: string
 }
 
 export type Aluno = {

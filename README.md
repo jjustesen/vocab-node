@@ -18,6 +18,21 @@ React + Vite · TypeScript · Tailwind v4 · TanStack Query · React Router · S
 
 ---
 
+## Landing e app no mesmo domínio
+
+Landing (marketing, SEO) e o SPA do professor/aluno são o **mesmo deploy do Vercel**, servidos do mesmo domínio, mas por dois HTML de entrada diferentes:
+
+| Arquivo | O que serve | Rota |
+|---|---|---|
+| [app/index.html](app/index.html) | Landing estática (preços, recursos) — o que o Google indexa | `/` (só a raiz) |
+| [app/app.html](app/app.html) | Shell do React Router | qualquer outra rota (`/entrar`, `/hoje`, `/t/:token`, …) |
+
+Quem decide isso em produção é o rewrite em [app/vercel.json](app/vercel.json): tudo que não é `/` cai em `app.html`; a raiz é servida direto pelo Vercel como arquivo estático (`index.html`) sem passar pelo rewrite. O `vite.config.ts` replica o mesmo roteamento no `npm run dev`, senão abrir `/entrar` direto no navegador cairia na landing.
+
+Os CTAs da landing ("Começar grátis" etc.) linkam para `/entrar?modo=criar`, que já abre a [LoginPage](app/src/features/auth/LoginPage.tsx) no modo de cadastro.
+
+---
+
 ## Rodando local
 
 ```bash

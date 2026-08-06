@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
-import { BookOpen, GraduationCap, Loader2 } from 'lucide-react'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, BookOpen, GraduationCap, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './AuthProvider'
 
@@ -8,7 +8,11 @@ type Modo = 'entrar' | 'criar'
 
 export function LoginPage() {
   const { session, carregando } = useAuth()
-  const [modo, setModo] = useState<Modo>('entrar')
+  // A landing (app/index.html, fora do SPA) linka "Começar grátis" com
+  // ?modo=criar — só lido na primeira renderização, de propósito: depois
+  // disso quem manda é o toggle abaixo, não a URL.
+  const [params] = useSearchParams()
+  const [modo, setModo] = useState<Modo>(params.get('modo') === 'criar' ? 'criar' : 'entrar')
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -46,6 +50,15 @@ export function LoginPage() {
   return (
     <div className="grid min-h-dvh place-items-center px-4">
       <div className="w-full max-w-sm">
+        {/* Link de verdade (não <Link>): a landing vive fora do SPA
+            (app/index.html, na raiz do domínio), então sair daqui é
+            navegação de página inteira, não roteamento client-side. */}
+        <a
+          href="/"
+          className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-400 hover:text-neutral-600"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar para o site
+        </a>
         <div className="mb-6 flex items-center justify-center gap-2">
           <span className="grid h-9 w-9 place-items-center rounded-2xl bg-violet-300 text-neutral-900">
             <GraduationCap className="h-5 w-5" />
