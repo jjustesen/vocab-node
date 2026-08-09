@@ -45,7 +45,15 @@ export function CadastroAlunoPage() {
 
     setTela('enviando')
     try {
-      const { data, error } = await supabaseAluno.auth.signUp({ email, password: senha })
+      // `perfil: 'aluno'` NÃO é decorativo: o trigger on_auth_user_created
+      // (migration 0002) cria uma linha em `professores` para todo signUp que
+      // não se declare aluno. Sem este metadado, cada aluno cadastrado ganhava
+      // também uma conta de professor funcional — ver migration 0009.
+      const { data, error } = await supabaseAluno.auth.signUp({
+        email,
+        password: senha,
+        options: { data: { perfil: 'aluno' } },
+      })
       if (error) throw error
 
       if (!data.session) {

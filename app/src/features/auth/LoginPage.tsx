@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, GraduationCap, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { consumirMotivoDaSaida } from '@/lib/motivo-saida'
 import { useAuth } from './AuthProvider'
 
 type Modo = 'entrar' | 'criar'
@@ -13,6 +14,13 @@ export function LoginPage() {
   // disso quem manda é o toggle abaixo, não a URL.
   const [params] = useSearchParams()
   const [modo, setModo] = useState<Modo>(params.get('modo') === 'criar' ? 'criar' : 'entrar')
+  // Lido uma vez, na montagem — ver lib/motivo-saida.ts para o porquê de não
+  // ser um parâmetro na URL.
+  const [avisoDePerfil] = useState(() =>
+    consumirMotivoDaSaida() === 'conta-de-aluno'
+      ? 'Essa conta é de aluno. Entre em "Entrar como aluno", logo abaixo.'
+      : null,
+  )
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -120,9 +128,9 @@ export function LoginPage() {
             />
           </label>
 
-          {erro && (
+          {(erro || avisoDePerfil) && (
             <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">
-              {erro}
+              {erro || avisoDePerfil}
             </p>
           )}
 

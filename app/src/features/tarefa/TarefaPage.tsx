@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
+  ArrowLeft,
   ArrowRight,
   Check,
   CheckCircle2,
@@ -317,13 +318,13 @@ export function TarefaPage() {
 
   if (!dados) return null
 
-  if (tela === 'intro') {
-    return <TelaIntro dados={dados} aoComecar={() => setTela('respondendo')} />
-  }
-
   // Só quem tem sessão tem para onde voltar (o painel). Por link anônimo a
   // tarefa é a única tela do app.
   const aoSair = atribuicaoId ? () => navegar('/painel') : null
+
+  if (tela === 'intro') {
+    return <TelaIntro dados={dados} aoComecar={() => setTela('respondendo')} aoSair={aoSair} />
+  }
 
   if (tela === 'final' && resultadoFinal) {
     return (
@@ -366,7 +367,16 @@ export function TarefaPage() {
 // ────────────────────────────────────────────────────────────────────────
 
 /** A1 — abertura do link. O nome do professor é o que dá confiança na tela. */
-function TelaIntro({ dados, aoComecar }: { dados: TarefaObterResposta; aoComecar: () => void }) {
+function TelaIntro({
+  dados,
+  aoComecar,
+  aoSair,
+}: {
+  dados: TarefaObterResposta
+  aoComecar: () => void
+  /** null por link anônimo: sem sessão não existe painel para onde voltar. */
+  aoSair: (() => void) | null
+}) {
   const primeiroNome = dados.aluno_nome.split(' ')[0]
 
   return (
@@ -378,6 +388,19 @@ function TelaIntro({ dados, aoComecar }: { dados: TarefaObterResposta; aoComecar
         <div className="relative overflow-hidden rounded-b-[2rem] bg-violet-200 px-6 pb-14 pt-10 text-center">
           <span className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-300/60" />
           <span className="absolute -left-8 top-16 h-20 w-20 rounded-full bg-white/40" />
+          {/* Abrir a tarefa era um caminho sem volta: as telas de questão e a
+              final já tinham saída, só a abertura não. 44px de alvo (RNF-06) e
+              acima das formas decorativas por causa do z-10. */}
+          {aoSair && (
+            <button
+              onClick={aoSair}
+              title="Voltar para o painel"
+              aria-label="Voltar para o painel"
+              className="absolute left-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full bg-white/70 text-violet-900 transition hover:bg-white"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <span className="relative mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-white text-2xl font-extrabold text-violet-700">
             {inicial(dados.professor_nome)}
           </span>

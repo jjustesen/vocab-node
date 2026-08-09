@@ -1,7 +1,10 @@
+import { useEffect } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { Layout } from '@/components/Layout'
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider'
+import { usePerfilProfessor } from '@/features/auth/perfil'
+import { guardarMotivoDaSaida } from '@/lib/motivo-saida'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { HojePage } from '@/features/hoje/HojePage'
 import { AlunosPage } from '@/features/alunos/AlunosPage'
@@ -78,9 +81,23 @@ export default function App() {
 }
 
 function ExigeSessao() {
-  const { session, carregando } = useAuth()
+  const { session, carregando, sair } = useAuth()
+  const { data: ehProfessor, isLoading: verificandoPerfil } = usePerfilProfessor(Boolean(session))
 
-  if (carregando) {
+  // Aluno que entrou pela porta do professor: a senha confere (é o mesmo
+  // GoTrue), mas não existe linha em `professores` por trás. A checagem mora
+  // aqui, e não no formulário de login, para pegar também sessão antiga em
+  // aba já aberta e acesso direto por URL.
+  const contaNaoEDeProfessor = Boolean(session) && ehProfessor === false
+  useEffect(() => {
+    if (!contaNaoEDeProfessor) return
+    // Grava ANTES de sair: assim que a sessão cai, `contaNaoEDeProfessor` vira
+    // falso e quem redireciona é o branch de baixo, que não carrega motivo.
+    guardarMotivoDaSaida('conta-de-aluno')
+    void sair()
+  }, [contaNaoEDeProfessor, sair])
+
+  if (carregando || (session && verificandoPerfil)) {
     return (
       <div className="grid min-h-dvh place-items-center">
         <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
@@ -88,7 +105,7 @@ function ExigeSessao() {
     )
   }
 
-  if (!session) return <Navigate to="/entrar" replace />
+  if (!session || contaNaoEDeProfessor) return <Navigate to="/entrar" replace />
 
   // O <Layout /> vem da rota filha; aqui só liberamos a passagem.
   return <Outlet />

@@ -1,3 +1,9 @@
+/** Status HTTP de um erro de `supabase.functions.invoke`, quando houver resposta. */
+export function statusDoErro(error: unknown): number | null {
+  const comContexto = error as { context?: Response }
+  return comContexto?.context instanceof Response ? comContexto.context.status : null
+}
+
 /** Extrai a mensagem `{ erro }` do corpo de uma resposta de erro de `supabase.functions.invoke`. */
 export async function extrairMensagemDeErro(error: unknown): Promise<string> {
   const comContexto = error as { context?: Response }

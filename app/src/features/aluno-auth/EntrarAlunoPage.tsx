@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { GraduationCap, Loader2 } from 'lucide-react'
 import { supabaseAluno } from '@/lib/supabase-aluno'
+import { consumirMotivoDaSaida } from '@/lib/motivo-saida'
 import { useAlunoAuth } from './AlunoAuthProvider'
 
 /** /entrar-aluno — login do aluno com conta (RF-28), sessão isolada da do professor. */
@@ -10,7 +11,14 @@ export function EntrarAlunoPage() {
   const { session, carregando: carregandoSessao } = useAlunoAuth()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  const [erro, setErro] = useState('')
+  // Lido uma vez, na montagem: o painel deixa o motivo aqui quando a sessão era
+  // válida mas não era de aluno. Sem isto a pessoa é devolvida ao login sem
+  // nenhuma explicação, que foi exatamente o que aconteceu no primeiro teste.
+  const [erro, setErro] = useState(() =>
+    consumirMotivoDaSaida() === 'conta-de-professor'
+      ? 'Essa conta é de professor. Entre pela área do professor, no link abaixo.'
+      : '',
+  )
   const [entrando, setEntrando] = useState(false)
 
   if (!carregandoSessao && session) return <Navigate to="/painel" replace />

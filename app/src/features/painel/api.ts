@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabaseAluno } from '@/lib/supabase-aluno'
-import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
+import { extrairMensagemDeErro, statusDoErro } from '@/lib/erro-edge-function'
 import type { NivelCefr } from '@/types/db'
 
 export type TarefaPendente = {
@@ -52,13 +52,30 @@ export type PainelAluno = {
 }
 
 /** RF-28 — o painel não lê tabela nenhuma direto, tudo vem de painel-aluno-obter (JWT do aluno). */
+/**
+ * Login válido no Supabase Auth, mas sem linha em `contas_aluno` — quase
+ * sempre um PROFESSOR que entrou pela porta do aluno. Os dois logins falam com
+ * o mesmo GoTrue, então a senha confere; quem separa os perfis é o produto,
+ * não o provedor de auth.
+ */
+export class ContaNaoEDeAluno extends Error {}
+
 export function usePainelAluno() {
   return useQuery({
     queryKey: ['painel-aluno'],
     queryFn: async (): Promise<PainelAluno> => {
       const { data, error } = await supabaseAluno.functions.invoke('painel-aluno-obter', { body: {} })
-      if (error) throw new Error(await extrairMensagemDeErro(error))
+      if (error) {
+        const mensagem = await extrairMensagemDeErro(error)
+        // 404 aqui é identidade, não indisponibilidade: a função achou a
+        // sessão e não achou o aluno. Sem essa distinção o professor logado
+        // ficava preso numa tela de erro genérica, sem saber que errou a porta.
+        if (statusDoErro(error) === 404) throw new ContaNaoEDeAluno(mensagem)
+        throw new Error(mensagem)
+      }
       return data as PainelAluno
     },
+    // Reautenticar não conserta identidade errada — só gastaria 3 chamadas.
+    retry: (falhas, erro) => !(erro instanceof ContaNaoEDeAluno) && falhas < 3,
   })
 }
