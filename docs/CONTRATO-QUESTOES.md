@@ -57,7 +57,7 @@ Ganho colateral: trocar de provedor de IA não mexe no contrato.
 - O **enunciado e o conteúdo estão em inglês**; a **explicação está sempre em português** (RF-66). A explicação é lida pelo aluno logo depois de responder — é o momento de ensino do produto.
 - `resposta_correta` de múltipla escolha precisa bater **caractere a caractere** com um item de `opcoes`. Não é índice, é o texto.
 - Lacuna usa exatamente **seis underscores** (`______`) — o app procura esse marcador para renderizar o campo.
-- `pares` só existe em `ligar_colunas`: `[{"esquerda": "luggage", "direita": "bagagem"}]`. O app embaralha a coluna direita na renderização.
+- `pares` só existe em `ligar_colunas`: `[{"esquerda": "luggage", "direita": "bagagem"}]`. O app embaralha **as duas colunas** na renderização (ver §4 para o porquê de nenhuma das ordens da tela importar).
 
 **Os dois tipos com áudio (adicionados em 26/07/2026):**
 
@@ -74,11 +74,13 @@ Ganho colateral: trocar de provedor de IA não mexe no contrato.
 | `multipla_escolha`, `verdadeiro_falso` | igualdade exata |
 | `lacuna`, `resposta_curta` | normaliza (minúsculas, sem acento, sem espaço nas bordas, apóstrofo unificado) e compara com `resposta_correta` + `respostas_aceitas` |
 | `ordenar_palavras` | compara a frase montada, normalizada |
-| `ligar_colunas` | acerto por par; a questão conta como correta só com todos os pares certos |
+| `ligar_colunas` | acerto por par; a questão conta como correta só com todos os pares certos. `valor` é um JSON de `string[]` com a "direita" de cada par, **na ordem de `pares`** — nunca na ordem da tela |
 | `ordenar_audio` | idêntica a `ordenar_palavras` — compara a frase montada, normalizada. As fichas distratoras simplesmente sobram |
 | `pronuncia` | `valor` é a TRANSCRIÇÃO que o `SpeechRecognition` do navegador ouviu. Nota 0–100 pela média harmônica entre cobertura e precisão da subsequência comum de palavras; `correta` = nota ≥ 70 (`CORTE_PRONUNCIA`) |
 
 `resposta_curta` é a única que pode precisar de revisão humana (RF-91): quando não bate com nenhuma resposta aceita, marca como errada **mas sinaliza para o professor revisar** — a IA erra mais aqui do que o aluno.
+
+**`ligar_colunas` envia a PRIMEIRA tentativa, não o estado final** (13/08/2026). A tela deixou de ser cinco menus suspensos e virou tocar-de-um-lado-e-do-outro, com o par certo travando na hora e o errado se desfazendo. Como par errado nunca gruda, o aluno termina **sempre** com tudo certo na tela — enviar o estado final faria toda questão desse tipo virar acerto. Então o componente guarda, para cada item da esquerda, a primeira "direita" que o aluno tentou, e é esse array que vai no `valor`. A régua vira "acertou de primeira", e nada mais precisou mudar: o formato na rede, `corrigir()` (aqui e em `_shared/correcao.ts`) e a tela de resultado do professor seguem idênticos. Efeito colateral proposital: `respostas.valor` passa a registrar o que o aluno **de fato sabia**, não o que ele conseguiu por eliminação.
 
 ---
 

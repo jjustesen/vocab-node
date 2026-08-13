@@ -9,6 +9,21 @@
   --color-tinta: #0a0a0a; /* cromo escuro / ação principal */
 
   --radius-card: 1.5rem;
+
+  /* Tranco curto do par errado em ligar_colunas — o "não é esse" sem punir. */
+  --animate-treme: treme 0.38s;
+  @keyframes treme {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-5px);
+    }
+    75% {
+      transform: translateX(5px);
+    }
+  }
 }
 
 @layer base {

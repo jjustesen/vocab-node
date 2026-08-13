@@ -19,6 +19,7 @@ import { EditarAtividadePage } from '@/features/atividades/EditarAtividadePage'
 import { TarefaPage } from '@/features/tarefa/TarefaPage'
 import { CadastroAlunoPage } from '@/features/cadastro/CadastroAlunoPage'
 import { AlunoAuthProvider, useAlunoAuth } from '@/features/aluno-auth/AlunoAuthProvider'
+import { LinkAbertoPage } from '@/features/link-aberto/LinkAbertoPage'
 import { EntrarAlunoPage } from '@/features/aluno-auth/EntrarAlunoPage'
 import { PainelAlunoPage } from '@/features/painel/PainelAlunoPage'
 import { TrilhaAlunoPage } from '@/features/painel/TrilhaAlunoPage'
@@ -42,6 +43,9 @@ export default function App() {
 
         {/* Área do aluno logado (RF-28) — sessão própria, nunca a do professor. */}
         <Route element={<ProvedorSessaoAluno />}>
+          {/* Link ABERTO da atividade (0010): rota pública, mas dentro do
+              provider — se já houver sessão de aluno, o link vira atalho. */}
+          <Route path="/a/:token" element={<LinkAbertoPage />} />
           <Route path="/entrar-aluno" element={<EntrarAlunoPage />} />
           <Route element={<ExigeSessaoAluno />}>
             <Route path="/painel" element={<PainelAlunoPage />} />

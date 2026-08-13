@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { gerarTokenDeAcesso } from '@/lib/token'
+import { gerarTokenDeAcesso, hashDoToken } from '@/lib/token'
 import { base64ParaBytes } from '@/lib/arquivo'
-import { lembrarToken } from '@/lib/links-lembrados'
+import { lembrarToken, lembrarTokenLinkAberto, linkAbertoLembrado } from '@/lib/links-lembrados'
 import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
 import { chavesAlunos } from '@/features/alunos/api'
-import type { Atividade, AtividadeStatus, Aluno, QuestaoRow } from '@/types/db'
+import type { Atividade, AtividadeStatus, Aluno, LinkAberto, QuestaoRow } from '@/types/db'
 import type { Questao } from '@/types/questao'
 
 /**
@@ -33,6 +33,7 @@ export const chavesAtividades = {
   questoes: (id: string) => ['atividades', id, 'questoes'] as const,
   envios: (id: string) => ['atividades', id, 'envios'] as const,
   editavel: (id: string) => ['atividades', id, 'editavel'] as const,
+  linkAberto: (id: string) => ['atividades', id, 'link-aberto'] as const,
 }
 
 export type AtividadeComEnvio = Atividade & {
@@ -513,6 +514,75 @@ export function useRegerarLinkDaTarefa(alunoId: string) {
       return `${window.location.origin}/t/${token}`
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: chavesAlunos.historico(alunoId) }),
+  })
+}
+
+export type LinkAbertoDaAtividade = {
+  registro: LinkAberto
+  /**
+   * Link completo, ou null quando este navegador não presenciou a geração —
+   * o banco só tem o hash (RNF-09), então nesse caso a única saída que o
+   * modal pode oferecer é gerar um link novo.
+   */
+  url: string | null
+}
+
+/** Link aberto (0010) da atividade — null se nunca foi gerado. */
+export function useLinkAberto(atividadeId: string | undefined) {
+  return useQuery({
+    queryKey: chavesAtividades.linkAberto(atividadeId!),
+    enabled: Boolean(atividadeId),
+    queryFn: async (): Promise<LinkAbertoDaAtividade | null> => {
+      const { data, error } = await supabase
+        .from('links_abertos')
+        .select('*')
+        .eq('atividade_id', atividadeId!)
+        .maybeSingle()
+      if (error) throw error
+      if (!data) return null
+
+      // O lembrete local pode estar velho (link regerado em outro navegador):
+      // só vale se o hash do token guardado bater com o hash da linha atual.
+      let url = linkAbertoLembrado(atividadeId!)
+      if (url) {
+        const token = url.split('/a/')[1]
+        if ((await hashDoToken(token)) !== data.token_hash) url = null
+      }
+      return { registro: data, url }
+    },
+  })
+}
+
+/**
+ * Gera (ou regera) o link aberto da atividade. Upsert por `atividade_id`
+ * (unique em 0010): regerar troca o token e REINICIA a janela de 12h na mesma
+ * linha — o link anterior morre na hora, as atribuições já criadas ficam.
+ */
+export function useGerarLinkAberto(atividadeId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (): Promise<string> => {
+      const { data: sessao } = await supabase.auth.getUser()
+      if (!sessao.user) throw new Error('Sessão expirada. Entre novamente.')
+
+      const { token, hash } = await gerarTokenDeAcesso()
+      const DOZE_HORAS_MS = 12 * 60 * 60 * 1000
+      const { error } = await supabase.from('links_abertos').upsert(
+        {
+          atividade_id: atividadeId,
+          professor_id: sessao.user.id,
+          token_hash: hash,
+          cadastro_expira_em: new Date(Date.now() + DOZE_HORAS_MS).toISOString(),
+          criado_em: new Date().toISOString(),
+        },
+        { onConflict: 'atividade_id' },
+      )
+      if (error) throw error
+
+      lembrarTokenLinkAberto(atividadeId, token)
+      return `${window.location.origin}/a/${token}`
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesAtividades.linkAberto(atividadeId) }),
   })
 }
 

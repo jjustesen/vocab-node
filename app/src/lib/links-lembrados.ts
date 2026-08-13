@@ -60,3 +60,38 @@ export function linkLembrado(atribuicaoId: string): string | null {
   // domínio continua válido, só precisa apontar para o endereço de hoje.
   return token ? `${window.location.origin}/t/${token}` : null
 }
+
+// ---------------------------------------------------------------------------
+// Mesmo lembrete, para o LINK ABERTO da atividade (/a/:token, 0010) — chave à
+// parte porque o mapa é por atividade, não por atribuição, e o teto de 500
+// entradas de tarefa não deve empurrar esses tokens para fora.
+// ---------------------------------------------------------------------------
+
+const CHAVE_ABERTO = 'vocab-node:tokens-link-aberto'
+
+function lerAbertos(): Mapa {
+  try {
+    const cru = localStorage.getItem(CHAVE_ABERTO)
+    if (!cru) return {}
+    const dados: unknown = JSON.parse(cru)
+    return dados && typeof dados === 'object' && !Array.isArray(dados) ? (dados as Mapa) : {}
+  } catch {
+    return {}
+  }
+}
+
+export function lembrarTokenLinkAberto(atividadeId: string, token: string): void {
+  const mapa = lerAbertos()
+  mapa[atividadeId] = token
+  try {
+    localStorage.setItem(CHAVE_ABERTO, JSON.stringify(mapa))
+  } catch {
+    /* sem espaço ou sem permissão — o modal apenas oferece "gerar novo link" */
+  }
+}
+
+/** Link aberto completo, ou null se este navegador não presenciou a geração. */
+export function linkAbertoLembrado(atividadeId: string): string | null {
+  const token = lerAbertos()[atividadeId]
+  return token ? `${window.location.origin}/a/${token}` : null
+}

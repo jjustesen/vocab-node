@@ -147,6 +147,8 @@ export type Atribuicao = {
   atividade_id: string
   aluno_id: string
   trilha_etapa_id: string | null
+  /** De onde veio: preenchido quando a atribuição nasceu pelo link aberto (0010). */
+  link_aberto_id: string | null
   token_hash: string
   tentativa: number
   prazo: string | null
@@ -154,6 +156,20 @@ export type Atribuicao = {
   iniciada_em: string | null
   concluida_em: string | null
   revogada_em: string | null
+}
+
+/**
+ * Link aberto da atividade (0010_link_aberto.sql) — um por atividade.
+ * Cadastro liberado até `cadastro_expira_em` (geração + 12h); depois o link
+ * segue valendo só como acesso para quem já tem conta.
+ */
+export type LinkAberto = {
+  id: string
+  atividade_id: string
+  professor_id: string
+  token_hash: string
+  cadastro_expira_em: string
+  criado_em: string
 }
 
 /**
@@ -272,6 +288,11 @@ export type Database = {
         Atribuicao,
         Insert<Atribuicao, 'atividade_id' | 'aluno_id' | 'token_hash'>,
         Partial<Atribuicao>
+      >
+      links_abertos: Tabela<
+        LinkAberto,
+        Insert<LinkAberto, 'atividade_id' | 'professor_id' | 'token_hash' | 'cadastro_expira_em'>,
+        Partial<LinkAberto>
       >
       questoes: Tabela<
         QuestaoRow,

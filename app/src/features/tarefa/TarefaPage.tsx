@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -942,57 +942,182 @@ function RespostaLigarColunas({
   aoResponder: (valor: string) => void
 }) {
   const pares = questao.pares ?? []
-  const esquerda = useMemo(() => pares.map((p) => p.esquerda), [pares])
-  // Embaralhado uma vez por questão (useMemo por id) — não a cada re-render,
-  // senão as opções trocariam de lugar sozinhas enquanto o aluno escolhe.
-  const direita = useMemo(() => embaralhar(pares.map((p) => p.direita)), [questao.id])
-  const [escolhas, setEscolhas] = useState<(string | null)[]>(() => esquerda.map(() => null))
 
-  const completo = escolhas.length === esquerda.length && escolhas.every((e) => e !== null)
+  // Os dois lados embaralhados uma vez por questão (useMemo por id) — não a
+  // cada re-render, senão as fichas trocariam de lugar sozinhas enquanto o
+  // aluno joga. A esquerda carrega o índice de origem porque é ele, não a
+  // posição na tela, que define a ordem do que enviamos.
+  const esquerda = useMemo(
+    () => embaralhar(pares.map((p, indice) => ({ indice, texto: p.esquerda }))),
+    [questao.id],
+  )
+  const direita = useMemo(() => embaralhar(pares.map((p) => p.direita)), [questao.id])
+
+  /** índice do par → posição da ficha da direita que fechou com ele. */
+  const [fechados, setFechados] = useState<Map<number, number>>(new Map())
+  /** índice do par → PRIMEIRA direita tentada para ele; é o que vira resposta. */
+  const primeirasRef = useRef<Map<number, string>>(new Map())
+  const [selecionado, setSelecionado] = useState<{ lado: 'esq' | 'dir'; pos: number } | null>(null)
+  const [errando, setErrando] = useState<{ esq: number; dir: number } | null>(null)
+
+  const travado = Boolean(feedback) || errando !== null
+  const posicoesDireitaFechadas = new Set(fechados.values())
+
+  function tocar(lado: 'esq' | 'dir', pos: number) {
+    if (travado) return
+    const jaFechada = lado === 'esq' ? fechados.has(esquerda[pos].indice) : posicoesDireitaFechadas.has(pos)
+    if (jaFechada) return
+
+    // Tocar de novo na mesma ficha desfaz; trocar de ideia no mesmo lado só
+    // move a seleção — nenhum dos dois conta como tentativa.
+    if (selecionado?.lado === lado) {
+      setSelecionado(selecionado.pos === pos ? null : { lado, pos })
+      return
+    }
+    if (!selecionado) {
+      setSelecionado({ lado, pos })
+      return
+    }
+
+    const posEsq = lado === 'esq' ? pos : selecionado.pos
+    const posDir = lado === 'dir' ? pos : selecionado.pos
+    const indicePar = esquerda[posEsq].indice
+    const textoDireita = direita[posDir]
+    setSelecionado(null)
+
+    // Só a PRIMEIRA tentativa de cada item da esquerda entra na conta — é ela
+    // que responde "o aluno sabia?", e é ela que enviamos ao servidor.
+    if (!primeirasRef.current.has(indicePar)) {
+      primeirasRef.current.set(indicePar, textoDireita)
+    }
+
+    if (pares[indicePar].direita !== textoDireita) {
+      setErrando({ esq: posEsq, dir: posDir })
+      setTimeout(() => setErrando(null), 620)
+      return
+    }
+
+    const novos = new Map(fechados).set(indicePar, posDir)
+    setFechados(novos)
+    // Fechou o último par: a questão se responde sozinha, sem botão. O valor
+    // enviado é o das primeiras tentativas, na ordem original de `pares`
+    // (CONTRATO-QUESTOES.md §3) — daí a correção e a tela do professor
+    // seguirem sem nenhuma mudança.
+    if (novos.size === pares.length) {
+      aoResponder(JSON.stringify(pares.map((_, i) => primeirasRef.current.get(i) ?? '')))
+    }
+  }
+
+  const errosDePrimeira = pares.filter((p, i) => {
+    const primeira = primeirasRef.current.get(i)
+    return primeira !== undefined && primeira !== p.direita
+  }).length
+  const faltam = pares.length - fechados.size
+
+  // Ordinal do par, na ordem em que o aluno fechou — é o que liga visualmente
+  // as duas fichas depois que elas travam, no lugar de uma linha entre colunas.
+  const numeroPorPar = new Map<number, number>()
+  const numeroPorPosicaoDireita = new Map<number, number>()
+  for (const [indicePar, posDireita] of fechados) {
+    const numero = numeroPorPar.size + 1
+    numeroPorPar.set(indicePar, numero)
+    numeroPorPosicaoDireita.set(posDireita, numero)
+  }
 
   return (
-    <div className="space-y-2">
-      {esquerda.map((item, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <span className="w-2/5 truncate text-sm font-medium text-neutral-700">{item}</span>
-          <select
-            value={escolhas[i] ?? ''}
-            disabled={Boolean(feedback)}
-            onChange={(e) => setEscolhas((atual) => atual.map((v, j) => (j === i ? e.target.value : v)))}
-            className="w-3/5 rounded-xl border-2 border-neutral-200 px-3 py-2 text-sm outline-none focus:border-indigo-500"
-          >
-            <option value="" disabled>
-              Selecione…
-            </option>
-            {direita.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-        </div>
-      ))}
-
-      {feedback && !feedback.correta && feedback.pares_corretos && (
-        <div className="mt-2 rounded-xl bg-neutral-50 p-3 text-xs text-neutral-600">
-          <p className="mb-1 font-bold text-neutral-500">Pares corretos:</p>
-          {feedback.pares_corretos.map((p, i) => (
-            <p key={i}>
-              {p.esquerda} → {p.direita}
-            </p>
-          ))}
-        </div>
-      )}
+    <div>
+      {/* Uma linha da grade = uma ficha de cada lado, mas os lados NÃO se
+          correspondem: ambos estão embaralhados, e é o toque que liga. */}
+      <div className="grid grid-cols-2 gap-2">
+        {esquerda.map((item, pos) => (
+          <Fragment key={item.indice}>
+            <Ficha
+              texto={item.texto}
+              numero={numeroPorPar.get(item.indice)}
+              selecionada={selecionado?.lado === 'esq' && selecionado.pos === pos}
+              errando={errando?.esq === pos}
+              travada={travado}
+              aoTocar={() => tocar('esq', pos)}
+            />
+            <Ficha
+              texto={direita[pos]}
+              numero={numeroPorPosicaoDireita.get(pos)}
+              selecionada={selecionado?.lado === 'dir' && selecionado.pos === pos}
+              errando={errando?.dir === pos}
+              travada={travado}
+              aoTocar={() => tocar('dir', pos)}
+            />
+          </Fragment>
+        ))}
+      </div>
 
       {!feedback && (
-        <button
-          onClick={() => completo && aoResponder(JSON.stringify(escolhas))}
-          disabled={!completo}
-          className="mt-1 w-full rounded-2xl bg-neutral-900 py-3 text-sm font-bold text-white disabled:opacity-40"
-        >
-          Responder
-        </button>
+        <p className="mt-3 text-center text-xs font-semibold text-neutral-400">
+          {selecionado
+            ? 'Agora toque no par do outro lado.'
+            : faltam === pares.length
+              ? 'Toque em uma palavra de cada lado para formar o par.'
+              : `Boa! ${faltam === 1 ? 'Falta 1.' : `Faltam ${faltam}.`}`}
+        </p>
+      )}
+
+      {/* Sem esta linha a tela se contradiz: a grade termina toda verde (par
+          errado nunca gruda) enquanto o card do pai diz "Quase!". */}
+      {feedback && !feedback.correta && errosDePrimeira > 0 && (
+        <p className="mt-3 rounded-2xl bg-neutral-50 px-4 py-2.5 text-center text-xs font-medium text-neutral-500">
+          Você fechou todos os pares, mas{' '}
+          {errosDePrimeira === 1 ? 'errou 1 na primeira tentativa' : `errou ${errosDePrimeira} na primeira tentativa`}.
+        </p>
       )}
     </div>
+  )
+}
+
+/**
+ * Ficha de ligar_colunas — a mesma dos dois lados. `numero` presente significa
+ * par já fechado: ganha a bolinha verde (o que substitui a linha que ligaria
+ * as colunas) e sai do jogo.
+ */
+function Ficha({
+  texto,
+  numero,
+  selecionada,
+  errando,
+  travada,
+  aoTocar,
+}: {
+  texto: string
+  numero?: number
+  selecionada: boolean
+  errando: boolean
+  travada: boolean
+  aoTocar: () => void
+}) {
+  const fechada = numero !== undefined
+  const base =
+    'flex min-h-11 items-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-left text-sm font-bold transition'
+  const aparencia = fechada
+    ? 'border-transparent bg-emerald-50 text-emerald-800'
+    : errando
+      ? 'animate-treme border-rose-400 bg-rose-50 text-rose-700'
+      : selecionada
+        ? '-translate-y-px border-violet-500 bg-violet-100 text-violet-800'
+        : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
+
+  return (
+    <button
+      type="button"
+      aria-pressed={selecionada}
+      disabled={travada || fechada}
+      onClick={aoTocar}
+      className={`${base} ${aparencia}`}
+    >
+      {fechada && (
+        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500 text-[10px] font-extrabold text-white">
+          {numero}
+        </span>
+      )}
+      <span className="min-w-0 flex-1 break-words">{texto}</span>
+    </button>
   )
 }

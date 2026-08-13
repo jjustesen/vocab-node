@@ -1,7 +1,15 @@
-import { useState } from 'react'
-import { Check, Copy, Loader2, MessageCircle, Search, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Check, Copy, Link2, Loader2, MessageCircle, RefreshCw, Search, X } from 'lucide-react'
+import QRCode from 'qrcode'
 import { useAlunos } from '@/features/alunos/api'
-import { useEnviarAtividade, useQuestoesDaAtividade, type EnvioResultado } from './api'
+import { linkWhatsapp } from '@/lib/whatsapp'
+import {
+  useEnviarAtividade,
+  useGerarLinkAberto,
+  useLinkAberto,
+  useQuestoesDaAtividade,
+  type EnvioResultado,
+} from './api'
 
 export function EnvioModal({
   atividadeId,
@@ -16,6 +24,7 @@ export function EnvioModal({
   const { data: questoes } = useQuestoesDaAtividade(atividadeId)
   const enviar = useEnviarAtividade(atividadeId)
 
+  const [aba, setAba] = useState<'alunos' | 'link'>('alunos')
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
   const [busca, setBusca] = useState('')
   const [prazo, setPrazo] = useState('')
@@ -61,7 +70,20 @@ export function EnvioModal({
           </button>
         </div>
 
-        {!resultados ? (
+        {!resultados && (
+          <div className="mt-4 flex gap-1 rounded-full bg-neutral-100 p-1">
+            <BotaoAba ativo={aba === 'alunos'} onClick={() => setAba('alunos')}>
+              Enviar para alunos
+            </BotaoAba>
+            <BotaoAba ativo={aba === 'link'} onClick={() => setAba('link')}>
+              Link aberto
+            </BotaoAba>
+          </div>
+        )}
+
+        {!resultados && aba === 'link' ? (
+          <AbaLinkAberto atividadeId={atividadeId} atividadeTitulo={atividadeTitulo} />
+        ) : !resultados ? (
           <>
             <p className="mt-4 text-xs font-bold text-neutral-600">Escolha os alunos</p>
 
@@ -166,6 +188,206 @@ export function EnvioModal({
       </div>
     </div>
   )
+}
+
+function BotaoAba({
+  ativo,
+  onClick,
+  children,
+}: {
+  ativo: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 rounded-full py-2 text-xs font-extrabold transition ${
+        ativo ? 'bg-neutral-900 text-white' : 'text-neutral-500'
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+/**
+ * Aba "Link aberto" — um único link por atividade, para quem ainda não é
+ * aluno (feedback de 13/08/2026). Nas 12h após a geração quem abre pode se
+ * cadastrar; depois o link vira só porta de acesso de quem já tem conta.
+ */
+function AbaLinkAberto({ atividadeId, atividadeTitulo }: { atividadeId: string; atividadeTitulo: string }) {
+  const { data: linkAberto, isLoading } = useLinkAberto(atividadeId)
+  const gerar = useGerarLinkAberto(atividadeId)
+  const [copiado, setCopiado] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+
+  const url = linkAberto?.url ?? null
+  const cadastroAberto = linkAberto ? new Date(linkAberto.registro.cadastro_expira_em) > new Date() : false
+
+  useEffect(() => {
+    if (!url) return setQrDataUrl(null)
+    let cancelado = false
+    QRCode.toDataURL(url, { width: 480, margin: 1 }).then((dataUrl) => {
+      if (!cancelado) setQrDataUrl(dataUrl)
+    })
+    return () => {
+      cancelado = true
+    }
+  }, [url])
+
+  async function copiar() {
+    if (!url) return
+    await navigator.clipboard.writeText(url)
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2000)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="grid h-40 place-items-center">
+        <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-4">
+      <p className="rounded-2xl bg-amber-100 px-4 py-3 text-xs font-semibold leading-relaxed text-amber-900">
+        <b>Cadastro aberto por 12h.</b> Quem abrir o link nesse período cria a conta na hora — vira seu
+        aluno — e já resolve a atividade. Depois disso, o link continua funcionando só para quem já tem
+        conta.
+      </p>
+
+      {gerar.error && (
+        <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">
+          {(gerar.error as Error).message}
+        </p>
+      )}
+
+      {!linkAberto && (
+        <button
+          onClick={() => gerar.mutate()}
+          disabled={gerar.isPending}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-3.5 text-sm font-extrabold text-white disabled:opacity-50"
+        >
+          {gerar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+          Gerar link aberto
+        </button>
+      )}
+
+      {linkAberto && !url && (
+        <>
+          <p className="mt-3 rounded-2xl bg-neutral-50 px-4 py-3 text-xs text-neutral-500">
+            Esta atividade já tem um link aberto, mas ele foi gerado em outro navegador — por segurança,
+            só o código embaralhado dele fica guardado. Gere um novo: o anterior deixa de funcionar e a
+            janela de 12h recomeça.
+          </p>
+          <BotaoGerarNovamente aoGerar={() => gerar.mutate()} gerando={gerar.isPending} destaque />
+        </>
+      )}
+
+      {linkAberto && url && (
+        <>
+          <p className="mt-4 text-xs font-bold text-neutral-600">Link da atividade</p>
+          <div className="mt-1.5 flex items-center gap-2">
+            <input
+              readOnly
+              value={url}
+              className="w-full truncate rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-500 outline-none"
+            />
+            <button
+              onClick={copiar}
+              title="Copiar link"
+              className="shrink-0 rounded-xl border border-neutral-200 bg-white p-2 text-neutral-600"
+            >
+              {copiado ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+            </button>
+            <a
+              href={linkWhatsapp(`Fiz uma atividade de inglês pra você: ${atividadeTitulo}. É só abrir o link: ${url}`)}
+              target="_blank"
+              rel="noreferrer"
+              title="Enviar pelo WhatsApp"
+              className="shrink-0 rounded-xl bg-emerald-500 p-2 text-white"
+            >
+              <MessageCircle className="h-4 w-4" />
+            </a>
+          </div>
+
+          <p className="mt-2 text-xs font-medium text-neutral-500">
+            {cadastroAberto ? (
+              <>
+                Cadastro aberto até{' '}
+                <b className="text-neutral-900">{formatarPrazoDoCadastro(linkAberto.registro.cadastro_expira_em)}</b>
+              </>
+            ) : (
+              <>
+                <b className="text-neutral-700">Cadastro encerrado</b> — o link segue valendo para quem já
+                tem conta. Gere um novo para reabrir por mais 12h.
+              </>
+            )}
+          </p>
+
+          {qrDataUrl && (
+            <div className="mt-4 flex items-center gap-4">
+              <img
+                src={qrDataUrl}
+                alt="QR code do link aberto"
+                className="h-28 w-28 shrink-0 rounded-2xl border border-neutral-200 bg-white p-1.5"
+              />
+              <p className="text-xs leading-relaxed text-neutral-500">
+                <b className="text-neutral-700">QR code</b> para mostrar em aula ou mandar como imagem —
+                cai na mesma página do link.
+              </p>
+            </div>
+          )}
+
+          <BotaoGerarNovamente aoGerar={() => gerar.mutate()} gerando={gerar.isPending} />
+        </>
+      )}
+    </div>
+  )
+}
+
+function BotaoGerarNovamente({
+  aoGerar,
+  gerando,
+  destaque = false,
+}: {
+  aoGerar: () => void
+  gerando: boolean
+  destaque?: boolean
+}) {
+  return (
+    <button
+      onClick={aoGerar}
+      disabled={gerando}
+      className={`mt-4 flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-extrabold transition disabled:opacity-50 ${
+        destaque
+          ? 'bg-neutral-900 text-white'
+          : 'border-[1.5px] border-neutral-200 bg-white text-neutral-900'
+      }`}
+    >
+      {gerando ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+      Gerar novo link
+    </button>
+  )
+}
+
+/** "amanhã, 09:41" quando cabe; senão data completa — o professor decide rápido se reenvia. */
+function formatarPrazoDoCadastro(iso: string): string {
+  const data = new Date(iso)
+  const agora = new Date()
+  const mesmoDia = data.toDateString() === agora.toDateString()
+  const amanha = new Date(agora)
+  amanha.setDate(amanha.getDate() + 1)
+  const ehAmanha = data.toDateString() === amanha.toDateString()
+
+  const hora = data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  if (mesmoDia) return `hoje, ${hora}`
+  if (ehAmanha) return `amanhã, ${hora}`
+  return `${data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}, ${hora}`
 }
 
 /** Também usado ao enviar da biblioteca pela ficha do aluno. */
