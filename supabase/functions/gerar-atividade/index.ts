@@ -3,16 +3,20 @@
 // ligado (padrão do deploy): a chave da IA nunca sai do servidor.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
-import { GeminiProvider } from '../_shared/ia/gemini.ts'
+import { fallbackPrecisaDePaginas, gerarAtividadeComFallback } from '../_shared/ia/provedor.ts'
 import { atividadeBrutaSchema, questaoSchema, NIVEIS, HABILIDADES, type Questao } from '../_shared/questao-validacao.ts'
 import { limiteGeracoes } from '../_shared/planos.ts'
-import type { MaterialGeracao, ParametrosGeracao, UsoIA } from '../_shared/ia/tipos.ts'
+import { mensagemUsuarioDoErro } from '../_shared/ia/tipos.ts'
+import type { MaterialGeracao, PaginaMaterial, ParametrosGeracao, UsoIA } from '../_shared/ia/tipos.ts'
 
 const QUANTIDADE_MIN = 1
 const QUANTIDADE_MAX = 20
 const MATERIAL_MIN_CARACTERES = 20
 const IMAGEM_MAX_BYTES = 8 * 1024 * 1024
 const PDF_MAX_BYTES = 15 * 1024 * 1024
+/** Mesmo teto do front (app/src/lib/arquivo.ts) — quem chamar a função direto cai aqui. */
+const PAGINAS_MAX = 20
+const PAGINAS_MAX_BYTES_TOTAL = 15 * 1024 * 1024
 
 /** Tamanho decodificado a partir do comprimento base64 — não vale a pena decodificar só pra medir. */
 function bytesDeBase64(base64: string): number {
@@ -29,6 +33,29 @@ function validarMaterial(bruto: unknown): MaterialGeracao | { erro: string } {
       return { erro: 'Cole o material da aula — precisa de mais texto para gerar algo bom.' }
     }
     return { tipo: 'texto', conteudo }
+  }
+
+  // Reenvio do front depois de o Gemini falhar com PDF: as páginas já vêm
+  // rasterizadas em JPEG, uma imagem por página.
+  if (m.tipo === 'paginas') {
+    const paginas = Array.isArray((bruto as { paginas?: unknown }).paginas)
+      ? ((bruto as { paginas: unknown[] }).paginas as { conteudo?: unknown; mimeType?: unknown }[])
+      : []
+    if (paginas.length === 0) return { erro: 'Nenhuma página recebida.' }
+    if (paginas.length > PAGINAS_MAX) return { erro: `Envie no máximo ${PAGINAS_MAX} páginas.` }
+
+    let total = 0
+    const validadas: PaginaMaterial[] = []
+    for (const p of paginas) {
+      const conteudo = typeof p.conteudo === 'string' ? p.conteudo : ''
+      const mimeType = typeof p.mimeType === 'string' ? p.mimeType : ''
+      if (!conteudo || !mimeType.startsWith('image/')) return { erro: 'Página inválida.' }
+      total += bytesDeBase64(conteudo)
+      validadas.push({ conteudo, mimeType })
+    }
+    if (total > PAGINAS_MAX_BYTES_TOTAL) return { erro: 'Material muito grande — envie menos páginas.' }
+
+    return { tipo: 'paginas', paginas: validadas }
   }
 
   if (m.tipo === 'imagem' || m.tipo === 'pdf') {
@@ -130,13 +157,12 @@ Deno.serve(async (req) => {
   const errosRecorrentes = typeof corpo.erros_recorrentes === 'string' ? corpo.erros_recorrentes : undefined
 
   const parametros: ParametrosGeracao = { nivel, quantidade, habilidades, foco, errosRecorrentes }
-  const provedor = new GeminiProvider()
 
   async function registrarUso(sucesso: boolean, uso?: UsoIA) {
     await db.from('geracoes_ia').insert({
       professor_id: sessao.user!.id,
       atividade_id: null,
-      provedor: 'gemini',
+      provedor: uso?.provedor ?? 'gemini',
       modelo: uso?.modelo ?? Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.6-flash',
       tokens_entrada: uso?.tokensEntrada ?? null,
       tokens_saida: uso?.tokensSaida ?? null,
@@ -147,10 +173,17 @@ Deno.serve(async (req) => {
 
   let resultado: { dados: unknown; uso: UsoIA }
   try {
-    resultado = await provedor.gerarAtividade({ material, parametros })
+    resultado = await gerarAtividadeComFallback({ material, parametros })
   } catch (e) {
+    // O detalhe técnico fica no log da função (provedor.ts); o professor lê
+    // uma frase que diz o que fazer, não o JSON de erro do fornecedor.
     await registrarUso(false)
-    return respostaErro(e instanceof Error ? e.message : 'Falha ao gerar a atividade. Tente novamente.', 502)
+    // O fallback existe mas não lê PDF. Em vez de desistir, pede ao navegador
+    // as páginas rasterizadas — ele refaz a chamada com tipo 'paginas'.
+    if (fallbackPrecisaDePaginas(material)) {
+      return respostaJson({ erro: mensagemUsuarioDoErro(e), converter_paginas: true }, 502)
+    }
+    return respostaErro(mensagemUsuarioDoErro(e), 502)
   }
 
   const bruto = atividadeBrutaSchema.safeParse(resultado.dados)
@@ -172,7 +205,7 @@ Deno.serve(async (req) => {
   // foi aceito. Falha aqui não é fatal: segue só com o que já tem.
   if (questoesValidas.length > 0 && questoesValidas.length < quantidade) {
     try {
-      const complemento = await provedor.gerarAtividade({
+      const complemento = await gerarAtividadeComFallback({
         material,
         parametros: { ...parametros, quantidade: quantidade - questoesValidas.length },
         questoesJaAceitas: questoesValidas.map((q) => q.enunciado),

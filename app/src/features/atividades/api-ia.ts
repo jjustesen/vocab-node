@@ -1,12 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
+import { corpoDoErro, extrairMensagemDeErro } from '@/lib/erro-edge-function'
+import { pdfParaPaginas, type PaginaMaterial } from '@/lib/arquivo'
 import type { Questao } from '@/types/questao'
 import type { NivelCefr } from '@/types/db'
 
 export type MaterialGeracaoIA =
   | { tipo: 'texto'; conteudo: string }
   | { tipo: 'imagem' | 'pdf'; conteudo: string; mimeType: string }
+  | { tipo: 'paginas'; paginas: PaginaMaterial[] }
 
 export type ParametrosGeracaoIA = {
   material: MaterialGeracaoIA
@@ -30,10 +32,10 @@ export type AtividadeGeradaIA = {
  * Gemini nunca sai dele). Diferente de tarefa-*, esta função verifica o JWT:
  * `supabase.functions.invoke` já manda o Authorization do professor logado.
  */
-export async function gerarAtividadeIA(parametros: ParametrosGeracaoIA): Promise<AtividadeGeradaIA> {
-  const { data, error } = await supabase.functions.invoke('gerar-atividade', {
+async function invocar(parametros: ParametrosGeracaoIA, material: MaterialGeracaoIA) {
+  return await supabase.functions.invoke('gerar-atividade', {
     body: {
-      material: parametros.material,
+      material,
       nivel: parametros.nivel,
       quantidade: parametros.quantidade,
       habilidades: parametros.habilidades,
@@ -41,11 +43,24 @@ export async function gerarAtividadeIA(parametros: ParametrosGeracaoIA): Promise
       erros_recorrentes: parametros.errosRecorrentes,
     },
   })
-  if (error) {
-    const mensagem = await extrairMensagemDeErro(error)
-    throw new Error(mensagem)
+}
+
+export async function gerarAtividadeIA(parametros: ParametrosGeracaoIA): Promise<AtividadeGeradaIA> {
+  const { data, error } = await invocar(parametros, parametros.material)
+  if (!error) return data as AtividadeGeradaIA
+
+  // O Gemini caiu e o provedor de fallback não lê PDF: a função pede as
+  // páginas rasterizadas. Só o navegador consegue renderizar o PDF, então a
+  // conversão acontece aqui e a chamada é refeita.
+  const corpo = await corpoDoErro(error)
+  if (corpo?.converter_paginas === true && parametros.material.tipo === 'pdf') {
+    const { paginas } = await pdfParaPaginas(parametros.material.conteudo)
+    const retentativa = await invocar(parametros, { tipo: 'paginas', paginas })
+    if (!retentativa.error) return retentativa.data as AtividadeGeradaIA
+    throw new Error(await extrairMensagemDeErro(retentativa.error))
   }
-  return data as AtividadeGeradaIA
+
+  throw new Error(await extrairMensagemDeErro(error))
 }
 
 export function useGerarAtividadeIA() {

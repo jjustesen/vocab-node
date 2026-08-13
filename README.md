@@ -72,6 +72,11 @@ npm run dev
    ```bash
    supabase secrets set GEMINI_API_KEY=sua_chave_aqui
    ```
+7. (Opcional, recomendado) Configure o provedor de fallback. Quando o Gemini responde 503 de sobrecarga em todas as tentativas, a geração cai para o Grok em vez de falhar:
+   ```bash
+   supabase secrets set XAI_API_KEY=sua_chave_xai_aqui
+   ```
+   Sem esse secret o fallback fica desligado e o comportamento é o de antes. O xAI não lê PDF: nesse caso a função pede as páginas ao navegador, que rasteriza o arquivo com pdf.js (até 20 páginas) e refaz a chamada — ver `pdfParaPaginas` em [arquivo.ts](app/src/lib/arquivo.ts).
 
 A chave `service_role` **nunca** entra no front — ela vive só nas Edge Functions, injetada automaticamente pelo Supabase como variável de ambiente (`SUPABASE_SERVICE_ROLE_KEY`).
 
