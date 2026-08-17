@@ -40,6 +40,8 @@ const parSchema = z.object({
 export const questaoSchema = z
   .object({
     tipo: z.enum(TIPOS_QUESTAO),
+    /** Comando em pt-BR, separado da frase-alvo desde 13/08/2026 (migration 0011). */
+    instrucao: z.string().default(''),
     enunciado: z.string().min(1),
     opcoes: z.array(z.string()),
     resposta_correta: z.string(),

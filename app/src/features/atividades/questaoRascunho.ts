@@ -1,4 +1,4 @@
-import { MARCADOR_LACUNA, palavrasDaFrase } from '@/types/questao'
+import { INSTRUCAO_PADRAO, MARCADOR_LACUNA, palavrasDaFrase } from '@/types/questao'
 import { embaralhar } from '@/lib/embaralhar'
 import type { QuestaoTipo, Par, QuestaoRow } from '@/types/db'
 
@@ -10,6 +10,8 @@ import type { QuestaoTipo, Par, QuestaoRow } from '@/types/db'
  */
 export type QuestaoRascunho = {
   tipo: QuestaoTipo
+  /** Comando em pt-BR (migration 0011); vazio deixa a tela usar o padrão do tipo. */
+  instrucao: string
   enunciado: string
   opcoes: string[]
   resposta_correta: string
@@ -23,6 +25,7 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
     case 'multipla_escolha':
       return {
         tipo,
+        instrucao: INSTRUCAO_PADRAO[tipo] ?? '',
         enunciado: '',
         opcoes: ['', '', '', ''],
         resposta_correta: '',
@@ -33,6 +36,7 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
     case 'verdadeiro_falso':
       return {
         tipo,
+        instrucao: INSTRUCAO_PADRAO[tipo] ?? '',
         enunciado: '',
         opcoes: ['true', 'false'],
         resposta_correta: 'true',
@@ -40,9 +44,13 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
         pares: [],
         explicacao: '',
       }
+    // Daqui para baixo o `enunciado` já É a instrução em pt-BR (o inglês mora
+    // em `pares`, `opcoes` ou `resposta_correta`), então `instrucao` fica vazia
+    // — ver TIPOS_SEM_FRASE_ALVO em types/questao.ts.
     case 'ligar_colunas':
       return {
         tipo,
+        instrucao: '',
         enunciado: '',
         opcoes: [],
         resposta_correta: '',
@@ -57,6 +65,7 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
     case 'lacuna':
       return {
         tipo,
+        instrucao: INSTRUCAO_PADRAO[tipo] ?? '',
         enunciado: `They ${MARCADOR_LACUNA} to the beach yesterday.`,
         opcoes: [],
         resposta_correta: '',
@@ -71,6 +80,7 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
     case 'ordenar_audio':
       return {
         tipo,
+        instrucao: '',
         enunciado: 'Ouça e monte a frase na ordem em que foi falada.',
         opcoes: ['', ''],
         resposta_correta: '',
@@ -81,6 +91,7 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
     case 'pronuncia':
       return {
         tipo,
+        instrucao: '',
         enunciado: 'Leia a frase em voz alta.',
         opcoes: [],
         resposta_correta: '',
@@ -92,6 +103,7 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
     case 'resposta_curta':
       return {
         tipo,
+        instrucao: INSTRUCAO_PADRAO[tipo] ?? '',
         enunciado: '',
         opcoes: [],
         resposta_correta: '',
@@ -123,6 +135,7 @@ export function paraQuestaoContrato(r: QuestaoRascunho) {
     const palavras = palavrasDaFrase(r.resposta_correta)
     return {
       tipo: r.tipo,
+      instrucao: r.instrucao.trim(),
       enunciado: r.enunciado.trim() || 'Coloque as palavras na ordem correta.',
       opcoes: embaralhar(palavras),
       resposta_correta: r.resposta_correta.trim(),
@@ -139,6 +152,7 @@ export function paraQuestaoContrato(r: QuestaoRascunho) {
     const distratoras = r.opcoes.map((o) => o.trim()).filter(Boolean)
     return {
       tipo: r.tipo,
+      instrucao: r.instrucao.trim(),
       enunciado: r.enunciado.trim() || 'Ouça e monte a frase na ordem em que foi falada.',
       opcoes: embaralhar([...palavras, ...distratoras]),
       resposta_correta: r.resposta_correta.trim(),
@@ -151,6 +165,7 @@ export function paraQuestaoContrato(r: QuestaoRascunho) {
   if (r.tipo === 'pronuncia') {
     return {
       tipo: r.tipo,
+      instrucao: r.instrucao.trim(),
       enunciado: r.enunciado.trim() || 'Leia a frase em voz alta.',
       opcoes: [],
       resposta_correta: r.resposta_correta.trim(),
@@ -162,6 +177,7 @@ export function paraQuestaoContrato(r: QuestaoRascunho) {
 
   return {
     tipo: r.tipo,
+    instrucao: r.instrucao.trim(),
     enunciado: r.enunciado.trim(),
     opcoes: r.opcoes.map((o) => o.trim()).filter(Boolean),
     resposta_correta: r.resposta_correta.trim(),
@@ -177,6 +193,7 @@ export function paraQuestaoContrato(r: QuestaoRascunho) {
 export function questaoRowParaRascunho(q: QuestaoRow): QuestaoRascunho {
   return {
     tipo: q.tipo,
+    instrucao: q.instrucao ?? '',
     enunciado: q.enunciado,
     // Em `ordenar_audio` o rascunho guarda só as distratoras, então voltamos
     // tirando de `opcoes` as fichas que a própria frase explica.

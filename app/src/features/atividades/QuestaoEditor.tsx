@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { EtiquetaTipo, QuestaoLeitura } from './QuestaoLeitura'
-import { CORES_TIPO, MARCADOR_LACUNA, ROTULO_TIPO, TIPOS_QUESTAO, palavrasDaFrase } from '@/types/questao'
+import {
+  CORES_TIPO,
+  INSTRUCAO_PADRAO,
+  MARCADOR_LACUNA,
+  ROTULO_TIPO,
+  TIPOS_QUESTAO,
+  palavrasDaFrase,
+  temFraseAlvo,
+} from '@/types/questao'
 import type { QuestaoRascunho } from './questaoRascunho'
 import { questaoVazia } from './questaoRascunho'
 
@@ -44,6 +52,8 @@ export function QuestaoEditor({
     // Troca de tipo reinicia os campos específicos — evita levar um `pares`
     // de ligar_colunas para uma múltipla escolha, por exemplo.
     const nova = questaoVazia(tipo)
+    // A instrução vem da questão NOVA, não da anterior: o comando é próprio de
+    // cada tipo ("Complete a frase" não serve para ligar colunas).
     onMudar({ ...nova, enunciado: valor.enunciado, explicacao: valor.explicacao })
   }
 
@@ -106,9 +116,28 @@ export function QuestaoEditor({
     <div className="rounded-3xl bg-white p-5 ring-2 ring-neutral-900">
       {cabecalho}
 
+      {/* Instrução e frase são campos separados desde a migration 0011: na tela
+          do aluno a primeira é cinza e pequena, a segunda ganha bloco de
+          destaque. Nos tipos em que o enunciado já é só instrução
+          (ordenar_palavras, ligar_colunas, ordenar_audio, pronuncia) este
+          campo não aparece — seria pedir a mesma coisa duas vezes. */}
+      {temFraseAlvo(valor.tipo) && (
+        <label className="mb-3 block">
+          <span className="text-xs font-bold text-neutral-600">
+            Instrução <span className="font-normal text-neutral-400">— em português, some se vazia</span>
+          </span>
+          <input
+            value={valor.instrucao}
+            onChange={(e) => onMudar({ ...valor, instrucao: e.target.value })}
+            placeholder={INSTRUCAO_PADRAO[valor.tipo] ?? 'Complete a frase'}
+            className="mt-1 w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-neutral-900"
+          />
+        </label>
+      )}
+
       <label className="block">
         <span className="text-xs font-bold text-neutral-600">
-          Enunciado
+          {temFraseAlvo(valor.tipo) ? 'Frase em inglês' : 'Enunciado'}
           {valor.tipo === 'lacuna' && (
             <span className="font-normal text-neutral-400"> — use {MARCADOR_LACUNA} onde falta a palavra</span>
           )}

@@ -37,7 +37,9 @@ Deno.serve(async (req) => {
     db.from('atividades').select('titulo, nivel, professor_id').eq('id', atribuicao.atividade_id).single(),
     db
       .from('questoes')
-      .select('id, ordem, tipo, enunciado, opcoes, pares, resposta_correta, respostas_aceitas, explicacao, audio_path')
+      .select(
+        'id, ordem, tipo, instrucao, enunciado, opcoes, pares, resposta_correta, respostas_aceitas, explicacao, audio_path',
+      )
       .eq('atividade_id', atribuicao.atividade_id)
       .order('ordem'),
     db.from('respostas').select('questao_id, valor, correta').eq('atribuicao_id', atribuicao.id),
@@ -71,6 +73,7 @@ Deno.serve(async (req) => {
       id: q.id,
       ordem: q.ordem,
       tipo: q.tipo,
+      instrucao: q.instrucao,
       enunciado: q.enunciado,
       opcoes: q.opcoes,
       pares: q.pares,

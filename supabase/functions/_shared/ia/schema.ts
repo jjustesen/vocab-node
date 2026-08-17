@@ -17,7 +17,16 @@ export const ATIVIDADE_GERADA_SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        required: ['tipo', 'enunciado', 'opcoes', 'resposta_correta', 'respostas_aceitas', 'pares', 'explicacao'],
+        required: [
+          'tipo',
+          'instrucao',
+          'enunciado',
+          'opcoes',
+          'resposta_correta',
+          'respostas_aceitas',
+          'pares',
+          'explicacao',
+        ],
         properties: {
           tipo: {
             type: 'string',
@@ -32,6 +41,7 @@ export const ATIVIDADE_GERADA_SCHEMA = {
               'ordenar_audio',
             ],
           },
+          instrucao: { type: 'string' },
           enunciado: { type: 'string' },
           opcoes: { type: 'array', items: { type: 'string' } },
           resposta_correta: { type: 'string' },

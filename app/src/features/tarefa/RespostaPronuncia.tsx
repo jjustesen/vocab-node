@@ -72,15 +72,25 @@ export function RespostaPronuncia({
   questao,
   feedback,
   aoFalar,
+  aoTentarNovamente,
 }: {
   questao: QuestaoTarefa
   feedback: FeedbackLocal | null
   aoFalar: (transcricao: string, audioBase64: string | null, mimeType: string | null) => void
+  /** Limpa o feedback no pai para que a leitura possa recomeçar. */
+  aoTentarNovamente: () => void
 }) {
   const [gravando, setGravando] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [semSuporte] = useState(() => criarReconhecedor() === null)
+  /**
+   * Reconhecedor não devolveu palavra nenhuma. Estado à parte de propósito:
+   * antes isso virava transcrição vazia → nota 0, indistinguível de quem leu
+   * tudo errado, e o aluno via "0/100" sem uma palavra de explicação. Silêncio
+   * não é resposta: não grava nada e não queima a questão.
+   */
+  const [naoOuvi, setNaoOuvi] = useState(false)
 
   const recRef = useRef<Reconhecedor | null>(null)
   const gravadorRef = useRef<MediaRecorder | null>(null)
@@ -101,6 +111,7 @@ export function RespostaPronuncia({
 
   async function comecar() {
     setErro(null)
+    setNaoOuvi(false)
     transcricaoRef.current = ''
     finalizadoRef.current = false
     pedacosRef.current = []
@@ -189,7 +200,31 @@ export function RespostaPronuncia({
     }
 
     setProcessando(false)
+
+    // Nada reconhecido: microfone mudo, ruído, `no-speech`, rede caída. Não
+    // enviamos — sem isto o aluno leva 0/100 por um problema que não é dele.
+    if (transcricaoRef.current.trim() === '') {
+      setNaoOuvi(true)
+      return
+    }
+
     aoFalar(transcricaoRef.current, audioBase64, formato)
+  }
+
+  /** Regravar: o servidor faz upsert da resposta e do áudio, então repetir é seguro. */
+  async function tentarDeNovo() {
+    aoTentarNovamente()
+    await comecar()
+  }
+
+  /**
+   * Saída de emergência para quem não consegue ser ouvido de jeito nenhum
+   * (microfone quebrado, navegador sem motor). Sem ela a atividade fica
+   * impossível de concluir — o servidor exige resposta para toda questão.
+   */
+  function seguirSemGravar() {
+    setNaoOuvi(false)
+    aoFalar('', null, null)
   }
 
   return (
@@ -214,7 +249,29 @@ export function RespostaPronuncia({
         </p>
       )}
 
-      {!feedback && !semSuporte && (
+      {naoOuvi && (
+        <>
+          <p className="mt-3 flex items-start gap-2 rounded-2xl bg-amber-100 px-4 py-3 text-xs font-medium text-amber-900">
+            <Mic className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              <b className="block text-sm font-extrabold">Não consegui te ouvir</b>
+              Nada chegou no microfone. Confira se ele está liberado para o site e tente de novo — isto
+              não conta como erro.
+            </span>
+          </p>
+          <button
+            onClick={comecar}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-4 text-sm font-extrabold text-white"
+          >
+            <Mic className="h-4 w-4" /> Tentar de novo
+          </button>
+          <button onClick={seguirSemGravar} className="mt-3 w-full text-center text-xs font-bold text-neutral-400">
+            Não estou conseguindo — seguir mesmo assim
+          </button>
+        </>
+      )}
+
+      {!feedback && !semSuporte && !naoOuvi && (
         <>
           {processando ? (
             <p className="mt-4 flex items-center justify-center gap-2 rounded-full bg-neutral-100 py-4 text-sm font-bold text-neutral-500">
@@ -239,6 +296,18 @@ export function RespostaPronuncia({
             {gravando ? 'Leia a frase. Paro sozinho quando você terminar.' : 'Toque e leia a frase em inglês.'}
           </p>
         </>
+      )}
+
+      {/* Ler em voz alta é treino: repetir É o exercício. O servidor já grava
+          por upsert (tarefa-pronuncia), então a última leitura simplesmente
+          substitui a anterior, áudio incluído. */}
+      {feedback && !semSuporte && (
+        <button
+          onClick={tentarDeNovo}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-neutral-200 bg-white py-3.5 text-sm font-extrabold text-neutral-900"
+        >
+          <Mic className="h-4 w-4" /> Tentar de novo
+        </button>
       )}
     </div>
   )

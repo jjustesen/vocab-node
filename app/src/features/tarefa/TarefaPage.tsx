@@ -15,18 +15,27 @@ import {
   RefreshCw,
   RotateCcw,
   TrendingUp,
+  Volume2,
   X,
   XCircle,
 } from 'lucide-react'
 import { apiTarefa, mensagemDeErro } from '@/lib/api-tarefa'
 import { embaralhar } from '@/lib/embaralhar'
 import { inicial } from '@/lib/avatar'
-import { CORTE_PRONUNCIA, corrigir, pontuarPronuncia } from '@/types/questao'
+import {
+  CORTE_PRONUNCIA,
+  MARCADOR_LACUNA,
+  compararFala,
+  corrigir,
+  dividirEnunciado,
+  pontuarPronuncia,
+} from '@/types/questao'
 import { useAlunoAuthOpcional } from '@/features/aluno-auth/AlunoAuthProvider'
 import { minutosEstimados } from './formato'
 import { BotaoPrincipal, Chip, TelaAluno } from './visual'
 import { BotaoOuvir } from './RespostasAudio'
 import { RespostaPronuncia } from './RespostaPronuncia'
+import { falarEmIngles, useTemVozEmIngles } from './vozDoNavegador'
 import type {
   ConcluirResposta,
   FeedbackLocal,
@@ -200,20 +209,17 @@ export function TarefaPage() {
   function responderPronuncia(transcricao: string, audioBase64: string | null, mimeType: string | null) {
     if (!identificador) return
     const questao = dados!.questoes[indice]
-    const { pontuacao, faltando } = pontuarPronuncia(questao.resposta_correta, transcricao)
+    const { pontuacao } = pontuarPronuncia(questao.resposta_correta, transcricao)
     const correta = pontuacao >= CORTE_PRONUNCIA
 
     setFeedback({
       correta,
       resposta_correta: questao.resposta_correta,
       pares_corretos: null,
-      // Sem análise fonética não dá para dizer QUAL som corrigir, só quais
-      // palavras não foram reconhecidas — a explicação da questão continua
-      // sendo o conteúdo de ensino.
-      explicacao:
-        faltando.length > 0 && pontuacao > 0
-          ? `${questao.explicacao} (Não reconheci: ${faltando.join(', ')}.)`
-          : questao.explicacao,
+      // A lista de palavras não reconhecidas saía costurada aqui dentro da
+      // explicação; agora quem mostra o que saiu diferente é <FalaOuvida>,
+      // marcando na própria transcrição — dizer as duas coisas era repetição.
+      explicacao: questao.explicacao,
       pontuacao,
       transcricao,
     })
@@ -358,6 +364,7 @@ export function TarefaPage() {
       repassandoErros={Boolean(indicesParaRefazer)}
       aoResponder={responder}
       aoFalar={responderPronuncia}
+      aoLimparFeedback={() => setFeedback(null)}
       aoAvancar={proxima}
       aoSair={aoSair}
     />
@@ -611,6 +618,7 @@ function TelaQuestao({
   repassandoErros,
   aoResponder,
   aoFalar,
+  aoLimparFeedback,
   aoAvancar,
   aoSair,
 }: {
@@ -620,6 +628,7 @@ function TelaQuestao({
   sequencia: number
   feedback: FeedbackLocal | null
   aoFalar: (transcricao: string, audioBase64: string | null, mimeType: string | null) => void
+  aoLimparFeedback: () => void
   repassandoErros: boolean
   aoResponder: (valor: string) => void
   aoAvancar: () => void
@@ -659,7 +668,7 @@ function TelaQuestao({
           </p>
         )}
 
-        <h2 className="mt-4 text-lg font-extrabold leading-snug text-neutral-900">{questao.enunciado}</h2>
+        <Enunciado questao={questao} />
 
         {/* key por questão: cada componente de resposta guarda o que o aluno
             escolheu/digitou em estado próprio, e sem remontar esse valor
@@ -692,7 +701,12 @@ function TelaQuestao({
             </div>
           )}
           {questao.tipo === 'pronuncia' && (
-            <RespostaPronuncia questao={questao} feedback={feedback} aoFalar={aoFalar} />
+            <RespostaPronuncia
+              questao={questao}
+              feedback={feedback}
+              aoFalar={aoFalar}
+              aoTentarNovamente={aoLimparFeedback}
+            />
           )}
           {questao.tipo === 'ligar_colunas' && (
             <RespostaLigarColunas questao={questao} feedback={feedback} aoResponder={aoResponder} />
@@ -733,9 +747,11 @@ function TelaQuestao({
                   {feedback.explicacao}
                 </p>
                 {feedback.transcricao && (
-                  <p className={`mt-1.5 text-xs ${feedback.correta ? 'text-emerald-700' : 'text-rose-700'}`}>
-                    Ouvi: <i>“{feedback.transcricao}”</i>
-                  </p>
+                  <FalaOuvida
+                    fraseAlvo={feedback.resposta_correta}
+                    transcricao={feedback.transcricao}
+                    correta={feedback.correta}
+                  />
                 )}
               </div>
             </div>
@@ -749,6 +765,93 @@ function TelaQuestao({
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * Instrução e frase-alvo, separadas (migration 0011).
+ *
+ * A instrução é moldura: pequena, sem negrito, cinza. A frase é o conteúdo —
+ * bloco próprio, corpo maior, fundo lilás suave. Antes as duas saíam no mesmo
+ * negrito e o olho não achava onde começava o inglês.
+ */
+function Enunciado({ questao }: { questao: QuestaoTarefa }) {
+  const { instrucao, frase } = dividirEnunciado(questao)
+
+  return (
+    <div className="mt-4">
+      {instrucao && <p className="text-sm font-medium leading-snug text-neutral-500">{instrucao}</p>}
+      {frase && (
+        <p
+          className={`rounded-2xl bg-violet-50 px-4 py-3.5 text-[17px] font-bold leading-relaxed text-neutral-900 ${
+            instrucao ? 'mt-2' : ''
+          }`}
+        >
+          <FraseComLacuna texto={frase} />
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** Os seis underscores viram um traço desenhado — a frase vira exercício, não código. */
+function FraseComLacuna({ texto }: { texto: string }) {
+  const partes = texto.split(MARCADOR_LACUNA)
+  if (partes.length === 1) return <>{texto}</>
+
+  return (
+    <>
+      {partes.map((parte, i) => (
+        <Fragment key={i}>
+          {parte}
+          {i < partes.length - 1 && (
+            <span className="mx-1 inline-block w-16 border-b-[3px] border-violet-300 align-baseline" />
+          )}
+        </Fragment>
+      ))}
+    </>
+  )
+}
+
+/**
+ * "Ouvi: ..." com as palavras que não bateram sublinhadas.
+ *
+ * É o feedback mais útil que a questão de fala consegue dar sem análise
+ * fonética: ver que o motor entendeu "fink" no lugar de "think" mostra ONDE a
+ * leitura escorregou, e de quebra prova ao aluno que a nota não é aleatória.
+ */
+function FalaOuvida({
+  fraseAlvo,
+  transcricao,
+  correta,
+}: {
+  fraseAlvo: string
+  transcricao: string
+  correta: boolean
+}) {
+  const palavras = compararFala(fraseAlvo, transcricao)
+  const algumaErrada = palavras.some((p) => !p.bate)
+
+  return (
+    <div className={`mt-1.5 text-xs ${correta ? 'text-emerald-700' : 'text-rose-700'}`}>
+      <p>
+        Ouvi:{' '}
+        <i>
+          “
+          {palavras.map((p, i) => (
+            <span
+              key={i}
+              className={p.bate ? undefined : 'font-bold underline decoration-wavy underline-offset-2'}
+            >
+              {p.palavra}
+              {i < palavras.length - 1 ? ' ' : ''}
+            </span>
+          ))}
+          ”
+        </i>
+      </p>
+      {algumaErrada && <p className="mt-0.5 opacity-80">O sublinhado é o que saiu diferente da frase.</p>}
     </div>
   )
 }
@@ -832,6 +935,11 @@ function RespostaTexto({
   aoResponder: (valor: string) => void
 }) {
   const [valor, setValor] = useState('')
+  const temVoz = useTemVozEmIngles()
+
+  // A dica só existe na lacuna: em `resposta_curta` a resposta é uma frase
+  // inteira, e ouvi-la seria entregar tudo.
+  const podeOuvirDica = questao.tipo === 'lacuna' && temVoz && !feedback
 
   return (
     <div>
@@ -847,6 +955,19 @@ function RespostaTexto({
           Resposta certa: <b className="text-neutral-700">{feedback.resposta_correta}</b>
         </p>
       )}
+
+      {/* Ouvir a palavra destrava quem empacou sem entregar a escrita — o
+          aluno ainda precisa soletrar. Some quando o aparelho não tem voz em
+          inglês (ver vozDoNavegador.ts). */}
+      {podeOuvirDica && (
+        <button
+          onClick={() => falarEmIngles(questao.resposta_correta)}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-neutral-200 bg-white py-2.5 text-xs font-bold text-neutral-500"
+        >
+          <Volume2 className="h-3.5 w-3.5" /> Travou? Ouvir a pronúncia
+        </button>
+      )}
+
       {!feedback && (
         <button
           onClick={() => valor.trim() && aoResponder(valor.trim())}

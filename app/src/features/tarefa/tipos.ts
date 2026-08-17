@@ -18,6 +18,8 @@ export type QuestaoTarefa = {
   id: string
   ordem: number
   tipo: QuestaoTipo
+  /** Comando em pt-BR. Null nas questões anteriores à migration 0011. */
+  instrucao: string | null
   enunciado: string
   opcoes: string[] | null
   pares: Par[] | null

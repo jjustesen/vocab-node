@@ -10,6 +10,8 @@ import type { QuestaoTipo } from '@/types/db'
  */
 export type QuestaoParaLeitura = {
   tipo: QuestaoTipo
+  /** Comando em pt-BR (migration 0011). Ausente/null nas questões antigas. */
+  instrucao?: string | null
   enunciado: string
   opcoes?: string[] | null
   resposta_correta: string
@@ -27,6 +29,11 @@ export function EtiquetaTipo({ tipo }: { tipo: QuestaoTipo }) {
 export function QuestaoLeitura({ valor }: { valor: QuestaoParaLeitura }) {
   return (
     <>
+      {/* O professor revisa o que o ALUNO vai ver: mesma separação da tela da
+          tarefa — instrução em cinza pequeno, frase em destaque. */}
+      {valor.instrucao?.trim() && (
+        <p className="mb-1 text-xs font-medium text-neutral-500">{valor.instrucao}</p>
+      )}
       <p className={`font-bold ${valor.enunciado ? 'text-neutral-900' : 'text-neutral-300'}`}>
         {valor.enunciado || 'Questão sem enunciado.'}
       </p>

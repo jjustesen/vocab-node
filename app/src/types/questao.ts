@@ -90,6 +90,31 @@ export function pontuarPronuncia(
   return { pontuacao, faltando }
 }
 
+/**
+ * A transcrição quebrada em palavras, cada uma marcada com `bate` — se aquela
+ * palavra existe na frase-alvo (contando repetição: dizer "the" três vezes numa
+ * frase com um "the" marca só o primeiro).
+ *
+ * Serve só para MOSTRAR ao aluno onde a leitura saiu diferente, que é o feedback
+ * possível sem análise fonética. Não entra em nota nenhuma — por isso vive só
+ * aqui e não tem cópia em _shared/correcao.ts.
+ */
+export function compararFala(fraseAlvo: string, transcricao: string): { palavra: string; bate: boolean }[] {
+  const restante = normalizarFala(fraseAlvo)
+  // Percorre o texto CRU para devolver ao aluno o que ele falou como falou
+  // (maiúscula, apóstrofo), comparando pela forma normalizada.
+  return transcricao
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((palavra) => {
+      const [normalizada] = normalizarFala(palavra)
+      const posicao = normalizada ? restante.indexOf(normalizada) : -1
+      if (posicao !== -1) restante.splice(posicao, 1)
+      return { palavra, bate: posicao !== -1 }
+    })
+}
+
 export const NIVEIS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
 /**
  * `fala` entrou com o tipo `pronuncia`: sem uma habilidade que a represente, o
@@ -100,6 +125,108 @@ export const HABILIDADES = ['leitura', 'escrita', 'listening', 'fala', 'vocabula
 
 /** Marcador de lacuna: seis underscores. O app procura exatamente isto. */
 export const MARCADOR_LACUNA = '______'
+
+/**
+ * Comando mostrado quando a questão não traz `instrucao` própria e o enunciado
+ * não se deixa dividir — questões criadas antes da migration 0011, na maioria.
+ */
+export const INSTRUCAO_PADRAO: Partial<Record<(typeof TIPOS_QUESTAO)[number], string>> = {
+  multipla_escolha: 'Escolha a opção que completa a frase',
+  lacuna: 'Complete a frase',
+  verdadeiro_falso: 'A afirmação é verdadeira ou falsa?',
+  resposta_curta: 'Responda em inglês',
+  ordenar_palavras: 'Coloque as palavras na ordem correta',
+  ligar_colunas: 'Ligue cada palavra ao seu par',
+  ordenar_audio: 'Ouça e monte a frase na ordem em que foi falada',
+  pronuncia: 'Leia a frase em voz alta',
+}
+
+/**
+ * Tipos cujo `enunciado` JÁ é só a instrução em pt-BR — o conteúdo em inglês
+ * mora em outro campo (fichas em `opcoes`, `pares`, ou a frase em
+ * `resposta_correta`). Não existe frase-alvo a destacar dentro do enunciado, e
+ * tratá-los como se existisse imprimiria a instrução duas vezes.
+ */
+const TIPOS_SEM_FRASE_ALVO: readonly (typeof TIPOS_QUESTAO)[number][] = [
+  'ordenar_palavras',
+  'ligar_colunas',
+  'ordenar_audio',
+  'pronuncia',
+]
+
+/**
+ * Se o enunciado deste tipo carrega uma frase em inglês para destacar. Decide
+ * tanto o bloco de destaque na tela do aluno quanto a existência do campo
+ * "Instrução" no editor do professor — por isso vive aqui, e não copiado nos dois.
+ */
+export function temFraseAlvo(tipo: (typeof TIPOS_QUESTAO)[number]): boolean {
+  return !TIPOS_SEM_FRASE_ALVO.includes(tipo)
+}
+
+/**
+ * Instrução em pt-BR + frase-alvo em inglês, separadas.
+ *
+ * Caminhos, nesta ordem:
+ *  1. tipo sem frase-alvo — tudo vira instrução, `frase` sai vazia;
+ *  2. `instrucao` preenchida (questões novas) — usa como está;
+ *  3. enunciado no formato "comando: 'frase'" — divide ali. É como a IA
+ *     escrevia antes da migration 0011, então cobre o acervo já criado;
+ *  4. nada disso — cai no comando padrão do tipo, e o enunciado inteiro vira
+ *     a frase. É o caso dos enunciados que já são só a frase, como
+ *     "______ eating out tonight?".
+ *
+ * Nunca esconde texto: o que não vira instrução continua aparecendo como frase.
+ */
+export function dividirEnunciado(questao: {
+  tipo: (typeof TIPOS_QUESTAO)[number]
+  instrucao?: string | null
+  enunciado: string
+}): { instrucao: string; frase: string } {
+  const enunciado = questao.enunciado.trim()
+  const propria = questao.instrucao?.trim()
+
+  if (TIPOS_SEM_FRASE_ALVO.includes(questao.tipo)) {
+    return { instrucao: propria || enunciado || INSTRUCAO_PADRAO[questao.tipo] || '', frase: '' }
+  }
+
+  if (propria) return { instrucao: propria, frase: enunciado }
+
+  const legado = dividirEnunciadoLegado(enunciado)
+  if (legado) return legado
+
+  return { instrucao: INSTRUCAO_PADRAO[questao.tipo] ?? '', frase: enunciado }
+}
+
+/**
+ * Verbos com que uma instrução começa. É o que separa
+ * "Choose the correct verb phrase: Yesterday, Sarah ______ her luggage"
+ * de "He said: I will be there at noon." — os dois têm dois-pontos, e só o
+ * primeiro tem comando antes deles. Sem essa lista, partir no dois-pontos
+ * cortaria frases legítimas ao meio.
+ */
+const VERBOS_DE_INSTRUCAO =
+  /^(choose|select|complete|fill|match|read|write|rewrite|put|order|answer|decide|mark|circle|underline|listen|look|use|escolha|complete|selecione|ligue|leia|escreva|responda|marque|ordene|coloque|ouça|preencha|indique|reescreva)\b/i
+
+/**
+ * Divide o enunciado das questões anteriores à migration 0011, em que a IA
+ * escrevia comando e frase juntos. Duas formas, ambas exigindo comando curto:
+ *
+ *   "Choose the correct option: 'Does Mexican food ______ too spicy?'"
+ *   "Choose the correct verb phrase: Yesterday, Sarah ______ her luggage."
+ *
+ * Devolve `null` quando não reconhece — aí quem chama decide o que fazer.
+ */
+function dividirEnunciadoLegado(enunciado: string): { instrucao: string; frase: string } | null {
+  const comAspas = enunciado.match(/^(.{4,120}?):\s*["'“‘](.+)["'”’]\s*$/s)
+  if (comAspas) return { instrucao: comAspas[1].trim(), frase: comAspas[2].trim() }
+
+  const semAspas = enunciado.match(/^(.{4,120}?):\s*(\S.*)$/s)
+  if (semAspas && VERBOS_DE_INSTRUCAO.test(semAspas[1].trim())) {
+    return { instrucao: semAspas[1].trim(), frase: semAspas[2].trim() }
+  }
+
+  return null
+}
 
 export const ROTULO_HABILIDADE: Record<(typeof HABILIDADES)[number], string> = {
   leitura: 'Leitura',
@@ -161,6 +288,8 @@ const parSchema = z.object({
 export const questaoSchema = z
   .object({
     tipo: z.enum(TIPOS_QUESTAO),
+    /** Comando em pt-BR, separado da frase-alvo desde 13/08/2026 (migration 0011). */
+    instrucao: z.string().default(''),
     enunciado: z.string().min(1),
     opcoes: z.array(z.string()),
     resposta_correta: z.string(),

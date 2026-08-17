@@ -219,6 +219,8 @@ export type QuestaoRow = {
   atividade_id: string
   ordem: number
   tipo: QuestaoTipo
+  /** Comando em pt-BR, separado da frase-alvo (migration 0011). Null nas questões antigas. */
+  instrucao: string | null
   enunciado: string
   opcoes: string[] | null
   resposta_correta: string
