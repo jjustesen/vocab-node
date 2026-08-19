@@ -6,6 +6,8 @@ import type { FeedbackLocal, QuestaoTarefa } from './tipos'
  * `SpeechRecognition` não está na lib DOM do TypeScript — o tipo mínimo que
  * usamos fica aqui, em vez de um `any` solto.
  */
+type ResultadoFala = ArrayLike<{ transcript: string }> & { isFinal: boolean }
+
 type Reconhecedor = {
   lang: string
   continuous: boolean
@@ -14,9 +16,22 @@ type Reconhecedor = {
   start: () => void
   stop: () => void
   abort: () => void
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
+  onresult: ((e: { results: ArrayLike<ResultadoFala> }) => void) | null
   onerror: ((e: { error: string }) => void) | null
   onend: (() => void) | null
+}
+
+/**
+ * Só os erros que o aluno consegue resolver viram mensagem. `no-speech` e
+ * `aborted` ficam de fora de propósito: viram o estado "não te ouvi", que já
+ * explica melhor e oferece o botão de tentar de novo.
+ */
+const MENSAGEM_POR_ERRO: Record<string, string> = {
+  'not-allowed': 'O microfone está bloqueado para este site. Libere nas permissões do navegador e tente de novo.',
+  'service-not-allowed':
+    'O microfone está bloqueado para este site. Libere nas permissões do navegador e tente de novo.',
+  'audio-capture': 'Não encontrei um microfone disponível. Feche outros apps que possam estar usando o microfone.',
+  network: 'A conexão caiu durante a leitura — o reconhecimento de fala precisa de internet. Tente de novo.',
 }
 
 function criarReconhecedor(): Reconhecedor | null {
@@ -31,9 +46,33 @@ function criarReconhecedor(): Reconhecedor | null {
   // `continuous` false encerra sozinho na pausa do fim da frase — como a tarefa
   // é ler UMA frase, isso poupa o aluno de ter que parar manualmente.
   rec.continuous = false
-  rec.interimResults = false
+  // Parciais ligados como REDE: em celular é comum o motor entregar o que
+  // entendeu aos pedaços e nunca fechar o resultado final (a leitura acaba, o
+  // aluno toca em "terminei", a rede oscila). Sem guardar o parcial, tudo isso
+  // virava transcrição vazia mesmo com o aluno tendo lido certo.
+  rec.interimResults = true
   rec.maxAlternatives = 1
   return rec
+}
+
+/**
+ * No celular NÃO usamos o `SpeechRecognition` (decisão de 13/08/2026).
+ *
+ * Dois motivos, os dois medidos em uso real: o microfone costuma ser recurso
+ * exclusivo no aparelho, então a gravação e o reconhecedor disputam o mesmo
+ * mic e o segundo recebe silêncio; e o motor do Chrome depende de mandar áudio
+ * para servidores do Google, o que 4G instável derruba. Gravar é confiável em
+ * qualquer aparelho — então gravamos e o servidor transcreve
+ * (_shared/ia/transcricao.ts). Custa uma chamada de IA por leitura no celular,
+ * e é o preço de a nota parar de depender da sorte.
+ *
+ * `maxTouchPoints` em vez de user agent: string de UA mente, número de pontos
+ * de toque não.
+ */
+function ehCelular(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const toques = navigator.maxTouchPoints ?? 0
+  return toques > 1 && window.matchMedia('(pointer: coarse)').matches
 }
 
 /** Formatos que o MediaRecorder produz por navegador, em ordem de preferência. */
@@ -76,14 +115,23 @@ export function RespostaPronuncia({
 }: {
   questao: QuestaoTarefa
   feedback: FeedbackLocal | null
-  aoFalar: (transcricao: string, audioBase64: string | null, mimeType: string | null) => void
+  /** Devolve `ouviu: false` quando nem o navegador nem o servidor entenderam nada. */
+  aoFalar: (
+    transcricao: string,
+    audioBase64: string | null,
+    mimeType: string | null,
+    desistiu?: boolean,
+  ) => Promise<{ ouviu: boolean }>
   /** Limpa o feedback no pai para que a leitura possa recomeçar. */
   aoTentarNovamente: () => void
 }) {
   const [gravando, setGravando] = useState(false)
   const [processando, setProcessando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const [semSuporte] = useState(() => criarReconhecedor() === null)
+  const [noCelular] = useState(ehCelular)
+  // No celular o motor do navegador nem entra em campo, então "sem suporte"
+  // passa a significar só "não dá para gravar" — aí sim não há o que fazer.
+  const [semSuporte] = useState(() => (ehCelular() ? formatoSuportado() === null : criarReconhecedor() === null))
   /**
    * Reconhecedor não devolveu palavra nenhuma. Estado à parte de propósito:
    * antes isso virava transcrição vazia → nota 0, indistinguível de quem leu
@@ -96,6 +144,11 @@ export function RespostaPronuncia({
   const gravadorRef = useRef<MediaRecorder | null>(null)
   const pedacosRef = useRef<Blob[]>([])
   const transcricaoRef = useRef('')
+  /** Último resultado PARCIAL — vale como resposta quando o final nunca chega. */
+  const parcialRef = useRef('')
+  /** Entrou som no microfone? Separa silêncio real de falha do motor. */
+  const houveSomRef = useRef(false)
+  const erroDoMotorRef = useRef<string | null>(null)
   const finalizadoRef = useRef(false)
   const pararTimeoutRef = useRef<number | undefined>(undefined)
 
@@ -109,12 +162,24 @@ export function RespostaPronuncia({
     }
   }, [])
 
-  async function comecar() {
+  function comecar() {
     setErro(null)
     setNaoOuvi(false)
     transcricaoRef.current = ''
+    parcialRef.current = ''
+    erroDoMotorRef.current = null
+    houveSomRef.current = false
     finalizadoRef.current = false
     pedacosRef.current = []
+
+    // Celular: nada de reconhecedor. Gravamos com o microfone só para nós e o
+    // servidor transcreve — ver ehCelular() para o porquê.
+    if (noCelular) {
+      setGravando(true)
+      pararTimeoutRef.current = setTimeout(parar, DURACAO_MAXIMA_MS)
+      void iniciarGravacao()
+      return
+    }
 
     const rec = criarReconhecedor()
     if (!rec) {
@@ -122,46 +187,114 @@ export function RespostaPronuncia({
       return
     }
 
-    // O MediaRecorder é OPCIONAL: sem ele o professor perde a gravação, mas o
-    // aluno ainda responde — a nota depende só da transcrição.
-    const formato = formatoSuportado()
-    if (formato) {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        const gravador = new MediaRecorder(stream, { mimeType: formato })
-        gravadorRef.current = gravador
-        gravador.ondataavailable = (e) => {
-          if (e.data.size > 0) pedacosRef.current.push(e.data)
-        }
-        gravador.start()
-      } catch {
-        // Microfone negado derruba os dois caminhos — o reconhecedor também
-        // precisa dele. Melhor falhar aqui, com mensagem, do que na metade.
-        setErro('Não consegui acessar o microfone. Autorize o acesso e tente de novo.')
-        return
-      }
-    }
-
     recRef.current = rec
     rec.onresult = (e) => {
-      transcricaoRef.current = e.results?.[0]?.[0]?.transcript ?? ''
+      // Percorre TODOS os segmentos: o motor pode quebrar a leitura em vários
+      // pedaços, e ler só `results[0]` jogava fora o resto da frase — nota
+      // baixa em leitura correta.
+      let finais = ''
+      for (let i = 0; i < e.results.length; i++) {
+        const resultado = e.results[i]
+        const texto = resultado[0]?.transcript ?? ''
+        if (resultado.isFinal) finais += `${texto} `
+        else if (texto.trim()) parcialRef.current = texto.trim()
+      }
+      if (finais.trim()) transcricaoRef.current = finais.trim()
     }
     rec.onerror = (e) => {
-      // `no-speech` é o caso comum de gravar silêncio: vira nota 0 pelo caminho
-      // normal, não erro de tela. Os demais viram mensagem.
-      if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        setErro('O reconhecimento de fala falhou. Tente de novo.')
-      }
+      erroDoMotorRef.current = e.error
+      const mensagem = MENSAGEM_POR_ERRO[e.error]
+      if (mensagem) setErro(mensagem)
     }
     rec.onend = () => void finalizar()
 
-    rec.start()
+    // `start()` SÍNCRONO, ainda dentro do toque que chamou esta função. Antes
+    // ele vinha depois de um `await getUserMedia`, e é aí que quebrava no
+    // celular: a permissão de microfone vale enquanto dura a "ativação por
+    // gesto", que o await já tinha consumido. No iOS isso derruba a leitura
+    // inteira sem erro visível.
+    try {
+      rec.start()
+    } catch {
+      setErro('Não consegui iniciar o microfone. Tente de novo.')
+      return
+    }
     setGravando(true)
     pararTimeoutRef.current = setTimeout(parar, DURACAO_MAXIMA_MS)
+
+    // A gravação corre por fora e nunca derruba o reconhecimento: ela existe
+    // para o professor ouvir depois, a nota depende só da transcrição.
+    void iniciarGravacao()
+  }
+
+  /** MediaRecorder em paralelo — opcional, e falha em silêncio de propósito. */
+  async function iniciarGravacao() {
+    const formato = formatoSuportado()
+    if (!formato) return
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      // O aluno pode ter terminado de ler enquanto a permissão era resolvida.
+      if (finalizadoRef.current) {
+        stream.getTracks().forEach((t) => t.stop())
+        return
+      }
+
+      monitorarNivel(stream)
+
+      const gravador = new MediaRecorder(stream, { mimeType: formato })
+      gravadorRef.current = gravador
+      gravador.ondataavailable = (e) => {
+        if (e.data.size > 0) pedacosRef.current.push(e.data)
+      }
+      gravador.start()
+    } catch {
+      // Sem gravação seguimos só com a transcrição — o professor perde o
+      // áudio, o aluno não perde a resposta.
+    }
+  }
+
+  /**
+   * Escuta o nível do microfone só para saber se ENTROU SOM. É o que separa
+   * "você ficou em silêncio" de "ouvi você falar, mas o motor não transcreveu"
+   * — dois problemas com soluções opostas, e até agora indistinguíveis na tela.
+   */
+  function monitorarNivel(stream: MediaStream) {
+    try {
+      const contexto = new AudioContext()
+      const analisador = contexto.createAnalyser()
+      analisador.fftSize = 512
+      contexto.createMediaStreamSource(stream).connect(analisador)
+
+      const amostras = new Uint8Array(analisador.fftSize)
+      const medir = () => {
+        if (finalizadoRef.current) {
+          void contexto.close()
+          return
+        }
+        analisador.getByteTimeDomainData(amostras)
+        // 128 é o silêncio na onda; desvio acima de 6 já é voz, não ruído de fundo.
+        for (const amostra of amostras) {
+          if (Math.abs(amostra - 128) > 6) {
+            houveSomRef.current = true
+            break
+          }
+        }
+        requestAnimationFrame(medir)
+      }
+      requestAnimationFrame(medir)
+    } catch {
+      // Sem Web Audio perdemos só o diagnóstico, não a resposta.
+    }
   }
 
   function parar() {
     clearTimeout(pararTimeoutRef.current)
+    // No celular não há reconhecedor para disparar `onend`, então fechamos na mão.
+    if (noCelular) {
+      void finalizar()
+      return
+    }
     // `stop()` dispara `onend`, que chama finalizar() — não duplicamos aqui.
     recRef.current?.stop()
   }
@@ -199,22 +332,30 @@ export function RespostaPronuncia({
       }
     }
 
-    setProcessando(false)
+    // Sem resultado final, vale o parcial: o motor entendeu alguma coisa e só
+    // não fechou — jogar isso fora era transformar leitura boa em nota zero.
+    const ouvido = transcricaoRef.current.trim() || parcialRef.current.trim()
 
-    // Nada reconhecido: microfone mudo, ruído, `no-speech`, rede caída. Não
-    // enviamos — sem isto o aluno leva 0/100 por um problema que não é dele.
-    if (transcricaoRef.current.trim() === '') {
+    // Sem transcrição E sem áudio não sobra nada nem para o servidor tentar.
+    // (No celular `ouvido` é sempre vazio de propósito: quem transcreve é o
+    // servidor, a partir do áudio.)
+    if (ouvido === '' && !audioBase64) {
+      setProcessando(false)
       setNaoOuvi(true)
       return
     }
 
-    aoFalar(transcricaoRef.current, audioBase64, formato)
+    // Segue processando enquanto o servidor transcreve — no celular esse é o
+    // caminho normal e leva alguns segundos.
+    const { ouviu } = await aoFalar(ouvido, audioBase64, formato)
+    setProcessando(false)
+    if (!ouviu) setNaoOuvi(true)
   }
 
   /** Regravar: o servidor faz upsert da resposta e do áudio, então repetir é seguro. */
-  async function tentarDeNovo() {
+  function tentarDeNovo() {
     aoTentarNovamente()
-    await comecar()
+    comecar()
   }
 
   /**
@@ -224,7 +365,9 @@ export function RespostaPronuncia({
    */
   function seguirSemGravar() {
     setNaoOuvi(false)
-    aoFalar('', null, null)
+    // `desistiu` é o que impede isto de virar laço: sem a flag, o pai devolveria
+    // "não ouvi" de novo e a tela voltaria para o mesmo aviso, sem saída.
+    void aoFalar('', null, null, true)
   }
 
   return (
@@ -254,9 +397,19 @@ export function RespostaPronuncia({
           <p className="mt-3 flex items-start gap-2 rounded-2xl bg-amber-100 px-4 py-3 text-xs font-medium text-amber-900">
             <Mic className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <span>
-              <b className="block text-sm font-extrabold">Não consegui te ouvir</b>
-              Nada chegou no microfone. Confira se ele está liberado para o site e tente de novo — isto
-              não conta como erro.
+              {houveSomRef.current ? (
+                <>
+                  <b className="block text-sm font-extrabold">Ouvi você, mas não entendi as palavras</b>
+                  O som chegou, só não deu para transcrever — costuma ser conexão instável ou ruído em
+                  volta. Tente num lugar mais silencioso; isto não conta como erro.
+                </>
+              ) : (
+                <>
+                  <b className="block text-sm font-extrabold">Não consegui te ouvir</b>
+                  Nada chegou no microfone. Confira se ele está liberado para o site e se nenhum outro app
+                  está usando — isto não conta como erro.
+                </>
+              )}
             </span>
           </p>
           <button

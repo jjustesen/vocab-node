@@ -38,6 +38,7 @@ import { RespostaPronuncia } from './RespostaPronuncia'
 import { falarEmIngles, useTemVozEmIngles } from './vozDoNavegador'
 import type {
   ConcluirResposta,
+  PronunciaResposta,
   FeedbackLocal,
   IdentificadorTarefa,
   QuestaoTarefa,
@@ -206,9 +207,60 @@ export function TarefaPage() {
    * segundo plano — ela existe para guardar o áudio e para RECALCULAR a nota,
    * porque o registro que o professor vê nunca sai do que o cliente mandou.
    */
-  function responderPronuncia(transcricao: string, audioBase64: string | null, mimeType: string | null) {
-    if (!identificador) return
+  async function responderPronuncia(
+    transcricao: string,
+    audioBase64: string | null,
+    mimeType: string | null,
+    /** O aluno desistiu de ser ouvido — registra a tentativa vazia e segue. */
+    desistiu = false,
+  ): Promise<{ ouviu: boolean }> {
+    if (!identificador) return { ouviu: false }
     const questao = dados!.questoes[indice]
+
+    // Sem transcrição do navegador mas com áudio: quem transcreve é o servidor
+    // (Gemini). É o caminho NORMAL no celular, onde o reconhecedor do navegador
+    // não é confiável — e a rede de segurança no desktop, quando ele falha.
+    if (!desistiu && transcricao.trim() === '' && audioBase64) {
+      try {
+        const { data } = await apiTarefa.post<PronunciaResposta>('/tarefa-pronuncia', {
+          ...identificador,
+          questao_id: questao.id,
+          transcricao: '',
+          audio_base64: audioBase64,
+          mime_type: mimeType,
+          tempo_ms: Date.now() - inicioQuestaoRef.current,
+          // No repasse dos erros o servidor transcreve e pontua sem gravar.
+          apenas_transcrever: Boolean(indicesParaRefazer),
+        })
+
+        if (!data.transcricao?.trim()) return { ouviu: false }
+
+        setFeedback({
+          correta: data.correta,
+          resposta_correta: questao.resposta_correta,
+          pares_corretos: null,
+          explicacao: questao.explicacao,
+          pontuacao: data.pontuacao,
+          transcricao: data.transcricao,
+        })
+        setSequencia((s) => {
+          const nova = data.correta ? s + 1 : 0
+          setMelhorSequencia((m) => Math.max(m, nova))
+          return nova
+        })
+        // A resposta já foi gravada pela própria chamada acima — nada de
+        // reenviar em segundo plano como no caminho local.
+        if (!indicesParaRefazer) resultadosLocais.current.set(questao.id, data.correta)
+        return { ouviu: true }
+      } catch {
+        // Servidor fora do ar ou áudio recusado: tratamos como "não te ouvi",
+        // que oferece tentar de novo em vez de cravar um zero.
+        return { ouviu: false }
+      }
+    }
+
+    if (!desistiu && transcricao.trim() === '') return { ouviu: false }
+
     const { pontuacao } = pontuarPronuncia(questao.resposta_correta, transcricao)
     const correta = pontuacao >= CORTE_PRONUNCIA
 
@@ -229,7 +281,7 @@ export function TarefaPage() {
       return nova
     })
 
-    if (indicesParaRefazer) return
+    if (indicesParaRefazer) return { ouviu: true }
     resultadosLocais.current.set(questao.id, correta)
 
     const promessa = apiTarefa
@@ -246,6 +298,7 @@ export function TarefaPage() {
         // ao concluir, o servidor recusa e a tela oferece recarregar.
       })
     pendentesRef.current.push(promessa)
+    return { ouviu: true }
   }
 
   function proxima() {
@@ -627,7 +680,12 @@ function TelaQuestao({
   total: number
   sequencia: number
   feedback: FeedbackLocal | null
-  aoFalar: (transcricao: string, audioBase64: string | null, mimeType: string | null) => void
+  aoFalar: (
+    transcricao: string,
+    audioBase64: string | null,
+    mimeType: string | null,
+    desistiu?: boolean,
+  ) => Promise<{ ouviu: boolean }>
   aoLimparFeedback: () => void
   repassandoErros: boolean
   aoResponder: (valor: string) => void

@@ -15,6 +15,7 @@
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { resolverAtribuicao } from '../_shared/atribuicao.ts'
 import { corretaPorPontuacao, pontuarPronuncia } from '../_shared/correcao.ts'
+import { transcreverFala } from '../_shared/ia/transcricao.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 
 /** ~1,5 MB de base64 ≈ 1,1 MB de áudio ≈ 60s de webm/opus mono. */
@@ -34,6 +35,8 @@ Deno.serve(async (req) => {
     audio_base64?: unknown
     mime_type?: unknown
     tempo_ms?: unknown
+    /** Modo treino: transcreve e pontua sem gravar nada (RF-86). */
+    apenas_transcrever?: unknown
   }
   try {
     corpo = await req.json()
@@ -72,7 +75,12 @@ Deno.serve(async (req) => {
 
   if (!atribuicao) return respostaErro('Link inválido ou expirado.', 404)
   if (atribuicao.revogada_em) return respostaErro('Este link foi desativado pelo professor.', 410)
-  if (atribuicao.concluida_em) return respostaErro('Esta atividade já foi concluída.', 409)
+  // O repasse dos erros (RF-86) acontece DEPOIS de concluir, e é justamente
+  // quando o aluno relê para treinar. Por isso a trava de conclusão vale só
+  // para quem vai gravar resposta — `apenas_transcrever` não grava nada.
+  if (atribuicao.concluida_em && corpo.apenas_transcrever !== true) {
+    return respostaErro('Esta atividade já foi concluída.', 409)
+  }
 
   const { data: questao } = await db
     .from('questoes')
@@ -85,8 +93,24 @@ Deno.serve(async (req) => {
   }
   if (questao.tipo !== 'pronuncia') return respostaErro('Esta questão não é de pronúncia.', 400)
 
-  const pontuacao = pontuarPronuncia(questao.resposta_correta, transcricao)
+  // Transcrição vazia + áudio em mãos = o navegador não deu conta (celular,
+  // quase sempre). Transcrevemos aqui, com o áudio que já subiria de qualquer
+  // forma. A frase-alvo NÃO vai junto — ver _shared/ia/transcricao.ts.
+  let textoOuvido = transcricao
+  let transcritoNoServidor = false
+  if (textoOuvido.trim() === '' && temAudio) {
+    textoOuvido = await transcreverFala(audioBase64 as string, mimeBase)
+    transcritoNoServidor = textoOuvido.trim() !== ''
+  }
+
+  const pontuacao = pontuarPronuncia(questao.resposta_correta, textoOuvido)
   const correta = corretaPorPontuacao(pontuacao)
+
+  // Modo treino (repasse dos erros, RF-86): o aluno relê para praticar e a
+  // nota já enviada não muda. Transcrevemos e pontuamos, mas nada é gravado.
+  if (corpo.apenas_transcrever === true) {
+    return respostaJson({ ok: true, correta, pontuacao, transcricao: textoOuvido, transcritoNoServidor })
+  }
 
   let audioPath: string | null = null
   if (temAudio) {
@@ -119,7 +143,7 @@ Deno.serve(async (req) => {
     {
       atribuicao_id: atribuicao.id,
       questao_id: questaoId,
-      valor: transcricao,
+      valor: textoOuvido,
       correta,
       pontuacao,
       audio_path: audioPath,
@@ -129,7 +153,7 @@ Deno.serve(async (req) => {
   )
   if (erroResposta) return respostaErro(erroResposta.message, 500)
 
-  return respostaJson({ ok: true, correta, pontuacao })
+  return respostaJson({ ok: true, correta, pontuacao, transcricao: textoOuvido, transcritoNoServidor })
 })
 
 function base64ParaBytes(base64: string): Uint8Array {
