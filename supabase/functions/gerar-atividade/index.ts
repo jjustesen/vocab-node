@@ -4,7 +4,14 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { fallbackPrecisaDePaginas, gerarAtividadeComFallback } from '../_shared/ia/provedor.ts'
-import { atividadeBrutaSchema, questaoSchema, NIVEIS, HABILIDADES, type Questao } from '../_shared/questao-validacao.ts'
+import {
+  atividadeBrutaSchema,
+  enxugarFichas,
+  questaoSchema,
+  NIVEIS,
+  HABILIDADES,
+  type Questao,
+} from '../_shared/questao-validacao.ts'
 import { limiteGeracoes } from '../_shared/planos.ts'
 import { mensagemUsuarioDoErro } from '../_shared/ia/tipos.ts'
 import type { MaterialGeracao, PaginaMaterial, ParametrosGeracao, UsoIA } from '../_shared/ia/tipos.ts'
@@ -195,7 +202,7 @@ Deno.serve(async (req) => {
   const questoesValidas: Questao[] = []
   let descartadas = 0
   for (const q of bruto.data.questoes) {
-    const r = questaoSchema.safeParse(q)
+    const r = questaoSchema.safeParse(enxugarFichasDaQuestao(q))
     if (r.success) questoesValidas.push(r.data)
     else descartadas++
   }
@@ -217,7 +224,7 @@ Deno.serve(async (req) => {
       const brutoComplemento = atividadeBrutaSchema.safeParse(complemento.dados)
       if (brutoComplemento.success) {
         for (const q of brutoComplemento.data.questoes) {
-          const r = questaoSchema.safeParse(q)
+          const r = questaoSchema.safeParse(enxugarFichasDaQuestao(q))
           if (r.success) questoesValidas.push(r.data)
           else descartadas++
         }
@@ -241,3 +248,16 @@ Deno.serve(async (req) => {
     descartadas,
   })
 })
+
+/**
+ * Corta o excesso de fichas antes de validar. A IA costuma estourar o pedido de
+ * "2 a 3 distratoras" — ver enxugarFichas em _shared/questao-validacao.ts.
+ */
+function enxugarFichasDaQuestao(q: unknown): unknown {
+  if (typeof q !== 'object' || q === null) return q
+  const questao = q as { tipo?: unknown; opcoes?: unknown; resposta_correta?: unknown }
+  if (questao.tipo !== 'ordenar_audio' && questao.tipo !== 'ordenar_palavras') return q
+  if (!Array.isArray(questao.opcoes) || typeof questao.resposta_correta !== 'string') return q
+
+  return { ...questao, opcoes: enxugarFichas(questao.opcoes as string[], questao.resposta_correta) }
+}

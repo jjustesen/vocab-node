@@ -8,7 +8,6 @@ export const TIPOS_QUESTAO = [
   'ordenar_palavras',
   'ligar_colunas',
   'verdadeiro_falso',
-  'resposta_curta',
   'pronuncia',
   'ordenar_audio',
 ] as const
@@ -26,6 +25,57 @@ function opcoesCobremAFrase(opcoes: string[], frase: string): boolean {
     restante.splice(i, 1)
     return true
   })
+}
+
+/** Quantas fichas a mais, além das palavras da frase, o exercício aceita. */
+export const MAXIMO_DISTRATORAS = 3
+
+/**
+ * Enxuga as fichas de `ordenar_palavras`/`ordenar_audio`: mantém uma ficha por
+ * palavra da frase e no máximo três distratoras DISTINTAS.
+ *
+ * Existe porque a IA ignora o pedido de "2 a 3 distratoras" com frequência e
+ * devolve quinze fichas, várias repetindo palavras que a frase já usa. Ficha
+ * repetida não é distratora: é ruído que transforma montar a frase em caça ao
+ * tesouro, e some com a pista que a distratora deveria dar.
+ *
+ * Enxugar em vez de rejeitar é de propósito — a questão em si costuma estar
+ * boa, e descartá-la custaria uma questão a menos para o professor.
+ */
+export function enxugarFichas(opcoes: string[], frase: string): string[] {
+  const palavras = palavrasDaFrase(frase)
+  const chave = (p: string) => p.trim().toLowerCase()
+
+  // Tira do monte uma ficha para cada palavra da frase; o que sobra é extra.
+  const restante = [...opcoes]
+  for (const palavra of palavras) {
+    const i = restante.findIndex((o) => chave(o) === chave(palavra))
+    if (i !== -1) restante.splice(i, 1)
+  }
+
+  const daFrase = new Set(palavras.map(chave))
+  const vistas = new Set<string>()
+  const distratoras: string[] = []
+  // Extra que repete palavra da frase não distrai ninguém — descartada antes.
+  for (const extra of restante) {
+    if (daFrase.has(chave(extra)) || vistas.has(chave(extra))) continue
+    vistas.add(chave(extra))
+    distratoras.push(extra)
+    if (distratoras.length === MAXIMO_DISTRATORAS) break
+  }
+
+  // Se nada sobrou de útil, devolve o que veio: `ordenar_audio` exige ao menos
+  // uma ficha a mais, e ficar sem nenhuma reprovaria a questão inteira.
+  if (distratoras.length === 0) return opcoes
+
+  // Embaralhar aqui não é enfeite: devolver as palavras na ordem da frase
+  // entregaria a resposta a quem lesse as fichas da esquerda para a direita.
+  const fichas = [...palavras, ...distratoras]
+  for (let i = fichas.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[fichas[i], fichas[j]] = [fichas[j], fichas[i]]
+  }
+  return fichas
 }
 
 export const NIVEIS = ['A1', 'A2', 'B1', 'B2', 'C1'] as const
@@ -57,6 +107,14 @@ export const questaoSchema = z
   })
   .refine((q) => q.tipo !== 'lacuna' || q.enunciado.includes(MARCADOR_LACUNA), {
     message: `lacuna precisa do marcador ${MARCADOR_LACUNA} no enunciado`,
+  })
+  // Desde 13/08/2026 a lacuna é ESCOLHA, não digitação: sem alternativas o
+  // aluno não teria como responder.
+  .refine((q) => q.tipo !== 'lacuna' || q.opcoes.length >= 3, {
+    message: 'lacuna precisa de ao menos 3 alternativas em opcoes',
+  })
+  .refine((q) => q.tipo !== 'lacuna' || q.opcoes.includes(q.resposta_correta), {
+    message: 'resposta_correta da lacuna precisa ser idêntica a uma das opcoes',
   })
   .refine((q) => q.tipo !== 'pronuncia' || q.resposta_correta.trim().length > 0, {
     message: 'pronuncia precisa da frase-alvo em resposta_correta',

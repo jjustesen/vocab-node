@@ -67,7 +67,8 @@ export function questaoVazia(tipo: QuestaoTipo): QuestaoRascunho {
         tipo,
         instrucao: INSTRUCAO_PADRAO[tipo] ?? '',
         enunciado: `They ${MARCADOR_LACUNA} to the beach yesterday.`,
-        opcoes: [],
+        // A lacuna é respondida escolhendo, não digitando (13/08/2026).
+        opcoes: ['', '', '', ''],
         resposta_correta: '',
         respostas_aceitas: [],
         pares: [],

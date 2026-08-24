@@ -19,6 +19,17 @@ export const TIPOS_QUESTAO = [
 ] as const
 
 /**
+ * O que o professor e a IA podem CRIAR hoje. `resposta_curta` ficou de fora em
+ * 13/08/2026: era o único tipo que só se responde digitando uma frase, e campo
+ * livre gerava falso erro demais (sinônimo válido, grafia, acento). O tipo
+ * continua declarado porque o acervo antigo tem questões assim e elas precisam
+ * seguir renderizáveis — ver docs/CONTRATO-QUESTOES.md §3.
+ */
+export const TIPOS_CRIAVEIS: readonly (typeof TIPOS_QUESTAO)[number][] = TIPOS_QUESTAO.filter(
+  (t) => t !== 'resposta_curta',
+)
+
+/**
  * Nota mínima para uma leitura em voz alta contar como acerto no placar.
  *
  * 70 é um corte de produto, não uma medida: o público é lição de casa, e a
@@ -306,6 +317,14 @@ export const questaoSchema = z
   })
   .refine((q) => q.tipo !== 'lacuna' || q.enunciado.includes(MARCADOR_LACUNA), {
     message: `lacuna precisa do marcador ${MARCADOR_LACUNA} no enunciado`,
+  })
+  // A lacuna virou ESCOLHA em botão (13/08/2026): sem alternativas não há como
+  // respondê-la. Espelha os refines de _shared/questao-validacao.ts.
+  .refine((q) => q.tipo !== 'lacuna' || q.opcoes.length >= 3, {
+    message: 'lacuna precisa de ao menos 3 alternativas',
+  })
+  .refine((q) => q.tipo !== 'lacuna' || q.opcoes.includes(q.resposta_correta), {
+    message: 'a resposta correta da lacuna precisa ser uma das alternativas',
   })
   // A frase que o aluno lê em voz alta mora em resposta_correta (o enunciado é
   // a instrução em pt-BR, como em ordenar_palavras). Sem ela não há o que ler

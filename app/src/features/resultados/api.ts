@@ -6,6 +6,7 @@ export type QuestaoResultado = {
   id: string
   ordem: number
   tipo: QuestaoTipo
+  instrucao: string | null
   enunciado: string
   opcoes: string[] | null
   pares: Par[] | null
@@ -15,6 +16,10 @@ export type QuestaoResultado = {
   respostaDada: string | null
   correta: boolean | null
   tempoMs: number | null
+  /** 0–100, só em `pronuncia`. */
+  pontuacao: number | null
+  /** Caminho no bucket privado `audio-respostas` — a gravação do aluno. */
+  audioPath: string | null
 }
 
 /** Tarefa anterior do mesmo aluno, para o card de padrão de erro (RF-92/93). */
@@ -116,10 +121,13 @@ export function useResultadoAtribuicao(atribuicaoId: string | undefined) {
         supabase.from('alunos').select('nome').eq('id', atribuicao.aluno_id).single(),
         supabase
           .from('questoes')
-          .select('id, ordem, tipo, enunciado, opcoes, pares, resposta_correta, explicacao')
+          .select('id, ordem, tipo, instrucao, enunciado, opcoes, pares, resposta_correta, explicacao')
           .eq('atividade_id', atribuicao.atividade_id)
           .order('ordem'),
-        supabase.from('respostas').select('questao_id, valor, correta, tempo_ms').eq('atribuicao_id', atribuicao.id),
+        supabase
+          .from('respostas')
+          .select('questao_id, valor, correta, tempo_ms, pontuacao, audio_path')
+          .eq('atribuicao_id', atribuicao.id),
       ])
       if (erroAtividade) throw erroAtividade
       if (erroAluno) throw erroAluno
@@ -133,6 +141,7 @@ export function useResultadoAtribuicao(atribuicaoId: string | undefined) {
           id: q.id,
           ordem: q.ordem,
           tipo: q.tipo,
+          instrucao: q.instrucao,
           enunciado: q.enunciado,
           opcoes: q.opcoes,
           pares: q.pares,
@@ -142,6 +151,8 @@ export function useResultadoAtribuicao(atribuicaoId: string | undefined) {
           respostaDada: r?.valor ?? null,
           correta: r?.correta ?? null,
           tempoMs: r?.tempo_ms ?? null,
+          pontuacao: r?.pontuacao ?? null,
+          audioPath: r?.audio_path ?? null,
         }
       })
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, Loader2, Pencil, Send, Trash2, Volume2 } from 'lucide-react'
+import { AlertTriangle, Eye, Loader2, Pencil, Send, Trash2, Volume2 } from 'lucide-react'
 import { useAtividade, useQuestoesDaAtividade, useEnviosDaAtividade, useGerarAudioAtividade } from './api'
 import { EnvioModal } from './EnvioModal'
 import { ExcluirAtividadeModal } from './ExcluirAtividadeModal'
@@ -69,6 +69,13 @@ export function AtividadeDetalhePage() {
           </div>
         </div>
         <div className="flex shrink-0 gap-2">
+          {/* Ver como o ALUNO vê, antes de enviar. */}
+          <Link
+            to={`/atividades/${atividade.id}/preview`}
+            className="flex items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-4 py-2.5 text-sm font-bold text-neutral-700"
+          >
+            <Eye className="h-4 w-4" /> Pré-visualizar
+          </Link>
           <Link
             to={`/atividades/${atividade.id}/editar`}
             className="flex items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-4 py-2.5 text-sm font-bold text-neutral-700"

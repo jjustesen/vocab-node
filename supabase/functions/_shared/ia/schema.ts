@@ -36,7 +36,6 @@ export const ATIVIDADE_GERADA_SCHEMA = {
               'ordenar_palavras',
               'ligar_colunas',
               'verdadeiro_falso',
-              'resposta_curta',
               'pronuncia',
               'ordenar_audio',
             ],

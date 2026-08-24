@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import { useResultadoAtribuicao, type QuestaoResultado, type ResultadoAtribuicao } from './api'
+import { AudioDaResposta } from './AudioDaResposta'
 import { useAluno, useAtualizarAluno } from '@/features/alunos/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import { ROTULO_TIPO } from '@/types/questao'
@@ -281,8 +282,16 @@ function LinhaQuestao({ numero, questao }: { numero: number; questao: QuestaoRes
 
       {aberta && (
         <div className="border-t border-neutral-100 bg-neutral-50/60 px-5 py-4">
+          {questao.instrucao?.trim() && (
+            <p className="mb-1 text-xs font-medium text-neutral-500">{questao.instrucao}</p>
+          )}
           <p className="text-sm font-medium text-neutral-900">{questao.enunciado}</p>
           <CorpoResposta questao={questao} />
+          {/* A gravação existia no bucket desde 26/07/2026 e nunca aparecia:
+              o professor pagava para guardar e não podia ouvir. */}
+          {questao.audioPath && (
+            <AudioDaResposta caminho={questao.audioPath} pontuacao={questao.pontuacao} />
+          )}
           {questao.explicacao && (
             <p className="mt-3 rounded-2xl bg-amber-100/70 px-4 py-3 text-sm text-amber-900">
               <span className="font-bold">Explicação: </span>

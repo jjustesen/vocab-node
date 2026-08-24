@@ -726,50 +726,13 @@ function TelaQuestao({
           </p>
         )}
 
-        <Enunciado questao={questao} />
-
-        {/* key por questão: cada componente de resposta guarda o que o aluno
-            escolheu/digitou em estado próprio, e sem remontar esse valor
-            vazaria para a questão seguinte. */}
-        <div key={questao.id} className="mt-5">
-          {questao.tipo === 'multipla_escolha' && (
-            <RespostaOpcoes questao={questao} feedback={feedback} aoResponder={aoResponder} />
-          )}
-          {questao.tipo === 'verdadeiro_falso' && (
-            <RespostaOpcoes
-              questao={questao}
-              feedback={feedback}
-              aoResponder={aoResponder}
-              rotulo={(o) => (o === 'true' ? 'Verdadeiro' : 'Falso')}
-            />
-          )}
-          {(questao.tipo === 'lacuna' || questao.tipo === 'resposta_curta') && (
-            <RespostaTexto questao={questao} feedback={feedback} aoResponder={aoResponder} />
-          )}
-          {questao.tipo === 'ordenar_palavras' && (
-            <RespostaOrdenarPalavras questao={questao} feedback={feedback} aoResponder={aoResponder} />
-          )}
-          {/* Mesma montagem de `ordenar_palavras` — o que muda é a origem do
-              estímulo (o navegador fala a frase) e as fichas distratoras, que
-              já vêm misturadas em `opcoes`. */}
-          {questao.tipo === 'ordenar_audio' && (
-            <div className="space-y-3">
-              <BotaoOuvir frase={questao.resposta_correta} audioUrl={questao.audio_url} />
-              <RespostaOrdenarPalavras questao={questao} feedback={feedback} aoResponder={aoResponder} />
-            </div>
-          )}
-          {questao.tipo === 'pronuncia' && (
-            <RespostaPronuncia
-              questao={questao}
-              feedback={feedback}
-              aoFalar={aoFalar}
-              aoTentarNovamente={aoLimparFeedback}
-            />
-          )}
-          {questao.tipo === 'ligar_colunas' && (
-            <RespostaLigarColunas questao={questao} feedback={feedback} aoResponder={aoResponder} />
-          )}
-        </div>
+        <CorpoDaQuestao
+          questao={questao}
+          feedback={feedback}
+          aoResponder={aoResponder}
+          aoFalar={aoFalar}
+          aoLimparFeedback={aoLimparFeedback}
+        />
 
         {feedback && (
           <>
@@ -911,6 +874,92 @@ function FalaOuvida({
       </p>
       {algumaErrada && <p className="mt-0.5 opacity-80">O sublinhado é o que saiu diferente da frase.</p>}
     </div>
+  )
+}
+
+
+/**
+ * O miolo da questão: enunciado + o componente de resposta do tipo.
+ *
+ * Extraído para que a PRÉ-VISUALIZAÇÃO do professor
+ * (features/atividades/PreviewAtividadePage.tsx) mostre exatamente o que o
+ * aluno vê, usando os mesmos componentes. Um preview que redesenha a tela por
+ * conta própria mente na primeira divergência — e é justamente para conferir
+ * antes de enviar que ele existe.
+ */
+export function CorpoDaQuestao({
+  questao,
+  feedback,
+  aoResponder,
+  aoFalar,
+  aoLimparFeedback,
+}: {
+  questao: QuestaoTarefa
+  feedback: FeedbackLocal | null
+  aoResponder: (valor: string) => void
+  aoFalar: (
+    transcricao: string,
+    audioBase64: string | null,
+    mimeType: string | null,
+    desistiu?: boolean,
+  ) => Promise<{ ouviu: boolean }>
+  aoLimparFeedback: () => void
+}) {
+  return (
+    <>
+      <Enunciado questao={questao} />
+
+      {/* key por questão: cada componente de resposta guarda o que o aluno
+          escolheu/digitou em estado próprio, e sem remontar esse valor
+          vazaria para a questão seguinte. */}
+      <div key={questao.id} className="mt-5">
+        {questao.tipo === 'multipla_escolha' && (
+          <RespostaOpcoes questao={questao} feedback={feedback} aoResponder={aoResponder} />
+        )}
+        {questao.tipo === 'verdadeiro_falso' && (
+          <RespostaOpcoes
+            questao={questao}
+            feedback={feedback}
+            aoResponder={aoResponder}
+            rotulo={(o) => (o === 'true' ? 'Verdadeiro' : 'Falso')}
+          />
+        )}
+        {/* Digitar saiu de cena (13/08/2026): campo livre em frase dava
+            falso erro demais — sinônimo válido, grafia, acento, espaço. A
+            lacuna agora é escolha em BOTÃO, com as alternativas em `opcoes`.
+            O <RespostaTexto> sobrevive só para o acervo anterior, que não
+            tem alternativas guardadas e ficaria sem como ser respondido. */}
+        {(questao.tipo === 'lacuna' || questao.tipo === 'resposta_curta') &&
+          ((questao.opcoes?.length ?? 0) >= 2 ? (
+            <RespostaOpcoes questao={questao} feedback={feedback} aoResponder={aoResponder} />
+          ) : (
+            <RespostaTexto questao={questao} feedback={feedback} aoResponder={aoResponder} />
+          ))}
+        {questao.tipo === 'ordenar_palavras' && (
+          <RespostaOrdenarPalavras questao={questao} feedback={feedback} aoResponder={aoResponder} />
+        )}
+        {/* Mesma montagem de `ordenar_palavras` — o que muda é a origem do
+            estímulo (o navegador fala a frase) e as fichas distratoras, que
+            já vêm misturadas em `opcoes`. */}
+        {questao.tipo === 'ordenar_audio' && (
+          <div className="space-y-3">
+            <BotaoOuvir frase={questao.resposta_correta} audioUrl={questao.audio_url} />
+            <RespostaOrdenarPalavras questao={questao} feedback={feedback} aoResponder={aoResponder} />
+          </div>
+        )}
+        {questao.tipo === 'pronuncia' && (
+          <RespostaPronuncia
+            questao={questao}
+            feedback={feedback}
+            aoFalar={aoFalar}
+            aoTentarNovamente={aoLimparFeedback}
+          />
+        )}
+        {questao.tipo === 'ligar_colunas' && (
+          <RespostaLigarColunas questao={questao} feedback={feedback} aoResponder={aoResponder} />
+        )}
+      </div>
+    </>
   )
 }
 

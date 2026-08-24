@@ -114,9 +114,11 @@ como já era.
 
 - multipla_escolha: 4 alternativas em "opcoes"; "resposta_correta" idêntica,
   caractere a caractere, a uma delas.
-- lacuna: use exatamente ______ (seis underscores) no enunciado. Em
-  "respostas_aceitas", inclua as variações legítimas (contrações, sinônimos,
-  grafia britânica/americana) — este campo quase nunca deve vir vazio.
+- lacuna: use exatamente ______ (seis underscores) no enunciado. O aluno
+  ESCOLHE a resposta, não digita: entregue 4 alternativas em "opcoes", com
+  "resposta_correta" idêntica, caractere a caractere, a uma delas. Os
+  distratores seguem a regra 6 — plausíveis, do material, e do mesmo tamanho
+  aproximado da resposta.
 
   A FRASE PRECISA FECHAR O CERCO em volta da resposta. Antes de entregar,
   pergunte-se: "existe outra palavra do material que caberia aqui?" Se
@@ -135,8 +137,34 @@ como já era.
   traz a frase montada.
 - ligar_colunas: 3 a 6 pares em "pares". "opcoes" fica [].
 - verdadeiro_falso: "opcoes" é exatamente ["true", "false"].
-- resposta_curta: use com moderação; liste em "respostas_aceitas" as
-  formulações alternativas que um professor aceitaria.
+- ordenar_audio: o aluno OUVE a frase e a monta com fichas de palavra.
+  "enunciado" é a instrução em português; "resposta_correta" é a frase em
+  inglês; "opcoes" traz TODAS as palavras da frase MAIS 2 a 3 palavras
+  distratoras. As distratoras são obrigatórias — sem elas o aluno acerta só
+  por usar todas as fichas, sem ouvir.
+
+  NO MÁXIMO 3 distratoras, e nunca mais que isso. Cada distratora precisa ser
+  uma palavra que NÃO aparece na frase, e diferente das outras distratoras.
+  Repetir uma palavra que a frase já usa não distrai ninguém: só polui a tela e
+  transforma montar a frase em caça ao tesouro.
+
+  Escolha distratoras plausíveis: mesma classe gramatical ou som parecido com
+  alguma palavra da frase ("their" para "there", "another" para "other",
+  "walk" para "work"). Palavra repetida DENTRO da frase precisa de uma ficha
+  para cada ocorrência — isso não conta como distratora. Frases de 5 a 10
+  palavras.
+
+  Exemplo — frase "We work out every other day" (6 palavras):
+    certo:  ["We","work","out","every","other","day","another","walk","their"]
+            (6 fichas da frase + 3 distratoras distintas = 9)
+    errado: 15 fichas, com "We", "work" e "day" aparecendo duas vezes
+- pronuncia: o aluno LÊ a frase em voz alta e recebe uma nota. "enunciado" é a
+  instrução em português; "resposta_correta" é a frase em inglês que ele deve
+  ler; "opcoes" e "respostas_aceitas" ficam []. Escolha frases curtas (4 a 12
+  palavras) com um desafio de pronúncia claro para brasileiros — "th", "r"
+  inicial, "-ed" final, vogais longas/curtas. A "explicacao" deve apontar o som
+  a vigiar, em português: "Atenção ao 'th' de 'think' — a língua vai entre os
+  dentes, não é 'f' nem 't'."
 
 ## Título
 Curto e reconhecível pelo professor semanas depois: tema + unidade quando

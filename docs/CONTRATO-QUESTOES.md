@@ -44,13 +44,15 @@ Ganho colateral: trocar de provedor de IA não mexe no contrato.
 | `tipo` | `enunciado` | `opcoes` | `resposta_correta` | `respostas_aceitas` | `pares` |
 |---|---|---|---|---|---|
 | `multipla_escolha` | frase, com `______` se houver lacuna | 3–5 alternativas | texto exato de uma das opções | `[]` | `[]` |
-| `lacuna` | frase com `______` | `[]` | a palavra/expressão correta | variantes aceitas (contrações, sinônimos) | `[]` |
+| `lacuna` | frase com `______` | **4 alternativas** | texto exato de uma das opções | variantes aceitas (contrações, sinônimos) | `[]` |
 | `ordenar_palavras` | instrução em pt-BR | palavras embaralhadas | a frase correta montada | `[]` | `[]` |
 | `ligar_colunas` | instrução em pt-BR | `[]` | `""` | `[]` | 3–6 pares |
 | `verdadeiro_falso` | a afirmação | `["true", "false"]` | `"true"` ou `"false"` | `[]` | `[]` |
-| `resposta_curta` | a pergunta | `[]` | resposta modelo | outras formulações aceitas | `[]` |
+| ~~`resposta_curta`~~ | **aposentado** em 13/08/2026 — ver abaixo | | | | |
 | `ordenar_audio` | instrução em pt-BR | palavras da frase **+ 2–3 distratoras**, embaralhadas | a frase correta montada | `[]` | `[]` |
 | `pronuncia` | instrução em pt-BR | `[]` | a frase em inglês a ler em voz alta | `[]` | `[]` |
+
+**Nada de campo livre** (13/08/2026). Toda resposta do aluno é uma ESCOLHA, dada em botão — nunca um `<input>` de texto e nunca um `<select>`. Digitar frase em inglês produzia erro falso demais (sinônimo legítimo, grafia britânica, acento, espaço sobrando), e o aluno levava a culpa por uma limitação da correção. Consequências: `lacuna` passou a exigir **4 alternativas** em `opcoes`, como a múltipla escolha; `resposta_curta` foi **aposentado** — era o único tipo que só se responde escrevendo uma frase inteira. O tipo continua declarado no código porque o acervo anterior tem questões assim e elas precisam seguir respondíveis: essas caem num campo de texto de legado, e só essas. A IA não gera mais nenhum dos dois formatos livres, e o editor não deixa criá-los.
 
 **Regras que valem para todos:**
 
@@ -73,7 +75,7 @@ Ganho colateral: trocar de provedor de IA não mexe no contrato.
 | Tipo | Regra |
 |---|---|
 | `multipla_escolha`, `verdadeiro_falso` | igualdade exata |
-| `lacuna`, `resposta_curta` | normaliza (minúsculas, sem acento, sem espaço nas bordas, apóstrofo unificado) e compara com `resposta_correta` + `respostas_aceitas` |
+| `lacuna`, `resposta_curta` | normaliza (minúsculas, sem acento, sem espaço nas bordas, apóstrofo unificado) e compara com `resposta_correta` + `respostas_aceitas`. Com a lacuna virando escolha, a normalização passou a valer só para o acervo antigo |
 | `ordenar_palavras` | compara a frase montada, normalizada |
 | `ligar_colunas` | acerto por par; a questão conta como correta só com todos os pares certos. `valor` é um JSON de `string[]` com a "direita" de cada par, **na ordem de `pares`** — nunca na ordem da tela |
 | `ordenar_audio` | idêntica a `ordenar_palavras` — compara a frase montada, normalizada. As fichas distratoras simplesmente sobram |

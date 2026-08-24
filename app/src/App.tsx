@@ -16,6 +16,7 @@ import { GerarLotePage } from '@/features/atividades/GerarLotePage'
 import { ResultadoAtribuicaoPage } from '@/features/resultados/ResultadoAtribuicaoPage'
 import { AtividadeDetalhePage } from '@/features/atividades/AtividadeDetalhePage'
 import { EditarAtividadePage } from '@/features/atividades/EditarAtividadePage'
+import { PreviewAtividadePage } from '@/features/atividades/PreviewAtividadePage'
 import { TarefaPage } from '@/features/tarefa/TarefaPage'
 import { CadastroAlunoPage } from '@/features/cadastro/CadastroAlunoPage'
 import { AlunoAuthProvider, useAlunoAuth } from '@/features/aluno-auth/AlunoAuthProvider'
@@ -67,6 +68,7 @@ export default function App() {
             <Route path="/atividades/lote" element={<GerarLotePage />} />
             <Route path="/atividades/:id" element={<AtividadeDetalhePage />} />
             <Route path="/atividades/:id/editar" element={<EditarAtividadePage />} />
+            <Route path="/atividades/:id/preview" element={<PreviewAtividadePage />} />
             <Route path="/resultados/:atribuicaoId" element={<ResultadoAtribuicaoPage />} />
             {/* Trilhas é uma aba da biblioteca (P11) — a mesma página, com a
                 aba escolhida pela rota, para o endereço continuar direto. */}

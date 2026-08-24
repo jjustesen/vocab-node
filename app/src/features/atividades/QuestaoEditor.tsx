@@ -6,7 +6,7 @@ import {
   INSTRUCAO_PADRAO,
   MARCADOR_LACUNA,
   ROTULO_TIPO,
-  TIPOS_QUESTAO,
+  TIPOS_CRIAVEIS,
   palavrasDaFrase,
   temFraseAlvo,
 } from '@/types/questao'
@@ -66,7 +66,10 @@ export function QuestaoEditor({
           onChange={(e) => mudarTipo(e.target.value as QuestaoRascunho['tipo'])}
           className={`rounded-full border-0 px-2.5 py-1 text-xs font-bold outline-none ${CORES_TIPO[valor.tipo]}`}
         >
-          {TIPOS_QUESTAO.map((t) => (
+          {/* A questão legada mantém o próprio tipo na lista, senão o select
+              abriria mostrando outro tipo e trocaria o conteúdo sem o professor
+              pedir — `resposta_curta` não é mais criável desde 13/08/2026. */}
+          {[...TIPOS_CRIAVEIS, ...(TIPOS_CRIAVEIS.includes(valor.tipo) ? [] : [valor.tipo])].map((t) => (
             <option key={t} value={t}>
               {ROTULO_TIPO[t]}
             </option>
@@ -162,9 +165,11 @@ export function QuestaoEditor({
         {valor.tipo === 'ordenar_palavras' && <CamposOrdenarPalavras valor={valor} onMudar={onMudar} />}
         {valor.tipo === 'ordenar_audio' && <CamposOrdenarAudio valor={valor} onMudar={onMudar} />}
         {valor.tipo === 'pronuncia' && <CamposPronuncia valor={valor} onMudar={onMudar} />}
-        {(valor.tipo === 'lacuna' || valor.tipo === 'resposta_curta') && (
-          <CamposRespostaTexto valor={valor} onMudar={onMudar} />
-        )}
+        {/* A lacuna virou escolha em botão (13/08/2026), então usa o mesmo
+            editor de alternativas da múltipla escolha. `resposta_curta` não é
+            mais criável e só aparece aqui ao abrir uma questão antiga. */}
+        {valor.tipo === 'lacuna' && <CamposMultiplaEscolha valor={valor} onMudar={onMudar} />}
+        {valor.tipo === 'resposta_curta' && <CamposRespostaTexto valor={valor} onMudar={onMudar} />}
       </div>
 
       <label className="mt-3 block">
