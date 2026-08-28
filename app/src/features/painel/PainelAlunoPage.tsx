@@ -5,6 +5,7 @@ import { useAlunoAuth } from '@/features/aluno-auth/AlunoAuthProvider'
 import { corDaNota, minutosEstimados } from '@/features/tarefa/formato'
 import { guardarMotivoDaSaida } from '@/lib/motivo-saida'
 import { usePainelAluno, ContaNaoEDeAluno, type TrilhaDoAluno } from './api'
+import { NavAluno } from './NavAluno'
 
 /** /painel — RF-28. Tudo vem de painel-aluno-obter; nenhuma tabela é lida direto (ver lib/supabase-aluno.ts). */
 export function PainelAlunoPage() {
@@ -68,7 +69,7 @@ export function PainelAlunoPage() {
   const [destaque, ...resto] = ordenadas
 
   return (
-    <div className="min-h-dvh bg-areia px-5 pb-10 pt-6">
+    <div className="min-h-dvh bg-areia px-5 pb-24 pt-6">
       <div className="mx-auto max-w-sm">
         <div className="flex items-center justify-between">
           <div>
@@ -192,6 +193,8 @@ export function PainelAlunoPage() {
           </details>
         )}
       </div>
+
+      <NavAluno />
     </div>
   )
 }

@@ -64,10 +64,11 @@ npm run dev
    supabase functions deploy convite-concluir --no-verify-jwt
    supabase functions deploy gerar-atividade
    supabase functions deploy painel-aluno-obter
+   supabase functions deploy materiais-aluno-obter
    supabase functions deploy tarefa-pronuncia --no-verify-jwt
    supabase functions deploy atividade-gerar-audio
    ```
-   `--no-verify-jwt` é obrigatório nas quatro primeiras: quem chama é o navegador do aluno sem sessão (tarefa-\*) ou ainda sem conta (convite-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade` e `painel-aluno-obter` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
+   `--no-verify-jwt` é obrigatório nas quatro primeiras: quem chama é o navegador do aluno sem sessão (tarefa-\*) ou ainda sem conta (convite-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter` e `materiais-aluno-obter` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
 6. Gere uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e configure o secret (nunca entra no `.env` do front — só a Edge Function enxerga):
    ```bash
    supabase secrets set GEMINI_API_KEY=sua_chave_aqui
@@ -136,6 +137,7 @@ supabase/
     convite-obter/        valida o link de cadastro/reset, devolve nome do aluno/professor
     convite-concluir/     cria contas_aluno após o signUp, marca o convite usado, grava auditoria
     painel-aluno-obter/   aluno logado (JWT) — trilhas, pendentes e concluídas, sem RLS (service_role)
+    materiais-aluno-obter/ aluno logado (JWT) — lista os materiais dele e assina a URL do arquivo no clique
     gerar-atividade/      professor autenticado (JWT) — chama a IA, valida, registra custo em geracoes_ia
     _shared/              cors, hash do token, resolução dual de atribuição, correção, cliente service_role, validação Zod, ia/ (prompt, schema, provedor Gemini)
 docs/

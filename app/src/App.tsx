@@ -24,6 +24,7 @@ import { LinkAbertoPage } from '@/features/link-aberto/LinkAbertoPage'
 import { EntrarAlunoPage } from '@/features/aluno-auth/EntrarAlunoPage'
 import { PainelAlunoPage } from '@/features/painel/PainelAlunoPage'
 import { TrilhaAlunoPage } from '@/features/painel/TrilhaAlunoPage'
+import { MateriaisAlunoPage } from '@/features/painel/MateriaisAlunoPage'
 import { AgendaPage } from '@/features/aulas/AgendaPage'
 import { TrilhaDetalhePage } from '@/features/trilhas/TrilhaDetalhePage'
 import { TrilhaDoAlunoPage } from '@/features/trilhas/TrilhaDoAlunoPage'
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/entrar-aluno" element={<EntrarAlunoPage />} />
           <Route element={<ExigeSessaoAluno />}>
             <Route path="/painel" element={<PainelAlunoPage />} />
+            <Route path="/painel/materiais" element={<MateriaisAlunoPage />} />
             <Route path="/painel/trilha/:id" element={<TrilhaAlunoPage />} />
             <Route path="/painel/tarefa/:atribuicaoId" element={<TarefaPage />} />
           </Route>
