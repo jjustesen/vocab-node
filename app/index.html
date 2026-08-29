@@ -6,14 +6,17 @@
 <title>Vocab Node — Lição de casa que se faz sozinha</title>
 <meta name="description" content="Transforme o material da sua aula em atividades interativas que o aluno faz pelo celular. Sem app, sem senha, direto pelo WhatsApp. Planos a partir de R$ 0.">
 <meta name="robots" content="index, follow">
-<!-- rel="canonical" fica para quando o domínio final estiver decidido — um
-     href="/" aqui faz o bundler de HTML tentar resolver como asset local e
-     quebra o build (lê "/" como diretório). -->
+<!-- Canônica ABSOLUTA, e apontando para /landing: a raiz agora redireciona
+     para /entrar, então esta é a única URL indexável desta página. Caminho
+     relativo aqui quebra o build — o bundler de HTML tenta resolver como
+     asset local. -->
+<link rel="canonical" href="https://vocabnode.com/landing">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="theme-color" content="#0a0a0a">
 
 <!-- Open Graph / compartilhamento -->
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://vocabnode.com/landing">
 <meta property="og:site_name" content="Vocab Node">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:title" content="Vocab Node — Lição de casa que se faz sozinha">
@@ -117,7 +120,7 @@
 <!-- ════════════ NAV ════════════ -->
 <header class="sticky top-0 z-50 px-3 pt-3">
   <div class="max-w-5xl mx-auto bg-neutral-950/95 backdrop-blur text-white rounded-full pl-4 pr-2 py-2 flex items-center justify-between shadow-xl shadow-neutral-900/10">
-    <a href="/" class="flex items-center gap-2">
+    <a href="/landing" class="flex items-center gap-2">
       <span class="w-8 h-8 rounded-2xl bg-violet-300 grid place-items-center text-neutral-900"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
       <span class="font-extrabold text-sm sm:text-base">Vocab Node</span>
     </a>

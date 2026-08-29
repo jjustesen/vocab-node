@@ -59,10 +59,11 @@ export function LoginPage() {
     <div className="grid min-h-dvh place-items-center px-4">
       <div className="w-full max-w-sm">
         {/* Link de verdade (não <Link>): a landing vive fora do SPA
-            (app/index.html, na raiz do domínio), então sair daqui é
-            navegação de página inteira, não roteamento client-side. */}
+            (app/index.html, servida em /landing), então sair daqui é
+            navegação de página inteira, não roteamento client-side.
+            Apontar para "/" faria um laço — a raiz redireciona para cá. */}
         <a
-          href="/"
+          href="/landing"
           className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-400 hover:text-neutral-600"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Voltar para o site

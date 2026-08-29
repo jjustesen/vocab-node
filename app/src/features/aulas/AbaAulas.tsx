@@ -11,6 +11,7 @@ import {
   type EscopoSerie,
 } from './api'
 import type { Aula, AulaStatus } from '@/types/db'
+import { CartaoSala } from '@/features/sala/CartaoSala'
 
 const COR_STATUS: Record<AulaStatus, string> = {
   agendada: 'bg-indigo-50 text-indigo-700',
@@ -42,7 +43,11 @@ export function AbaAulas({ alunoId, alunoNome }: { alunoId: string; alunoNome: s
 
   return (
     <div className="mt-4">
-      <div className="flex items-center justify-between">
+      {/* A sala vem antes da lista: na hora da aula é o único botão que
+          importa, e o professor abre esta aba justamente nessa hora. */}
+      <CartaoSala alunoId={alunoId} alunoNome={alunoNome} />
+
+      <div className="mt-6 flex items-center justify-between">
         <h2 className="text-sm font-bold text-neutral-900">Aulas</h2>
         <button
           onClick={() => setModalNovaAberto(true)}

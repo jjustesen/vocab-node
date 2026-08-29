@@ -92,6 +92,24 @@ export type EventoAcessoAluno = {
   criado_em: string
 }
 
+/**
+ * Sala de vídeo do aluno (LiveKit) — uma por aluno, estável no tempo. Ver o
+ * cabeçalho de 0012_salas_livekit.sql para o porquê de não ser por aula.
+ */
+export type Sala = {
+  id: string
+  aluno_id: string
+  professor_id: string
+  /** sha256 — é por ele que `sala-entrar` acha a sala. */
+  token_hash: string
+  /**
+   * O token em claro, para reexibir o link (ver 0013_sala_token_visivel.sql).
+   * Null nas salas criadas antes dessa migration.
+   */
+  token: string | null
+  criada_em: string
+}
+
 export type Aula = {
   id: string
   aluno_id: string
@@ -269,6 +287,7 @@ export type Database = {
         Partial<ContaAluno>
       >
       aulas: Tabela<Aula, Insert<Aula, 'aluno_id' | 'data_hora'>, Partial<Aula>>
+      salas: Tabela<Sala, Insert<Sala, 'aluno_id' | 'professor_id' | 'token_hash'>, Partial<Sala>>
       pagamentos: Tabela<
         Pagamento,
         Insert<Pagamento, 'aluno_id' | 'referencia_mes' | 'valor'>,

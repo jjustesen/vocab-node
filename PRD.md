@@ -85,7 +85,7 @@ Não é um Duolingo (que ensina sozinho) e não é um Google Classroom (que é g
 | Pagamento integrado (Pix / cartão) e cobrança automática | v2 |
 | Turmas / grupos de alunos | v2 |
 | Compartilhar atividades entre professores (banco público) | v2 |
-| Videochamada dentro da plataforma | Não planejado |
+| ~~Videochamada dentro da plataforma~~ | **Implementada** (LiveKit, ver 0012_salas_livekit.sql) |
 | Contas de escola, múltiplos professores, permissões | v3 |
 | App nativo (o MVP é web responsivo / PWA) | v3 |
 | Marketplace professor↔aluno | Não planejado |

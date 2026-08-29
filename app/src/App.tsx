@@ -25,6 +25,7 @@ import { EntrarAlunoPage } from '@/features/aluno-auth/EntrarAlunoPage'
 import { PainelAlunoPage } from '@/features/painel/PainelAlunoPage'
 import { TrilhaAlunoPage } from '@/features/painel/TrilhaAlunoPage'
 import { MateriaisAlunoPage } from '@/features/painel/MateriaisAlunoPage'
+import { SalaAlunoPage, SalaConvidadoPage, SalaProfessorPage } from '@/features/sala/SalaPage'
 import { AgendaPage } from '@/features/aulas/AgendaPage'
 import { TrilhaDetalhePage } from '@/features/trilhas/TrilhaDetalhePage'
 import { TrilhaDoAlunoPage } from '@/features/trilhas/TrilhaDoAlunoPage'
@@ -40,6 +41,10 @@ export default function App() {
         {/* Rota do aluno: sem sessão, sem RLS. Ver features/tarefa/TarefaPage.tsx. */}
         <Route path="/t/:token" element={<TarefaPage />} />
 
+        {/* Sala de vídeo pelo link (0012): sem sessão — a autorização é a posse
+            do token, validada por hash em sala-entrar. */}
+        <Route path="/s/:token" element={<SalaConvidadoPage />} />
+
         {/* Cadastro (RF-22/23/24): usa o cliente do aluno (@/lib/supabase-aluno) só pro signUp, sem precisar do provider abaixo. */}
         <Route path="/cadastro/:token" element={<CadastroAlunoPage />} />
 
@@ -52,6 +57,7 @@ export default function App() {
           <Route element={<ExigeSessaoAluno />}>
             <Route path="/painel" element={<PainelAlunoPage />} />
             <Route path="/painel/materiais" element={<MateriaisAlunoPage />} />
+            <Route path="/painel/sala" element={<SalaAlunoPage />} />
             <Route path="/painel/trilha/:id" element={<TrilhaAlunoPage />} />
             <Route path="/painel/tarefa/:atribuicaoId" element={<TarefaPage />} />
           </Route>
@@ -59,6 +65,9 @@ export default function App() {
 
         {/* Área do professor. */}
         <Route element={<ExigeSessao />}>
+          {/* Fora do <Layout>: a sala ocupa a tela inteira, sem a navegação
+              lateral por cima do vídeo. */}
+          <Route path="/sala/:alunoId" element={<SalaProfessorPage />} />
           <Route element={<Layout />}>
             <Route path="/hoje" element={<HojePage />} />
             <Route path="/alunos" element={<AlunosPage />} />

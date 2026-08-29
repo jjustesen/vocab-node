@@ -24,10 +24,16 @@ Landing (marketing, SEO) e o SPA do professor/aluno são o **mesmo deploy do Ver
 
 | Arquivo | O que serve | Rota |
 |---|---|---|
-| [app/index.html](app/index.html) | Landing estática (preços, recursos) — o que o Google indexa | `/` (só a raiz) |
+| [app/index.html](app/index.html) | Landing estática (preços, recursos) — o que o Google indexa | `/landing` |
 | [app/app.html](app/app.html) | Shell do React Router | qualquer outra rota (`/entrar`, `/hoje`, `/t/:token`, …) |
 
-Quem decide isso em produção é o rewrite em [app/vercel.json](app/vercel.json): tudo que não é `/` cai em `app.html`; a raiz é servida direto pelo Vercel como arquivo estático (`index.html`) sem passar pelo rewrite. O `vite.config.ts` replica o mesmo roteamento no `npm run dev`, senão abrir `/entrar` direto no navegador cairia na landing.
+**A raiz não é a landing: `/` responde 307 para `/entrar`.** Quem digita o domínio é quase sempre um professor voltando para trabalhar, não um visitante decidindo se assina — a vitrine mora em `/landing`, para onde vão os anúncios, as redes e os links.
+
+Quem decide isso em produção é [app/vercel.json](app/vercel.json), e a ordem importa: a Vercel aplica `redirects` **antes** de servir arquivo estático, então o 307 da raiz ganha do `index.html` que está no `dist`; depois `/landing` é reescrito (internamente, sem salto) para esse mesmo `index.html`; e só então tudo o mais cai em `app.html`. O `vite.config.ts` replica os três passos no `npm run dev`, senão abrir `/entrar` direto no navegador cairia na landing.
+
+O redirect é **307 e não 301** de propósito: 301 mandaria o Google consolidar `/` em `/entrar` para sempre — e `/entrar` é `noindex` —, além de ficar em cache permanente no navegador de quem já abriu o domínio uma vez. Com 307 a raiz continua disponível para voltar a ser a landing um dia, sem cache para limpar.
+
+SEO da landing depois da mudança: `<link rel="canonical">` absoluta apontando para `/landing` (a única URL indexável dela), `og:url` no mesmo endereço, e [app/public/sitemap.xml](app/public/sitemap.xml) declarando `/landing` — referenciado no `robots.txt`. O que se perde é a raiz como URL de ranking; se a landing já tinha histórico em `/`, vale reenviar o sitemap no Search Console e atualizar os links externos que apontam para o domínio pelado.
 
 Os CTAs da landing ("Começar grátis" etc.) linkam para `/entrar?modo=criar`, que já abre a [LoginPage](app/src/features/auth/LoginPage.tsx) no modo de cadastro.
 
@@ -67,8 +73,9 @@ npm run dev
    supabase functions deploy materiais-aluno-obter
    supabase functions deploy tarefa-pronuncia --no-verify-jwt
    supabase functions deploy atividade-gerar-audio
+   supabase functions deploy sala-entrar --no-verify-jwt
    ```
-   `--no-verify-jwt` é obrigatório nas quatro primeiras: quem chama é o navegador do aluno sem sessão (tarefa-\*) ou ainda sem conta (convite-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter` e `materiais-aluno-obter` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
+   `--no-verify-jwt` é obrigatório nas quatro primeiras e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter` e `materiais-aluno-obter` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
 6. Gere uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e configure o secret (nunca entra no `.env` do front — só a Edge Function enxerga):
    ```bash
    supabase secrets set GEMINI_API_KEY=sua_chave_aqui
@@ -78,6 +85,14 @@ npm run dev
    supabase secrets set XAI_API_KEY=sua_chave_xai_aqui
    ```
    Sem esse secret o fallback fica desligado e o comportamento é o de antes. O xAI não lê PDF: nesse caso a função pede as páginas ao navegador, que rasteriza o arquivo com pdf.js (até 20 páginas) e refaz a chamada — ver `pdfParaPaginas` em [arquivo.ts](app/src/lib/arquivo.ts).
+
+8. (Opcional) Para a sala de vídeo (LiveKit), configure os três secrets. Sem eles a sala responde erro e o resto do app segue funcionando:
+   ```bash
+   supabase secrets set LIVEKIT_URL=wss://seu-projeto.livekit.cloud
+   supabase secrets set LIVEKIT_API_KEY=sua_api_key
+   supabase secrets set LIVEKIT_API_SECRET=seu_api_secret
+   ```
+   Servem tanto para o LiveKit Cloud quanto para um servidor próprio (`livekit-server`, Apache 2.0) — a API é a mesma, e trocar um pelo outro é trocar estes três valores. Nenhum deles entra no `.env` do front: o navegador recebe a URL e um JWT de curta duração, emitidos por `sala-entrar`.
 
 A chave `service_role` **nunca** entra no front — ela vive só nas Edge Functions, injetada automaticamente pelo Supabase como variável de ambiente (`SUPABASE_SERVICE_ROLE_KEY`).
 
@@ -139,7 +154,9 @@ supabase/
     painel-aluno-obter/   aluno logado (JWT) — trilhas, pendentes e concluídas, sem RLS (service_role)
     materiais-aluno-obter/ aluno logado (JWT) — lista os materiais dele e assina a URL do arquivo no clique
     gerar-atividade/      professor autenticado (JWT) — chama a IA, valida, registra custo em geracoes_ia
-    _shared/              cors, hash do token, resolução dual de atribuição, correção, cliente service_role, validação Zod, ia/ (prompt, schema, provedor Gemini)
+    sala-entrar/          token de acesso do LiveKit — professor (JWT), aluno logado (JWT) ou convidado (token por hash)
+                          a sala tem lousa compartilhada (data channel) e painel de anotações/ficha, só do professor
+    _shared/              cors, hash do token, resolução dual de atribuição, correção, cliente service_role, validação Zod, livekit.ts (assina o JWT da sala), ia/ (prompt, schema, provedor Gemini)
 docs/
 ```
 

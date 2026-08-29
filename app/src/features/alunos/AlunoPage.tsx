@@ -36,6 +36,7 @@ import { mesReferenciaISO, usePagamentosDoAluno } from '@/features/financeiro/ap
 import { useTrilhasDoAluno } from '@/features/trilhas/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import { ROTULO_HABILIDADE } from '@/types/questao'
+import { CartaoSala } from '@/features/sala/CartaoSala'
 
 const ABAS = ['Resumo', 'Atividades', 'Aulas', 'Materiais', 'Pagamentos'] as const
 type Aba = (typeof ABAS)[number]
@@ -256,6 +257,11 @@ export function AlunoPage() {
               }
             />
           </div>
+
+          {/* A sala vem logo abaixo dos números: é o que o professor procura
+              quando abre a ficha na hora da aula. A mesma peça aparece na aba
+              Aulas — um componente só, dois lugares. */}
+          <CartaoSala alunoId={aluno.id} alunoNome={aluno.nome} />
 
           {trilhas && trilhas.length > 0 && (
             <div className="mt-4 grid gap-2 sm:grid-cols-2">

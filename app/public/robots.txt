@@ -13,3 +13,5 @@ Disallow: /painel
 Disallow: /t/
 Disallow: /cadastro/
 Disallow: /resultados/
+
+Sitemap: https://vocabnode.com/sitemap.xml

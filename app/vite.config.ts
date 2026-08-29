@@ -6,22 +6,43 @@ import path from 'node:path'
 /**
  * Landing (SEO, estática) e SPA do professor/aluno dividem o mesmo domínio e
  * o mesmo deploy — decisão de arquitetura, não acidente:
- *   index.html → landing (raiz do domínio, é o que o Google indexa)
+ *   index.html → landing, servida em /landing (é o que o Google indexa)
  *   app.html   → shell do React Router (todas as outras rotas)
- * Em produção quem decide isso é o rewrite em vercel.json. Este plugin só
- * replica o mesmo comportamento no `vite dev`, onde não existe vercel.json:
- * sem ele, abrir /entrar direto no navegador (ou dar F5) cairia na landing
- * em vez do SPA, porque o appType 'spa' padrão do Vite só sabe fazer
- * fallback para UM index.html.
+ * A raiz não serve mais a landing: quem digita o domínio é quase sempre um
+ * professor voltando para trabalhar, então `/` manda para /entrar.
+ *
+ * Em produção quem decide isso são o redirect e os rewrites em vercel.json.
+ * Este plugin só replica o mesmo comportamento no `vite dev`, onde não existe
+ * vercel.json: sem ele, abrir /entrar direto no navegador (ou dar F5) cairia
+ * na landing em vez do SPA, porque o appType 'spa' padrão do Vite só sabe
+ * fazer fallback para UM index.html.
  */
-function fallbackParaSpaEmDev(): Plugin {
+function roteamentoDaVercelEmDev(): Plugin {
   return {
-    name: 'fallback-app-html-em-dev',
+    name: 'roteamento-da-vercel-em-dev',
     configureServer(server) {
-      server.middlewares.use((req, _res, next) => {
+      server.middlewares.use((req, res, next) => {
         const url = req.url ?? ''
-        const rotaDoAppSemArquivo = url !== '/' && !url.startsWith('/@') && !url.startsWith('/src') && !url.includes('.')
-        if (req.method === 'GET' && rotaDoAppSemArquivo) req.url = '/app.html'
+        if (req.method !== 'GET') return next()
+
+        // Espelha o redirect da Vercel: 307, não 301 — navegador não guarda em
+        // cache permanente, senão trocar isso depois exigiria limpar o cache
+        // de todo mundo que já abriu a raiz uma vez.
+        if (url === '/') {
+          res.statusCode = 307
+          res.setHeader('Location', '/entrar')
+          return res.end()
+        }
+
+        // A landing, servida pelo caminho novo. Precisa vir ANTES do fallback:
+        // /landing não tem ponto na URL e cairia no app.html.
+        if (url === '/landing' || url.startsWith('/landing?')) {
+          req.url = '/index.html'
+          return next()
+        }
+
+        const rotaDoAppSemArquivo = !url.startsWith('/@') && !url.startsWith('/src') && !url.includes('.')
+        if (rotaDoAppSemArquivo) req.url = '/app.html'
         next()
       })
     },
@@ -29,7 +50,7 @@ function fallbackParaSpaEmDev(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), fallbackParaSpaEmDev()],
+  plugins: [react(), tailwindcss(), roteamentoDaVercelEmDev()],
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },

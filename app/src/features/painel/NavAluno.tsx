@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { FolderOpen, House } from 'lucide-react'
+import { FolderOpen, House, Video } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 const ITENS: { para: string; rotulo: string; Icone: LucideIcon }[] = [
   { para: '/painel', rotulo: 'Tarefas', Icone: House },
   { para: '/painel/materiais', rotulo: 'Materiais', Icone: FolderOpen },
+  { para: '/painel/sala', rotulo: 'Aula ao vivo', Icone: Video },
 ]
 
 /**
