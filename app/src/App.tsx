@@ -25,7 +25,15 @@ import { EntrarAlunoPage } from '@/features/aluno-auth/EntrarAlunoPage'
 import { PainelAlunoPage } from '@/features/painel/PainelAlunoPage'
 import { TrilhaAlunoPage } from '@/features/painel/TrilhaAlunoPage'
 import { MateriaisAlunoPage } from '@/features/painel/MateriaisAlunoPage'
-import { SalaAlunoPage, SalaConvidadoPage, SalaProfessorPage } from '@/features/sala/SalaPage'
+import {
+  SalaAlunoPage,
+  SalaConvidadoPage,
+  SalaProfessorPage,
+  SalaProfessorTurmaPage,
+} from '@/features/sala/SalaPage'
+import { TurmasPage } from '@/features/turmas/TurmasPage'
+import { MateriaisPage } from '@/features/materiais/MateriaisPage'
+import { TurmaPage } from '@/features/turmas/TurmaPage'
 import { AgendaPage } from '@/features/aulas/AgendaPage'
 import { TrilhaDetalhePage } from '@/features/trilhas/TrilhaDetalhePage'
 import { TrilhaDoAlunoPage } from '@/features/trilhas/TrilhaDoAlunoPage'
@@ -67,7 +75,11 @@ export default function App() {
         <Route element={<ExigeSessao />}>
           {/* Fora do <Layout>: a sala ocupa a tela inteira, sem a navegação
               lateral por cima do vídeo. */}
-          <Route path="/sala/:alunoId" element={<SalaProfessorPage />} />
+          <Route path="/sala/turma/:turmaId" element={<SalaProfessorTurmaPage />} />
+        {/* A rota da turma vem ANTES: `/sala/turma/x` casaria com `/sala/:alunoId`
+            e o "turma" viraria um id de aluno. */}
+        <Route path="/sala/turma/:turmaId" element={<SalaProfessorTurmaPage />} />
+        <Route path="/sala/:alunoId" element={<SalaProfessorPage />} />
           <Route element={<Layout />}>
             <Route path="/hoje" element={<HojePage />} />
             <Route path="/alunos" element={<AlunosPage />} />
@@ -85,6 +97,9 @@ export default function App() {
                 aba escolhida pela rota, para o endereço continuar direto. */}
             <Route path="/trilhas" element={<AtividadesPage />} />
             <Route path="/trilhas/:id" element={<TrilhaDetalhePage />} />
+            <Route path="/materiais" element={<MateriaisPage />} />
+            <Route path="/turmas" element={<TurmasPage />} />
+            <Route path="/turmas/:id" element={<TurmaPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/financeiro" element={<FinanceiroPage />} />
             <Route path="/plano" element={<PlanoPage />} />

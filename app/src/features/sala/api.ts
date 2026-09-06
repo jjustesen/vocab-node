@@ -16,6 +16,7 @@ export function linkDaSala(token: string): string {
 
 export const chavesSala = {
   doAluno: (alunoId: string) => ['sala', 'aluno', alunoId] as const,
+  daTurma: (turmaId: string) => ['sala', 'turma', turmaId] as const,
   acesso: (chave: string) => ['sala', 'acesso', chave] as const,
 }
 
@@ -64,13 +65,69 @@ export function useCriarSala(alunoId: string) {
   })
 }
 
+/** A sala da turma. Mesma tabela, `turma_id` no lugar de `aluno_id` (0015). */
+export function useSalaDaTurma(turmaId: string | undefined) {
+  return useQuery({
+    queryKey: chavesSala.daTurma(turmaId!),
+    enabled: Boolean(turmaId),
+    queryFn: async (): Promise<Sala | null> => {
+      const { data, error } = await supabase.from('salas').select('*').eq('turma_id', turmaId!).maybeSingle()
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+/** Mesma regra do 1:1: trocar o link é apagar e recriar, para o link velho morrer de fato. */
+export function useCriarSalaDaTurma(turmaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (): Promise<string> => {
+      const { data: sessao } = await supabase.auth.getUser()
+      if (!sessao.user) throw new Error('Sessão expirada. Entre novamente.')
+
+      const { token, hash } = await gerarTokenDeAcesso()
+      await supabase.from('salas').delete().eq('turma_id', turmaId)
+      const { error } = await supabase
+        .from('salas')
+        .insert({ turma_id: turmaId, professor_id: sessao.user.id, token_hash: hash, token })
+      if (error) throw error
+
+      return linkDaSala(token)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesSala.daTurma(turmaId) }),
+  })
+}
+
+/**
+ * A porta de turma pode responder "quem é você?" em vez de um acesso. Não é
+ * erro: é o estado normal de quem abriu o link sem sessão (ver 0015).
+ */
+export type PrecisaIdentificar = { precisaIdentificar: true; turmaNome: string }
+
+export function pedeIdentificacao(d: AcessoSala | PrecisaIdentificar): d is PrecisaIdentificar {
+  return 'precisaIdentificar' in d
+}
+
 export type AcessoSala = {
   url: string
   token: string
   papel: 'professor' | 'aluno'
+  /**
+   * Identidade ESTÁVEL de quem entrou — `prof-<id>` ou `aluno-<id>`.
+   *
+   * Substitui o `papel` como identidade dentro da sala, e é a peça que torna
+   * a turma possível: com dois valores só ('professor'/'aluno'), três alunos
+   * dividiriam a mesma camada de anotação, a mesma trava de bloco no documento
+   * e a mesma identidade no LiveKit — que derruba quem repete.
+   */
+  participanteId: string
   nomeExibido: string
   professorNome: string
-  alunoNome: string
+  /** O que está do outro lado: um aluno (1:1) ou uma turma. */
+  contexto:
+    | { tipo: 'aluno'; alunoId: string; alunoNome: string }
+    | { tipo: 'turma'; turmaId: string; turmaNome: string }
 }
 
 /**
@@ -82,11 +139,24 @@ export type AcessoSala = {
  */
 export type ModoDeEntrada =
   | { modo: 'professor'; alunoId: string }
+  | { modo: 'professor-turma'; turmaId: string }
   | { modo: 'aluno-logado' }
-  | { modo: 'convidado'; token: string }
+  /**
+   * `nome`/`email` só existem na sala de TURMA: ali o token é endereço e não
+   * identidade, então quem chega precisa dizer quem é. Na sala 1:1 eles vêm
+   * vazios e nem são pedidos — o token já identifica a pessoa (ver 0015).
+   */
+  | { modo: 'convidado'; token: string; nome?: string; email?: string }
 
 export function useAcessoSala(entrada: ModoDeEntrada) {
-  const chave = entrada.modo === 'professor' ? entrada.alunoId : entrada.modo === 'convidado' ? entrada.token : 'eu'
+  const chave =
+    entrada.modo === 'professor'
+      ? entrada.alunoId
+      : entrada.modo === 'professor-turma'
+        ? entrada.turmaId
+        : entrada.modo === 'convidado'
+          ? `${entrada.token}:${entrada.email ?? ''}`
+          : 'eu'
   return useQuery({
     queryKey: chavesSala.acesso(`${entrada.modo}:${chave}`),
     // O token do LiveKit vale 4h e a conexão se sustenta sozinha depois de
@@ -95,18 +165,20 @@ export function useAcessoSala(entrada: ModoDeEntrada) {
     refetchOnWindowFocus: false,
     staleTime: Infinity,
     retry: false,
-    queryFn: async (): Promise<AcessoSala> => {
+    queryFn: async (): Promise<AcessoSala | PrecisaIdentificar> => {
       const cliente = entrada.modo === 'aluno-logado' ? supabaseAluno : supabase
       const corpo =
         entrada.modo === 'professor'
           ? { alunoId: entrada.alunoId }
-          : entrada.modo === 'convidado'
-            ? { token: entrada.token }
-            : {}
+          : entrada.modo === 'professor-turma'
+            ? { turmaId: entrada.turmaId }
+            : entrada.modo === 'convidado'
+              ? { token: entrada.token, nome: entrada.nome, email: entrada.email }
+              : {}
 
       const { data, error } = await cliente.functions.invoke('sala-entrar', { body: corpo })
       if (error) throw new Error(await extrairMensagemDeErro(error))
-      return data as AcessoSala
+      return data as AcessoSala | PrecisaIdentificar
     },
   })
 }

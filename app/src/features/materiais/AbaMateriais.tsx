@@ -1,34 +1,17 @@
 import { useState } from 'react'
-import {
-  Download,
-  FileText,
-  Headphones,
-  Image as ImageIcon,
-  Loader2,
-  Plus,
-  Trash2,
-  Type,
-  Upload,
-  X,
-} from 'lucide-react'
+import { Download, FileText, Library, Loader2, Plus, Upload, X } from 'lucide-react'
 import {
   TAMANHO_MAX_MATERIAL,
   tipoDoArquivo,
   urlAssinada,
   useEnviarMaterial,
-  useExcluirMaterial,
   useMateriaisDoAluno,
+  useTirarDoAluno,
 } from './api'
-import type { Material, MaterialTipo } from '@/types/db'
-import type { LucideIcon } from 'lucide-react'
-
-const VISUAL_TIPO: Record<MaterialTipo, { Icone: LucideIcon; cor: string }> = {
-  pdf: { Icone: FileText, cor: 'bg-rose-100 text-rose-700' },
-  docx: { Icone: FileText, cor: 'bg-sky-100 text-sky-700' },
-  imagem: { Icone: ImageIcon, cor: 'bg-violet-100 text-violet-700' },
-  audio: { Icone: Headphones, cor: 'bg-amber-100 text-amber-700' },
-  texto: { Icone: Type, cor: 'bg-neutral-100 text-neutral-600' },
-}
+import { BotaoApagar } from '@/components/BotaoApagar'
+import { EscolherDoAcervo } from './EscolherDoAcervo'
+import { VISUAL_TIPO } from './visual'
+import type { Material } from '@/types/db'
 
 function formatarData(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -38,17 +21,34 @@ function formatarData(iso: string): string {
 export function AbaMateriais({ alunoId, alunoNome }: { alunoId: string; alunoNome: string }) {
   const { data: materiais, isLoading } = useMateriaisDoAluno(alunoId)
   const [modalAberto, setModalAberto] = useState(false)
+  const [acervoAberto, setAcervoAberto] = useState(false)
+
+  /** O que este aluno já tem, no formato que `EscolherDoAcervo` espera. */
+  const jaTem = new Map((materiais ?? []).map((m) => [m.id, [alunoId]]))
 
   return (
     <div className="mt-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-bold text-neutral-900">Materiais</h2>
-        <button
-          onClick={() => setModalAberto(true)}
-          className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-xs font-bold text-white"
-        >
-          <Plus className="h-3.5 w-3.5" /> Novo material
-        </button>
+        <div className="flex items-center gap-2">
+          {/*
+            Duas portas desde 0016, e a ordem importa: o acervo vem primeiro
+            porque reaproveitar é o caso comum. Subir de novo o mesmo PDF que
+            já está lá era exatamente o que o modelo antigo obrigava.
+          */}
+          <button
+            onClick={() => setAcervoAberto(true)}
+            className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-bold text-neutral-700 transition hover:bg-neutral-100"
+          >
+            <Library className="h-3.5 w-3.5" /> Do acervo
+          </button>
+          <button
+            onClick={() => setModalAberto(true)}
+            className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-xs font-bold text-white"
+          >
+            <Plus className="h-3.5 w-3.5" /> Novo material
+          </button>
+        </div>
       </div>
 
       {isLoading && (
@@ -76,12 +76,21 @@ export function AbaMateriais({ alunoId, alunoNome }: { alunoId: string; alunoNom
       )}
 
       {modalAberto && <ModalNovoMaterial alunoId={alunoId} aoFechar={() => setModalAberto(false)} />}
+
+      {acervoAberto && (
+        <EscolherDoAcervo
+          alunoIds={[alunoId]}
+          paraQuem={`para ${alunoNome.split(' ')[0]}`}
+          jaTem={jaTem}
+          aoFechar={() => setAcervoAberto(false)}
+        />
+      )}
     </div>
   )
 }
 
 function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: string }) {
-  const excluir = useExcluirMaterial(alunoId)
+  const tirar = useTirarDoAluno()
   const [baixando, setBaixando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [textoAberto, setTextoAberto] = useState(false)
@@ -136,14 +145,12 @@ function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: st
           </button>
         )}
 
-        <button
-          onClick={() => excluir.mutate(material)}
-          disabled={excluir.isPending}
-          title="Excluir material"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-neutral-300 hover:bg-rose-50 hover:text-rose-600"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <BotaoApagar
+          titulo="Tirar deste aluno — o arquivo continua no seu acervo"
+          confirmacao="Tirar do aluno?"
+          pendente={tirar.isPending}
+          aoConfirmar={() => tirar.mutate({ materialId: material.id, alunoId })}
+        />
       </div>
 
       {erro && <p className="mt-2 text-xs font-medium text-rose-700">{erro}</p>}
@@ -158,7 +165,7 @@ function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: st
 }
 
 function ModalNovoMaterial({ alunoId, aoFechar }: { alunoId: string; aoFechar: () => void }) {
-  const enviar = useEnviarMaterial(alunoId)
+  const enviar = useEnviarMaterial([alunoId])
   const [modo, setModo] = useState<'arquivo' | 'texto'>('arquivo')
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [nome, setNome] = useState('')

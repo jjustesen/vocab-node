@@ -7,10 +7,11 @@ const QUALIDADE_JPEG = 0.85
 export const PAGINAS_MAX = 20
 
 /**
- * pdf.js pesa ~500kB e só é usado no fallback (ver `pdfParaPaginas`) — carrega
- * sob demanda, para não entrar no bundle que todo professor baixa.
+ * pdf.js pesa ~500kB e não entra no bundle que todo professor baixa: carrega
+ * sob demanda, e só em quem precisa dele — o fallback de geração
+ * (`pdfParaPaginas`) e o material no palco da sala (`MaterialNoPalco`).
  */
-async function carregarPdfjs() {
+export async function carregarPdfjs() {
   const pdfjs = await import('pdfjs-dist')
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
   return pdfjs

@@ -98,7 +98,10 @@ export type EventoAcessoAluno = {
  */
 export type Sala = {
   id: string
-  aluno_id: string
+  /** Null nas salas de turma — ver o check `sala_de_um_ou_de_turma` (0015). */
+  aluno_id: string | null
+  /** Null nas salas 1:1. Exatamente um dos dois é preenchido. */
+  turma_id: string | null
   professor_id: string
   /** sha256 — é por ele que `sala-entrar` acha a sala. */
   token_hash: string
@@ -108,6 +111,22 @@ export type Sala = {
    */
   token: string | null
   criada_em: string
+}
+
+/**
+ * Turma — a aula em grupo (migration 0015). `turmas_alunos` diz quem é
+ * esperado, e essa lista é o controle de acesso do link, não só organização.
+ */
+export type Turma = {
+  id: string
+  professor_id: string
+  nome: string
+  criada_em: string
+}
+
+export type TurmaAluno = {
+  turma_id: string
+  aluno_id: string
 }
 
 export type Aula = {
@@ -126,6 +145,22 @@ export type Aula = {
   criada_em: string
 }
 
+/**
+ * O documento escrito ao vivo durante a aula (migration 0014).
+ *
+ * `blocos` é o array de `Bloco` de `features/sala/documento.ts` — aquele
+ * arquivo é a fonte do formato, este tipo só diz que é json.
+ */
+export type DocumentoAula = {
+  id: string
+  aula_id: string
+  aluno_id: string
+  professor_id: string
+  blocos: unknown
+  criado_em: string
+  atualizado_em: string
+}
+
 export type Pagamento = {
   id: string
   aluno_id: string
@@ -135,15 +170,26 @@ export type Pagamento = {
   pago_em: string | null
 }
 
+/**
+ * O ARQUIVO, do professor. Quem tem acesso está em `materiais_alunos` — a
+ * coluna `aluno_id` saiu em 0016 justamente para não haver duas respostas
+ * para "quem tem este material".
+ */
 export type Material = {
   id: string
   professor_id: string
-  aluno_id: string | null
   aula_id: string | null
   tipo: MaterialTipo
   nome: string
   storage_path: string | null
   texto: string | null
+  criado_em: string
+}
+
+/** Quem tem acesso a um material (0016). */
+export type MaterialAluno = {
+  material_id: string
+  aluno_id: string
   criado_em: string
 }
 
@@ -287,7 +333,14 @@ export type Database = {
         Partial<ContaAluno>
       >
       aulas: Tabela<Aula, Insert<Aula, 'aluno_id' | 'data_hora'>, Partial<Aula>>
-      salas: Tabela<Sala, Insert<Sala, 'aluno_id' | 'professor_id' | 'token_hash'>, Partial<Sala>>
+      salas: Tabela<Sala, Insert<Sala, 'professor_id' | 'token_hash'>, Partial<Sala>>
+      turmas: Tabela<Turma, Insert<Turma, 'professor_id' | 'nome'>, Partial<Turma>>
+      turmas_alunos: Tabela<TurmaAluno, TurmaAluno, Partial<TurmaAluno>>
+      documentos_aula: Tabela<
+        DocumentoAula,
+        Insert<DocumentoAula, 'aula_id' | 'aluno_id' | 'professor_id'>,
+        Partial<DocumentoAula>
+      >
       pagamentos: Tabela<
         Pagamento,
         Insert<Pagamento, 'aluno_id' | 'referencia_mes' | 'valor'>,
@@ -300,6 +353,11 @@ export type Database = {
         Partial<EventoAcessoAluno>
       >
       materiais: Tabela<Material, Insert<Material, 'professor_id' | 'tipo' | 'nome'>, Partial<Material>>
+      materiais_alunos: Tabela<
+        MaterialAluno,
+        Insert<MaterialAluno, 'material_id' | 'aluno_id'>,
+        Partial<MaterialAluno>
+      >
       atividades: Tabela<
         Atividade,
         Insert<Atividade, 'professor_id' | 'titulo' | 'nivel'>,

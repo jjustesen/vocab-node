@@ -4,6 +4,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Copy,
   Loader2,
   Minus,
   NotebookPen,
@@ -15,7 +16,8 @@ import { useAluno, useErrosRecorrentes, useHistoricoDoAluno } from '@/features/a
 import { useAtualizarAula, useAulasDoAluno, useCriarAula } from '@/features/aulas/api'
 import { useResultadoAtribuicao } from '@/features/resultados/api'
 import { corDaNota } from '@/features/tarefa/formato'
-import type { Aula } from '@/types/db'
+import { aulaDeAgora, JANELA_HORAS } from './aula-de-agora'
+import { linkDaSala, useSala, useSalaDaTurma } from './api'
 
 /**
  * Painel lateral da sala — SÓ do professor.
@@ -28,13 +30,37 @@ import type { Aula } from '@/types/db'
  * Tudo aqui lê pelo cliente do professor (RLS) — nenhuma Edge Function nova.
  */
 
-/** Janela em que uma aula agendada conta como "a aula de agora". */
-const JANELA_HORAS = 12
-
 type AbaPainel = 'anotacoes' | 'aluno'
 
-export function PainelDaAula({ alunoId, alunoNome }: { alunoId: string; alunoNome: string }) {
+export type AlunoNoPainel = { id: string; nome: string }
+
+/**
+ * ── Numa turma, o painel e por PESSOA ───────────────────────────────────────
+ *
+ * A anotação da aula e o diagnostico continuam sendo de um aluno so — "erros
+ * recorrentes da turma" nao existe, e a cobranca tambem e individual. Entao o
+ * painel ganha uma tira de nomes no topo: o professor escolhe de quem esta
+ * falando, e anotacao, ficha e historico seguem aquela escolha.
+ *
+ * No 1:1 a tira nao aparece (um nome so nao e escolha), e a tela e exatamente
+ * a de antes.
+ */
+export function PainelDaAula({
+  alunos,
+  alunoId,
+  aoTrocarAluno,
+  turmaId,
+}: {
+  /** Quem esta na aula. No 1:1 tem um; numa turma, todos os inscritos. */
+  alunos: AlunoNoPainel[]
+  /** De quem o painel esta falando agora. */
+  alunoId: string
+  aoTrocarAluno: (alunoId: string) => void
+  /** Preenchido na sala de turma — decide qual link o rodape mostra. */
+  turmaId: string | null
+}) {
   const [aba, setAba] = useState<AbaPainel>('anotacoes')
+  const aluno = alunos.find((a) => a.id === alunoId) ?? alunos[0]
 
   return (
     // `text-neutral-900` explícito: o painel vive dentro de `data-lk-theme`, e
@@ -42,11 +68,30 @@ export function PainelDaAula({ alunoId, alunoNome }: { alunoId: string; alunoNom
     // não traz classe de cor própria — a começar pelo textarea — sai branco no
     // branco. Fixar a cor na raiz resolve para o que vier depois também.
     <div className="flex h-full flex-col rounded-2xl bg-white text-neutral-900">
+      {alunos.length > 1 && (
+        <div className="flex gap-1 overflow-x-auto border-b border-neutral-200 p-2">
+          {alunos.map((a) => (
+            <button
+              key={a.id}
+              onClick={() => aoTrocarAluno(a.id)}
+              title={a.nome}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                a.id === aluno.id
+                  ? 'bg-violet-300 text-neutral-900'
+                  : 'text-neutral-500 hover:bg-neutral-100'
+              }`}
+            >
+              <User className="h-3 w-3" /> {a.nome.split(' ')[0]}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex gap-1 border-b border-neutral-200 p-2">
         {(
           [
             ['anotacoes', 'Anotações', NotebookPen],
-            ['aluno', alunoNome.split(' ')[0], User],
+            ['aluno', alunos.length > 1 ? 'Perfil' : aluno.nome.split(' ')[0], User],
           ] as const
         ).map(([chave, rotulo, Icone]) => (
           <button
@@ -61,38 +106,91 @@ export function PainelDaAula({ alunoId, alunoNome }: { alunoId: string; alunoNom
         ))}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      {/*
+        `key` no aluno: trocar de pessoa TEM que remontar o miolo. Sem isso, o
+        textarea da anotacao guardaria o texto do aluno anterior enquanto o
+        servidor traz o do novo — e o debounce salvaria a anotacao de um na
+        aula do outro.
+      */}
+      <div key={aluno.id} className="min-h-0 flex-1 overflow-y-auto p-4">
         {aba === 'anotacoes' ? (
-          <Anotacoes alunoId={alunoId} />
+          <Anotacoes alunoId={aluno.id} />
         ) : (
-          <FichaDoAluno alunoId={alunoId} alunoNome={alunoNome} />
+          <FichaDoAluno alunoId={aluno.id} alunoNome={aluno.nome} />
         )}
       </div>
+
+      <LinkDaSala alunoId={turmaId ? null : aluno.id} turmaId={turmaId} nome={aluno.nome} />
     </div>
   )
 }
 
 /**
- * Qual aula recebe a anotação: a agendada mais próxima de agora, dentro de
- * ±12h. Fora dessa janela devolve null de propósito — escrever no campo não
- * pode significar carimbar silenciosamente a aula do mês passado.
+ * O link de entrada do aluno, ao alcance de dentro da sala.
+ *
+ * Ele já existe na ficha (`CartaoSala`), e é justamente por isso que faltava
+ * aqui: o momento em que o professor precisa dele é o momento em que ele NÃO
+ * pode sair da sala — está sozinho na chamada, esperando, e o aluno não
+ * apareceu. Ter que abrir outra aba para copiar um link enquanto a aula já
+ * começou é a fricção que a sala existe para tirar.
+ *
+ * Fica fora das abas, no rodapé do painel, porque não é nem anotação nem ficha
+ * — é uma ação, e precisa estar visível qualquer que seja a aba aberta.
+ *
+ * Sem botão de gerar link: criar sala e trocar link são decisões da ficha, com
+ * o aviso de que o link antigo morre (0013). No meio de uma aula isso seria um
+ * clique de arrependimento.
  */
-function aulaDeAgora(aulas: Aula[] | undefined): Aula | null {
-  if (!aulas || aulas.length === 0) return null
-  const agora = Date.now()
-  const limite = JANELA_HORAS * 60 * 60 * 1000
+function LinkDaSala({
+  alunoId,
+  turmaId,
+  nome,
+}: {
+  alunoId: string | null
+  turmaId: string | null
+  nome: string
+}) {
+  const { data: salaDoAluno } = useSala(alunoId ?? undefined)
+  const { data: salaDaTurma } = useSalaDaTurma(turmaId ?? undefined)
+  const [copiado, setCopiado] = useState(false)
 
-  let melhor: Aula | null = null
-  let menorDistancia = Infinity
-  for (const aula of aulas) {
-    if (aula.status === 'cancelada') continue
-    const distancia = Math.abs(new Date(aula.data_hora).getTime() - agora)
-    if (distancia <= limite && distancia < menorDistancia) {
-      menorDistancia = distancia
-      melhor = aula
-    }
+  const sala = turmaId ? salaDaTurma : salaDoAluno
+  const link = sala?.token ? linkDaSala(sala.token) : null
+  const primeiroNome = turmaId ? 'a turma' : nome.split(' ')[0]
+
+  if (!link) return null
+
+  async function copiar() {
+    if (!link) return
+    await navigator.clipboard.writeText(link)
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2000)
   }
-  return melhor
+
+  return (
+    <div className="shrink-0 border-t border-neutral-200 p-3">
+      <p className="text-[11px] font-bold text-neutral-500">Link de entrada {turmaId ? 'da turma' : `de ${primeiroNome}`}</p>
+      <div className="mt-1.5 flex items-center gap-2">
+        {/* `readOnly` e não texto solto: assim o professor pode selecionar o
+            link à mão quando a área de transferência do navegador estiver
+            bloqueada — o que acontece em http sem TLS. */}
+        <input
+          readOnly
+          value={link}
+          onFocus={(e) => e.currentTarget.select()}
+          className="min-w-0 flex-1 truncate rounded-lg bg-neutral-100 px-2 py-1.5 text-[11px] text-neutral-600"
+        />
+        <button
+          onClick={copiar}
+          title="Copiar o link para mandar no WhatsApp"
+          className="flex shrink-0 items-center gap-1 rounded-lg bg-neutral-900 px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-neutral-700"
+        >
+          {copiado ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+          {copiado ? 'Copiado' : 'Copiar'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 function Anotacoes({ alunoId }: { alunoId: string }) {

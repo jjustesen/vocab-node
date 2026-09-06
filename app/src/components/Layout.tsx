@@ -2,10 +2,12 @@ import { NavLink, Outlet } from 'react-router-dom'
 import {
   Calendar,
   GraduationCap,
+  Library,
   LogOut,
   Pencil,
   Sun,
   Users,
+  UsersRound,
   Wallet,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -16,7 +18,9 @@ import { useAuth } from '@/features/auth/AuthProvider'
 const ITENS: { para: string; rotulo: string; Icone: LucideIcon }[] = [
   { para: '/hoje', rotulo: 'Hoje', Icone: Sun },
   { para: '/alunos', rotulo: 'Alunos', Icone: Users },
+  { para: '/turmas', rotulo: 'Turmas', Icone: UsersRound },
   { para: '/atividades', rotulo: 'Atividades', Icone: Pencil },
+  { para: '/materiais', rotulo: 'Materiais', Icone: Library },
   { para: '/agenda', rotulo: 'Agenda', Icone: Calendar },
   { para: '/financeiro', rotulo: 'Financeiro', Icone: Wallet },
 ]
