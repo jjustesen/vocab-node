@@ -184,6 +184,21 @@ export type Material = {
   storage_path: string | null
   texto: string | null
   criado_em: string
+  /** Pasta do acervo (0017). Nulo = raiz. Não tem relação com acesso. */
+  pasta_id: string | null
+}
+
+/**
+ * Uma prateleira do acervo — "Livro 1", "Provas" (0017).
+ *
+ * Organiza, não dá acesso: quem tem cada material continua sendo assunto
+ * exclusivo de `materiais_alunos`.
+ */
+export type PastaMaterial = {
+  id: string
+  professor_id: string
+  nome: string
+  criada_em: string
 }
 
 /** Quem tem acesso a um material (0016). */
@@ -353,6 +368,11 @@ export type Database = {
         Partial<EventoAcessoAluno>
       >
       materiais: Tabela<Material, Insert<Material, 'professor_id' | 'tipo' | 'nome'>, Partial<Material>>
+      pastas_materiais: Tabela<
+        PastaMaterial,
+        Insert<PastaMaterial, 'professor_id' | 'nome'>,
+        Partial<PastaMaterial>
+      >
       materiais_alunos: Tabela<
         MaterialAluno,
         Insert<MaterialAluno, 'material_id' | 'aluno_id'>,

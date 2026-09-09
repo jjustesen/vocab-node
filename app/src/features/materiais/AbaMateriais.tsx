@@ -11,6 +11,7 @@ import {
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { EscolherDoAcervo } from './EscolherDoAcervo'
 import { VISUAL_TIPO } from './visual'
+import { EtiquetaDePasta } from './EtiquetaDePasta'
 import type { Material } from '@/types/db'
 
 function formatarData(iso: string): string {
@@ -120,8 +121,11 @@ function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: st
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-neutral-800">{material.nome}</p>
-          <p className="text-xs text-neutral-400">
-            {material.tipo} · {formatarData(material.criado_em)}
+          <p className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-400">
+            <EtiquetaDePasta pastaId={material.pasta_id} />
+            <span>
+              {material.tipo} · {formatarData(material.criado_em)}
+            </span>
           </p>
         </div>
 

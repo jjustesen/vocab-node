@@ -93,6 +93,12 @@ export type MaterialDoAluno = {
   texto: string | null
   temArquivo: boolean
   criadoEm: string
+  /**
+   * O NOME da pasta do professor (0017), já resolvido pela Edge Function —
+   * nulo para o que está solto no acervo. O aluno não navega em pastas: ele
+   * recebe a lista agrupada pelo mesmo rótulo que o professor usa em aula.
+   */
+  pasta: string | null
 }
 
 export function useMateriaisAluno() {

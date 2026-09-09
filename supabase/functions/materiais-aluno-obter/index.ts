@@ -85,9 +85,26 @@ Deno.serve(async (req) => {
   const { data: linhas } = vinculos?.length
     ? await db
         .from('materiais')
-        .select('id, tipo, nome, texto, storage_path, criado_em')
+        .select('id, tipo, nome, texto, storage_path, criado_em, pasta_id')
         .in('id', vinculos.map((v) => v.material_id))
     : { data: [] }
+
+  /**
+   * O NOME da pasta, não o id (0017).
+   *
+   * O aluno não navega em pastas nem tem o que fazer com um uuid: para ele a
+   * pasta é o rótulo pelo qual o professor chama aquele conjunto em aula — "o
+   * do Livro 1". Mandar o nome já resolvido deixa o painel dele agrupar sem
+   * uma segunda chamada, e sem expor a estrutura do acervo de quem ensina.
+   *
+   * Só as pastas que aparecem nesta lista são consultadas: o aluno não tem
+   * nada a ver com as prateleiras do professor onde ele não tem material.
+   */
+  const pastaIds = [...new Set((linhas ?? []).map((m) => m.pasta_id).filter(Boolean))]
+  const { data: pastas } = pastaIds.length
+    ? await db.from('pastas_materiais').select('id, nome').in('id', pastaIds)
+    : { data: [] }
+  const nomeDaPasta = new Map((pastas ?? []).map((p) => [p.id, p.nome]))
 
   // A ordem que vale é a do VÍNCULO — quando este aluno recebeu —, e não a do
   // arquivo. Um PDF antigo do acervo entregue hoje tem que aparecer no topo.
@@ -106,6 +123,8 @@ Deno.serve(async (req) => {
       texto: m.texto,
       temArquivo: Boolean(m.storage_path),
       criadoEm: m.criado_em,
+      // Nulo quando está na raiz do acervo — o painel junta esses em "Outros".
+      pasta: m.pasta_id ? (nomeDaPasta.get(m.pasta_id) ?? null) : null,
     })),
   })
 })

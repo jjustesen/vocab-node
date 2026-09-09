@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Download, FileText, Headphones, Image as ImageIcon, Loader2, Type } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Download, FileText, Folder, Headphones, Image as ImageIcon, Loader2, Type } from 'lucide-react'
 import { useMateriaisAluno, urlDoMaterialDoAluno, type MaterialDoAluno } from './api'
 import { NavAluno } from './NavAluno'
 import type { MaterialTipo } from '@/types/db'
@@ -24,6 +24,33 @@ function formatarData(iso: string): string {
  */
 export function MateriaisAlunoPage() {
   const { data: materiais, isLoading, error } = useMateriaisAluno()
+
+  /**
+   * Agrupado pela pasta do professor (0017), na ordem em que os materiais
+   * chegaram.
+   *
+   * O aluno não escolhe pasta nem navega entre elas — ele recebe o mesmo
+   * agrupamento que o professor usa quando fala em aula ("abre o do Livro 1").
+   * Uma lista lisa de nomes de arquivo obriga a criança a lembrar qual PDF era
+   * de qual livro, que é o problema que as pastas existem para resolver, e não
+   * há motivo para resolvê-lo só de um lado.
+   *
+   * A ordem das seções segue a PRIMEIRA aparição, e não o alfabeto: a lista já
+   * vem do mais recente para o mais antigo, então o que o professor mandou
+   * ontem fica no topo — que é onde o aluno vai procurar.
+   */
+  const grupos = useMemo(() => {
+    const mapa = new Map<string | null, MaterialDoAluno[]>()
+    for (const m of materiais ?? []) {
+      const lista = mapa.get(m.pasta) ?? []
+      lista.push(m)
+      mapa.set(m.pasta, lista)
+    }
+    return [...mapa.entries()]
+  }, [materiais])
+
+  /** Sem pasta nenhuma, a lista continua sendo uma lista — sem cabeçalho inútil. */
+  const agrupar = grupos.length > 1 || (grupos.length === 1 && grupos[0][0] !== null)
 
   return (
     <div className="min-h-dvh bg-areia px-5 pb-24 pt-6">
@@ -52,10 +79,32 @@ export function MateriaisAlunoPage() {
           </div>
         )}
 
-        {materiais && materiais.length > 0 && (
+        {materiais && materiais.length > 0 && !agrupar && (
           <div className="mt-5 space-y-2">
             {materiais.map((m) => (
               <CartaoMaterial key={m.id} material={m} />
+            ))}
+          </div>
+        )}
+
+        {materiais && materiais.length > 0 && agrupar && (
+          <div className="mt-5 space-y-5">
+            {grupos.map(([pasta, itens]) => (
+              <section key={pasta ?? 'sem-pasta'}>
+                <h2 className="mb-2 flex items-center gap-1.5 px-1 text-xs font-extrabold text-neutral-500">
+                  <Folder className="h-3.5 w-3.5" />
+                  {/* "Outros" e não "Sem pasta": o aluno não sabe que existe um
+                      acervo com pastas do outro lado, e o nome do balde não
+                      pode denunciar uma estrutura que não é dele. */}
+                  {pasta ?? 'Outros'}
+                  <span className="font-bold text-neutral-300">{itens.length}</span>
+                </h2>
+                <div className="space-y-2">
+                  {itens.map((m) => (
+                    <CartaoMaterial key={m.id} material={m} />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         )}

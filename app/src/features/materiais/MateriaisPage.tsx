@@ -1,16 +1,35 @@
 import { useMemo, useState } from 'react'
-import { Download, Loader2, Search, Type, Upload, Users } from 'lucide-react'
+import {
+  Check,
+  Download,
+  Folder,
+  FolderPlus,
+  Inbox,
+  Loader2,
+  Pencil,
+  Search,
+  Type,
+  Upload,
+  Users,
+  X,
+} from 'lucide-react'
 import { useAlunos } from '@/features/alunos/api'
-import type { Material, MaterialTipo } from '@/types/db'
+import type { Material, MaterialTipo, PastaMaterial } from '@/types/db'
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { SoltarArquivos } from './SoltarArquivos'
 import { EscolherAlunos } from './EscolherAlunos'
 import { VISUAL_TIPO } from './visual'
 import {
+  SEM_PASTA,
   urlAssinada,
   useAcervo,
+  useCriarPasta,
   useDonosDosMateriais,
   useExcluirMaterial,
+  useExcluirPasta,
+  useMoverParaPasta,
+  usePastas,
+  useRenomearPasta,
   useSubirAoAcervo,
 } from './api'
 
@@ -27,17 +46,37 @@ import {
  * A lista inclui os materiais que nasceram de uma geração de atividade (eles
  * sempre tiveram `aluno_id` nulo, mesmo antes de 0016). São do professor tanto
  * quanto os outros; escondê-los seria fingir que o acervo é menor do que é.
+ *
+ * ── As pastas (0017) ────────────────────────────────────────────────────────
+ *
+ * Prateleiras: "Livro 1", "Provas". Elas filtram e agrupam, e não escondem
+ * nada — "Todas" continua sendo a visão padrão, porque a busca por nome só
+ * funciona se ela varrer o acervo inteiro. Pasta aqui é organização, nunca
+ * permissão: quem tem cada material continua sendo assunto de
+ * `materiais_alunos` (ver o cabeçalho de 0017).
  */
 const FILTROS: (MaterialTipo | 'todos')[] = ['todos', 'pdf', 'imagem', 'audio', 'docx', 'texto']
 
+/** Qual prateleira está aberta. `'todas'` é a visão do acervo inteiro. */
+type PastaAberta = 'todas' | typeof SEM_PASTA | string
+
 export function MateriaisPage() {
   const { data: acervo, isLoading } = useAcervo()
+  const { data: pastas } = usePastas()
   const { data: alunos } = useAlunos('ativo')
-  const subir = useSubirAoAcervo()
 
+  const [pastaAberta, setPastaAberta] = useState<PastaAberta>('todas')
   const [busca, setBusca] = useState('')
   const [tipo, setTipo] = useState<MaterialTipo | 'todos'>('todos')
   const [distribuindo, setDistribuindo] = useState<Material | null>(null)
+
+  /**
+   * O arquivo novo cai NA PASTA ABERTA. Quem arrasta um PDF para dentro de
+   * "Livro 1" já disse onde ele vai; pedir para mover depois seria perguntar
+   * duas vezes a mesma coisa. Em "Todas" e em "Sem pasta" ele nasce na raiz.
+   */
+  const pastaDoUpload = pastaAberta === 'todas' || pastaAberta === SEM_PASTA ? null : pastaAberta
+  const subir = useSubirAoAcervo(pastaDoUpload)
 
   const ids = useMemo(() => (acervo ?? []).map((m) => m.id), [acervo])
   const { data: donos } = useDonosDosMateriais(ids)
@@ -45,14 +84,33 @@ export function MateriaisPage() {
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase()
     return (acervo ?? [])
+      .filter((m) =>
+        pastaAberta === 'todas'
+          ? true
+          : pastaAberta === SEM_PASTA
+            ? m.pasta_id === null
+            : m.pasta_id === pastaAberta,
+      )
       .filter((m) => tipo === 'todos' || m.tipo === tipo)
       .filter((m) => !termo || m.nome.toLowerCase().includes(termo))
-  }, [acervo, busca, tipo])
+  }, [acervo, busca, tipo, pastaAberta])
+
+  /** Quantos itens em cada prateleira — o número é metade da utilidade da aba. */
+  const contagem = useMemo(() => {
+    const mapa = new Map<string, number>()
+    for (const m of acervo ?? []) {
+      const chave = m.pasta_id ?? SEM_PASTA
+      mapa.set(chave, (mapa.get(chave) ?? 0) + 1)
+    }
+    return mapa
+  }, [acervo])
 
   const nomePorAluno = useMemo(
     () => new Map((alunos ?? []).map((a) => [a.id, a.nome])),
     [alunos],
   )
+
+  const pastaCorrente = (pastas ?? []).find((p) => p.id === pastaAberta) ?? null
 
   return (
     <div>
@@ -66,10 +124,24 @@ export function MateriaisPage() {
         aluno, na sala ou por aqui mesmo.
       </p>
 
+      <BarraDePastas
+        pastas={pastas ?? []}
+        aberta={pastaAberta}
+        contagem={contagem}
+        total={acervo?.length ?? 0}
+        aoAbrir={setPastaAberta}
+        pastaCorrente={pastaCorrente}
+        aoSairDaPasta={() => setPastaAberta('todas')}
+      />
+
       <div className="mt-4">
         <SoltarArquivos
           aoReceber={(arquivo) => subir.mutateAsync({ tipo: 'arquivo', arquivo })}
-          rotulo="Arraste arquivos aqui para o seu acervo"
+          rotulo={
+            pastaCorrente
+              ? `Arraste arquivos aqui para "${pastaCorrente.nome}"`
+              : 'Arraste arquivos aqui para o seu acervo'
+          }
         />
       </div>
 
@@ -119,7 +191,9 @@ export function MateriaisPage() {
 
       {acervo && acervo.length > 0 && filtrados.length === 0 && (
         <p className="mt-6 rounded-2xl bg-white px-4 py-4 text-center text-xs text-neutral-500">
-          Nenhum material para esse filtro.
+          {pastaCorrente
+            ? `Nada em "${pastaCorrente.nome}" com esse filtro.`
+            : 'Nenhum material para esse filtro.'}
         </p>
       )}
 
@@ -129,6 +203,8 @@ export function MateriaisPage() {
             <LinhaDoAcervo
               key={material.id}
               material={material}
+              pastas={pastas ?? []}
+              mostrarPasta={pastaAberta === 'todas'}
               donos={donos?.get(material.id) ?? []}
               nomePorAluno={nomePorAluno}
               aoDistribuir={() => setDistribuindo(material)}
@@ -148,18 +224,271 @@ export function MateriaisPage() {
   )
 }
 
+/**
+ * As prateleiras, e o que se faz com elas.
+ *
+ * "Todas" primeiro e sempre presente: o acervo inteiro é a visão de trabalho,
+ * e a pasta é um recorte dela. "Sem pasta" só aparece quando existe algo lá —
+ * numa organização completa a aba seria uma prateleira vazia permanente.
+ */
+function BarraDePastas({
+  pastas,
+  aberta,
+  contagem,
+  total,
+  aoAbrir,
+  pastaCorrente,
+  aoSairDaPasta,
+}: {
+  pastas: PastaMaterial[]
+  aberta: PastaAberta
+  contagem: Map<string, number>
+  total: number
+  aoAbrir: (pasta: PastaAberta) => void
+  pastaCorrente: PastaMaterial | null
+  aoSairDaPasta: () => void
+}) {
+  const criar = useCriarPasta()
+  const renomear = useRenomearPasta()
+  const excluir = useExcluirPasta()
+
+  const [criando, setCriando] = useState(false)
+  const [renomeando, setRenomeando] = useState(false)
+  const [nome, setNome] = useState('')
+  const [erro, setErro] = useState<string | null>(null)
+
+  const semPasta = contagem.get(SEM_PASTA) ?? 0
+
+  function confirmarCriacao(evento: React.FormEvent) {
+    evento.preventDefault()
+    setErro(null)
+    criar.mutate(nome, {
+      onSuccess: (pasta) => {
+        setNome('')
+        setCriando(false)
+        // Abre a pasta recém-criada: quem acabou de criar "Livro 1" quer
+        // colocar coisas nele, e o passo seguinte é sempre esse.
+        aoAbrir(pasta.id)
+      },
+      onError: (e) => setErro(e.message),
+    })
+  }
+
+  function confirmarRenomeacao(evento: React.FormEvent) {
+    evento.preventDefault()
+    if (!pastaCorrente) return
+    setErro(null)
+    renomear.mutate(
+      { id: pastaCorrente.id, nome },
+      { onSuccess: () => setRenomeando(false), onError: (e) => setErro(e.message) },
+    )
+  }
+
+  return (
+    <div className="mt-4">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Aba
+          rotulo="Todas"
+          contagem={total}
+          ativa={aberta === 'todas'}
+          aoClicar={() => aoAbrir('todas')}
+        />
+
+        {pastas.map((pasta) => (
+          <Aba
+            key={pasta.id}
+            Icone={Folder}
+            rotulo={pasta.nome}
+            contagem={contagem.get(pasta.id) ?? 0}
+            ativa={aberta === pasta.id}
+            aoClicar={() => aoAbrir(pasta.id)}
+          />
+        ))}
+
+        {semPasta > 0 && (
+          <Aba
+            Icone={Inbox}
+            rotulo="Sem pasta"
+            contagem={semPasta}
+            ativa={aberta === SEM_PASTA}
+            aoClicar={() => aoAbrir(SEM_PASTA)}
+          />
+        )}
+
+        {!criando && (
+          <button
+            onClick={() => {
+              setNome('')
+              setErro(null)
+              setCriando(true)
+            }}
+            className="flex items-center gap-1.5 rounded-full border border-dashed border-neutral-300 px-3 py-1.5 text-xs font-bold text-neutral-500 transition hover:border-neutral-400 hover:text-neutral-900"
+          >
+            <FolderPlus className="h-3.5 w-3.5" /> Nova pasta
+          </button>
+        )}
+
+        {criando && (
+          <CampoDePasta
+            valor={nome}
+            aoDigitar={setNome}
+            aoEnviar={confirmarCriacao}
+            aoCancelar={() => setCriando(false)}
+            pendente={criar.isPending}
+            marcador="Livro 1"
+          />
+        )}
+      </div>
+
+      {/*
+        As ações da pasta ficam AQUI, e não em cada aba: um lápis e uma lixeira
+        por prateleira encheriam a barra de alvos pequenos e perigosos. Renomear
+        e apagar são coisas que se faz de dentro da pasta aberta, que é onde a
+        pessoa já está vendo o que há nela.
+      */}
+      {pastaCorrente && !renomeando && (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-bold text-neutral-500">Pasta "{pastaCorrente.nome}":</span>
+          <button
+            onClick={() => {
+              setNome(pastaCorrente.nome)
+              setErro(null)
+              setRenomeando(true)
+            }}
+            className="flex items-center gap-1 rounded-full px-2 py-1 font-bold text-neutral-500 hover:bg-white hover:text-neutral-900"
+          >
+            <Pencil className="h-3 w-3" /> Renomear
+          </button>
+          {/*
+            Apagar a pasta NÃO apaga material: o `set null` de 0017 devolve tudo
+            à raiz. A confirmação diz isso com todas as letras, senão o botão
+            parece o mesmo perigo do "apagar do acervo" logo abaixo — e o
+            professor deixa de arrumar as coisas com medo de perder arquivo.
+          */}
+          <BotaoApagar
+            titulo="Apagar a pasta"
+            confirmacao={
+              (contagem.get(pastaCorrente.id) ?? 0) > 0
+                ? `Apagar a pasta? Os ${contagem.get(pastaCorrente.id)} materiais voltam para "Sem pasta"`
+                : 'Apagar a pasta?'
+            }
+            pendente={excluir.isPending}
+            aoConfirmar={() => excluir.mutate(pastaCorrente.id, { onSuccess: aoSairDaPasta })}
+          />
+        </div>
+      )}
+
+      {pastaCorrente && renomeando && (
+        <div className="mt-2">
+          <CampoDePasta
+            valor={nome}
+            aoDigitar={setNome}
+            aoEnviar={confirmarRenomeacao}
+            aoCancelar={() => setRenomeando(false)}
+            pendente={renomear.isPending}
+            marcador={pastaCorrente.nome}
+          />
+        </div>
+      )}
+
+      {erro && <p className="mt-2 text-xs font-medium text-rose-700">{erro}</p>}
+    </div>
+  )
+}
+
+function Aba({
+  Icone,
+  rotulo,
+  contagem,
+  ativa,
+  aoClicar,
+}: {
+  Icone?: typeof Folder
+  rotulo: string
+  contagem: number
+  ativa: boolean
+  aoClicar: () => void
+}) {
+  return (
+    <button
+      onClick={aoClicar}
+      className={`flex max-w-56 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+        ativa ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500 hover:text-neutral-900'
+      }`}
+    >
+      {Icone && <Icone className="h-3.5 w-3.5 shrink-0" />}
+      <span className="truncate">{rotulo}</span>
+      <span className={ativa ? 'text-neutral-400' : 'text-neutral-300'}>{contagem}</span>
+    </button>
+  )
+}
+
+function CampoDePasta({
+  valor,
+  aoDigitar,
+  aoEnviar,
+  aoCancelar,
+  pendente,
+  marcador,
+}: {
+  valor: string
+  aoDigitar: (v: string) => void
+  aoEnviar: (e: React.FormEvent) => void
+  aoCancelar: () => void
+  pendente: boolean
+  marcador: string
+}) {
+  return (
+    <form onSubmit={aoEnviar} className="flex items-center gap-1 rounded-full bg-white px-2 py-1">
+      <input
+        autoFocus
+        value={valor}
+        onChange={(e) => aoDigitar(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') aoCancelar()
+        }}
+        placeholder={marcador}
+        maxLength={60}
+        className="w-32 bg-transparent px-2 text-xs font-bold outline-none placeholder:font-normal placeholder:text-neutral-400"
+      />
+      <button
+        type="submit"
+        disabled={pendente || valor.trim().length === 0}
+        title="Confirmar"
+        className="grid h-6 w-6 place-items-center rounded-full bg-neutral-900 text-white disabled:opacity-30"
+      >
+        {pendente ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+      </button>
+      <button
+        type="button"
+        onClick={aoCancelar}
+        title="Cancelar"
+        className="grid h-6 w-6 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </form>
+  )
+}
+
 function LinhaDoAcervo({
   material,
+  pastas,
+  mostrarPasta,
   donos,
   nomePorAluno,
   aoDistribuir,
 }: {
   material: Material
+  pastas: PastaMaterial[]
+  /** Em "Todas", a pasta de cada item precisa aparecer; dentro dela, seria repetir o cabeçalho. */
+  mostrarPasta: boolean
   donos: string[]
   nomePorAluno: Map<string, string>
   aoDistribuir: () => void
 }) {
   const excluir = useExcluirMaterial()
+  const mover = useMoverParaPasta()
   const [baixando, setBaixando] = useState(false)
   const [texto, setTexto] = useState(false)
   const { Icone, cor } = VISUAL_TIPO[material.tipo]
@@ -175,6 +504,7 @@ function LinhaDoAcervo({
   }
 
   const nomes = donos.map((id) => nomePorAluno.get(id)).filter(Boolean) as string[]
+  const pastaDoItem = pastas.find((p) => p.id === material.pasta_id) ?? null
 
   return (
     <li className="flex flex-wrap items-center gap-3 px-5 py-3.5">
@@ -190,6 +520,12 @@ function LinhaDoAcervo({
           precisa distribuir de novo.
         */}
         <span className="block truncate text-xs text-neutral-500" title={nomes.join(', ')}>
+          {mostrarPasta && pastaDoItem && (
+            <span className="mr-1.5 inline-flex items-center gap-1 rounded-full bg-neutral-100 px-1.5 py-0.5 font-bold text-neutral-600">
+              <Folder className="h-2.5 w-2.5" />
+              {pastaDoItem.nome}
+            </span>
+          )}
           {donos.length === 0
             ? 'ainda não está com ninguém'
             : donos.length <= 2
@@ -198,20 +534,48 @@ function LinhaDoAcervo({
         </span>
       </span>
 
-      <span className="flex shrink-0 items-center gap-1">
+      {/*
+        `gap-2` e o separador antes dos ícones: são três grupos de risco muito
+        diferente na mesma fileira — mover (reversível), disponibilizar (some
+        no aluno) e apagar (some para todo mundo). Encostados, o dedo que mira
+        o download acerta a lixeira.
+      */}
+      <span className="flex shrink-0 items-center gap-2">
+        {/*
+          `select` nativo, e não um menu desenhado: mover é um gesto raro e
+          arrastar-e-soltar entre abas não existe no celular. O nativo já traz
+          teclado, rolagem e busca por letra de graça.
+        */}
+        <select
+          value={material.pasta_id ?? ''}
+          disabled={mover.isPending}
+          onChange={(e) => mover.mutate({ materialIds: [material.id], pastaId: e.target.value || null })}
+          title="Mover para uma pasta"
+          className="max-w-32 rounded-full bg-neutral-100 px-3 py-2 text-xs font-bold text-neutral-600 outline-none"
+        >
+          <option value="">Sem pasta</option>
+          {pastas.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.nome}
+            </option>
+          ))}
+        </select>
+
         <button
           onClick={aoDistribuir}
           title="Disponibilizar para alunos"
-          className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-bold text-white"
+          className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-3.5 py-2 text-xs font-bold text-white"
         >
           <Users className="h-3.5 w-3.5" /> Disponibilizar
         </button>
+
+        <span className="ml-1 h-6 w-px bg-neutral-200" />
 
         {material.tipo === 'texto' ? (
           <button
             onClick={() => setTexto((v) => !v)}
             title="Ver texto"
-            className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"
+            className="grid h-9 w-9 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"
           >
             <Type className="h-4 w-4" />
           </button>
@@ -219,7 +583,7 @@ function LinhaDoAcervo({
           <button
             onClick={baixar}
             title="Baixar"
-            className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"
+            className="grid h-9 w-9 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"
           >
             {baixando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           </button>

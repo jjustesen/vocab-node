@@ -4,6 +4,7 @@ import { BotaoApagar } from '@/components/BotaoApagar'
 import { DisponibilizarATodos } from '@/features/materiais/DisponibilizarATodos'
 import { EscolherDoAcervo } from '@/features/materiais/EscolherDoAcervo'
 import { QuemTem } from '@/features/materiais/QuemTem'
+import { EtiquetaDePasta } from '@/features/materiais/EtiquetaDePasta'
 import { SoltarArquivos } from '@/features/materiais/SoltarArquivos'
 import { VISUAL_TIPO } from '@/features/materiais/visual'
 import { useEnviarMaterial, useMateriaisDeVarios, useTirarDeVarios } from '@/features/materiais/api'
@@ -83,7 +84,10 @@ export function MateriaisDaTurma({ alunos }: { alunos: { id: string; nome: strin
                   <span className="block truncate text-sm font-medium text-neutral-900">
                     {material.nome}
                   </span>
-                  <QuemTem alunos={alunos} donos={material.donos} />
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <EtiquetaDePasta pastaId={material.pasta_id} />
+                    <QuemTem alunos={alunos} donos={material.donos} />
+                  </span>
                 </span>
                 <DisponibilizarATodos
                   materialId={material.id}

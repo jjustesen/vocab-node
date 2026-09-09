@@ -19,6 +19,7 @@ import { EscolherDoAcervo } from '@/features/materiais/EscolherDoAcervo'
 import { SoltarArquivos } from '@/features/materiais/SoltarArquivos'
 import { DisponibilizarATodos } from '@/features/materiais/DisponibilizarATodos'
 import { QuemTem } from '@/features/materiais/QuemTem'
+import { EtiquetaDePasta } from '@/features/materiais/EtiquetaDePasta'
 import { carregarPdfjs } from '@/lib/arquivo'
 import type { Material } from '@/types/db'
 import type { Palco } from './estado-palco'
@@ -152,7 +153,10 @@ export function SeletorDeConteudo({
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{material.nome}</span>
-                      {emTurma && <QuemTem alunos={alunos} donos={material.donos} />}
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <EtiquetaDePasta pastaId={material.pasta_id} />
+                        {emTurma && <QuemTem alunos={alunos} donos={material.donos} />}
+                      </span>
                     </span>
                   </button>
 
