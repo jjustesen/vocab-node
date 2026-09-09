@@ -10,6 +10,15 @@
 
   --radius-card: 1.5rem;
 
+  /*
+    A letra das anotações do palco. Só ela é Chewy: o resto do produto é a
+    fonte de sistema, e misturar as duas fora da anotação viraria enfeite.
+    Aqui ela tem função — o que o professor escreve por cima do exercício se
+    distingue do que já estava impresso na página, sem precisar de cor nem de
+    caixa em volta. A fonte é carregada em app.html.
+  */
+  --font-anotacao: 'Chewy', ui-rounded, 'Comic Sans MS', cursive;
+
   /* Tranco curto do par errado em ligar_colunas — o "não é esse" sem punir. */
   --animate-treme: treme 0.38s;
   @keyframes treme {
@@ -38,4 +47,23 @@
   button {
     @apply touch-manipulation;
   }
+}
+
+/* ==========================================================================
+   A tira de vídeo da sala (features/sala/SalaPage.tsx).
+
+   O pacote de estilos do LiveKit fixa `object-fit: cover` no vídeo, e reforça
+   a regra para vídeo landscape. Cover é a escolha certa quando o ladrilho tem
+   a mesma proporção da câmera; na tira ele cortava rosto, porque a proporção
+   quem dita é o layout. Aqui o ladrilho JÁ é 16:9, então `contain` só entra em
+   ação com câmera de proporção diferente — e nesse caso mostrar o quadro
+   inteiro com tarja preta é melhor que cortar a pessoa.
+
+   Precisa vir por CSS e com especificidade maior: as duas regras do pacote são
+   por classe, e Tailwind não alcança um elemento que este código não renderiza.
+   ========================================================================== */
+[data-tira-de-video] .lk-participant-media-video,
+[data-tira-de-video] .lk-participant-media-video[data-lk-orientation='landscape'] {
+  object-fit: contain;
+  background-color: #000;
 }

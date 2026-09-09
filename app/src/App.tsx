@@ -25,8 +25,10 @@ import { EntrarAlunoPage } from '@/features/aluno-auth/EntrarAlunoPage'
 import { PainelAlunoPage } from '@/features/painel/PainelAlunoPage'
 import { TrilhaAlunoPage } from '@/features/painel/TrilhaAlunoPage'
 import { MateriaisAlunoPage } from '@/features/painel/MateriaisAlunoPage'
+import { AulasAoVivoPage } from '@/features/painel/AulasAoVivoPage'
 import {
   SalaAlunoPage,
+  SalaAlunoTurmaPage,
   SalaConvidadoPage,
   SalaProfessorPage,
   SalaProfessorTurmaPage,
@@ -65,7 +67,12 @@ export default function App() {
           <Route element={<ExigeSessaoAluno />}>
             <Route path="/painel" element={<PainelAlunoPage />} />
             <Route path="/painel/materiais" element={<MateriaisAlunoPage />} />
-            <Route path="/painel/sala" element={<SalaAlunoPage />} />
+            {/* `/painel/sala` é a LISTA; as salas em si ficam abaixo dela e
+                espelham as rotas do professor (`/sala/:alunoId` e
+                `/sala/turma/:turmaId`) — ver AulasAoVivoPage. */}
+            <Route path="/painel/sala" element={<AulasAoVivoPage />} />
+            <Route path="/painel/sala/individual" element={<SalaAlunoPage />} />
+            <Route path="/painel/sala/turma/:turmaId" element={<SalaAlunoTurmaPage />} />
             <Route path="/painel/trilha/:id" element={<TrilhaAlunoPage />} />
             <Route path="/painel/tarefa/:atribuicaoId" element={<TarefaPage />} />
           </Route>
@@ -75,11 +82,10 @@ export default function App() {
         <Route element={<ExigeSessao />}>
           {/* Fora do <Layout>: a sala ocupa a tela inteira, sem a navegação
               lateral por cima do vídeo. */}
+          {/* A rota da turma vem ANTES: `/sala/turma/x` casaria com
+              `/sala/:alunoId` e o "turma" viraria um id de aluno. */}
           <Route path="/sala/turma/:turmaId" element={<SalaProfessorTurmaPage />} />
-        {/* A rota da turma vem ANTES: `/sala/turma/x` casaria com `/sala/:alunoId`
-            e o "turma" viraria um id de aluno. */}
-        <Route path="/sala/turma/:turmaId" element={<SalaProfessorTurmaPage />} />
-        <Route path="/sala/:alunoId" element={<SalaProfessorPage />} />
+          <Route path="/sala/:alunoId" element={<SalaProfessorPage />} />
           <Route element={<Layout />}>
             <Route path="/hoje" element={<HojePage />} />
             <Route path="/alunos" element={<AlunosPage />} />

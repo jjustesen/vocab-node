@@ -16,6 +16,7 @@
 //   { alunoId }             + JWT do professor → 1:1, o professor
 //   { turmaId }             + JWT do professor → turma, o professor
 //   {}                      + JWT do aluno     → 1:1 do aluno com conta
+//   { turmaId }             + JWT do aluno     → turma em que ele está, pelo painel
 //   { token }               + JWT do aluno     → turma, identificado pela conta
 //   { token }                                  → 1:1, aluno sem conta
 //   { token, nome, email }                     → turma, aluno sem conta
@@ -94,7 +95,14 @@ Deno.serve(async (req) => {
     if (typeof corpo.alunoId === 'string') {
       acesso = await comoProfessorDoAluno(db, usuarioId, corpo.alunoId)
     } else if (typeof corpo.turmaId === 'string') {
-      acesso = await comoProfessorDaTurma(db, usuarioId, corpo.turmaId)
+      // Duas pessoas muito diferentes chegam com o mesmo corpo: o professor
+      // dono da turma e o aluno dela, vindo do painel. Cada tentativa confere
+      // o vínculo por conta própria e devolve null quando não é o caso, então
+      // encadear é seguro — e mantém `turmaId` como ENDEREÇO, nunca como
+      // identidade (a identidade continua saindo só do JWT).
+      acesso =
+        (await comoProfessorDaTurma(db, usuarioId, corpo.turmaId)) ??
+        (await comoAlunoDaTurma(db, usuarioId, corpo.turmaId))
     } else {
       // 404 aqui é identidade, não indisponibilidade — o painel usa esse
       // status para derrubar quem entrou pela porta errada.
@@ -186,6 +194,52 @@ async function comoProfessorDaTurma(db: Db, usuarioId: string, turmaId: string):
     nomeExibido: nome,
     professorNome: nome,
     contexto: { tipo: 'turma', turmaId, turmaNome: turma.nome },
+  }
+}
+
+/**
+ * O aluno com conta entrando na sala da TURMA pelo painel — a porta que faltava.
+ *
+ * A sala é achada por `turma_id`, exatamente como `comoProfessorDaTurma` acha
+ * a dele: é a MESMA linha de `salas`, logo o mesmo `nomeDaSala(sala.id)` no
+ * LiveKit. É isso que garante que professor e aluno caiam na mesma conversa —
+ * se cada lado derivasse o nome da sala do seu próprio id, os dois abririam
+ * salas vazias e ninguém veria ninguém.
+ *
+ * O vínculo é reconferido aqui, e não só na listagem (`salas-do-aluno`):
+ * listar não autoriza, e este é o ponto onde um token de LiveKit é assinado.
+ */
+async function comoAlunoDaTurma(db: Db, usuarioId: string, turmaId: string): Promise<Acesso | null> {
+  const { data: conta } = await db
+    .from('contas_aluno')
+    .select('aluno_id')
+    .eq('user_id', usuarioId)
+    .maybeSingle()
+  if (!conta) return null
+
+  if (!(await pertenceATurma(db, turmaId, conta.aluno_id))) return null
+
+  const { data: turma } = await db
+    .from('turmas')
+    .select('id, nome, professor_id')
+    .eq('id', turmaId)
+    .maybeSingle()
+  if (!turma) return null
+
+  const { data: sala } = await db.from('salas').select('id').eq('turma_id', turmaId).maybeSingle()
+  if (!sala) return null
+
+  const { data: aluno } = await db.from('alunos').select('nome').eq('id', conta.aluno_id).maybeSingle()
+
+  return {
+    salaId: sala.id,
+    papel: 'aluno',
+    // A mesma identidade que ele teria entrando pelo link (`porToken`): abrir
+    // a turma pelo painel e pelo link não pode criar dois participantes.
+    participanteId: `aluno-${conta.aluno_id}`,
+    nomeExibido: aluno?.nome ?? 'aluno',
+    professorNome: await nomeDoProfessor(db, turma.professor_id),
+    contexto: { tipo: 'turma', turmaId: turma.id, turmaNome: turma.nome },
   }
 }
 

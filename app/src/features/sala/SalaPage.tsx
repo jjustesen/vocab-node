@@ -9,11 +9,14 @@ import {
   useTracks,
 } from '@livekit/components-react'
 import { Track } from 'livekit-client'
+import type { TrackReferenceOrPlaceholder } from '@livekit/components-react'
 import {
   GraduationCap,
   Loader2,
+  PanelLeft,
   PanelRightClose,
   PanelRightOpen,
+  PanelTop,
   Presentation,
   Video,
 } from 'lucide-react'
@@ -23,14 +26,17 @@ import { pedeIdentificacao, useAcessoSala, type AcessoSala, type ModoDeEntrada }
 import { useAlunosDaTurma } from '@/features/turmas/api'
 import { aulaDeAgora } from './aula-de-agora'
 import { useCanal, useSalaConectada } from './canal'
+import { useLayoutDaSala, type PosicaoDaCamera } from './layout-da-sala'
 import { Palco } from './Palco'
 import { PainelDaAula } from './PainelDaAula'
 import { SeletorDeConteudo } from './SeletorDeConteudo'
 import {
   nomeDo,
   PALCO_VAZIO,
+  VISTA_PADRAO,
   type MensagemPalco,
   type Palco as EstadoPalco,
+  type Vista,
 } from './estado-palco'
 
 /**
@@ -109,23 +115,25 @@ export function SalaPage({ entrada }: { entrada: ModoDeEntrada }) {
   }
 
   if (!conectar) {
-    const oOutro =
-      data.papel === 'professor'
-        ? data.contexto.tipo === 'aluno'
+    /**
+     * O que dá nome à antessala. Numa TURMA é sempre o nome da turma, para os
+     * dois lados: desde que o aluno pode ter várias salas na lista do painel,
+     * "Aula com a Ana" deixou de responder à única pergunta que importa aqui —
+     * em qual das aulas dele ele está entrando.
+     */
+    const titulo =
+      data.contexto.tipo === 'turma'
+        ? data.contexto.turmaNome
+        : data.papel === 'professor'
           ? data.contexto.alunoNome
-          : data.contexto.turmaNome
-        : data.professorNome
+          : `Aula com ${data.professorNome.split(' ')[0]}`
     return (
       <div className="grid min-h-dvh place-items-center bg-neutral-950 px-6">
         <div className="w-full max-w-sm text-center">
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-violet-300 text-neutral-900">
             <GraduationCap className="h-8 w-8" />
           </span>
-          <h1 className="mt-5 text-xl font-extrabold text-white">
-            {data.contexto.tipo === 'turma' && data.papel === 'professor'
-              ? oOutro
-              : `Aula com ${oOutro.split(' ')[0]}`}
-          </h1>
+          <h1 className="mt-5 text-xl font-extrabold text-white">{titulo}</h1>
           <p className="mt-1 text-sm text-neutral-400">
             Você vai entrar como <span className="font-bold text-neutral-300">{data.nomeExibido}</span>.
           </p>
@@ -178,7 +186,11 @@ export function SalaPage({ entrada }: { entrada: ModoDeEntrada }) {
           setEntrou(false)
           if (entrada.modo === 'professor') navigate(`/alunos/${entrada.alunoId}`)
           else if (entrada.modo === 'professor-turma') navigate('/turmas')
-          else if (entrada.modo === 'aluno-logado') navigate('/painel')
+          // O aluno com conta volta para a LISTA de aulas ao vivo, não para o
+          // painel: é de lá que ele veio, e é lá que estão as outras salas
+          // dele — voltar para a raiz do painel o obrigaria a navegar de novo.
+          else if (entrada.modo === 'aluno-logado' || entrada.modo === 'aluno-logado-turma')
+            navigate('/painel/sala')
           else setConectar(false)
         }}
         className="h-full"
@@ -213,6 +225,11 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
   const ehProfessor = acesso.papel === 'professor'
 
   const [palco, setPalco] = useState<EstadoPalco>(PALCO_VAZIO)
+  const [vista, setVista] = useState<Vista>(VISTA_PADRAO)
+  const { posicao, fracao, alternarPosicao, definirFracao } = useLayoutDaSala()
+  /** A área que a tira e o palco dividem — a régua do divisor. */
+  const areaRef = useRef<HTMLDivElement>(null)
+  const [arrastandoDivisor, setArrastandoDivisor] = useState(false)
   const [seletorAberto, setSeletorAberto] = useState(false)
   const [painelAberto, setPainelAberto] = useState(true)
   /** Qual aluno o painel esta mostrando. Numa turma, o professor escolhe. */
@@ -263,15 +280,30 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
 
   const enviarRef = useRef<((m: MensagemPalco) => void) | null>(null)
 
+  // O palco e a vista mudam juntos numa referência só para o handler abaixo
+  // não precisar entrar nas dependências do canal — ele é recriado a cada
+  // render e leria valores velhos.
+  const atualRef = useRef({ palco, vista })
+  atualRef.current = { palco, vista }
+
   const enviar = useCanal<MensagemPalco>('palco', (msg) => {
     if (msg.t === 'pedir-estado') {
       // Só o PROFESSOR responde. Ele é a fonte única do palco; se os alunos
       // também respondessem, quem acabou de entrar veria a resposta que
       // chegasse por último — que pode ser a de alguém desatualizado.
-      if (ehProfessor) enviarRef.current?.({ t: 'palco', palco })
+      //
+      // Palco e vista vão juntos: quem entra no meio da aula precisa cair no
+      // mesmo pedaço do exercício que o resto da turma está olhando, não na
+      // página inteira reduzida.
+      if (ehProfessor) enviarRef.current?.({ t: 'palco', ...atualRef.current })
+      return
+    }
+    if (msg.t === 'vista') {
+      setVista(msg.vista)
       return
     }
     setPalco(msg.palco)
+    setVista(msg.vista)
   })
   enviarRef.current = enviar
 
@@ -286,26 +318,97 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
   const definirPalco = useCallback(
     (novo: EstadoPalco) => {
       setPalco(novo)
-      enviar({ t: 'palco', palco: novo })
+      // Conteúdo novo começa enquadrado do zero — herdar 3x de zoom do PDF
+      // anterior abriria o próximo num pedaço aleatório do canto, e o aluno
+      // veria isso antes de o professor perceber.
+      setVista(VISTA_PADRAO)
+      enviar({ t: 'palco', palco: novo, vista: VISTA_PADRAO })
     },
     [enviar],
   )
 
+  /**
+   * Só o professor emite. O aluno também chama isto (os controles dele são os
+   * mesmos), mas o `ehProfessor` corta o envio: o ajuste local dele vale para
+   * a tela dele e não arrasta a turma junto.
+   */
+  const definirVista = useCallback(
+    (nova: Vista) => {
+      setVista(nova)
+      if (ehProfessor) enviar({ t: 'vista', vista: nova })
+    },
+    [enviar, ehProfessor],
+  )
+
   const noPalco = palco.tipo !== 'nenhum'
+
+  /**
+   * O divisor não move nada de tamanho fixo: ele só decide quanto do eixo cabe
+   * a cada um. Tira e palco continuam desenhando o que já desenhavam —
+   * ladrilhos 16:9 e a caixa na proporção do material — então nenhum dos dois
+   * deforma em nenhuma posição da linha. O que muda é o quanto sobra.
+   */
+  function aoPressionarDivisor(evento: React.PointerEvent<HTMLDivElement>) {
+    // Sem `preventDefault` o navegador começa a selecionar texto no arrasto, e
+    // o ponteiro passa a arrastar uma seleção fantasma por cima do vídeo.
+    evento.preventDefault()
+    evento.currentTarget.setPointerCapture(evento.pointerId)
+    setArrastandoDivisor(true)
+  }
+
+  function aoMoverDivisor(evento: React.PointerEvent<HTMLDivElement>) {
+    if (!arrastandoDivisor) return
+    const regua = areaRef.current?.getBoundingClientRect()
+    if (!regua || regua.width === 0 || regua.height === 0) return
+    definirFracao(
+      posicao === 'lateral'
+        ? (evento.clientX - regua.left) / regua.width
+        : (evento.clientY - regua.top) / regua.height,
+    )
+  }
+
+  function aoSoltarDivisor() {
+    if (!arrastandoDivisor) return
+    setArrastandoDivisor(false)
+    definirFracao(fracao, true)
+  }
 
   return (
     <div className="flex h-full flex-col gap-2 p-2">
       <div className="flex min-h-0 flex-1 gap-2">
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          {/* O vídeo nunca sai da tela; só encolhe quando há palco. */}
-          <div className={noPalco ? 'h-28 shrink-0 sm:h-36' : 'min-h-0 flex-1'}>
-            <GridLayout tracks={tracks} className="h-full">
-              <ParticipantTile />
-            </GridLayout>
-          </div>
+        <div
+          ref={areaRef}
+          className={`flex min-w-0 flex-1 ${
+            noPalco && posicao === 'lateral' ? 'flex-row' : 'flex-col'
+          } ${noPalco ? '' : 'gap-2'}`}
+        >
+          {/*
+            O vídeo nunca sai da tela; só encolhe quando há palco — e ao
+            encolher vira TIRA, não uma faixa esticada. Ver `TiraDeVideo`.
+          */}
+          {noPalco ? (
+            <>
+              <TiraDeVideo tracks={tracks} posicao={posicao} fracao={fracao} />
+              <Divisor
+                posicao={posicao}
+                arrastando={arrastandoDivisor}
+                aoPressionar={aoPressionarDivisor}
+                aoMover={aoMoverDivisor}
+                aoSoltar={aoSoltarDivisor}
+              />
+            </>
+          ) : (
+            <div className="min-h-0 flex-1">
+              <GridLayout tracks={tracks} className="h-full">
+                <ParticipantTile />
+              </GridLayout>
+            </div>
+          )}
 
           <Palco
             palco={palco}
+            vista={vista}
+            aoMudarVista={definirVista}
             eu={eu}
             podeAnotar={ehProfessor}
             ehProfessor={ehProfessor}
@@ -348,6 +451,26 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
           </span>
         )}
 
+        {/*
+          Só aparece quando há palco: sem nada no centro da tela o vídeo ocupa
+          tudo, e o botão não teria efeito nenhum — controle morto confunde
+          mais do que ajuda.
+        */}
+        {ehProfessor && noPalco && (
+          <button
+            onClick={alternarPosicao}
+            title={posicao === 'topo' ? 'Mover as câmeras para a lateral' : 'Mover as câmeras para o topo'}
+            className="flex items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-bold text-neutral-200 transition hover:bg-neutral-700"
+          >
+            {posicao === 'topo' ? (
+              <PanelLeft className="h-4 w-4" />
+            ) : (
+              <PanelTop className="h-4 w-4" />
+            )}
+            Câmeras
+          </button>
+        )}
+
         {podeVerPainel && (
           <button
             onClick={() => setPainelAberto((v) => !v)}
@@ -375,6 +498,120 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
 
       {/* Sem isto ninguém ouve ninguém: `GridLayout` só renderiza o vídeo. */}
       <RoomAudioRenderer />
+    </div>
+  )
+}
+
+/**
+ * A linha entre a câmera e o palco.
+ *
+ * Invisível até o ponteiro chegar perto: numa aula, o que tem que estar à
+ * vista é a pessoa e o exercício — uma barra cinza permanente no meio da tela
+ * seria mais um elemento de interface disputando atenção com o conteúdo. Ela
+ * aparece quando a mão vai atrás dela, que é o único momento em que serve para
+ * alguma coisa, e continua visível durante o arrasto (senão sumiria justo
+ * enquanto está sendo usada).
+ *
+ * A área de clique é bem maior que o traço — 12px contra 2px. Mirar num fio de
+ * cabelo é o defeito clássico deste controle, e o alvo grande não custa nada
+ * porque só a linha é pintada.
+ */
+function Divisor({
+  posicao,
+  arrastando,
+  aoPressionar,
+  aoMover,
+  aoSoltar,
+}: {
+  posicao: PosicaoDaCamera
+  arrastando: boolean
+  aoPressionar: (e: React.PointerEvent<HTMLDivElement>) => void
+  aoMover: (e: React.PointerEvent<HTMLDivElement>) => void
+  aoSoltar: () => void
+}) {
+  const lateral = posicao === 'lateral'
+
+  return (
+    <div
+      onPointerDown={aoPressionar}
+      onPointerMove={aoMover}
+      onPointerUp={aoSoltar}
+      onPointerCancel={aoSoltar}
+      role="separator"
+      aria-orientation={lateral ? 'vertical' : 'horizontal'}
+      aria-label="Ajustar o espaço entre a câmera e a apresentação"
+      title="Arraste para ajustar o espaço entre a câmera e a apresentação"
+      className={`group flex shrink-0 touch-none items-center justify-center ${
+        lateral ? 'w-3 cursor-col-resize' : 'h-3 cursor-row-resize'
+      }`}
+    >
+      <span
+        className={`rounded-full transition-colors ${
+          lateral ? 'h-16 w-0.5' : 'h-0.5 w-16'
+        } ${arrastando ? 'bg-violet-300' : 'bg-transparent group-hover:bg-neutral-600'}`}
+      />
+    </div>
+  )
+}
+
+/**
+ * O vídeo quando há algo no palco.
+ *
+ * ── Por que não é o `GridLayout` encolhido ──────────────────────────────────
+ *
+ * Era: uma faixa de altura fixa e largura inteira com o `GridLayout` dentro.
+ * O grid estica os ladrilhos para preencher o que recebe, e o vídeo do LiveKit
+ * é `object-fit: cover` — numa faixa de 112px de altura por 1200px de largura,
+ * a câmera 16:9 de cada um virava uma tira em que só sobrava a testa. Era o
+ * enquadramento que se perdia, não a resolução.
+ *
+ * Agora cada ladrilho tem proporção 16:9 fixa (`aspect-video`) e a lista rola
+ * quando não cabe, como no Meet: o tamanho cai, o enquadramento não. O
+ * `object-fit: contain` vem do CSS em index.css — a regra do pacote de estilos
+ * do LiveKit força `cover` até em vídeo landscape, então tem que ser
+ * sobrescrita por fora.
+ */
+function TiraDeVideo({
+  tracks,
+  posicao,
+  fracao,
+}: {
+  tracks: TrackReferenceOrPlaceholder[]
+  posicao: PosicaoDaCamera
+  /** Quanto do eixo a tira ocupa — o que o divisor ajusta. */
+  fracao: number
+}) {
+  const lateral = posicao === 'lateral'
+
+  return (
+    <div
+      data-tira-de-video
+      // Percentual, e não pixels: a tira acompanha a janela sem precisar de
+      // conta em JS a cada resize. Ver `layout-da-sala.ts`.
+      style={lateral ? { width: `${fracao * 100}%` } : { height: `${fracao * 100}%` }}
+      className={lateral ? 'shrink-0 overflow-y-auto' : 'shrink-0 overflow-x-auto'}
+    >
+      {/*
+        `justify-center` para uma câmera só não ficar encostada no canto, e
+        `min-w-max`/`min-h-max` para que, quando NÃO couber, a lista cresça e
+        role em vez de espremer os ladrilhos de volta.
+      */}
+      <div
+        className={`flex gap-2 ${
+          lateral ? 'min-h-max flex-col justify-center' : 'h-full min-w-max justify-center'
+        }`}
+      >
+        {tracks.map((track) => (
+          <div
+            key={`${track.participant.identity}:${track.source}`}
+            className={`aspect-video shrink-0 overflow-hidden rounded-lg bg-black ${
+              lateral ? 'w-full' : 'h-full'
+            }`}
+          >
+            <ParticipantTile trackRef={track} className="h-full w-full" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -479,9 +716,22 @@ export function SalaProfessorTurmaPage() {
   return <SalaPage entrada={{ modo: 'professor-turma', turmaId: turmaId! }} />
 }
 
-/** /painel/sala — aluno com conta, entrando pelo painel. */
+/** /painel/sala/individual — aluno com conta, na sala 1:1 dele. */
 export function SalaAlunoPage() {
   return <SalaPage entrada={{ modo: 'aluno-logado' }} />
+}
+
+/**
+ * /painel/sala/turma/:turmaId — aluno com conta, na sala de uma turma dele.
+ *
+ * Espelha `/sala/turma/:turmaId` do professor de propósito: os dois lados
+ * mandam o mesmo `turmaId` para `sala-entrar`, que acha a MESMA linha de
+ * `salas` e devolve o mesmo nome de sala no LiveKit. É essa simetria que
+ * garante que os dois caiam na mesma conversa.
+ */
+export function SalaAlunoTurmaPage() {
+  const { turmaId } = useParams<{ turmaId: string }>()
+  return <SalaPage entrada={{ modo: 'aluno-logado-turma', turmaId: turmaId! }} />
 }
 
 /** /s/:token — aluno sem conta, pelo link que o professor mandou. */

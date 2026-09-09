@@ -71,11 +71,12 @@ npm run dev
    supabase functions deploy gerar-atividade
    supabase functions deploy painel-aluno-obter
    supabase functions deploy materiais-aluno-obter
+   supabase functions deploy salas-do-aluno
    supabase functions deploy tarefa-pronuncia --no-verify-jwt
    supabase functions deploy atividade-gerar-audio
    supabase functions deploy sala-entrar --no-verify-jwt
    ```
-   `--no-verify-jwt` é obrigatório nas quatro primeiras e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter` e `materiais-aluno-obter` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
+   `--no-verify-jwt` é obrigatório nas quatro primeiras e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter` e `salas-do-aluno` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
 6. Gere uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e configure o secret (nunca entra no `.env` do front — só a Edge Function enxerga):
    ```bash
    supabase secrets set GEMINI_API_KEY=sua_chave_aqui

@@ -74,6 +74,40 @@ export type Palco =
 
 export const PALCO_VAZIO: Palco = { tipo: 'nenhum' }
 
+/**
+ * COMO o palco está enquadrado — o que o professor está olhando de perto.
+ *
+ * Separado de `Palco` porque muda por outro motivo e num outro ritmo: o palco
+ * troca quando ele sobe outro material, a vista troca dezenas de vezes por
+ * minuto enquanto ele percorre o exercício. Misturar os dois faria cada
+ * arrastar de página reenviar a URL assinada do PDF inteiro.
+ *
+ * ── Por que o enquadramento é do professor, e não de cada um ────────────────
+ *
+ * Porque quem está dando a aula é ele. "Olha aqui nesta linha" só funciona se
+ * "aqui" for o mesmo lugar nas duas telas — ampliar sozinho e falar como se o
+ * outro estivesse vendo o mesmo pedaço é exatamente o mal-entendido que a
+ * sala existe para evitar. O aluno continua podendo mexer nos controles dele
+ * (no celular, às vezes precisa), e volta a acompanhar assim que o professor
+ * mexe de novo.
+ */
+export type Vista = {
+  /** 'encaixar' mostra a página inteira; 'largura' estica até a borda. */
+  ajuste: 'encaixar' | 'largura'
+  /** Multiplicador da lupa. 1 = o tamanho que o `ajuste` já dá. */
+  zoom: number
+  /**
+   * O centro do enquadramento, em FRAÇÃO do conteúdo (0..1) — nunca em pixels
+   * de rolagem. O professor está num notebook e o aluno num celular: a mesma
+   * quantidade de pixels rolados cai em pontos diferentes da página. O centro
+   * relativo é a única medida que quer dizer a mesma coisa nas duas telas.
+   */
+  cx: number
+  cy: number
+}
+
+export const VISTA_PADRAO: Vista = { ajuste: 'encaixar', zoom: 1, cx: 0.5, cy: 0.5 }
+
 export type MensagemPalco =
   /**
    * O professor anuncia o palco inteiro. Objeto pequeno: não vale diferenciar.
@@ -82,7 +116,13 @@ export type MensagemPalco =
    * (o data channel do LiveKit é aberto para todos), é a forma do estado: com
    * uma fonte só, não existe "duas versões do palco" para reconciliar.
    */
-  | { t: 'palco'; palco: Palco }
+  | { t: 'palco'; palco: Palco; vista: Vista }
+  /**
+   * Só o enquadramento mudou. Mensagem à parte da de cima porque é a que
+   * viaja durante o arrasto — mandar o palco inteiro a cada quadro seria
+   * repetir a URL do material dezenas de vezes por minuto sem necessidade.
+   */
+  | { t: 'vista'; vista: Vista }
   /** Quem chega depois pergunta; o professor responde. */
   | { t: 'pedir-estado' }
 

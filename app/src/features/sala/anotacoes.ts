@@ -70,7 +70,25 @@ type Comum = {
 }
 
 export type Traco = Comum & { tipo: 'traco'; espessura: number; pontos: Ponto[] }
-export type Texto = Comum & { tipo: 'texto'; tamanho: number; x: number; y: number; texto: string }
+export type Texto = Comum & {
+  tipo: 'texto'
+  tamanho: number
+  x: number
+  y: number
+  texto: string
+  /**
+   * Tamanho da CAIXA, quando a pessoa arrastou o punho para defini-lo.
+   * Milésimos da largura e da altura do palco, como todo o resto daqui.
+   *
+   * Opcionais porque a caixa nasce sem tamanho próprio: ela cresce com o texto
+   * até a borda direita (`larguraMaxima`), que é o comportamento certo para as
+   * anotações curtas que são a maioria. Só quem quer um bloco de texto com
+   * quebra em lugar específico precisa fixar a medida — e aí ela viaja junto,
+   * senão a quebra de linha cairia num ponto no notebook e em outro no celular.
+   */
+  largura?: number
+  altura?: number
+}
 export type Forma = Comum & { tipo: 'forma'; forma: FormaTipo; espessura: number; de: Ponto; ate: Ponto }
 export type Anotacao = Traco | Texto | Forma
 

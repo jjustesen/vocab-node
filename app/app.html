@@ -6,6 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
     <title>Vocab Node</title>
+
+    <!--
+      Chewy — a letra das anotações do palco (features/sala/Lousa.tsx).
+
+      Carregada no shell, e não por `@import` no CSS: `@import` só dispara
+      depois de o bundle de estilo chegar, e a anotação escrita nos primeiros
+      segundos da aula apareceria numa fonte e pularia para outra. Com o
+      `preconnect`, o navegador já abre a conexão com o Google Fonts enquanto
+      lê o resto do HTML.
+
+      `display=swap`: se a fonte demorar, o texto aparece na fallback e troca
+      depois — numa aula ao vivo, texto invisível é pior que texto na fonte
+      errada.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>

@@ -131,8 +131,8 @@ export type AcessoSala = {
 }
 
 /**
- * Como esta aba se identifica para `sala-entrar`. As três portas da função
- * (ver o cabeçalho dela) viram três rotas aqui — e cada uma fala pelo cliente
+ * Como esta aba se identifica para `sala-entrar`. Cada porta da função
+ * (ver o cabeçalho dela) vira uma rota aqui — e cada uma fala pelo cliente
  * certo: o do professor e o do aluno têm sessões separadas no mesmo navegador
  * (`lib/supabase-aluno.ts`), então escolher o cliente errado entraria na sala
  * com a identidade errada.
@@ -141,6 +141,12 @@ export type ModoDeEntrada =
   | { modo: 'professor'; alunoId: string }
   | { modo: 'professor-turma'; turmaId: string }
   | { modo: 'aluno-logado' }
+  /**
+   * O aluno com conta entrando na sala de uma TURMA dele, pelo painel — o
+   * espelho de `professor-turma`. O `turmaId` aqui é endereço, não identidade:
+   * quem diz que ele é aluno daquela turma é o JWT, conferido em `sala-entrar`.
+   */
+  | { modo: 'aluno-logado-turma'; turmaId: string }
   /**
    * `nome`/`email` só existem na sala de TURMA: ali o token é endereço e não
    * identidade, então quem chega precisa dizer quem é. Na sala 1:1 eles vêm
@@ -152,7 +158,7 @@ export function useAcessoSala(entrada: ModoDeEntrada) {
   const chave =
     entrada.modo === 'professor'
       ? entrada.alunoId
-      : entrada.modo === 'professor-turma'
+      : entrada.modo === 'professor-turma' || entrada.modo === 'aluno-logado-turma'
         ? entrada.turmaId
         : entrada.modo === 'convidado'
           ? `${entrada.token}:${entrada.email ?? ''}`
@@ -166,11 +172,18 @@ export function useAcessoSala(entrada: ModoDeEntrada) {
     staleTime: Infinity,
     retry: false,
     queryFn: async (): Promise<AcessoSala | PrecisaIdentificar> => {
-      const cliente = entrada.modo === 'aluno-logado' ? supabaseAluno : supabase
+      // O cliente é a identidade: professor e aluno têm sessões separadas no
+      // mesmo navegador, e `aluno-logado-turma` manda o MESMO corpo que
+      // `professor-turma` — é só o JWT que diz de que lado da sala a pessoa
+      // entra. Falar pelo cliente errado aqui entraria como a pessoa errada.
+      const cliente =
+        entrada.modo === 'aluno-logado' || entrada.modo === 'aluno-logado-turma'
+          ? supabaseAluno
+          : supabase
       const corpo =
         entrada.modo === 'professor'
           ? { alunoId: entrada.alunoId }
-          : entrada.modo === 'professor-turma'
+          : entrada.modo === 'professor-turma' || entrada.modo === 'aluno-logado-turma'
             ? { turmaId: entrada.turmaId }
             : entrada.modo === 'convidado'
               ? { token: entrada.token, nome: entrada.nome, email: entrada.email }

@@ -118,3 +118,35 @@ export async function urlDoMaterialDoAluno(materialId: string): Promise<string> 
   if (error) throw new Error(await extrairMensagemDeErro(error))
   return (data as { url: string }).url
 }
+
+// ---------------------------------------------------------------------------
+// As salas de vídeo deste aluno (0012/0015).
+//
+// Uma LISTA, e não uma sala: com turmas, o mesmo aluno pode ter a sala
+// individual dele e uma sala por turma. Enquanto o painel abria "a" sala
+// direto, quem só estava em turma batia num 404 na aba "Aula ao vivo".
+// ---------------------------------------------------------------------------
+
+export type SalaDoAluno =
+  | { tipo: 'aluno'; nome: string }
+  | { tipo: 'turma'; turmaId: string; nome: string }
+
+export function useSalasDoAluno() {
+  return useQuery({
+    queryKey: ['salas-do-aluno'],
+    // Uma sala pode ser criada pelo professor no minuto anterior à aula — e a
+    // pessoa costuma estar com a aba aberta esperando. Revalidar ao focar é o
+    // que faz o botão aparecer sem ela precisar recarregar a página.
+    refetchOnWindowFocus: true,
+    queryFn: async (): Promise<SalaDoAluno[]> => {
+      const { data, error } = await supabaseAluno.functions.invoke('salas-do-aluno', { body: {} })
+      if (error) {
+        const mensagem = await extrairMensagemDeErro(error)
+        if (statusDoErro(error) === 404) throw new ContaNaoEDeAluno(mensagem)
+        throw new Error(mensagem)
+      }
+      return (data as { salas: SalaDoAluno[] }).salas
+    },
+    retry: (falhas, erro) => !(erro instanceof ContaNaoEDeAluno) && falhas < 3,
+  })
+}

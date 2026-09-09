@@ -33,6 +33,33 @@ function PdfNoPalco({ url, pagina }: { url: string; pagina: number }) {
   const [erro, setErro] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
 
+  /**
+   * A largura em que a página foi rasterizada da última vez.
+   *
+   * Sem isto, ampliar (a lupa do palco, ver `Palco.tsx`) só esticava o bitmap
+   * já desenhado: o texto crescia junto com os artefatos, que é exatamente o
+   * contrário do que a lupa promete. Redesenhar na largura nova devolve texto
+   * nítido em qualquer zoom.
+   *
+   * O degrau de 25% existe para não redesenhar o PDF a cada pixel de um
+   * arrastar de janela — o render de uma página é caro, e a diferença de
+   * nitidez abaixo disso ninguém enxerga.
+   */
+  const [larguraAlvo, setLarguraAlvo] = useState(0)
+  const caixaRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const caixa = caixaRef.current
+    if (!caixa) return
+    const observador = new ResizeObserver(([entrada]) => {
+      const largura = entrada.contentRect.width
+      if (largura < 1) return
+      setLarguraAlvo((atual) => (Math.abs(largura - atual) / (atual || largura) > 0.25 ? largura : atual))
+    })
+    observador.observe(caixa)
+    return () => observador.disconnect()
+  }, [])
+
   useEffect(() => {
     let cancelado = false
     // Uma tarefa de render por vez: trocar de página rápido deixaria dois
@@ -59,6 +86,7 @@ function PdfNoPalco({ url, pagina }: { url: string; pagina: number }) {
         // sem mandar imagem grande pela rede — cada lado rasteriza o seu.
         const { width } = canvas.getBoundingClientRect()
         const dpr = window.devicePixelRatio || 1
+        void larguraAlvo // a mudança de largura é o que redispara este efeito
         const original = paginaPdf.getViewport({ scale: 1 })
         const escala = ((width || 900) * dpr) / original.width
         const viewport = paginaPdf.getViewport({ scale: escala })
@@ -94,10 +122,10 @@ function PdfNoPalco({ url, pagina }: { url: string; pagina: number }) {
       cancelado = true
       renderizando?.cancel()
     }
-  }, [url, pagina])
+  }, [url, pagina, larguraAlvo])
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl bg-white">
+    <div ref={caixaRef} className="relative h-full w-full overflow-hidden rounded-2xl bg-white">
       <canvas ref={canvasRef} className="h-full w-full object-contain" />
 
       {carregando && !erro && (

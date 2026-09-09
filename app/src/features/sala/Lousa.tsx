@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ArrowUpRight, ChevronDown, Circle, Eraser, Pen, Square, Trash2, Type, Undo2 } from 'lucide-react'
 import { useCanal, useSalaConectada } from './canal'
 import {
@@ -63,6 +64,7 @@ export function Lousa({
   superficie,
   eu,
   podeAnotar,
+  controles,
 }: {
   /** Em qual conteúdo do palco esta anotação nasce. Ver `superficieDo`. */
   superficie: string
@@ -77,6 +79,17 @@ export function Lousa({
    * pode anotar continua VENDO tudo, ao vivo — o que muda é quem escreve.
    */
   podeAnotar: boolean
+  /**
+   * Onde os CONTROLES da lousa são desenhados — a camada fixa da área do
+   * palco, que não rola (ver `Palco.tsx`).
+   *
+   * A camada de anotação tem que ficar dentro da caixa do conteúdo: ela é
+   * colada no exercício, e sair de lá quebraria o alinhamento do traço. Os
+   * botões são o oposto: são ferramenta de quem olha, e ir embora com o
+   * scroll quando a página está ampliada deixa a pessoa sem como parar de
+   * anotar. Por isso a camada fica e os controles saem, por portal.
+   */
+  controles?: HTMLElement | null
 }) {
   /**
    * A barra mora DENTRO do quadro e começa recolhida, como um botão pequeno no
@@ -646,48 +659,8 @@ export function Lousa({
   const grossuraAtual = escrevendo ? tamanho : espessura
   const trocarGrossura = escrevendo ? setTamanho : setEspessura
 
-  return (
-    // `containerType: size` é o que dá as unidades `cqw`/`cqh` usadas para
-    // posicionar e dimensionar os textos: assim eles acompanham a caixa do
-    // conteúdo sem nenhuma conta em JavaScript, e chegam do mesmo tamanho
-    // relativo nos dois lados.
-    <div
-      ref={camadaRef}
-      onPointerDown={aoPressionarCamada}
-      className={`absolute inset-0 ${
-        aberta && ferramenta === 'texto' ? 'pointer-events-auto' : 'pointer-events-none'
-      }`}
-      style={{ containerType: 'size' }}
-    >
-      <canvas
-        ref={canvasRef}
-        onPointerDown={aoPressionarCanvas}
-        onPointerMove={aoMoverCanvas}
-        onPointerUp={aoSoltarCanvas}
-        onPointerCancel={aoSoltarCanvas}
-        // `touch-none`: sem isso, arrastar o dedo rola a página em vez de desenhar.
-        // `pointer-events` é HERDADO: sem `auto` explícito, o canvas herdaria
-        // o `none` da camada e a caneta não receberia clique nenhum.
-        className={`absolute inset-0 h-full w-full touch-none ${
-          aberta && ferramenta !== 'texto' ? 'pointer-events-auto' : 'pointer-events-none'
-        }`}
-      />
-
-      {daPagina.map((texto) => (
-        <CaixaDeTexto
-          key={texto.id}
-          texto={texto}
-          editavel={aberta && ferramenta === 'texto'}
-          editando={editando === texto.id}
-          aoPressionar={(e) => aoPressionarTexto(e, texto)}
-          aoMover={aoMoverTexto}
-          aoSoltar={aoSoltarTexto}
-          aoEscrever={(valor) => guardarTexto({ ...texto, texto: valor })}
-          aoEncerrar={encerrarEdicao}
-          aoApagar={() => removerAnotacao(texto.id)}
-        />
-      ))}
-
+  const barraDeFerramentas = (
+    <>
       {!aberta && podeAnotar && (
         // Recolhida: um botão só, no canto, sem tapar o conteúdo nem os
         // controles de página. Clicar aqui é o gesto de "quero escrever".
@@ -815,6 +788,61 @@ export function Lousa({
           </button>
         </div>
       )}
+    </>
+  )
+
+  return (
+    // `containerType: size` é o que dá as unidades `cqw`/`cqh` usadas para
+    // posicionar e dimensionar os textos: assim eles acompanham a caixa do
+    // conteúdo sem nenhuma conta em JavaScript, e chegam do mesmo tamanho
+    // relativo nos dois lados.
+    <div
+      ref={camadaRef}
+      onPointerDown={aoPressionarCamada}
+      className={`absolute inset-0 ${
+        aberta && ferramenta === 'texto' ? 'pointer-events-auto' : 'pointer-events-none'
+      }`}
+      style={{ containerType: 'size' }}
+    >
+      <canvas
+        ref={canvasRef}
+        onPointerDown={aoPressionarCanvas}
+        onPointerMove={aoMoverCanvas}
+        onPointerUp={aoSoltarCanvas}
+        onPointerCancel={aoSoltarCanvas}
+        // `touch-none`: sem isso, arrastar o dedo rola a página em vez de desenhar.
+        // `pointer-events` é HERDADO: sem `auto` explícito, o canvas herdaria
+        // o `none` da camada e a caneta não receberia clique nenhum.
+        className={`absolute inset-0 h-full w-full touch-none ${
+          aberta && ferramenta !== 'texto' ? 'pointer-events-auto' : 'pointer-events-none'
+        }`}
+      />
+
+      {daPagina.map((texto) => (
+        <CaixaDeTexto
+          key={texto.id}
+          texto={texto}
+          editavel={aberta && ferramenta === 'texto'}
+          editando={editando === texto.id}
+          aoPressionar={(e) => aoPressionarTexto(e, texto)}
+          aoMover={aoMoverTexto}
+          aoSoltar={aoSoltarTexto}
+          aoEscrever={(valor) => guardarTexto({ ...texto, texto: valor })}
+          aoEncerrar={encerrarEdicao}
+          aoApagar={() => removerAnotacao(texto.id)}
+          aoRedimensionar={(largura, altura) => guardarTexto({ ...texto, largura, altura })}
+          paraLogico={paraLogico}
+        />
+      ))}
+
+      {/*
+        Os controles saem da caixa que rola e vão para a camada fixa da área
+        (`controles`), quando ela existe. Com o palco ampliado, `absolute
+        bottom-3` dentro da caixa quer dizer "no rodapé da PÁGINA" — e o
+        rodapé de uma A4 esticada está três telas abaixo. O botão de anotar
+        sumia junto com o conteúdo, exatamente quando mais se precisa dele.
+      */}
+      {controles ? createPortal(barraDeFerramentas, controles) : barraDeFerramentas}
     </div>
   )
 }
@@ -837,6 +865,8 @@ function CaixaDeTexto({
   aoEscrever,
   aoEncerrar,
   aoApagar,
+  aoRedimensionar,
+  paraLogico,
 }: {
   texto: Texto
   editavel: boolean
@@ -847,8 +877,11 @@ function CaixaDeTexto({
   aoEscrever: (valor: string) => void
   aoEncerrar: () => void
   aoApagar: () => void
+  aoRedimensionar: (largura: number, altura: number) => void
+  paraLogico: (clientX: number, clientY: number) => Ponto
 }) {
   const campoRef = useRef<HTMLTextAreaElement>(null)
+  const redimensionando = useRef(false)
 
   useEffect(() => {
     if (!editando) return
@@ -859,46 +892,111 @@ function CaixaDeTexto({
   }, [editando])
 
   // Textarea não cresce sozinho: sem isto, um texto de duas linhas viraria uma
-  // caixinha com barra de rolagem em cima do exercício.
+  // caixinha com barra de rolagem em cima do exercício. Some quando a pessoa
+  // fixou a altura no punho — ali quem manda é ela, não o conteúdo.
   useEffect(() => {
     const campo = campoRef.current
-    if (!campo) return
+    if (!campo || texto.altura !== undefined) return
     campo.style.height = 'auto'
     campo.style.height = `${campo.scrollHeight}px`
-  }, [texto.texto, editando])
+  }, [texto.texto, texto.altura, editando])
 
-  const estilo: React.CSSProperties = {
+  /** Onde a caixa está e que forma ela tem — as duas pontas leem o mesmo. */
+  const caixa: React.CSSProperties = {
     left: `${texto.x / 10}cqw`,
     top: `${texto.y / 10}cqh`,
-    maxWidth: `${larguraMaxima(texto.x) / 10}cqw`,
+    ...(texto.largura === undefined
+      ? { maxWidth: `${larguraMaxima(texto.x) / 10}cqw` }
+      : { width: `${texto.largura / 10}cqw` }),
+  }
+
+  /**
+   * Como o texto se desenha dentro dela — e é O MESMO objeto nos dois estados,
+   * edição e leitura. Qualquer diferença aqui faria a anotação pular de lugar
+   * no instante em que a pessoa clica para corrigir uma letra.
+   */
+  const letra: React.CSSProperties = {
+    fontFamily: 'var(--font-anotacao)',
     fontSize: `${texto.tamanho / 10}cqh`,
     color: texto.cor,
     lineHeight: 1.25,
   }
 
+  /**
+   * O punho de tamanho, no canto de baixo à direita.
+   *
+   * Arrastar define o CANTO da caixa, não um delta: o ponto sob o dedo é o
+   * canto, e a largura sai da diferença até a âncora. Bate com o que a mão
+   * espera e não acumula erro em arrasto longo.
+   */
+  function aoPegarPunho(evento: React.PointerEvent<HTMLSpanElement>) {
+    // Sem `preventDefault`, pegar o punho tira o foco do campo, o `onBlur`
+    // roda e a edição fecha no meio do arrasto — o mesmo problema de
+    // `aoPressionarCamada`, e a mesma cura.
+    evento.preventDefault()
+    evento.stopPropagation()
+    evento.currentTarget.setPointerCapture(evento.pointerId)
+    redimensionando.current = true
+  }
+
+  function aoMoverPunho(evento: React.PointerEvent<HTMLSpanElement>) {
+    if (!redimensionando.current) return
+    const [x, y] = paraLogico(evento.clientX, evento.clientY)
+    aoRedimensionar(
+      // Nem menor que um pedaço utilizável, nem passando da borda direita:
+      // uma caixa de dois caracteres de largura não dá para acertar de volta.
+      Math.max(NORMA * 0.05, Math.min(larguraMaxima(texto.x), x - texto.x)),
+      Math.max(NORMA * 0.03, y - texto.y),
+    )
+  }
+
+  function aoSoltarPunho() {
+    redimensionando.current = false
+  }
+
   if (editando) {
     return (
-      <textarea
-        ref={campoRef}
-        rows={1}
-        value={texto.texto}
-        onChange={(e) => aoEscrever(e.target.value)}
-        onBlur={aoEncerrar}
-        onKeyDown={(e) => {
-          // Escape fecha; Enter quebra linha — isto é anotação, não formulário.
-          if (e.key === 'Escape') {
-            e.preventDefault()
-            campoRef.current?.blur()
-          }
-          if (e.key === 'Backspace' && texto.texto === '') {
-            e.preventDefault()
-            aoApagar()
-          }
-        }}
-        placeholder="escreva…"
-        style={{ ...estilo, minWidth: '12cqw' }}
-        className="pointer-events-auto absolute resize-none overflow-hidden rounded bg-white/85 px-1 font-bold shadow-sm outline-2 outline-violet-400 placeholder:font-normal placeholder:text-neutral-400"
-      />
+      // Sem fundo e sem placeholder: a caixa fica POR CIMA do exercício, e
+      // qualquer véu branco — mesmo a 15% — apaga justamente a linha que a
+      // anotação está comentando. O que marca o campo é a borda fina; o cursor
+      // piscando já diz que dá para escrever, então o "escreva…" só cobria
+      // conteúdo enquanto a pessoa procurava por onde começar.
+      <div className="pointer-events-auto absolute" style={{ ...caixa, minWidth: '12cqw' }}>
+        <textarea
+          ref={campoRef}
+          rows={1}
+          value={texto.texto}
+          onChange={(e) => aoEscrever(e.target.value)}
+          onBlur={aoEncerrar}
+          onKeyDown={(e) => {
+            // Escape fecha; Enter quebra linha — isto é anotação, não formulário.
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              campoRef.current?.blur()
+            }
+            if (e.key === 'Backspace' && texto.texto === '') {
+              e.preventDefault()
+              aoApagar()
+            }
+          }}
+          style={{
+            ...letra,
+            ...(texto.altura === undefined ? {} : { height: `${texto.altura / 10}cqh` }),
+          }}
+          className={`block w-full resize-none rounded border border-black/25 bg-transparent px-1 outline-none ${
+            texto.altura === undefined ? 'overflow-hidden' : 'overflow-auto'
+          }`}
+        />
+
+        <span
+          onPointerDown={aoPegarPunho}
+          onPointerMove={aoMoverPunho}
+          onPointerUp={aoSoltarPunho}
+          onPointerCancel={aoSoltarPunho}
+          title="Arraste para mudar o tamanho da caixa"
+          className="absolute -right-1 -bottom-1 h-3 w-3 cursor-nwse-resize touch-none rounded-sm border border-black/40 bg-white/80"
+        />
+      </div>
     )
   }
 
@@ -909,8 +1007,16 @@ function CaixaDeTexto({
       onPointerMove={aoMover}
       onPointerUp={aoSoltar}
       onPointerCancel={aoSoltar}
-      style={estilo}
-      className={`absolute touch-none rounded px-1 font-bold whitespace-pre-wrap ${
+      style={{
+        ...caixa,
+        ...letra,
+        // `minHeight`, e não `height`: a altura escolhida é o tamanho da
+        // moldura, mas texto que passe dela tem que continuar legível — cortar
+        // a anotação do professor no celular do aluno seria pior que a caixa
+        // crescer um pouco além do que ele desenhou.
+        ...(texto.altura === undefined ? {} : { minHeight: `${texto.altura / 10}cqh` }),
+      }}
+      className={`absolute touch-none rounded px-1 whitespace-pre-wrap ${
         editavel ? 'pointer-events-auto cursor-move hover:bg-white/40' : 'pointer-events-none'
       }`}
     >
