@@ -8,7 +8,6 @@ import {
   encostou,
   ESPESSURAS,
   formaNova,
-  larguraMaxima,
   NORMA,
   TAMANHOS,
   textoNovo,
@@ -830,7 +829,7 @@ export function Lousa({
           aoEscrever={(valor) => guardarTexto({ ...texto, texto: valor })}
           aoEncerrar={encerrarEdicao}
           aoApagar={() => removerAnotacao(texto.id)}
-          aoRedimensionar={(largura, altura) => guardarTexto({ ...texto, largura, altura })}
+          aoEscalar={(tamanho) => guardarTexto({ ...texto, tamanho })}
           paraLogico={paraLogico}
         />
       ))}
@@ -865,7 +864,7 @@ function CaixaDeTexto({
   aoEscrever,
   aoEncerrar,
   aoApagar,
-  aoRedimensionar,
+  aoEscalar,
   paraLogico,
 }: {
   texto: Texto
@@ -877,11 +876,14 @@ function CaixaDeTexto({
   aoEscrever: (valor: string) => void
   aoEncerrar: () => void
   aoApagar: () => void
-  aoRedimensionar: (largura: number, altura: number) => void
+  /** Novo tamanho da letra, em milésimos da altura (ver `TAMANHOS`). */
+  aoEscalar: (tamanho: number) => void
   paraLogico: (clientX: number, clientY: number) => Ponto
 }) {
   const campoRef = useRef<HTMLTextAreaElement>(null)
-  const redimensionando = useRef(false)
+  /** O arrasto da moldura: de onde partiu e que tamanho a letra tinha. */
+  const escalando = useRef<{ distancia: number; tamanho: number } | null>(null)
+  const [arrastandoMoldura, setArrastandoMoldura] = useState(false)
 
   useEffect(() => {
     if (!editando) return
@@ -891,77 +893,143 @@ function CaixaDeTexto({
     campo.setSelectionRange(campo.value.length, campo.value.length)
   }, [editando])
 
-  // Textarea não cresce sozinho: sem isto, um texto de duas linhas viraria uma
-  // caixinha com barra de rolagem em cima do exercício. Some quando a pessoa
-  // fixou a altura no punho — ali quem manda é ela, não o conteúdo.
+  /**
+   * O textarea acompanha o texto nos DOIS eixos.
+   *
+   * Altura: sem isto, duas linhas viravam uma caixinha com barra de rolagem
+   * em cima do exercício. Largura: o texto não quebra mais sozinho (ver
+   * `whiteSpace: 'pre'` abaixo), então a caixa tem que crescer para a direita
+   * conforme se digita — e encolher ao apagar. O truque é o mesmo nos dois:
+   * zera a medida, lê o `scroll*`, aplica.
+   */
   useEffect(() => {
     const campo = campoRef.current
-    if (!campo || texto.altura !== undefined) return
+    if (!campo) return
+    campo.style.width = '0'
+    campo.style.width = `${campo.scrollWidth}px`
     campo.style.height = 'auto'
     campo.style.height = `${campo.scrollHeight}px`
-  }, [texto.texto, texto.altura, editando])
+  }, [texto.texto, texto.tamanho, editando])
 
-  /** Onde a caixa está e que forma ela tem — as duas pontas leem o mesmo. */
+  /** Onde a caixa está — as duas pontas leem o mesmo. */
   const caixa: React.CSSProperties = {
     left: `${texto.x / 10}cqw`,
     top: `${texto.y / 10}cqh`,
-    ...(texto.largura === undefined
-      ? { maxWidth: `${larguraMaxima(texto.x) / 10}cqw` }
-      : { width: `${texto.largura / 10}cqw` }),
   }
 
   /**
-   * Como o texto se desenha dentro dela — e é O MESMO objeto nos dois estados,
-   * edição e leitura. Qualquer diferença aqui faria a anotação pular de lugar
-   * no instante em que a pessoa clica para corrigir uma letra.
+   * Como o texto se desenha — e é O MESMO objeto nos dois estados, edição e
+   * leitura. Qualquer diferença aqui faria a anotação pular de lugar no
+   * instante em que a pessoa clica para corrigir uma letra.
+   *
+   * ── Sem quebra automática ───────────────────────────────────────────────
+   *
+   * `whiteSpace: 'pre'`: a linha só quebra onde a pessoa deu Enter. A versão
+   * anterior limitava a largura até a borda direita e deixava o navegador
+   * quebrar, e isso é o que fazia a anotação "não caber": texto que a pessoa
+   * queria numa linha só virava duas, e as duas quebravam em pontos
+   * diferentes conforme a fonte de cada navegador. Sem quebra, o que o
+   * professor digitou é exatamente o que o aluno vê, e se passar da borda a
+   * culpa é visível — ele mesmo encurta ou dá Enter.
+   *
+   * ── O contorno branco ───────────────────────────────────────────────────
+   *
+   * A anotação fica por cima de conteúdo de qualquer cor. Cor escura some no
+   * escuro, clara some no claro; o contorno branco fino é o que garante que
+   * a letra se destaque do que está embaixo sem precisar de fundo.
+   * `paintOrder: 'stroke fill'` pinta o traço POR TRÁS do preenchimento — sem
+   * isso, o traço centrado na borda da letra comeria metade dela para dentro
+   * e a deixaria magra. Em `em`, para escalar junto com o tamanho.
    */
   const letra: React.CSSProperties = {
     fontFamily: 'var(--font-anotacao)',
     fontSize: `${texto.tamanho / 10}cqh`,
     color: texto.cor,
     lineHeight: 1.25,
+    whiteSpace: 'pre',
+    WebkitTextStroke: '0.09em #ffffff',
+    paintOrder: 'stroke fill',
   }
 
   /**
-   * O punho de tamanho, no canto de baixo à direita.
+   * A moldura é o controle de ESCALA.
    *
-   * Arrastar define o CANTO da caixa, não um delta: o ponto sob o dedo é o
-   * canto, e a largura sai da diferença até a âncora. Bate com o que a mão
-   * espera e não acumula erro em arrasto longo.
+   * Arrastar a borda para longe da âncora (o canto de cima à esquerda, onde o
+   * texto está preso) aumenta a letra; para perto, diminui. A conta é a
+   * razão entre as distâncias, e não um delta em pixels: assim um arrasto
+   * curto perto da âncora e um arrasto longo lá longe mudam a escala na mesma
+   * proporção que mudam a distância — é o gesto de "esticar" que a mão espera.
+   *
+   * Os limites: abaixo de 12 milésimos (1,2% da altura) a letra some no
+   * celular; acima de 250 uma palavra cobre a página inteira.
    */
-  function aoPegarPunho(evento: React.PointerEvent<HTMLSpanElement>) {
-    // Sem `preventDefault`, pegar o punho tira o foco do campo, o `onBlur`
+  function distanciaDaAncora(clientX: number, clientY: number): number {
+    const [x, y] = paraLogico(clientX, clientY)
+    return Math.max(1, Math.hypot(x - texto.x, y - texto.y))
+  }
+
+  function aoPegarMoldura(evento: React.PointerEvent<HTMLDivElement>) {
+    // Sem `preventDefault`, pegar a moldura tira o foco do campo, o `onBlur`
     // roda e a edição fecha no meio do arrasto — o mesmo problema de
     // `aoPressionarCamada`, e a mesma cura.
     evento.preventDefault()
     evento.stopPropagation()
     evento.currentTarget.setPointerCapture(evento.pointerId)
-    redimensionando.current = true
+    escalando.current = {
+      distancia: distanciaDaAncora(evento.clientX, evento.clientY),
+      tamanho: texto.tamanho,
+    }
+    setArrastandoMoldura(true)
   }
 
-  function aoMoverPunho(evento: React.PointerEvent<HTMLSpanElement>) {
-    if (!redimensionando.current) return
-    const [x, y] = paraLogico(evento.clientX, evento.clientY)
-    aoRedimensionar(
-      // Nem menor que um pedaço utilizável, nem passando da borda direita:
-      // uma caixa de dois caracteres de largura não dá para acertar de volta.
-      Math.max(NORMA * 0.05, Math.min(larguraMaxima(texto.x), x - texto.x)),
-      Math.max(NORMA * 0.03, y - texto.y),
-    )
+  function aoMoverMoldura(evento: React.PointerEvent<HTMLDivElement>) {
+    const e = escalando.current
+    if (!e) return
+    const razao = distanciaDaAncora(evento.clientX, evento.clientY) / e.distancia
+    aoEscalar(Math.round(Math.min(250, Math.max(12, e.tamanho * razao))))
   }
 
-  function aoSoltarPunho() {
-    redimensionando.current = false
+  function aoSoltarMoldura() {
+    escalando.current = null
+    setArrastandoMoldura(false)
   }
+
+  /**
+   * A moldura em si: um anel de 8px em volta da caixa, e SÓ o anel.
+   *
+   * O `clip-path` com `evenodd` recorta o miolo — e recorte de `clip-path`
+   * vale para o ponteiro também. É o que faz o mouse "passar por cima do
+   * limite": o centro continua sendo o campo (para escrever) ou o texto (para
+   * arrastar), e só a borda responde ao hover e ao arrasto de escala. Sem o
+   * recorte, um div em volta engoliria todos os cliques da caixa.
+   *
+   * Invisível até o hover, e visível durante o arrasto (senão sumiria justo
+   * enquanto está sendo usada).
+   */
+  const ANEL = '8px'
+  const moldura = (
+    <div
+      onPointerDown={aoPegarMoldura}
+      onPointerMove={aoMoverMoldura}
+      onPointerUp={aoSoltarMoldura}
+      onPointerCancel={aoSoltarMoldura}
+      title="Arraste a borda para mudar o tamanho da letra"
+      style={{
+        clipPath: `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${ANEL} ${ANEL}, calc(100% - ${ANEL}) ${ANEL}, calc(100% - ${ANEL}) calc(100% - ${ANEL}), ${ANEL} calc(100% - ${ANEL}), ${ANEL} ${ANEL})`,
+      }}
+      className={`pointer-events-auto absolute -inset-2 cursor-nwse-resize touch-none rounded-md border-2 transition-colors ${
+        arrastandoMoldura ? 'border-violet-400' : 'border-transparent hover:border-black/30'
+      }`}
+    />
+  )
 
   if (editando) {
     return (
       // Sem fundo e sem placeholder: a caixa fica POR CIMA do exercício, e
       // qualquer véu branco — mesmo a 15% — apaga justamente a linha que a
-      // anotação está comentando. O que marca o campo é a borda fina; o cursor
-      // piscando já diz que dá para escrever, então o "escreva…" só cobria
-      // conteúdo enquanto a pessoa procurava por onde começar.
-      <div className="pointer-events-auto absolute" style={{ ...caixa, minWidth: '12cqw' }}>
+      // anotação está comentando. O cursor piscando já diz que dá para
+      // escrever, e a moldura só aparece quando a mão vai atrás dela.
+      <div className="pointer-events-auto absolute" style={caixa}>
         <textarea
           ref={campoRef}
           rows={1}
@@ -979,48 +1047,33 @@ function CaixaDeTexto({
               aoApagar()
             }
           }}
-          style={{
-            ...letra,
-            ...(texto.altura === undefined ? {} : { height: `${texto.altura / 10}cqh` }),
-          }}
-          className={`block w-full resize-none rounded border border-black/25 bg-transparent px-1 outline-none ${
-            texto.altura === undefined ? 'overflow-hidden' : 'overflow-auto'
-          }`}
+          style={{ ...letra, minWidth: '1.5em' }}
+          className="block resize-none overflow-hidden rounded bg-transparent px-1 outline-none"
         />
-
-        <span
-          onPointerDown={aoPegarPunho}
-          onPointerMove={aoMoverPunho}
-          onPointerUp={aoSoltarPunho}
-          onPointerCancel={aoSoltarPunho}
-          title="Arraste para mudar o tamanho da caixa"
-          className="absolute -right-1 -bottom-1 h-3 w-3 cursor-nwse-resize touch-none rounded-sm border border-black/40 bg-white/80"
-        />
+        {moldura}
       </div>
     )
   }
 
   return (
-    <div
-      data-anotacao={texto.id}
-      onPointerDown={aoPressionar}
-      onPointerMove={aoMover}
-      onPointerUp={aoSoltar}
-      onPointerCancel={aoSoltar}
-      style={{
-        ...caixa,
-        ...letra,
-        // `minHeight`, e não `height`: a altura escolhida é o tamanho da
-        // moldura, mas texto que passe dela tem que continuar legível — cortar
-        // a anotação do professor no celular do aluno seria pior que a caixa
-        // crescer um pouco além do que ele desenhou.
-        ...(texto.altura === undefined ? {} : { minHeight: `${texto.altura / 10}cqh` }),
-      }}
-      className={`absolute touch-none rounded px-1 whitespace-pre-wrap ${
-        editavel ? 'pointer-events-auto cursor-move hover:bg-white/40' : 'pointer-events-none'
-      }`}
-    >
-      {texto.texto}
+    <div className="absolute" style={caixa}>
+      <div
+        data-anotacao={texto.id}
+        onPointerDown={aoPressionar}
+        onPointerMove={aoMover}
+        onPointerUp={aoSoltar}
+        onPointerCancel={aoSoltar}
+        style={letra}
+        className={`touch-none rounded px-1 ${
+          editavel ? 'pointer-events-auto cursor-move' : 'pointer-events-none'
+        }`}
+      >
+        {texto.texto}
+      </div>
+      {/* A moldura de escala também fora da edição: o texto que já está na
+          página se ajusta sem precisar entrar nele — só com a ferramenta de
+          texto ativa, que é quando a caixa aceita ser mexida. */}
+      {editavel && moldura}
     </div>
   )
 }

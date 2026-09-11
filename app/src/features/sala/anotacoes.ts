@@ -70,25 +70,14 @@ type Comum = {
 }
 
 export type Traco = Comum & { tipo: 'traco'; espessura: number; pontos: Ponto[] }
-export type Texto = Comum & {
-  tipo: 'texto'
-  tamanho: number
-  x: number
-  y: number
-  texto: string
-  /**
-   * Tamanho da CAIXA, quando a pessoa arrastou o punho para defini-lo.
-   * Milésimos da largura e da altura do palco, como todo o resto daqui.
-   *
-   * Opcionais porque a caixa nasce sem tamanho próprio: ela cresce com o texto
-   * até a borda direita (`larguraMaxima`), que é o comportamento certo para as
-   * anotações curtas que são a maioria. Só quem quer um bloco de texto com
-   * quebra em lugar específico precisa fixar a medida — e aí ela viaja junto,
-   * senão a quebra de linha cairia num ponto no notebook e em outro no celular.
-   */
-  largura?: number
-  altura?: number
-}
+/**
+ * O texto não tem largura: ele só quebra onde a pessoa deu Enter, e o tamanho
+ * é a letra (`tamanho`), não a caixa. Uma versão intermediária guardava
+ * largura e altura de caixa para o navegador quebrar linha dentro dela — e a
+ * quebra caía em pontos diferentes conforme a fonte de cada lado. Sem quebra
+ * automática, o que o professor digitou é exatamente o que o aluno vê.
+ */
+export type Texto = Comum & { tipo: 'texto'; tamanho: number; x: number; y: number; texto: string }
 export type Forma = Comum & { tipo: 'forma'; forma: FormaTipo; espessura: number; de: Ponto; ate: Ponto }
 export type Anotacao = Traco | Texto | Forma
 
@@ -133,16 +122,6 @@ export function textoNovo(
   y: number,
 ): Texto {
   return { tipo: 'texto', id: crypto.randomUUID(), autor, superficie, cor, tamanho, x, y, texto: '' }
-}
-
-/**
- * O texto ancora pelo canto superior esquerdo, então perto da borda direita
- * ele quebraria linha numa coluna de dois caracteres. Limitar a largura ao que
- * sobra até a borda é o que mantém a quebra igual nas duas pontas — largura em
- * `ch` ou `auto` dependeria da fonte de cada navegador.
- */
-export function larguraMaxima(x: number): number {
-  return Math.max(NORMA * 0.15, NORMA - x)
 }
 
 /** Texto sem uma letra sequer não vira anotação — some ao sair da edição. */
