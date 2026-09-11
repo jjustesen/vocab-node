@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ControlBar,
   GridLayout,
   LiveKitRoom,
   ParticipantTile,
@@ -26,6 +25,7 @@ import { pedeIdentificacao, useAcessoSala, type AcessoSala, type ModoDeEntrada }
 import { useAlunosDaTurma } from '@/features/turmas/api'
 import { aulaDeAgora } from './aula-de-agora'
 import { useCanal, useSalaConectada } from './canal'
+import { BarraDeMidia } from './BarraDeMidia'
 import { useLayoutDaSala, type PosicaoDaCamera } from './layout-da-sala'
 import { Palco } from './Palco'
 import { PainelDaAula } from './PainelDaAula'
@@ -433,7 +433,7 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <ControlBar variation="minimal" controls={{ chat: false, leave: true }} />
+        <BarraDeMidia />
 
         {ehProfessor ? (
           <button
