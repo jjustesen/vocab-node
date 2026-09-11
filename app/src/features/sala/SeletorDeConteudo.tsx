@@ -5,7 +5,6 @@ import {
   Library,
   Loader2,
   Monitor,
-  NotebookPen,
   Presentation,
   Square,
   X,
@@ -29,7 +28,7 @@ import type { Palco } from './estado-palco'
  *
  * Só ele abre esta tela, e a lista de materiais vem por RLS com o cliente
  * dele. `alunoId` pode ser null numa turma sem ninguém selecionado no painel —
- * aí sobram lousa, documento e vídeo, que não dependem de acervo.
+ * aí sobram lousa e vídeo, que não dependem de acervo.
  */
 export function SeletorDeConteudo({
   alunos,
@@ -90,14 +89,17 @@ export function SeletorDeConteudo({
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        {/*
+          Sem "Documento" desde que a lousa e o material cobrem a aula: o
+          documento compartilhado era o único conteúdo do palco em que NÃO se
+          anotava por cima (ver `Palco.tsx`), e virou a opção que a pessoa
+          abria por engano procurando o PDF. O tipo continua no protocolo
+          (`estado-palco.ts`) para não quebrar uma sala aberta durante o
+          deploy; só a porta de entrada saiu.
+        */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
           <Opcao Icone={Monitor} rotulo="Só vídeo" aoClicar={() => { aoEscolher({ tipo: 'nenhum' }); aoFechar() }} />
           <Opcao Icone={Square} rotulo="Lousa" aoClicar={() => { aoEscolher({ tipo: 'branco' }); aoFechar() }} />
-          <Opcao
-            Icone={NotebookPen}
-            rotulo="Documento"
-            aoClicar={() => { aoEscolher({ tipo: 'documento' }); aoFechar() }}
-          />
         </div>
 
         {alunos.length > 0 && (

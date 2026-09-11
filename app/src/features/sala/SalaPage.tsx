@@ -8,7 +8,7 @@ import {
   useTracks,
 } from '@livekit/components-react'
 import { Track } from 'livekit-client'
-import type { TrackReferenceOrPlaceholder } from '@livekit/components-react'
+import { isTrackReference, type TrackReferenceOrPlaceholder } from '@livekit/components-react'
 import {
   GraduationCap,
   Loader2,
@@ -343,6 +343,29 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
   const noPalco = palco.tipo !== 'nenhum'
 
   /**
+   * A tela compartilhada é SEMPRE o destaque.
+   *
+   * `useTracks` devolve câmeras e telas na mesma lista, e a primeira versão
+   * jogava tudo na tira quando havia palco: a tela que alguém acabou de
+   * compartilhar aparecia num ladrilho de 120px ao lado do rosto dele, e o
+   * palco continuava ocupando o centro com o PDF de antes. Ninguém compartilha
+   * a tela para ela ficar pequena — se há uma, ela é o centro, o palco espera
+   * e as câmeras vão para a tira.
+   *
+   * `isTrackReference` porque `useTracks` também devolve MARCADORES (a câmera
+   * de quem está sem câmera). Tela compartilhada só existe quando publicada,
+   * então um marcador dela nunca chega aqui — mas o filtro deixa isso
+   * explícito em vez de depender de um detalhe do pacote.
+   */
+  const telaCompartilhada = tracks.find(
+    (t) => t.source === Track.Source.ScreenShare && isTrackReference(t),
+  )
+  const cameras = useMemo(() => tracks.filter((t) => t.source === Track.Source.Camera), [tracks])
+
+  /** Há algo no centro — palco OU tela — e as câmeras vão para a tira. */
+  const temDestaque = noPalco || Boolean(telaCompartilhada)
+
+  /**
    * O divisor não move nada de tamanho fixo: ele só decide quanto do eixo cabe
    * a cada um. Tira e palco continuam desenhando o que já desenhavam —
    * ladrilhos 16:9 e a caixa na proporção do material — então nenhum dos dois
@@ -379,16 +402,16 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
         <div
           ref={areaRef}
           className={`flex min-w-0 flex-1 ${
-            noPalco && posicao === 'lateral' ? 'flex-row' : 'flex-col'
-          } ${noPalco ? '' : 'gap-2'}`}
+            temDestaque && posicao === 'lateral' ? 'flex-row' : 'flex-col'
+          } ${temDestaque ? '' : 'gap-2'}`}
         >
           {/*
-            O vídeo nunca sai da tela; só encolhe quando há palco — e ao
+            O vídeo nunca sai da tela; só encolhe quando há destaque — e ao
             encolher vira TIRA, não uma faixa esticada. Ver `TiraDeVideo`.
           */}
-          {noPalco ? (
+          {temDestaque ? (
             <>
-              <TiraDeVideo tracks={tracks} posicao={posicao} fracao={fracao} />
+              <TiraDeVideo tracks={cameras} posicao={posicao} fracao={fracao} />
               <Divisor
                 posicao={posicao}
                 arrastando={arrastandoDivisor}
@@ -405,19 +428,29 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
             </div>
           )}
 
-          <Palco
-            palco={palco}
-            vista={vista}
-            aoMudarVista={definirVista}
-            eu={eu}
-            podeAnotar={ehProfessor}
-            ehProfessor={ehProfessor}
-            contextoDoDocumento={contextoDoDocumento}
-            aoVirarPagina={(pagina) => {
-              if (palco.tipo !== 'material') return
-              definirPalco({ ...palco, pagina })
-            }}
-          />
+          {telaCompartilhada ? (
+            // A tela no lugar do palco, inteira e sem cortar: `contain` vem do
+            // próprio pacote para `screen_share` — é o único tipo de vídeo em
+            // que ele não usa `cover`, porque cortar a borda de uma tela é
+            // cortar conteúdo.
+            <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-2xl bg-black">
+              <ParticipantTile trackRef={telaCompartilhada} className="h-full w-full" />
+            </div>
+          ) : (
+            <Palco
+              palco={palco}
+              vista={vista}
+              aoMudarVista={definirVista}
+              eu={eu}
+              podeAnotar={ehProfessor}
+              ehProfessor={ehProfessor}
+              contextoDoDocumento={contextoDoDocumento}
+              aoVirarPagina={(pagina) => {
+                if (palco.tipo !== 'material') return
+                definirPalco({ ...palco, pagina })
+              }}
+            />
+          )}
         </div>
 
         {podeVerPainel && painelAberto && alunoSelecionado && (
@@ -456,7 +489,7 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
           tudo, e o botão não teria efeito nenhum — controle morto confunde
           mais do que ajuda.
         */}
-        {ehProfessor && noPalco && (
+        {ehProfessor && temDestaque && (
           <button
             onClick={alternarPosicao}
             title={posicao === 'topo' ? 'Mover as câmeras para a lateral' : 'Mover as câmeras para o topo'}

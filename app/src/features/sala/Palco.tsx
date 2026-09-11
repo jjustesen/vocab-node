@@ -79,6 +79,14 @@ export function Palco({
 }) {
   const [mao, setMao] = useState(false)
   const { ajuste, zoom } = vista
+  /**
+   * Se a área do palco existe no DOM. É `false` em "só vídeo" — o componente
+   * devolve `null` lá embaixo — e é a dependência que faltava no ouvinte de
+   * rolagem: sem ela o efeito rodava uma vez, na montagem, com `area.current`
+   * ainda nulo (o palco começa vazio), desistia, e nunca mais voltava. O
+   * professor rolava, nada saía pelo canal, e o aluno ficava parado no topo.
+   */
+  const temArea = palco.tipo !== 'nenhum'
 
   /**
    * A camada que NÃO rola, onde moram todos os controles do palco: setas de
@@ -160,7 +168,9 @@ export function Palco({
       el.removeEventListener('scroll', aoRolar)
       clearTimeout(atrasado)
     }
-  }, [ehProfessor])
+    // `temArea` reata o ouvinte quando o palco sai de "só vídeo" — é quando a
+    // `area` passa a existir. Ver o comentário na declaração dela.
+  }, [ehProfessor, temArea])
 
   /**
    * O aluno acompanha. Roda depois da pintura, quando a caixa já foi
