@@ -1,19 +1,37 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowUpRight, ChevronRight, Circle, Eraser, Pen, Square, Trash2, Type, Undo2 } from 'lucide-react'
+import {
+  ArrowUpRight,
+  ChevronRight,
+  Circle,
+  Eraser,
+  Palette,
+  Pen,
+  Square,
+  Trash2,
+  Type,
+  Undo2,
+} from 'lucide-react'
 import { useCanal, useSalaConectada } from './canal'
 import {
   CORES,
   ehForma,
   encostou,
-  ESPESSURAS,
+  ESPESSURA_MAX,
+  ESPESSURA_MIN,
+  ESPESSURA_PADRAO,
+  FONTE_PADRAO,
+  FONTES,
   formaNova,
   NORMA,
+  ROTULOS_DE_FONTE,
+  ROTULOS_DE_TAMANHO,
   TAMANHOS,
   textoNovo,
   textoVazio,
   type Anotacao,
   type Ferramenta,
+  type FonteId,
   type Forma,
   type MensagemAnotacao,
   type Ponto,
@@ -110,8 +128,17 @@ export function Lousa({
 
   const [ferramenta, setFerramenta] = useState<Ferramenta>('caneta')
   const [cor, setCor] = useState<string>(CORES[0])
-  const [espessura, setEspessura] = useState<number>(ESPESSURAS[0])
-  const [tamanho, setTamanho] = useState<number>(TAMANHOS[0])
+  const [espessura, setEspessura] = useState<number>(ESPESSURA_PADRAO)
+  const [tamanho, setTamanho] = useState<number>(TAMANHOS[1])
+  const [fonte, setFonte] = useState<FonteId>(FONTE_PADRAO)
+  /**
+   * O painel de estilo — cor, espessura, tamanho e fonte — fica atrás de um
+   * botão, e não solto na barra. Solto, com doze cores e quatro fontes, a
+   * barra virava um painel de controle permanente na frente do exercício.
+   * O que se usa a cada traço (a ferramenta) fica à vista; o que se ajusta
+   * de vez em quando fica a um clique.
+   */
+  const [painelDeEstilo, setPainelDeEstilo] = useState(false)
 
   /**
    * Os textos vivem no DOM, então precisam de estado de render — ao contrário
@@ -125,7 +152,12 @@ export function Lousa({
   const apagando = useRef(false)
   const naoEnviados = useRef<Ponto[]>([])
   const ultimoEnvio = useRef(0)
-  const arrasto = useRef<{ id: string; de: Ponto; inicial: Ponto; moveu: boolean } | null>(null)
+  const arrasto = useRef<{
+    id: string
+    de: Ponto
+    inicial: Ponto
+    moveu: boolean
+  } | null>(null)
 
   // A superfície atual numa ref também: o handler do canal é registrado uma
   // vez e precisa saber se a mensagem que chegou é da página que está na tela.
@@ -582,7 +614,7 @@ export function Lousa({
     evento.preventDefault()
     encerrarEdicao()
     const [x, y] = paraLogico(evento.clientX, evento.clientY)
-    const novo = textoNovo(eu, superficie, cor, tamanho, x, y)
+    const novo = textoNovo(eu, superficie, cor, tamanho, fonte, x, y)
     guardarTexto(novo)
     setEditando(novo.id)
   }
@@ -652,11 +684,19 @@ export function Lousa({
   }
 
   const daPagina = textos.filter((t) => t.superficie === superficie)
-  // Espessura vale para a caneta e para as formas; tamanho, só para o texto.
+  // Espessura vale para a caneta e para as formas; tamanho e fonte, só para o texto.
   const escrevendo = ferramenta === 'texto'
-  const grossuras = escrevendo ? TAMANHOS : ESPESSURAS
-  const grossuraAtual = escrevendo ? tamanho : espessura
-  const trocarGrossura = escrevendo ? setTamanho : setEspessura
+  /** A borracha não tem cor nem espessura — o painel não tem o que mostrar. */
+  const temEstilo = ferramenta !== 'borracha'
+
+  const ferramentas = [
+    ['caneta', Pen, 'Desenhar à mão'],
+    ['texto', Type, 'Escrever — clique onde o texto deve começar'],
+    ['retangulo', Square, 'Retângulo — arraste para enquadrar'],
+    ['circulo', Circle, 'Círculo — arraste para circular'],
+    ['seta', ArrowUpRight, 'Seta — arraste do início para a ponta'],
+    ['borracha', Eraser, 'Borracha — passe por cima do que quer apagar'],
+  ] as const
 
   const barraDeFerramentas = (
     <>
@@ -680,16 +720,7 @@ export function Lousa({
         // cima (daí o teto de altura, que a impede de subir até lá). Quando
         // nem assim cabe, rola em vez de vazar para fora do quadro.
         <div className="pointer-events-auto absolute top-1/2 right-3 flex max-h-[calc(100%-7rem)] -translate-y-1/2 flex-col items-center gap-2 overflow-y-auto rounded-3xl bg-neutral-900/90 px-2 py-3 shadow-lg backdrop-blur">
-          {(
-            [
-              ['caneta', Pen, 'Desenhar à mão'],
-              ['texto', Type, 'Escrever — clique onde o texto deve começar'],
-              ['retangulo', Square, 'Retângulo — arraste para enquadrar'],
-              ['circulo', Circle, 'Círculo — arraste para circular'],
-              ['seta', ArrowUpRight, 'Seta — arraste do início para a ponta'],
-              ['borracha', Eraser, 'Borracha — passe por cima do que quer apagar'],
-            ] as const
-          ).map(([chave, Icone, dica]) => (
+          {ferramentas.map(([chave, Icone, dica]) => (
             <button
               key={chave}
               onClick={() => {
@@ -707,57 +738,27 @@ export function Lousa({
             </button>
           ))}
 
-          {/* Cor e espessura não dizem nada sobre a borracha — escondê-las é
-              menos ruído do que deixá-las ali sem efeito. */}
-          {ferramenta !== 'borracha' && <span className="my-1 h-px w-6 bg-neutral-700" />}
+          <span className="my-1 h-px w-6 bg-neutral-700" />
 
-          {ferramenta !== 'borracha' &&
-            CORES.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCor(c)}
-                title="Escolher cor"
-                style={{ backgroundColor: c }}
-                className={`h-7 w-7 rounded-full border-2 transition ${
-                  cor === c ? 'border-white' : 'border-transparent opacity-60'
-                }`}
-              />
-            ))}
-
-          {ferramenta !== 'borracha' && <span className="my-1 h-px w-6 bg-neutral-700" />}
-
-          {/* Os dois botões trocam de significado junto com a ferramenta:
-              fino/grosso na caneta e nas formas, pequeno/grande no texto. */}
-          {ferramenta !== 'borracha' &&
-            grossuras.map((valor, i) => (
-              <button
-                key={valor}
-                onClick={() => trocarGrossura(valor)}
-                title={
-                  escrevendo
-                    ? i === 0
-                      ? 'Letra pequena'
-                      : 'Letra grande'
-                    : i === 0
-                      ? 'Traço fino'
-                      : 'Traço grosso'
-                }
-                className={`grid h-7 w-7 place-items-center rounded-full transition ${
-                  grossuraAtual === valor ? 'bg-neutral-700' : 'hover:bg-neutral-800'
-                }`}
-              >
-                {escrevendo ? (
-                  <span className="font-bold text-white" style={{ fontSize: i === 0 ? 11 : 16 }}>
-                    A
-                  </span>
-                ) : (
-                  <span
-                    className="rounded-full bg-white"
-                    style={{ width: valor + 2, height: valor + 2 }}
-                  />
-                )}
-              </button>
-            ))}
+          {/* A bolinha mostra a cor em uso: o painel pode estar fechado, e a
+              pessoa precisa saber com que cor vai sair o próximo traço. */}
+          <button
+            onClick={() => setPainelDeEstilo((v) => !v)}
+            disabled={!temEstilo}
+            title={temEstilo ? 'Cor, espessura e fonte' : 'A borracha não tem estilo'}
+            aria-expanded={painelDeEstilo && temEstilo}
+            className={`relative grid h-8 w-8 place-items-center rounded-full transition disabled:opacity-30 ${
+              painelDeEstilo && temEstilo
+                ? 'bg-neutral-700 text-white'
+                : 'text-neutral-400 hover:bg-neutral-800'
+            }`}
+          >
+            <Palette className="h-4 w-4" />
+            <span
+              className="absolute right-0.5 bottom-0.5 h-2.5 w-2.5 rounded-full border border-neutral-900"
+              style={{ backgroundColor: cor }}
+            />
+          </button>
 
           <span className="my-1 h-px w-6 bg-neutral-700" />
 
@@ -789,6 +790,20 @@ export function Lousa({
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
+      )}
+
+      {aberta && painelDeEstilo && temEstilo && (
+        <PainelDeEstilo
+          escrevendo={escrevendo}
+          cor={cor}
+          aoEscolherCor={setCor}
+          espessura={espessura}
+          aoMudarEspessura={setEspessura}
+          tamanho={tamanho}
+          aoMudarTamanho={setTamanho}
+          fonte={fonte}
+          aoMudarFonte={setFonte}
+        />
       )}
     </>
   )
@@ -945,7 +960,7 @@ function CaixaDeTexto({
    * e a deixaria magra. Em `em`, para escalar junto com o tamanho.
    */
   const letra: React.CSSProperties = {
-    fontFamily: 'var(--font-anotacao)',
+    fontFamily: `var(--font-anotacao-${texto.fonte ?? FONTE_PADRAO})`,
     fontSize: `${texto.tamanho / 10}cqh`,
     color: texto.cor,
     lineHeight: 1.25,
@@ -998,32 +1013,57 @@ function CaixaDeTexto({
   }
 
   /**
-   * A moldura em si: um anel de 8px em volta da caixa, e SÓ o anel.
+   * A moldura: o retângulo de seleção de editor de vetor — linha azul fina
+   * em volta da caixa e uma alça quadrada em cada canto.
    *
-   * O `clip-path` com `evenodd` recorta o miolo — e recorte de `clip-path`
-   * vale para o ponteiro também. É o que faz o mouse "passar por cima do
-   * limite": o centro continua sendo o campo (para escrever) ou o texto (para
-   * arrastar), e só a borda responde ao hover e ao arrasto de escala. Sem o
-   * recorte, um div em volta engoliria todos os cliques da caixa.
+   * Aparece assim que o ponteiro entra na caixa (`group-hover`), ANTES de
+   * qualquer clique: é o que avisa que aquele texto pode ser mexido, e mostra
+   * de onde puxar para mudar o tamanho. Fica visível durante o arrasto,
+   * senão sumiria justo enquanto está sendo usada.
    *
-   * Invisível até o hover, e visível durante o arrasto (senão sumiria justo
-   * enquanto está sendo usada).
+   * O anel usa `clip-path` com `evenodd` para recortar o miolo — e recorte
+   * de `clip-path` vale para o ponteiro também. O centro continua sendo o
+   * campo (para escrever) ou o texto (para arrastar); só a borda e as alças
+   * respondem ao arrasto de escala. Sem o recorte, um div em volta engoliria
+   * todos os cliques da caixa.
    */
   const ANEL = '8px'
+  const visivel = arrastandoMoldura
+  const escala = {
+    onPointerDown: aoPegarMoldura,
+    onPointerMove: aoMoverMoldura,
+    onPointerUp: aoSoltarMoldura,
+    onPointerCancel: aoSoltarMoldura,
+    title: 'Arraste para mudar o tamanho da letra',
+  }
   const moldura = (
-    <div
-      onPointerDown={aoPegarMoldura}
-      onPointerMove={aoMoverMoldura}
-      onPointerUp={aoSoltarMoldura}
-      onPointerCancel={aoSoltarMoldura}
-      title="Arraste a borda para mudar o tamanho da letra"
-      style={{
-        clipPath: `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${ANEL} ${ANEL}, calc(100% - ${ANEL}) ${ANEL}, calc(100% - ${ANEL}) calc(100% - ${ANEL}), ${ANEL} calc(100% - ${ANEL}), ${ANEL} ${ANEL})`,
-      }}
-      className={`pointer-events-auto absolute -inset-2 cursor-nwse-resize touch-none rounded-md border-2 transition-colors ${
-        arrastandoMoldura ? 'border-violet-400' : 'border-transparent hover:border-black/30'
-      }`}
-    />
+    <>
+      <div
+        {...escala}
+        style={{
+          clipPath: `polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0, ${ANEL} ${ANEL}, calc(100% - ${ANEL}) ${ANEL}, calc(100% - ${ANEL}) calc(100% - ${ANEL}), ${ANEL} calc(100% - ${ANEL}), ${ANEL} ${ANEL})`,
+        }}
+        className={`pointer-events-auto absolute -inset-2 cursor-nwse-resize touch-none border transition-colors group-hover:border-sky-500 ${
+          visivel ? 'border-sky-500' : 'border-transparent'
+        }`}
+      />
+      {(
+        [
+          ['-top-3 -left-3', 'cursor-nwse-resize'],
+          ['-top-3 -right-3', 'cursor-nesw-resize'],
+          ['-bottom-3 -left-3', 'cursor-nesw-resize'],
+          ['-bottom-3 -right-3', 'cursor-nwse-resize'],
+        ] as const
+      ).map(([canto, cursor]) => (
+        <div
+          key={canto}
+          {...escala}
+          className={`pointer-events-auto absolute ${canto} ${cursor} h-2 w-2 touch-none border border-sky-500 bg-white transition-opacity group-hover:opacity-100 ${
+            visivel ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ))}
+    </>
   )
 
   if (editando) {
@@ -1031,8 +1071,8 @@ function CaixaDeTexto({
       // Sem fundo e sem placeholder: a caixa fica POR CIMA do exercício, e
       // qualquer véu branco — mesmo a 15% — apaga justamente a linha que a
       // anotação está comentando. O cursor piscando já diz que dá para
-      // escrever, e a moldura só aparece quando a mão vai atrás dela.
-      <div className="pointer-events-auto absolute" style={caixa}>
+      // escrever, e a moldura aparece quando o ponteiro entra na caixa.
+      <div className="group pointer-events-auto absolute" style={caixa}>
         <textarea
           ref={campoRef}
           rows={1}
@@ -1059,7 +1099,10 @@ function CaixaDeTexto({
   }
 
   return (
-    <div className="absolute" style={caixa}>
+    // `group` só quando editável: fora da ferramenta de texto a caixa não
+    // responde ao ponteiro, e uma moldura que acende sem poder ser mexida
+    // seria promessa falsa.
+    <div className={`absolute ${editavel ? 'group' : ''}`} style={caixa}>
       <div
         data-anotacao={texto.id}
         onPointerDown={aoPressionar}
@@ -1077,6 +1120,115 @@ function CaixaDeTexto({
           página se ajusta sem precisar entrar nele — só com a ferramenta de
           texto ativa, que é quando a caixa aceita ser mexida. */}
       {editavel && moldura}
+    </div>
+  )
+}
+
+/**
+ * O painel de estilo — o que sai do botão de paleta da barra.
+ *
+ * Abre ao lado da barra, e não em cima do conteúdo: a barra mora na borda
+ * direita, então o painel cresce para a esquerda, alinhado ao meio dela.
+ * Tudo aqui é de quem escreve e não viaja pelo canal: o que viaja é o
+ * resultado (a cor do traço, a fonte do texto), já dentro de cada anotação.
+ */
+function PainelDeEstilo({
+  escrevendo,
+  cor,
+  aoEscolherCor,
+  espessura,
+  aoMudarEspessura,
+  tamanho,
+  aoMudarTamanho,
+  fonte,
+  aoMudarFonte,
+}: {
+  /** Ferramenta de texto: mostra tamanho e fonte em vez de espessura. */
+  escrevendo: boolean
+  cor: string
+  aoEscolherCor: (cor: string) => void
+  espessura: number
+  aoMudarEspessura: (valor: number) => void
+  tamanho: number
+  aoMudarTamanho: (valor: number) => void
+  fonte: FonteId
+  aoMudarFonte: (fonte: FonteId) => void
+}) {
+  return (
+    <div className="pointer-events-auto absolute top-1/2 right-16 w-44 -translate-y-1/2 rounded-2xl bg-white p-3 text-neutral-900 shadow-xl ring-1 ring-black/10">
+      <div className="grid grid-cols-4 gap-2">
+        {CORES.map((c) => (
+          <button
+            key={c}
+            onClick={() => aoEscolherCor(c)}
+            title="Escolher cor"
+            aria-pressed={cor === c}
+            style={{ backgroundColor: c }}
+            className={`mx-auto h-6 w-6 rounded-full ring-offset-2 transition ${
+              cor === c ? 'ring-2 ring-neutral-900' : 'hover:ring-2 hover:ring-neutral-300'
+            }`}
+          />
+        ))}
+      </div>
+
+      {escrevendo ? (
+        <>
+          <div className="mt-3 grid grid-cols-4 gap-1 rounded-lg bg-neutral-100 p-1 text-[11px] font-bold">
+            {TAMANHOS.map((valor, i) => (
+              <button
+                key={valor}
+                onClick={() => aoMudarTamanho(valor)}
+                title={`Letra ${ROTULOS_DE_TAMANHO[i]}`}
+                aria-pressed={tamanho === valor}
+                className={`rounded-md py-1 transition ${
+                  tamanho === valor ? 'bg-white shadow' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                {ROTULOS_DE_TAMANHO[i]}
+              </button>
+            ))}
+          </div>
+
+          {/* Cada botão é escrito na própria fonte: escolher fonte pelo nome
+              é adivinhação, e pelo desenho é reconhecimento. */}
+          <div className="mt-2 grid grid-cols-4 gap-1 rounded-lg bg-neutral-100 p-1">
+            {FONTES.map((f) => (
+              <button
+                key={f}
+                onClick={() => aoMudarFonte(f)}
+                title={`Fonte ${ROTULOS_DE_FONTE[f].toLowerCase()}`}
+                aria-pressed={fonte === f}
+                style={{ fontFamily: `var(--font-anotacao-${f})` }}
+                className={`rounded-md py-1 text-sm leading-none transition ${
+                  fonte === f ? 'bg-white shadow' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Aa
+              </button>
+            ))}
+          </div>
+        </>
+      ) : (
+        <label className="mt-3 flex items-center gap-2" title="Espessura do traço">
+          <span
+            className="shrink-0 rounded-full"
+            style={{
+              width: espessura + 2,
+              height: espessura + 2,
+              backgroundColor: cor,
+            }}
+          />
+          <input
+            type="range"
+            min={ESPESSURA_MIN}
+            max={ESPESSURA_MAX}
+            value={espessura}
+            onChange={(e) => aoMudarEspessura(Number(e.target.value))}
+            aria-label="Espessura do traço"
+            className="w-full accent-sky-600"
+          />
+        </label>
+      )}
     </div>
   )
 }

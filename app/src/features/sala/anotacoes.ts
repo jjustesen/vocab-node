@@ -29,11 +29,46 @@ import type { ParticipanteId } from './estado-palco'
 /** Quadro lógico normalizado. Os eixos escalam separados — ver o cabeçalho. */
 export const NORMA = 1000
 
-export const CORES = ['#171717', '#7c3aed', '#dc2626', '#059669'] as const
-/** Espessuras da caneta, em milésimos da largura. */
-export const ESPESSURAS = [3, 8] as const
-/** Tamanhos de letra, em milésimos da altura. */
-export const TAMANHOS = [32, 52] as const
+export const CORES = [
+  '#171717',
+  '#737373',
+  '#d946ef',
+  '#7c3aed',
+  '#2563eb',
+  '#0ea5e9',
+  '#eab308',
+  '#f97316',
+  '#059669',
+  '#4ade80',
+  '#fb7185',
+  '#dc2626',
+] as const
+/** Faixa da espessura da caneta e das formas, em milésimos da largura. */
+export const ESPESSURA_MIN = 2
+export const ESPESSURA_MAX = 16
+export const ESPESSURA_PADRAO = 4
+/** Tamanhos de letra, em milésimos da altura — P, M, G e GG. */
+export const TAMANHOS = [24, 32, 44, 60] as const
+export const ROTULOS_DE_TAMANHO = ['P', 'M', 'G', 'GG'] as const
+
+/**
+ * As fontes do texto. Quatro, e não uma: a redonda é a voz da correção
+ * informal, mas nem toda anotação é isso — uma frase-modelo que o aluno vai
+ * copiar pede letra limpa, e uma transcrição pede a manuscrita.
+ *
+ * Viaja como ID e não como `font-family`: os dois lados resolvem o ID na
+ * mesma tabela (`index.css`), e uma fonte que faltar num navegador cai no
+ * mesmo `fallback` para todo mundo.
+ */
+export const FONTES = ['redonda', 'manuscrita', 'limpa', 'serifada'] as const
+export type FonteId = (typeof FONTES)[number]
+export const FONTE_PADRAO: FonteId = 'redonda'
+export const ROTULOS_DE_FONTE: Record<FonteId, string> = {
+  redonda: 'Redonda',
+  manuscrita: 'Manuscrita',
+  limpa: 'Limpa',
+  serifada: 'Serifada',
+}
 
 /**
  * Formas fechadas — retângulo, círculo e seta.
@@ -69,7 +104,11 @@ type Comum = {
   cor: string
 }
 
-export type Traco = Comum & { tipo: 'traco'; espessura: number; pontos: Ponto[] }
+export type Traco = Comum & {
+  tipo: 'traco'
+  espessura: number
+  pontos: Ponto[]
+}
 /**
  * O texto não tem largura: ele só quebra onde a pessoa deu Enter, e o tamanho
  * é a letra (`tamanho`), não a caixa. Uma versão intermediária guardava
@@ -77,8 +116,22 @@ export type Traco = Comum & { tipo: 'traco'; espessura: number; pontos: Ponto[] 
  * quebra caía em pontos diferentes conforme a fonte de cada lado. Sem quebra
  * automática, o que o professor digitou é exatamente o que o aluno vê.
  */
-export type Texto = Comum & { tipo: 'texto'; tamanho: number; x: number; y: number; texto: string }
-export type Forma = Comum & { tipo: 'forma'; forma: FormaTipo; espessura: number; de: Ponto; ate: Ponto }
+export type Texto = Comum & {
+  tipo: 'texto'
+  tamanho: number
+  /** Opcional para o texto que chega de uma versão anterior — cai na redonda. */
+  fonte?: FonteId
+  x: number
+  y: number
+  texto: string
+}
+export type Forma = Comum & {
+  tipo: 'forma'
+  forma: FormaTipo
+  espessura: number
+  de: Ponto
+  ate: Ponto
+}
 export type Anotacao = Traco | Texto | Forma
 
 export type MensagemAnotacao =
@@ -110,7 +163,17 @@ export function formaNova(
   forma: FormaTipo,
   em: Ponto,
 ): Forma {
-  return { tipo: 'forma', id: crypto.randomUUID(), autor, superficie, cor, espessura, forma, de: em, ate: em }
+  return {
+    tipo: 'forma',
+    id: crypto.randomUUID(),
+    autor,
+    superficie,
+    cor,
+    espessura,
+    forma,
+    de: em,
+    ate: em,
+  }
 }
 
 export function textoNovo(
@@ -118,10 +181,22 @@ export function textoNovo(
   superficie: string,
   cor: string,
   tamanho: number,
+  fonte: FonteId,
   x: number,
   y: number,
 ): Texto {
-  return { tipo: 'texto', id: crypto.randomUUID(), autor, superficie, cor, tamanho, x, y, texto: '' }
+  return {
+    tipo: 'texto',
+    id: crypto.randomUUID(),
+    autor,
+    superficie,
+    cor,
+    tamanho,
+    fonte,
+    x,
+    y,
+    texto: '',
+  }
 }
 
 /** Texto sem uma letra sequer não vira anotação — some ao sair da edição. */
@@ -159,7 +234,10 @@ function distanciaAteSegmento(
   const dy = by - ay
   const comprimento = dx * dx + dy * dy
   // Segmento degenerado (os dois pontos no mesmo lugar) vira distância ao ponto.
-  const t = comprimento === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / comprimento))
+  const t =
+    comprimento === 0
+      ? 0
+      : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / comprimento))
   return Math.hypot(px - (ax + t * dx), py - (ay + t * dy))
 }
 
@@ -186,9 +264,12 @@ export function encostou(
     if (p.length === 1) return Math.hypot(px - p[0][0] * escalaX, py - p[0][1] * escalaY) <= folga
     for (let i = 1; i < p.length; i++) {
       const d = distanciaAteSegmento(
-        px, py,
-        p[i - 1][0] * escalaX, p[i - 1][1] * escalaY,
-        p[i][0] * escalaX, p[i][1] * escalaY,
+        px,
+        py,
+        p[i - 1][0] * escalaX,
+        p[i - 1][1] * escalaY,
+        p[i][0] * escalaX,
+        p[i][1] * escalaY,
       )
       if (d <= folga) return true
     }

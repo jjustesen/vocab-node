@@ -104,6 +104,19 @@ export type Vista = {
    */
   cx: number
   cy: number
+  /**
+   * Largura ÷ altura da JANELA do professor — a área em que o palco dele
+   * cabe, sem contar tira de vídeo nem painel.
+   *
+   * É o que faz o aluno ver EXATAMENTE o que o professor vê. Ajuste, zoom e
+   * centro iguais não bastam: "encaixar" numa janela larga encosta a página
+   * pela altura e sobra margem dos lados, e a mesma página numa janela
+   * estreita encosta pela largura e corta em baixo — dois recortes diferentes
+   * do mesmo exercício. Com a proporção da janela junto, o aluno desenha uma
+   * janela da mesma FORMA dentro da área dele (com faixas sobrando onde não
+   * couber) e o recorte fecha. Ausente em mensagens de versões anteriores.
+   */
+  area?: number
 }
 
 export const VISTA_PADRAO: Vista = { ajuste: 'encaixar', zoom: 1, cx: 0.5, cy: 0.5 }

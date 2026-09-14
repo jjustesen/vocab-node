@@ -99,7 +99,12 @@ export function Palco({
   const [controles, setControles] = useState<HTMLDivElement | null>(null)
 
   const area = useRef<HTMLDivElement>(null)
-  const arrasto = useRef<{ x: number; y: number; left: number; top: number } | null>(null)
+  const arrasto = useRef<{
+    x: number
+    y: number
+    left: number
+    top: number
+  } | null>(null)
   /**
    * Enquanto ESTA ponta arrasta, o que chega pelo canal é ignorado.
    *
@@ -109,6 +114,24 @@ export function Palco({
    */
   const mexendo = useRef(false)
   const ultimoEnvio = useRef(0)
+
+  /**
+   * Largura ÷ altura da janela do palco DESTA ponta. Vai junto com toda vista
+   * que o professor emite — ver `Vista.area` em `estado-palco.ts` para o
+   * porquê: sem ela, "encaixar" numa janela larga e numa estreita são dois
+   * recortes diferentes da mesma página.
+   */
+  const proporcaoDaJanela = useCallback((): number | undefined => {
+    const el = area.current
+    if (!el || el.clientWidth === 0 || el.clientHeight === 0) return undefined
+    return el.clientWidth / el.clientHeight
+  }, [])
+
+  /** Toda mudança de vista sai por aqui — o professor carimba a janela dele. */
+  const mudarVista = useCallback(
+    (nova: Vista) => aoMudarVista(ehProfessor ? { ...nova, area: proporcaoDaJanela() } : nova),
+    [aoMudarVista, ehProfessor, proporcaoDaJanela],
+  )
 
   /**
    * Põe o enquadramento recebido na tela.
@@ -141,7 +164,24 @@ export function Palco({
    * dos traços da lousa levaria uma mensagem por quadro de rolagem.
    */
   const emitirRef = useRef<() => void>(() => {})
-  emitirRef.current = () => aoMudarVista({ ajuste, zoom, ...centroAtual() })
+  emitirRef.current = () => mudarVista({ ajuste, zoom, ...centroAtual() })
+
+  /**
+   * A janela do professor mudou de tamanho — ele abriu o painel, arrastou o
+   * divisor da câmera, maximizou o navegador. A proporção que o aluno usa
+   * para desenhar a janela dele tem que acompanhar, senão os dois voltam a
+   * ver recortes diferentes. `observe` dispara uma vez ao começar, e o
+   * `palco` nas dependências reaproveita isso: cada material novo sobe ao
+   * palco já com a janela carimbada, sem esperar o primeiro scroll.
+   */
+  useEffect(() => {
+    if (!ehProfessor || !temArea) return
+    const el = area.current
+    if (!el) return
+    const observador = new ResizeObserver(() => emitirRef.current())
+    observador.observe(el)
+    return () => observador.disconnect()
+  }, [ehProfessor, temArea, palco])
 
   useEffect(() => {
     if (!ehProfessor) return
@@ -240,6 +280,28 @@ export function Palco({
     ehMaterial && ajuste === 'largura' ? '100cqw' : `min(100cqw, calc(100cqh * ${proporcao}))`
   const largura = zoom === 1 ? base : `calc(${base} * ${zoom})`
 
+  /**
+   * A JANELA em que o palco é desenhado.
+   *
+   * Para o professor é a área inteira. Para o aluno é uma caixa com a
+   * proporção da janela do PROFESSOR (`vista.area`), encaixada na área dele
+   * e centrada — sobra faixa escura em cima ou dos lados, e é assim que tem
+   * que ser: a faixa é o preço de o recorte da página ser o mesmo nas duas
+   * telas. Tudo o que é `cqw`/`cqh` abaixo mede ESTA janela, então ajuste,
+   * zoom e centro produzem o mesmo enquadramento aqui e lá.
+   *
+   * Sem `area` (professor numa versão anterior) o aluno usa a área inteira,
+   * como antes.
+   */
+  const janela = !ehProfessor && vista.area ? vista.area : null
+  const estiloDaJanela: React.CSSProperties = janela
+    ? {
+        containerType: 'size',
+        width: `min(100cqw, calc(100cqh * ${janela}))`,
+        aspectRatio: janela,
+      }
+    : { containerType: 'size', width: '100%', height: '100%' }
+
   function aoPressionar(evento: React.PointerEvent<HTMLDivElement>) {
     const el = area.current
     if (!el) return
@@ -274,10 +336,10 @@ export function Palco({
     const novo = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round((zoom + delta) * 100) / 100))
     // O centro é recalculado DEPOIS de o zoom entrar, num quadro à frente: a
     // caixa acabou de mudar de tamanho e o `scrollWidth` de agora é o antigo.
-    aoMudarVista({ ajuste, zoom: novo, cx: vista.cx, cy: vista.cy })
+    mudarVista({ ajuste, zoom: novo, cx: vista.cx, cy: vista.cy })
     requestAnimationFrame(() => {
       if (!ehProfessor) return
-      aoMudarVista({ ajuste, zoom: novo, ...centroAtual() })
+      mudarVista({ ajuste, zoom: novo, ...centroAtual() })
     })
   }
 
@@ -299,60 +361,64 @@ export function Palco({
         com `hidden`, que é exatamente o que se quer aqui.
       */}
       <div
-        ref={area}
-        className={`min-h-0 flex-1 ${podeComandar ? 'overflow-auto' : 'overflow-hidden'}`}
+        className="grid min-h-0 flex-1 place-items-center overflow-hidden"
         style={{ containerType: 'size' }}
       >
-        {/*
+        <div
+          ref={area}
+          className={podeComandar ? 'overflow-auto' : 'overflow-hidden'}
+          style={estiloDaJanela}
+        >
+          {/*
           `m-auto` num item de flex centraliza enquanto sobra espaço e vira
           zero quando falta. É o detalhe que evita o clássico de centralizar
           com `justify-center`: ali o transbordo vai para os DOIS lados e a
           metade de cima do conteúdo fica inalcançável pela rolagem.
         */}
-        <div className="flex min-h-full min-w-full">
-          <div
-            className="relative m-auto shrink-0"
-            style={{ aspectRatio: proporcao, width: largura }}
-          >
-            {palco.tipo === 'branco' && <div className="h-full w-full rounded-2xl bg-white" />}
+          <div className="flex min-h-full min-w-full">
+            <div
+              className="relative m-auto shrink-0"
+              style={{ aspectRatio: proporcao, width: largura }}
+            >
+              {palco.tipo === 'branco' && <div className="h-full w-full rounded-2xl bg-white" />}
 
-            {palco.tipo === 'material' && <MaterialNoPalco palco={palco} />}
+              {palco.tipo === 'material' && <MaterialNoPalco palco={palco} />}
 
-            {palco.tipo === 'documento' && (
-              <div className="absolute inset-0">
-                <Documento eu={eu} contexto={contextoDoDocumento} />
-              </div>
-            )}
+              {palco.tipo === 'documento' && (
+                <div className="absolute inset-0">
+                  <Documento eu={eu} contexto={contextoDoDocumento} />
+                </div>
+              )}
 
-            {/* A barra de anotação mora dentro do quadro e se recolhe sozinha —
+              {/* A barra de anotação mora dentro do quadro e se recolhe sozinha —
                 não há mais um botão "Anotar" na barra de baixo da sala. */}
-            {camadaDisponivel && (
-              <Lousa
-                superficie={superficieDo(palco)}
-                eu={eu}
-                podeAnotar={podeAnotar}
-                controles={controles}
-              />
-            )}
+              {camadaDisponivel && (
+                <Lousa
+                  superficie={superficieDo(palco)}
+                  eu={eu}
+                  podeAnotar={podeAnotar}
+                  controles={controles}
+                />
+              )}
 
-            {/*
+              {/*
               A mão vem DEPOIS da lousa de propósito: com as duas ligadas, o
               arrasto tem que mover a página, não riscar por cima dela. É o
               mesmo acordo de qualquer leitor de PDF — a ferramenta escolhida
               ganha o gesto.
             */}
-            {mao && (
-              <div
-                onPointerDown={aoPressionar}
-                onPointerMove={aoMover}
-                onPointerUp={aoSoltar}
-                onPointerCancel={aoSoltar}
-                // `touch-none`: sem isso o dedo rolaria a área nativamente E
-                // pelo arrasto, andando duas vezes mais rápido que a mão.
-                className="absolute inset-0 cursor-grab touch-none active:cursor-grabbing"
-              />
-            )}
-
+              {mao && (
+                <div
+                  onPointerDown={aoPressionar}
+                  onPointerMove={aoMover}
+                  onPointerUp={aoSoltar}
+                  onPointerCancel={aoSoltar}
+                  // `touch-none`: sem isso o dedo rolaria a área nativamente E
+                  // pelo arrasto, andando duas vezes mais rápido que a mão.
+                  className="absolute inset-0 cursor-grab touch-none active:cursor-grabbing"
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -426,7 +492,7 @@ export function Palco({
             }
             ativo={ajuste === 'largura'}
             aoClicar={() =>
-              aoMudarVista({
+              mudarVista({
                 ...vista,
                 ajuste: ajuste === 'largura' ? 'encaixar' : 'largura',
               })

@@ -18,6 +18,12 @@
     caixa em volta. A fonte é carregada em app.html.
   */
   --font-anotacao: 'Chewy', ui-rounded, 'Comic Sans MS', cursive;
+  /* As quatro fontes do texto da lousa — o ID que viaja pelo canal resolve aqui
+     (ver `FONTES` em anotacoes.ts). */
+  --font-anotacao-redonda: 'Chewy', ui-rounded, 'Comic Sans MS', cursive;
+  --font-anotacao-manuscrita: 'Patrick Hand', 'Segoe Print', 'Bradley Hand', cursive;
+  --font-anotacao-limpa: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-anotacao-serifada: Georgia, 'Times New Roman', serif;
 
   /* Tranco curto do par errado em ligar_colunas — o "não é esse" sem punir. */
   --animate-treme: treme 0.38s;
