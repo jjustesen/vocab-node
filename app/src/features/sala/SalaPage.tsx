@@ -13,11 +13,13 @@ import {
   GraduationCap,
   Loader2,
   PanelLeft,
+  PanelRight,
   PanelRightClose,
   PanelRightOpen,
   PanelTop,
   Presentation,
   Video,
+  X,
 } from 'lucide-react'
 import '@livekit/components-styles'
 import { useAulasDoAluno } from '@/features/aulas/api'
@@ -26,7 +28,12 @@ import { useAlunosDaTurma } from '@/features/turmas/api'
 import { aulaDeAgora } from './aula-de-agora'
 import { useCanal, useSalaConectada } from './canal'
 import { BarraDeMidia } from './BarraDeMidia'
-import { useLayoutDaSala, type PosicaoDaCamera } from './layout-da-sala'
+import {
+  FRACAO_MAX_DA_AREA,
+  proximaPosicao,
+  useLayoutDaSala,
+  type PosicaoDaCamera,
+} from './layout-da-sala'
 import { Palco } from './Palco'
 import { PainelDaAula } from './PainelDaAula'
 import { SeletorDeConteudo } from './SeletorDeConteudo'
@@ -226,7 +233,7 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
 
   const [palco, setPalco] = useState<EstadoPalco>(PALCO_VAZIO)
   const [vista, setVista] = useState<Vista>(VISTA_PADRAO)
-  const { posicao, fracao, alternarPosicao, definirFracao } = useLayoutDaSala()
+  const { posicao, tamanho, alternarPosicao, definirTamanho } = useLayoutDaSala()
   /** A área que a tira e o palco dividem — a régua do divisor. */
   const areaRef = useRef<HTMLDivElement>(null)
   const [arrastandoDivisor, setArrastandoDivisor] = useState(false)
@@ -366,10 +373,14 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
   const temDestaque = noPalco || Boolean(telaCompartilhada)
 
   /**
-   * O divisor não move nada de tamanho fixo: ele só decide quanto do eixo cabe
-   * a cada um. Tira e palco continuam desenhando o que já desenhavam —
-   * ladrilhos 16:9 e a caixa na proporção do material — então nenhum dos dois
-   * deforma em nenhuma posição da linha. O que muda é o quanto sobra.
+   * O divisor só decide o tamanho da tira, em pixels; o palco fica com o que
+   * sobra. Tira e palco continuam desenhando o que já desenhavam — ladrilhos
+   * 16:9 e a caixa na proporção do material — então nenhum dos dois deforma
+   * em nenhuma posição da linha.
+   *
+   * A conta é a distância da tira até o ponteiro: da borda de cima no topo,
+   * da esquerda na coluna da esquerda e da DIREITA na coluna da direita — a
+   * tira cresce para o lado do palco, e o ponteiro está sempre nesse lado.
    */
   function aoPressionarDivisor(evento: React.PointerEvent<HTMLDivElement>) {
     // Sem `preventDefault` o navegador começa a selecionar texto no arrasto, e
@@ -383,17 +394,19 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
     if (!arrastandoDivisor) return
     const regua = areaRef.current?.getBoundingClientRect()
     if (!regua || regua.width === 0 || regua.height === 0) return
-    definirFracao(
-      posicao === 'lateral'
-        ? (evento.clientX - regua.left) / regua.width
-        : (evento.clientY - regua.top) / regua.height,
+    definirTamanho(
+      posicao === 'topo'
+        ? evento.clientY - regua.top
+        : posicao === 'esquerda'
+          ? evento.clientX - regua.left
+          : regua.right - evento.clientX,
     )
   }
 
   function aoSoltarDivisor() {
     if (!arrastandoDivisor) return
     setArrastandoDivisor(false)
-    definirFracao(fracao, true)
+    definirTamanho(tamanho, true)
   }
 
   return (
@@ -401,8 +414,15 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
       <div className="flex min-h-0 flex-1 gap-2">
         <div
           ref={areaRef}
+          // `flex-row-reverse` põe a coluna à direita sem mexer na ordem do
+          // DOM: a tira continua vindo antes do palco no HTML e na leitura
+          // por teclado, só a pintura espelha.
           className={`flex min-w-0 flex-1 ${
-            temDestaque && posicao === 'lateral' ? 'flex-row' : 'flex-col'
+            !temDestaque || posicao === 'topo'
+              ? 'flex-col'
+              : posicao === 'esquerda'
+                ? 'flex-row'
+                : 'flex-row-reverse'
           } ${temDestaque ? '' : 'gap-2'}`}
         >
           {/*
@@ -411,7 +431,7 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
           */}
           {temDestaque ? (
             <>
-              <TiraDeVideo tracks={cameras} posicao={posicao} fracao={fracao} />
+              <TiraDeVideo tracks={cameras} posicao={posicao} tamanho={tamanho} />
               <Divisor
                 posicao={posicao}
                 arrastando={arrastandoDivisor}
@@ -469,15 +489,33 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
         <BarraDeMidia />
 
         {ehProfessor ? (
-          <button
-            onClick={() => setSeletorAberto(true)}
-            title="Escolher o que fica no centro da tela"
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold transition ${
+          // Com algo no palco o botão vira um par: o nome (abre o seletor) e o
+          // X (volta para só vídeo). Tirar o material da tela era o gesto mais
+          // frequente sem atalho — exigia abrir o seletor e achar "Só vídeo"
+          // lá dentro, dois passos para desfazer o que se fez com um.
+          <span
+            className={`flex items-stretch overflow-hidden rounded-lg text-sm font-bold transition ${
               noPalco ? 'bg-violet-300 text-neutral-900' : 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
             }`}
           >
-            <Presentation className="h-4 w-4" /> {nomeDo(palco)}
-          </button>
+            <button
+              onClick={() => setSeletorAberto(true)}
+              title="Escolher o que fica no centro da tela"
+              className="flex items-center gap-1.5 px-3 py-2"
+            >
+              <Presentation className="h-4 w-4" /> {nomeDo(palco)}
+            </button>
+            {noPalco && (
+              <button
+                onClick={() => definirPalco(PALCO_VAZIO)}
+                title="Tirar do palco e voltar para só vídeo"
+                aria-label="Tirar do palco"
+                className="grid w-8 place-items-center border-l border-neutral-900/15 transition hover:bg-violet-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </span>
         ) : (
           <span className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-bold text-neutral-500">
             {nomeDo(palco)}
@@ -490,18 +528,7 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
           mais do que ajuda.
         */}
         {ehProfessor && temDestaque && (
-          <button
-            onClick={alternarPosicao}
-            title={posicao === 'topo' ? 'Mover as câmeras para a lateral' : 'Mover as câmeras para o topo'}
-            className="flex items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-bold text-neutral-200 transition hover:bg-neutral-700"
-          >
-            {posicao === 'topo' ? (
-              <PanelLeft className="h-4 w-4" />
-            ) : (
-              <PanelTop className="h-4 w-4" />
-            )}
-            Câmeras
-          </button>
+          <BotaoDePosicao posicao={posicao} aoClicar={alternarPosicao} />
         )}
 
         {podeVerPainel && (
@@ -536,6 +563,38 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
 }
 
 /**
+ * O botão gira a câmera por três lugares — topo, esquerda, direita — e mostra
+ * para ONDE ela vai no próximo clique, não onde ela está: é o que o clique
+ * faz, e é isso que a pessoa quer saber antes de clicar.
+ */
+function BotaoDePosicao({
+  posicao,
+  aoClicar,
+}: {
+  posicao: PosicaoDaCamera
+  aoClicar: () => void
+}) {
+  const proxima = proximaPosicao(posicao)
+  const rotulo = {
+    topo: 'Mover as câmeras para o topo',
+    esquerda: 'Mover as câmeras para a esquerda',
+    direita: 'Mover as câmeras para a direita',
+  }[proxima]
+  const Icone = { topo: PanelTop, esquerda: PanelLeft, direita: PanelRight }[proxima]
+
+  return (
+    <button
+      onClick={aoClicar}
+      title={rotulo}
+      className="flex items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-bold text-neutral-200 transition hover:bg-neutral-700"
+    >
+      <Icone className="h-4 w-4" />
+      Câmeras
+    </button>
+  )
+}
+
+/**
  * A linha entre a câmera e o palco.
  *
  * Invisível até o ponteiro chegar perto: numa aula, o que tem que estar à
@@ -562,7 +621,7 @@ function Divisor({
   aoMover: (e: React.PointerEvent<HTMLDivElement>) => void
   aoSoltar: () => void
 }) {
-  const lateral = posicao === 'lateral'
+  const lateral = posicao !== 'topo'
 
   return (
     <div
@@ -607,31 +666,36 @@ function Divisor({
 function TiraDeVideo({
   tracks,
   posicao,
-  fracao,
+  tamanho,
 }: {
   tracks: TrackReferenceOrPlaceholder[]
   posicao: PosicaoDaCamera
-  /** Quanto do eixo a tira ocupa — o que o divisor ajusta. */
-  fracao: number
+  /** Quanto do eixo a tira ocupa, em pixels — o que o divisor ajusta. */
+  tamanho: number
 }) {
-  const lateral = posicao === 'lateral'
+  const lateral = posicao !== 'topo'
+  const teto = `${FRACAO_MAX_DA_AREA * 100}%`
 
   return (
     <div
       data-tira-de-video
-      // Percentual, e não pixels: a tira acompanha a janela sem precisar de
-      // conta em JS a cada resize. Ver `layout-da-sala.ts`.
-      style={lateral ? { width: `${fracao * 100}%` } : { height: `${fracao * 100}%` }}
+      // Pixels, com um teto em fração da área: o tamanho que a pessoa ajustou
+      // não muda quando a janela muda, mas numa tela pequena a tira não pode
+      // passar por cima do palco. Ver `layout-da-sala.ts`.
+      style={
+        lateral ? { width: tamanho, maxWidth: teto } : { height: tamanho, maxHeight: teto }
+      }
       className={lateral ? 'shrink-0 overflow-y-auto' : 'shrink-0 overflow-x-auto'}
     >
       {/*
         `justify-center` para uma câmera só não ficar encostada no canto, e
-        `min-w-max`/`min-h-max` para que, quando NÃO couber, a lista cresça e
-        role em vez de espremer os ladrilhos de volta.
+        `min-w-full`/`min-h-full` (e não `max`) para que a lista ocupe o eixo
+        inteiro enquanto cabe — é o que faz o centro ser o centro da tira — e
+        cresça e role quando NÃO couber, em vez de espremer os ladrilhos.
       */}
       <div
         className={`flex gap-2 ${
-          lateral ? 'min-h-max flex-col justify-center' : 'h-full min-w-max justify-center'
+          lateral ? 'min-h-full w-full flex-col justify-center' : 'h-full min-w-full justify-center'
         }`}
       >
         {tracks.map((track) => (

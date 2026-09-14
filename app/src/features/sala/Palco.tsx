@@ -380,9 +380,14 @@ export function Palco({
           ensina nada — a pessoa procura o botão de virar página, não acha, e
           conclui que o app não faz isso. Desabilitado, com o motivo no title,
           explica de quem é o comando.
+
+          Embaixo, e não em cima: o topo é onde o título e a primeira linha do
+          exercício aparecem, e a pílula tapava justamente isso. Na borda de
+          baixo ela fica sobre a margem da página — e, como nos leitores de
+          PDF, é onde a mão já procura a virada.
         */}
         {palco.tipo === 'material' && palco.paginas > 1 && (
-          <div className="pointer-events-auto absolute top-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-neutral-900/90 px-2 py-1 text-xs font-bold text-white shadow-lg backdrop-blur">
+          <div className="pointer-events-auto absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-neutral-900/90 px-2 py-1 text-xs font-bold text-white shadow-lg backdrop-blur">
             <SetaDePagina
               Icone={ChevronLeft}
               rotulo="Página anterior"

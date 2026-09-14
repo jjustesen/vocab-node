@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowUpRight, ChevronDown, Circle, Eraser, Pen, Square, Trash2, Type, Undo2 } from 'lucide-react'
+import { ArrowUpRight, ChevronRight, Circle, Eraser, Pen, Square, Trash2, Type, Undo2 } from 'lucide-react'
 import { useCanal, useSalaConectada } from './canal'
 import {
   CORES,
@@ -673,10 +673,13 @@ export function Lousa({
       )}
 
       {aberta && (
-        // `flex-wrap` e o teto de largura: com cinco ferramentas a barra não
-        // cabe mais numa linha no celular, e sem quebrar ela vazaria para fora
-        // do quadro levando junto os botões da ponta.
-        <div className="pointer-events-auto absolute bottom-3 left-1/2 flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-3xl bg-neutral-900/90 px-3 py-2 shadow-lg backdrop-blur">
+        // Coluna na borda direita, centrada na vertical: deitada no rodapé
+        // ela dividia a borda de baixo com a virada de página e tapava a última
+        // linha do exercício. Em pé, na lateral, ela só cobre a margem — e
+        // fica fora do caminho da barra de ampliação, que mora no canto de
+        // cima (daí o teto de altura, que a impede de subir até lá). Quando
+        // nem assim cabe, rola em vez de vazar para fora do quadro.
+        <div className="pointer-events-auto absolute top-1/2 right-3 flex max-h-[calc(100%-7rem)] -translate-y-1/2 flex-col items-center gap-2 overflow-y-auto rounded-3xl bg-neutral-900/90 px-2 py-3 shadow-lg backdrop-blur">
           {(
             [
               ['caneta', Pen, 'Desenhar à mão'],
@@ -706,7 +709,7 @@ export function Lousa({
 
           {/* Cor e espessura não dizem nada sobre a borracha — escondê-las é
               menos ruído do que deixá-las ali sem efeito. */}
-          {ferramenta !== 'borracha' && <span className="mx-1 h-6 w-px bg-neutral-700" />}
+          {ferramenta !== 'borracha' && <span className="my-1 h-px w-6 bg-neutral-700" />}
 
           {ferramenta !== 'borracha' &&
             CORES.map((c) => (
@@ -721,7 +724,7 @@ export function Lousa({
               />
             ))}
 
-          {ferramenta !== 'borracha' && <span className="mx-1 h-6 w-px bg-neutral-700" />}
+          {ferramenta !== 'borracha' && <span className="my-1 h-px w-6 bg-neutral-700" />}
 
           {/* Os dois botões trocam de significado junto com a ferramenta:
               fino/grosso na caneta e nas formas, pequeno/grande no texto. */}
@@ -756,7 +759,7 @@ export function Lousa({
               </button>
             ))}
 
-          <span className="mx-1 h-6 w-px bg-neutral-700" />
+          <span className="my-1 h-px w-6 bg-neutral-700" />
 
           <button
             onClick={desfazer}
@@ -773,7 +776,7 @@ export function Lousa({
             <Trash2 className="h-4 w-4" />
           </button>
 
-          <span className="mx-1 h-6 w-px bg-neutral-700" />
+          <span className="my-1 h-px w-6 bg-neutral-700" />
 
           <button
             onClick={() => {
@@ -783,7 +786,7 @@ export function Lousa({
             title="Minimizar — devolve o clique para o conteúdo"
             className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-white"
           >
-            <ChevronDown className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       )}

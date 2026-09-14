@@ -4,59 +4,79 @@ import { useCallback, useState } from 'react'
  * Onde a tira de vídeo fica quando há algo no palco.
  *
  * `topo` é a faixa horizontal acima do conteúdo (bom em tela larga e baixa, e
- * no celular); `lateral` é a coluna à esquerda, que sobra melhor quando o que
- * está no palco é um PDF em pé — ali a altura é o recurso escasso, não a
- * largura.
+ * no celular); `esquerda` e `direita` são a coluna ao lado, que sobra melhor
+ * quando o que está no palco é um PDF em pé — ali a altura é o recurso
+ * escasso, não a largura. Esquerda ou direita é gosto de quem olha: depende
+ * de onde está a barra de anotação e de que lado a pessoa prefere o rosto.
  */
-export type PosicaoDaCamera = 'topo' | 'lateral'
+export type PosicaoDaCamera = 'topo' | 'esquerda' | 'direita'
+
+/** O eixo que a tira divide com o palco — as duas colunas medem a mesma coisa. */
+export type EixoDaTira = 'topo' | 'lateral'
+
+export function eixoDe(posicao: PosicaoDaCamera): EixoDaTira {
+  return posicao === 'topo' ? 'topo' : 'lateral'
+}
 
 /**
- * Quanto da área a tira de vídeo ocupa, em fração do eixo que ela divide com
- * o palco — altura no `topo`, largura na `lateral`.
+ * Quanto da área a tira de vídeo ocupa, em PIXELS do eixo que ela divide com
+ * o palco — altura no `topo`, largura na lateral.
  *
- * Fração e não pixels: a mesma sala é aberta no notebook e no celular, e 180px
- * é um quinto da tela num e metade no outro. Guardar a proporção é o que faz o
- * ajuste continuar valendo quando a janela muda de tamanho.
+ * Pixels e não fração: a primeira versão guardava a proporção, e o efeito era
+ * a câmera crescer e encolher toda vez que a janela mudava de tamanho — ao
+ * maximizar, ao abrir o painel, ao virar o celular. O que a pessoa ajustou
+ * foi "a câmera deste tamanho", e é isso que tem que continuar valendo. Numa
+ * tela pequena demais para o valor guardado, o CSS limita a tira a uma fatia
+ * da área (ver `TiraDeVideo`), então o número nunca engole o palco.
  *
- * Uma fração por posição, porque são grandezas diferentes: 20% da altura numa
- * faixa horizontal e 20% da largura numa coluna não se parecem em nada.
+ * Um tamanho por eixo, porque são grandezas diferentes: 200px de altura numa
+ * faixa horizontal e 200px de largura numa coluna não se parecem em nada.
  */
-export type FracaoDaTira = Record<PosicaoDaCamera, number>
+export type TamanhoDaTira = Record<EixoDaTira, number>
 
 /** Nem tão fina que a câmera vire selo, nem a ponto de engolir o palco. */
-export const FRACAO_MIN = 0.1
-export const FRACAO_MAX = 0.6
+export const TAMANHO_MIN = 96
+export const TAMANHO_MAX = 720
+/** Teto em fração da área, para a tela pequena — o CSS aplica. */
+export const FRACAO_MAX_DA_AREA = 0.6
 
-const PADRAO: FracaoDaTira = { topo: 0.22, lateral: 0.18 }
+const PADRAO: TamanhoDaTira = { topo: 200, lateral: 280 }
 
 const CHAVE = 'vocab-node:layout-da-sala'
 
-type Guardado = { posicao: PosicaoDaCamera; fracao: FracaoDaTira }
+type Guardado = { posicao: PosicaoDaCamera; tamanho: TamanhoDaTira }
 
 function ler(): Guardado {
   try {
     const cru = localStorage.getItem(CHAVE)
-    if (!cru) return { posicao: 'topo', fracao: PADRAO }
-    const dados = JSON.parse(cru) as Partial<Guardado>
+    if (!cru) return { posicao: 'topo', tamanho: PADRAO }
+    const dados = JSON.parse(cru) as Partial<Guardado> & { posicao?: string }
     return {
-      posicao: dados.posicao === 'lateral' ? 'lateral' : 'topo',
+      posicao: lerPosicao(dados.posicao),
       // Cada eixo é validado sozinho: um valor corrompido num deles não pode
       // levar o outro junto, e fora da faixa cai no padrão em vez de abrir a
       // sala com a câmera ocupando a tela inteira.
-      fracao: {
-        topo: valida(dados.fracao?.topo, PADRAO.topo),
-        lateral: valida(dados.fracao?.lateral, PADRAO.lateral),
+      tamanho: {
+        topo: valida(dados.tamanho?.topo, PADRAO.topo),
+        lateral: valida(dados.tamanho?.lateral, PADRAO.lateral),
       },
     }
   } catch {
     // localStorage bloqueado (modo privado, política do navegador) ou conteúdo
     // corrompido: cair no padrão é degradação aceitável, quebrar a sala não é.
-    return { posicao: 'topo', fracao: PADRAO }
+    return { posicao: 'topo', tamanho: PADRAO }
   }
 }
 
+/** `lateral` é o nome antigo da coluna, de quando só havia a da esquerda. */
+function lerPosicao(valor: unknown): PosicaoDaCamera {
+  if (valor === 'esquerda' || valor === 'lateral') return 'esquerda'
+  if (valor === 'direita') return 'direita'
+  return 'topo'
+}
+
 function valida(valor: unknown, padrao: number): number {
-  return typeof valor === 'number' && valor >= FRACAO_MIN && valor <= FRACAO_MAX ? valor : padrao
+  return typeof valor === 'number' && valor >= TAMANHO_MIN && valor <= TAMANHO_MAX ? valor : padrao
 }
 
 function gravar(dados: Guardado): void {
@@ -65,6 +85,13 @@ function gravar(dados: Guardado): void {
   } catch {
     /* sem espaço ou sem permissão — vale só nesta sessão */
   }
+}
+
+const ORDEM: PosicaoDaCamera[] = ['topo', 'esquerda', 'direita']
+
+/** Para onde a câmera vai no próximo clique do botão. */
+export function proximaPosicao(atual: PosicaoDaCamera): PosicaoDaCamera {
+  return ORDEM[(ORDEM.indexOf(atual) + 1) % ORDEM.length]
 }
 
 /**
@@ -81,10 +108,7 @@ export function useLayoutDaSala() {
 
   const alternarPosicao = useCallback(() => {
     setEstado((atual) => {
-      const novo: Guardado = {
-        ...atual,
-        posicao: atual.posicao === 'topo' ? 'lateral' : 'topo',
-      }
+      const novo: Guardado = { ...atual, posicao: proximaPosicao(atual.posicao) }
       gravar(novo)
       return novo
     })
@@ -95,12 +119,12 @@ export function useLayoutDaSala() {
    * um `setItem` por evento de ponteiro é escrita síncrona no meio de uma
    * chamada de vídeo, e o valor intermediário não interessa a ninguém.
    */
-  const definirFracao = useCallback((valor: number, persistir = false) => {
+  const definirTamanho = useCallback((valor: number, persistir = false) => {
     setEstado((atual) => {
-      const limitado = Math.min(FRACAO_MAX, Math.max(FRACAO_MIN, valor))
+      const limitado = Math.round(Math.min(TAMANHO_MAX, Math.max(TAMANHO_MIN, valor)))
       const novo: Guardado = {
         ...atual,
-        fracao: { ...atual.fracao, [atual.posicao]: limitado },
+        tamanho: { ...atual.tamanho, [eixoDe(atual.posicao)]: limitado },
       }
       if (persistir) gravar(novo)
       return novo
@@ -109,8 +133,8 @@ export function useLayoutDaSala() {
 
   return {
     posicao: estado.posicao,
-    fracao: estado.fracao[estado.posicao],
+    tamanho: estado.tamanho[eixoDe(estado.posicao)],
     alternarPosicao,
-    definirFracao,
+    definirTamanho,
   }
 }
