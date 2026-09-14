@@ -18,12 +18,6 @@
     caixa em volta. A fonte é carregada em app.html.
   */
   --font-anotacao: 'Chewy', ui-rounded, 'Comic Sans MS', cursive;
-  /* As quatro fontes do texto da lousa — o ID que viaja pelo canal resolve aqui
-     (ver `FONTES` em anotacoes.ts). */
-  --font-anotacao-redonda: 'Chewy', ui-rounded, 'Comic Sans MS', cursive;
-  --font-anotacao-manuscrita: 'Patrick Hand', 'Segoe Print', 'Bradley Hand', cursive;
-  --font-anotacao-limpa: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-anotacao-serifada: Georgia, 'Times New Roman', serif;
 
   /* Tranco curto do par errado em ligar_colunas — o "não é esse" sem punir. */
   --animate-treme: treme 0.38s;
@@ -39,6 +33,22 @@
       transform: translateX(5px);
     }
   }
+}
+
+/*
+  As quatro fontes do texto da lousa — o ID que viaja pelo canal resolve aqui
+  (ver `FONTES` em anotacoes.ts).
+
+  Em `:root` e NÃO em `@theme`: o Tailwind só emite as variáveis do tema que
+  encontra em alguma classe, e estas são lidas por `var()` em estilo inline —
+  ele não vê o uso, não gera a variável, e os quatro textos caíam na fonte do
+  sistema.
+*/
+:root {
+  --font-anotacao-redonda: 'Chewy', ui-rounded, 'Comic Sans MS', cursive;
+  --font-anotacao-manuscrita: 'Patrick Hand', 'Segoe Print', 'Bradley Hand', cursive;
+  --font-anotacao-limpa: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-anotacao-serifada: Georgia, 'Times New Roman', serif;
 }
 
 @layer base {
