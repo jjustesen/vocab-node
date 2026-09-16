@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Circle,
   Eraser,
+  MousePointer2,
   Palette,
   Pen,
   Square,
@@ -82,6 +83,8 @@ export function Lousa({
   eu,
   podeAnotar,
   controles,
+  mao = false,
+  aoDesligarMao,
 }: {
   /** Em qual conteúdo do palco esta anotação nasce. Ver `superficieDo`. */
   superficie: string
@@ -107,6 +110,14 @@ export function Lousa({
    * anotar. Por isso a camada fica e os controles saem, por portal.
    */
   controles?: HTMLElement | null
+  /**
+   * A mão de arrastar a página (do `Palco`) está ligada. Com ela ligada a
+   * caneta e a criação de texto saem do caminho — o arrasto é da página —,
+   * mas os textos que já existem continuam clicáveis: clicar num deles
+   * desliga a mão e passa para o mouse, em vez de arrastar a página junto.
+   */
+  mao?: boolean
+  aoDesligarMao?: () => void
 }) {
   /**
    * A barra mora DENTRO do quadro e começa recolhida, como um botão pequeno no
@@ -139,6 +150,25 @@ export function Lousa({
    * de vez em quando fica a um clique.
    */
   const [painelDeEstilo, setPainelDeEstilo] = useState(false)
+  const painelRef = useRef<HTMLDivElement>(null)
+  const botaoDePaletaRef = useRef<HTMLButtonElement>(null)
+
+  /**
+   * Clicar fora fecha o painel. Ele é um popover: aberto, cobre parte do
+   * exercício, e ter que voltar ao botão da paleta para tirá-lo da frente é
+   * um clique a mais toda vez. Ouve na CAPTURA para fechar antes de o clique
+   * chegar ao destino — e ignora o próprio botão, que já alterna sozinho.
+   */
+  useEffect(() => {
+    if (!painelDeEstilo) return
+    const aoClicarFora = (evento: PointerEvent) => {
+      const alvo = evento.target as Node | null
+      if (painelRef.current?.contains(alvo) || botaoDePaletaRef.current?.contains(alvo)) return
+      setPainelDeEstilo(false)
+    }
+    document.addEventListener('pointerdown', aoClicarFora, true)
+    return () => document.removeEventListener('pointerdown', aoClicarFora, true)
+  }, [painelDeEstilo])
 
   /**
    * Os textos vivem no DOM, então precisam de estado de render — ao contrário
@@ -605,7 +635,7 @@ export function Lousa({
 
   /** Clique no vazio com a ferramenta de texto: nasce uma caixa ali mesmo. */
   function aoPressionarCamada(evento: React.PointerEvent<HTMLDivElement>) {
-    if (ferramenta !== 'texto' || evento.target !== evento.currentTarget) return
+    if (ferramenta !== 'texto' || mao || evento.target !== evento.currentTarget) return
     // `preventDefault` aqui não é detalhe: o navegador move o foco no MOUSEDOWN,
     // e a caixa que estamos criando só existe um render depois. Sem isto, o
     // clique cria a caixa, o `mouseup` seguinte joga o foco para o corpo da
@@ -619,13 +649,28 @@ export function Lousa({
     setEditando(novo.id)
   }
 
+  /**
+   * Volta para o ponteiro comum — e garante que ele esteja de fato na mão:
+   * abre a barra se estava recolhida e desliga a mão de arrastar a página.
+   * É o que acontece ao clicar num texto e ao terminar de escrever um.
+   */
+  function voltarParaOMouse() {
+    setFerramenta('mouse')
+    setQuerAberta(true)
+    if (mao) aoDesligarMao?.()
+  }
+
   function aoPressionarTexto(evento: React.PointerEvent<HTMLDivElement>, texto: Texto) {
-    if (ferramenta !== 'texto' || editando === texto.id) return
+    if (editando === texto.id) return
     evento.stopPropagation()
     // Mesmo motivo do `aoPressionarCamada`: sem isto, clicar num texto para
     // corrigir abriria o campo e o perderia no mesmo gesto.
     evento.preventDefault()
     evento.currentTarget.setPointerCapture(evento.pointerId)
+    // Clicar num texto é escolher o texto — seja qual for a ferramenta (ou a
+    // mão) que estava ativa. Sem isto, a pessoa terminava de escrever, ligava
+    // a mão para rolar, voltava para ajustar o texto e arrastava a página.
+    voltarParaOMouse()
     arrasto.current = {
       id: texto.id,
       de: paraLogico(evento.clientX, evento.clientY),
@@ -686,10 +731,25 @@ export function Lousa({
   const daPagina = textos.filter((t) => t.superficie === superficie)
   // Espessura vale para a caneta e para as formas; tamanho e fonte, só para o texto.
   const escrevendo = ferramenta === 'texto'
-  /** A borracha não tem cor nem espessura — o painel não tem o que mostrar. */
-  const temEstilo = ferramenta !== 'borracha'
+  /** A borracha e o mouse não têm cor nem espessura — o painel não tem o que mostrar. */
+  const temEstilo = ferramenta !== 'borracha' && ferramenta !== 'mouse'
+
+  /**
+   * Quem recebe o ponteiro, camada por camada. Com a mão ligada, a página é
+   * de quem arrasta: nem a caneta nem o clique-que-cria-texto respondem.
+   *
+   * Os textos são a exceção deliberada: ficam clicáveis sempre que EU posso
+   * anotar — com a mão ligada, com a barra recolhida, com a caneta na mão —,
+   * porque clicar num texto é o gesto de "quero mexer neste". A única
+   * ferramenta que os deixa em paz é a borracha, que precisa do clique para
+   * chegar ao canvas e apagar por baixo.
+   */
+  const canvasAtivo = aberta && !mao && ferramenta !== 'texto' && ferramenta !== 'mouse'
+  const criaTexto = aberta && !mao && ferramenta === 'texto'
+  const textosInterativos = podeAnotar && (mao || !aberta || ferramenta !== 'borracha')
 
   const ferramentas = [
+    ['mouse', MousePointer2, 'Mouse — mover e redimensionar textos'],
     ['caneta', Pen, 'Desenhar à mão'],
     ['texto', Type, 'Escrever — clique onde o texto deve começar'],
     ['retangulo', Square, 'Retângulo — arraste para enquadrar'],
@@ -743,9 +803,10 @@ export function Lousa({
           {/* A bolinha mostra a cor em uso: o painel pode estar fechado, e a
               pessoa precisa saber com que cor vai sair o próximo traço. */}
           <button
+            ref={botaoDePaletaRef}
             onClick={() => setPainelDeEstilo((v) => !v)}
             disabled={!temEstilo}
-            title={temEstilo ? 'Cor, espessura e fonte' : 'A borracha não tem estilo'}
+            title={temEstilo ? 'Cor, espessura e fonte' : 'Esta ferramenta não tem estilo'}
             aria-expanded={painelDeEstilo && temEstilo}
             className={`relative grid h-8 w-8 place-items-center rounded-full transition disabled:opacity-30 ${
               painelDeEstilo && temEstilo
@@ -794,6 +855,7 @@ export function Lousa({
 
       {aberta && painelDeEstilo && temEstilo && (
         <PainelDeEstilo
+          ref={painelRef}
           escrevendo={escrevendo}
           cor={cor}
           aoEscolherCor={setCor}
@@ -816,9 +878,7 @@ export function Lousa({
     <div
       ref={camadaRef}
       onPointerDown={aoPressionarCamada}
-      className={`absolute inset-0 ${
-        aberta && ferramenta === 'texto' ? 'pointer-events-auto' : 'pointer-events-none'
-      }`}
+      className={`absolute inset-0 ${criaTexto ? 'pointer-events-auto' : 'pointer-events-none'}`}
       style={{ containerType: 'size' }}
     >
       <canvas
@@ -831,7 +891,7 @@ export function Lousa({
         // `pointer-events` é HERDADO: sem `auto` explícito, o canvas herdaria
         // o `none` da camada e a caneta não receberia clique nenhum.
         className={`absolute inset-0 h-full w-full touch-none ${
-          aberta && ferramenta !== 'texto' ? 'pointer-events-auto' : 'pointer-events-none'
+          canvasAtivo ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
       />
 
@@ -839,13 +899,20 @@ export function Lousa({
         <CaixaDeTexto
           key={texto.id}
           texto={texto}
-          editavel={aberta && ferramenta === 'texto'}
+          editavel={textosInterativos}
           editando={editando === texto.id}
           aoPressionar={(e) => aoPressionarTexto(e, texto)}
           aoMover={aoMoverTexto}
           aoSoltar={aoSoltarTexto}
           aoEscrever={(valor) => guardarTexto({ ...texto, texto: valor })}
-          aoEncerrar={encerrarEdicao}
+          aoEncerrar={() => {
+            encerrarEdicao()
+            // Escreveu, saiu: o ponteiro volta a ser o comum. Ficar com a
+            // ferramenta de texto na mão depois de terminar fazia o próximo
+            // clique — que quase sempre é para ajustar o que acabou de
+            // escrever — abrir uma caixa nova em cima.
+            voltarParaOMouse()
+          }}
           aoApagar={() => removerAnotacao(texto.id)}
           aoEscalar={(tamanho) => guardarTexto({ ...texto, tamanho })}
           paraLogico={paraLogico}
@@ -1099,9 +1166,9 @@ function CaixaDeTexto({
   }
 
   return (
-    // `group` só quando editável: fora da ferramenta de texto a caixa não
-    // responde ao ponteiro, e uma moldura que acende sem poder ser mexida
-    // seria promessa falsa.
+    // `group` só quando editável: com a borracha na mão (ou sem permissão) a
+    // caixa não responde ao ponteiro, e uma moldura que acende sem poder ser
+    // mexida seria promessa falsa.
     <div className={`absolute ${editavel ? 'group' : ''}`} style={caixa}>
       <div
         data-anotacao={texto.id}
@@ -1117,8 +1184,8 @@ function CaixaDeTexto({
         {texto.texto}
       </div>
       {/* A moldura de escala também fora da edição: o texto que já está na
-          página se ajusta sem precisar entrar nele — só com a ferramenta de
-          texto ativa, que é quando a caixa aceita ser mexida. */}
+          página se ajusta sem precisar entrar nele — sempre que a caixa
+          aceita ser mexida. */}
       {editavel && moldura}
     </div>
   )
@@ -1133,6 +1200,7 @@ function CaixaDeTexto({
  * resultado (a cor do traço, a fonte do texto), já dentro de cada anotação.
  */
 function PainelDeEstilo({
+  ref,
   escrevendo,
   cor,
   aoEscolherCor,
@@ -1143,6 +1211,8 @@ function PainelDeEstilo({
   fonte,
   aoMudarFonte,
 }: {
+  /** Quem abre o painel precisa saber onde ele está para fechá-lo no clique fora. */
+  ref: React.Ref<HTMLDivElement>
   /** Ferramenta de texto: mostra tamanho e fonte em vez de espessura. */
   escrevendo: boolean
   cor: string
@@ -1155,7 +1225,10 @@ function PainelDeEstilo({
   aoMudarFonte: (fonte: FonteId) => void
 }) {
   return (
-    <div className="pointer-events-auto absolute top-1/2 right-16 w-44 -translate-y-1/2 rounded-2xl bg-white p-3 text-neutral-900 shadow-xl ring-1 ring-black/10">
+    <div
+      ref={ref}
+      className="pointer-events-auto absolute top-1/2 right-16 w-44 -translate-y-1/2 rounded-2xl bg-white p-3 text-neutral-900 shadow-xl ring-1 ring-black/10"
+    >
       <div className="grid grid-cols-4 gap-2">
         {CORES.map((c) => (
           <button

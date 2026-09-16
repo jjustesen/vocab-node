@@ -5,13 +5,16 @@ import {
   LiveKitRoom,
   ParticipantTile,
   RoomAudioRenderer,
+  useIsSpeaking,
+  useParticipants,
   useTracks,
 } from '@livekit/components-react'
-import { Track } from 'livekit-client'
+import { Track, type Participant } from 'livekit-client'
 import { isTrackReference, type TrackReferenceOrPlaceholder } from '@livekit/components-react'
 import {
   GraduationCap,
   Loader2,
+  Mic,
   PanelLeft,
   PanelRight,
   PanelRightClose,
@@ -411,6 +414,8 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
 
   return (
     <div className="flex h-full flex-col gap-2 p-2">
+      <QuemFala />
+
       <div className="flex min-h-0 flex-1 gap-2">
         <div
           ref={areaRef}
@@ -835,4 +840,40 @@ export function SalaAlunoTurmaPage() {
 export function SalaConvidadoPage() {
   const { token } = useParams<{ token: string }>()
   return <SalaPage entrada={{ modo: 'convidado', token: token! }} />
+}
+
+/**
+ * Quem está na sala, e quem está falando — uma fila de nomes no topo.
+ *
+ * Com o palco ocupado o vídeo vira tira, e a tira não diz de quem é a voz:
+ * numa turma de cinco, a pergunta "quem falou isso?" aparece o tempo todo.
+ * Os nomes ficam sempre à vista, apagados; quem fala ACENDE. É a opacidade
+ * que muda, e não a presença — um nome que aparece e some a cada frase
+ * chama mais atenção do que a fala.
+ */
+function QuemFala() {
+  const participantes = useParticipants()
+  if (participantes.length === 0) return null
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1.5">
+      {participantes.map((p) => (
+        <Falante key={p.identity} participante={p} />
+      ))}
+    </div>
+  )
+}
+
+function Falante({ participante }: { participante: Participant }) {
+  const falando = useIsSpeaking(participante)
+  return (
+    <span
+      aria-label={falando ? `${participante.name} está falando` : participante.name}
+      className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-opacity duration-200 ${
+        falando ? 'bg-violet-300 text-neutral-900 opacity-100' : 'bg-neutral-900 text-neutral-300 opacity-40'
+      }`}
+    >
+      <Mic className="h-3 w-3" />
+      {participante.name || participante.identity}
+    </span>
+  )
 }

@@ -82,7 +82,14 @@ export const ROTULOS_DE_FONTE: Record<FonteId, string> = {
  */
 export type FormaTipo = 'retangulo' | 'circulo' | 'seta'
 
-export type Ferramenta = 'caneta' | 'texto' | 'borracha' | FormaTipo
+/**
+ * `mouse` é a ferramenta de NÃO desenhar: o ponteiro comum, que mexe no que já
+ * está na página (arrasta e redimensiona texto) e deixa o clique atravessar
+ * para o conteúdo no resto. É para onde a lousa volta sozinha depois de cada
+ * texto escrito — e para onde vai quando se clica num texto com qualquer
+ * outra ferramenta na mão.
+ */
+export type Ferramenta = 'mouse' | 'caneta' | 'texto' | 'borracha' | FormaTipo
 
 /** As três formas seguem o mesmo caminho de desenho; só o traçado final muda. */
 export const FORMAS: FormaTipo[] = ['retangulo', 'circulo', 'seta']

@@ -390,22 +390,14 @@ export function Palco({
                 </div>
               )}
 
-              {/* A barra de anotação mora dentro do quadro e se recolhe sozinha —
-                não há mais um botão "Anotar" na barra de baixo da sala. */}
-              {camadaDisponivel && (
-                <Lousa
-                  superficie={superficieDo(palco)}
-                  eu={eu}
-                  podeAnotar={podeAnotar}
-                  controles={controles}
-                />
-              )}
-
               {/*
-              A mão vem DEPOIS da lousa de propósito: com as duas ligadas, o
-              arrasto tem que mover a página, não riscar por cima dela. É o
-              mesmo acordo de qualquer leitor de PDF — a ferramenta escolhida
-              ganha o gesto.
+              A mão vem ANTES da lousa: a lousa sabe que a mão está ligada
+              (`mao`) e tira a caneta e a criação de texto do caminho do
+              ponteiro, então o arrasto atravessa e chega aqui — move a
+              página, não risca por cima dela, como em qualquer leitor de
+              PDF. Ficar por baixo é o que deixa os TEXTOS já escritos
+              clicáveis por cima da mão: clicar num deles desliga a mão e
+              passa a lousa para o mouse, em vez de arrastar a página junto.
             */}
               {mao && (
                 <div
@@ -416,6 +408,19 @@ export function Palco({
                   // `touch-none`: sem isso o dedo rolaria a área nativamente E
                   // pelo arrasto, andando duas vezes mais rápido que a mão.
                   className="absolute inset-0 cursor-grab touch-none active:cursor-grabbing"
+                />
+              )}
+
+              {/* A barra de anotação mora dentro do quadro e se recolhe sozinha —
+                não há mais um botão "Anotar" na barra de baixo da sala. */}
+              {camadaDisponivel && (
+                <Lousa
+                  superficie={superficieDo(palco)}
+                  eu={eu}
+                  podeAnotar={podeAnotar}
+                  controles={controles}
+                  mao={mao}
+                  aoDesligarMao={() => setMao(false)}
                 />
               )}
             </div>
