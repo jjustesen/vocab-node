@@ -655,8 +655,21 @@ export function Lousa({
    * É o que acontece ao clicar num texto e ao terminar de escrever um.
    */
   function voltarParaOMouse() {
-    setFerramenta('mouse')
+    escolherFerramenta('mouse')
     setQuerAberta(true)
+  }
+
+  /**
+   * TODA escolha de ferramenta passa por aqui, e desliga a mão.
+   *
+   * A mão e as ferramentas da lousa disputam o mesmo gesto — o arrasto na
+   * página —, então são um interruptor só: ligar a mão tira a ferramenta da
+   * frente (ver `ferramentaAtiva`), e pegar qualquer ferramenta tira a mão.
+   * Sem isto a pessoa escolhia "texto" com a mão ligada, clicava na página e
+   * a página se mexia em vez de nascer uma caixa.
+   */
+  function escolherFerramenta(f: Ferramenta) {
+    setFerramenta(f)
     if (mao) aoDesligarMao?.()
   }
 
@@ -745,6 +758,8 @@ export function Lousa({
    * chegar ao canvas e apagar por baixo.
    */
   const canvasAtivo = aberta && !mao && ferramenta !== 'texto' && ferramenta !== 'mouse'
+  /** O que a barra mostra aceso: com a mão ligada, nenhuma ferramenta está na mão. */
+  const ferramentaAtiva: Ferramenta | null = mao ? null : ferramenta
   const criaTexto = aberta && !mao && ferramenta === 'texto'
   const textosInterativos = podeAnotar && (mao || !aberta || ferramenta !== 'borracha')
 
@@ -785,11 +800,11 @@ export function Lousa({
               key={chave}
               onClick={() => {
                 encerrarEdicao()
-                setFerramenta(chave)
+                escolherFerramenta(chave)
               }}
               title={dica}
               className={`grid h-8 w-8 place-items-center rounded-full transition ${
-                ferramenta === chave
+                ferramentaAtiva === chave
                   ? 'bg-violet-300 text-neutral-900'
                   : 'text-neutral-400 hover:bg-neutral-800'
               }`}
