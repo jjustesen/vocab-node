@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { AlertTriangle, Loader2, Volume2 } from 'lucide-react'
+import { AlertTriangle, Loader2, Turtle, Volume2 } from 'lucide-react'
+import { BOTAO_CHUNKY } from './estilo'
 
 /**
  * Toca o áudio pré-gerado da frase (TTS do Gemini, gerado quando o professor
@@ -16,31 +17,40 @@ import { AlertTriangle, Loader2, Volume2 } from 'lucide-react'
  * fallback: revelar o texto em vez de tocar.
  */
 export function BotaoOuvir({ frase, audioUrl }: { frase: string; audioUrl: string | null }) {
-  const [tocando, setTocando] = useState(false)
+  /** Qual dos dois botões está tocando — cada um pulsa só quando é o seu. */
+  const [tocando, setTocando] = useState<'normal' | 'lento' | null>(null)
   const [carregando, setCarregando] = useState(false)
   const [falhou, setFalhou] = useState(false)
   const [revelada, setRevelada] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  function tocar() {
+  /**
+   * `velocidade` é o "modo tartaruga": o mesmo áudio a 0.7x, sem regerar
+   * nada no servidor. `preservesPitch` (padrão true nos navegadores atuais)
+   * mantém o tom da voz — sem ele, a fala lenta soaria grave, como fita
+   * esticada, e o aluno estaria treinando o ouvido num som que não existe.
+   */
+  function tocar(velocidade: 'normal' | 'lento') {
     if (!audioUrl) return
     if (!audioRef.current) audioRef.current = new Audio(audioUrl)
     const audio = audioRef.current
 
     audio.currentTime = 0
+    audio.playbackRate = velocidade === 'lento' ? 0.7 : 1
+    audio.preservesPitch = true
     setCarregando(true)
     audio.onplaying = () => {
       setCarregando(false)
-      setTocando(true)
+      setTocando(velocidade)
     }
-    audio.onended = () => setTocando(false)
+    audio.onended = () => setTocando(null)
     audio.onerror = () => {
       // URL assinada expira em 1h (tarefa-obter) — se o aluno demorar mais que
       // isso para chegar nesta questão, o áudio para de carregar. Cai no
       // mesmo fallback de "geração falhou": não há diferença prática para o
       // aluno entre os dois motivos.
       setCarregando(false)
-      setTocando(false)
+      setTocando(null)
       setFalhou(true)
     }
     audio.play().catch(() => {
@@ -74,17 +84,30 @@ export function BotaoOuvir({ frase, audioUrl }: { frase: string; audioUrl: strin
   }
 
   return (
-    <button
-      onClick={tocar}
-      disabled={carregando}
-      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-100 py-4 text-sm font-extrabold text-indigo-900 transition active:scale-[0.99] disabled:opacity-70"
-    >
-      {carregando ? (
-        <Loader2 className="h-5 w-5 animate-spin" />
-      ) : (
-        <Volume2 className={`h-5 w-5 ${tocando ? 'animate-pulse' : ''}`} />
-      )}
-      {carregando ? 'Carregando...' : tocando ? 'Tocando...' : 'Ouvir a frase'}
-    </button>
+    <div className="flex gap-3">
+      <button
+        onClick={() => tocar('normal')}
+        disabled={carregando}
+        className={`${BOTAO_CHUNKY} min-w-0 flex-1 border-violet-700 bg-violet-500 py-4 text-base text-white`}
+      >
+        {carregando ? (
+          <Loader2 className="h-6 w-6 animate-spin" />
+        ) : (
+          <Volume2 className={`h-6 w-6 ${tocando === 'normal' ? 'animate-pulse' : ''}`} strokeWidth={2.5} />
+        )}
+        {carregando ? 'Carregando...' : tocando === 'normal' ? 'Tocando...' : 'Ouvir a frase'}
+      </button>
+      {/* A tartaruga do Duolingo: mesma frase, mais devagar. Quadrado e
+          menor de propósito — é apoio, não a ação principal. */}
+      <button
+        onClick={() => tocar('lento')}
+        disabled={carregando}
+        title="Ouvir mais devagar"
+        aria-label="Ouvir mais devagar"
+        className={`${BOTAO_CHUNKY} w-16 shrink-0 border-violet-300 bg-violet-100 text-violet-800 hover:bg-violet-200`}
+      >
+        <Turtle className={`h-7 w-7 ${tocando === 'lento' ? 'animate-pulse' : ''}`} strokeWidth={2.25} />
+      </button>
+    </div>
   )
 }

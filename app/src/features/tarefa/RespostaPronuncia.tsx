@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Loader2, Mic, Square } from 'lucide-react'
 import type { FeedbackLocal, QuestaoTarefa } from './tipos'
+import { BOTAO_CHUNKY } from './estilo'
 
 /**
  * `SpeechRecognition` não está na lib DOM do TypeScript — o tipo mínimo que
@@ -374,7 +375,7 @@ export function RespostaPronuncia({
     <div>
       {/* A frase-alvo é o conteúdo da questão aqui, não gabarito escondido:
           o aluno precisa vê-la para poder lê-la. */}
-      <p className="rounded-2xl bg-neutral-100 px-4 py-4 text-center text-lg font-extrabold text-neutral-900">
+      <p className="rounded-2xl border-2 border-neutral-200 bg-white px-5 py-5 text-center text-xl font-extrabold leading-relaxed text-neutral-900 md:text-2xl">
         {questao.resposta_correta}
       </p>
 
@@ -414,11 +415,16 @@ export function RespostaPronuncia({
           </p>
           <button
             onClick={comecar}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-4 text-sm font-extrabold text-white"
+            className={`${BOTAO_CHUNKY} mt-3 w-full border-neutral-950 bg-neutral-900 py-4 text-base text-white`}
           >
             <Mic className="h-4 w-4" /> Tentar de novo
           </button>
-          <button onClick={seguirSemGravar} className="mt-3 w-full text-center text-xs font-bold text-neutral-400">
+          {/* Saída secundária, mas visível: quem chega aqui já tentou e
+              falhou, e um link cinza-claro no rodapé passava batido. */}
+          <button
+            onClick={seguirSemGravar}
+            className={`${BOTAO_CHUNKY} mt-3 w-full border-neutral-200 bg-white py-3 text-sm text-neutral-600 hover:bg-neutral-50`}
+          >
             Não estou conseguindo — seguir mesmo assim
           </button>
         </>
@@ -427,20 +433,20 @@ export function RespostaPronuncia({
       {!feedback && !semSuporte && !naoOuvi && (
         <>
           {processando ? (
-            <p className="mt-4 flex items-center justify-center gap-2 rounded-full bg-neutral-100 py-4 text-sm font-bold text-neutral-500">
+            <p className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-neutral-100 py-4 text-base font-bold text-neutral-500">
               <Loader2 className="h-4 w-4 animate-spin" /> Conferindo o que você falou...
             </p>
           ) : gravando ? (
             <button
               onClick={parar}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-rose-600 py-4 text-sm font-extrabold text-white"
+              className={`${BOTAO_CHUNKY} mt-4 w-full border-rose-800 bg-rose-600 py-4 text-base text-white`}
             >
               <Square className="h-4 w-4 fill-current" /> Terminei de ler
             </button>
           ) : (
             <button
               onClick={comecar}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-4 text-sm font-extrabold text-white"
+              className={`${BOTAO_CHUNKY} mt-4 w-full border-neutral-950 bg-neutral-900 py-4 text-base text-white`}
             >
               <Mic className="h-4 w-4" /> Ler em voz alta
             </button>
@@ -457,7 +463,7 @@ export function RespostaPronuncia({
       {feedback && !semSuporte && (
         <button
           onClick={tentarDeNovo}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-neutral-200 bg-white py-3.5 text-sm font-extrabold text-neutral-900"
+          className={`${BOTAO_CHUNKY} mt-4 w-full border-neutral-200 bg-white py-3.5 text-base text-neutral-800 hover:bg-neutral-50`}
         >
           <Mic className="h-4 w-4" /> Tentar de novo
         </button>

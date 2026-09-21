@@ -33,6 +33,7 @@ import {
 import { useAlunoAuthOpcional } from '@/features/aluno-auth/AlunoAuthProvider'
 import { minutosEstimados } from './formato'
 import { BotaoPrincipal, Chip, TelaAluno } from './visual'
+import { BOTAO_CHUNKY, FICHA_BASE, FICHA_COR, LOUSA } from './estilo'
 import { BotaoOuvir } from './RespostasAudio'
 import { RespostaPronuncia } from './RespostaPronuncia'
 import { falarEmIngles, useTemVozEmIngles } from './vozDoNavegador'
@@ -440,8 +441,10 @@ function TelaIntro({
   const primeiroNome = dados.aluno_nome.split(' ')[0]
 
   return (
-    <div className="min-h-dvh bg-areia pb-10">
-      <div className="mx-auto max-w-sm">
+    <div className="min-h-dvh bg-areia pb-10 md:grid md:place-items-center md:px-5">
+      {/* No desktop o topo lilás vira a "capa" de um cartão centralizado; no
+          celular continua colado nas bordas da tela. */}
+      <div className={`mx-auto w-full max-w-sm md:max-w-md md:overflow-hidden ${LOUSA} md:pb-8`}>
         {/* Raio de 32px na base — igual à sobreposição do card (-mt-8), que é o
             máximo que cabe: acima disso a curva sobe além da faixa coberta pelo
             card e abre falhas de fundo areia ao lado dos cantos dele. */}
@@ -476,8 +479,10 @@ function TelaIntro({
               card é estático, o bloco lilás acima é posicionado, e elemento
               posicionado pinta sobre estático mesmo vindo antes no DOM — os
               32px de -mt-8 continuam existindo, só ficam escondidos. */}
-          <div className="relative -mt-8 rounded-3xl bg-white p-6 text-center shadow-lg">
-            <h1 className="text-lg font-extrabold text-neutral-900">{dados.atividade.titulo}</h1>
+          <div className="relative -mt-8 rounded-3xl border-2 border-neutral-200 border-b-4 bg-white p-6 text-center shadow-lg md:shadow-none">
+            <h1 className="text-xl font-extrabold leading-tight text-neutral-900 md:text-2xl">
+              {dados.atividade.titulo}
+            </h1>
             <div className="mt-2 flex justify-center gap-1.5">
               <Chip>
                 {dados.questoes.length} {dados.questoes.length === 1 ? 'questão' : 'questões'}
@@ -540,67 +545,99 @@ function TelaFinal({
   const proxima = podeContinuar ? resultado.proxima_etapa : null
 
   return (
-    <TelaAluno comFormas>
-      <div className="pt-8 text-center">
-        <span className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-emerald-200">
-          <PartyPopper className="h-7 w-7 text-emerald-800" />
+    <TelaAluno comFormas moldura>
+      <div className="pt-8 text-center md:pt-2">
+        <span className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-emerald-200">
+          <PartyPopper className="h-9 w-9 text-emerald-800" />
         </span>
 
-        <p className="mt-5 text-5xl font-extrabold text-neutral-900">
-          {resultado.acertos}
-          <span className="text-3xl text-neutral-300">/{resultado.total}</span>
-        </p>
-        <p className="mt-2 text-lg font-extrabold text-neutral-900">
+        {/* O título é o veredito, em amarelo-ouro como o "Perfect lesson!":
+            é o que se lê primeiro. O placar vem logo abaixo, grande. */}
+        <p className="mt-5 text-2xl font-extrabold text-amber-500 md:text-3xl">
           {proxima
             ? `Etapa ${proxima.ordem - 1} concluída!`
-            : percentual >= 80
-              ? `Mandou bem, ${alunoNome.split(' ')[0]}!`
-              : percentual >= 50
-                ? `Bom trabalho, ${alunoNome.split(' ')[0]}!`
-                : 'Continue praticando!'}
+            : percentual === 100
+              ? 'Tarefa perfeita!'
+              : percentual >= 80
+                ? `Mandou bem, ${alunoNome.split(' ')[0]}!`
+                : percentual >= 50
+                  ? `Bom trabalho, ${alunoNome.split(' ')[0]}!`
+                  : 'Continue praticando!'}
+        </p>
+        <p className="mt-1 text-base font-medium text-neutral-500">
+          {erros === 0
+            ? 'Você não errou nenhuma questão'
+            : `Você acertou ${resultado.acertos} de ${resultado.total}`}
         </p>
 
-        <div className="mt-5 flex justify-center gap-2.5">
+        {/* Cartões de estatística: rótulo colorido em cima, valor grande
+            embaixo, borda da mesma cor. */}
+        <div className="mt-7 flex justify-center gap-3">
           {minutos && (
-            <div className="rounded-2xl bg-white px-4 py-3">
-              <Clock className="mx-auto h-3.5 w-3.5 text-neutral-400" />
-              <p className="mt-1 text-sm font-extrabold text-neutral-900">{minutos} min</p>
-            </div>
+            <CartaoEstatistica cor="sky" rotulo="Tempo">
+              <Clock className="h-5 w-5" /> {minutos} min
+            </CartaoEstatistica>
           )}
           {melhorSequencia > 1 && (
-            <div className="rounded-2xl bg-amber-100 px-4 py-3">
-              <Flame className="mx-auto h-3.5 w-3.5 text-amber-700" />
-              <p className="mt-1 text-sm font-extrabold text-amber-900">{melhorSequencia} seguidas</p>
-            </div>
+            <CartaoEstatistica cor="amber" rotulo="Sequência">
+              <Flame className="h-5 w-5" fill="currentColor" /> {melhorSequencia}
+            </CartaoEstatistica>
           )}
-          <div className="rounded-2xl bg-emerald-100 px-4 py-3">
-            <TrendingUp className="mx-auto h-3.5 w-3.5 text-emerald-700" />
-            <p className="mt-1 text-sm font-extrabold text-emerald-900">{percentual}% de acerto</p>
-          </div>
+          <CartaoEstatistica cor="emerald" rotulo="Acertos">
+            <TrendingUp className="h-5 w-5" /> {percentual}%
+          </CartaoEstatistica>
         </div>
 
         {proxima && <CartaoProximaEtapa proxima={proxima} aoContinuar={aoContinuar} />}
 
         {!proxima && erros > 0 && (
-          <div className="mt-6">
-            <BotaoPrincipal onClick={aoRefazerErros}>
-              <RotateCcw className="h-4 w-4" /> Refazer {erros === 1 ? 'o erro' : `os ${erros} erros`}
+          <div className="mt-8">
+            <BotaoPrincipal onClick={aoRefazerErros} cor="violeta">
+              <RotateCcw className="h-5 w-5" strokeWidth={2.5} /> Refazer{' '}
+              {erros === 1 ? 'o erro' : `os ${erros} erros`}
             </BotaoPrincipal>
           </div>
         )}
 
         {aoSair && (
-          <button onClick={aoSair} className="mt-1 w-full rounded-full py-3 text-sm font-bold text-neutral-500">
+          <button
+            onClick={aoSair}
+            className={`${BOTAO_CHUNKY} mt-3 w-full border-neutral-200 bg-white py-3.5 text-base text-neutral-600 hover:bg-neutral-50`}
+          >
             {proxima ? 'Parar por aqui' : 'Concluir'}
           </button>
         )}
-        {proxima && <p className="text-xs font-medium text-neutral-400">Você pode voltar quando quiser</p>}
+        {proxima && <p className="mt-2 text-xs font-medium text-neutral-400">Você pode voltar quando quiser</p>}
 
-        <p className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-emerald-700">
-          <CheckCircle2 className="h-3.5 w-3.5" /> {professorNome} já recebeu seu resultado
+        <p className="mt-5 flex items-center justify-center gap-1.5 text-sm font-semibold text-emerald-700">
+          <CheckCircle2 className="h-4 w-4" /> {professorNome} já recebeu seu resultado
         </p>
       </div>
     </TelaAluno>
+  )
+}
+
+/** Cartão de estatística da tela final: faixa colorida com o rótulo, valor grande embaixo. */
+function CartaoEstatistica({
+  cor,
+  rotulo,
+  children,
+}: {
+  cor: 'sky' | 'amber' | 'emerald'
+  rotulo: string
+  children: React.ReactNode
+}) {
+  const cores = {
+    sky: 'border-sky-400 [&>span]:bg-sky-400 [&>p]:text-sky-600',
+    amber: 'border-amber-400 [&>span]:bg-amber-400 [&>p]:text-amber-600',
+    emerald: 'border-emerald-400 [&>span]:bg-emerald-400 [&>p]:text-emerald-600',
+  }[cor]
+
+  return (
+    <div className={`min-w-24 overflow-hidden rounded-2xl border-2 bg-white ${cores}`}>
+      <span className="block px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white">{rotulo}</span>
+      <p className="flex items-center justify-center gap-1.5 px-3 py-3 text-lg font-extrabold">{children}</p>
+    </div>
   )
 }
 
@@ -694,66 +731,93 @@ function TelaQuestao({
 }) {
   const progresso = Math.round(((numero - 1) / total) * 100)
 
+  // Três faixas, como no Duolingo: progresso em cima, a questão no meio e um
+  // rodapé que gruda embaixo e vira o cartão de feedback. O rodapé fixo é o
+  // que garante que "Próxima" está sempre ao alcance do polegar, mesmo com a
+  // explicação longa ou a lista de opções passando da dobra.
   return (
-    <div className="min-h-dvh bg-areia px-5 pb-10 pt-4">
-      <div className="mx-auto max-w-sm">
-        <div className="flex items-center gap-3">
-          {aoSair ? (
-            <button onClick={aoSair} title="Sair da tarefa" className="shrink-0 text-neutral-400">
-              <X className="h-4 w-4" />
-            </button>
-          ) : (
-            // Sem sessão não há para onde voltar — a tarefa é a única tela.
-            <span className="w-0" />
-          )}
-          <div className="h-3 flex-1 overflow-hidden rounded-full bg-white">
-            <div className="h-full rounded-full bg-violet-400 transition-all" style={{ width: `${progresso}%` }} />
-          </div>
-          <span
-            className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-extrabold ${
-              sequencia > 0 ? 'bg-amber-200 text-amber-900' : 'bg-white text-neutral-400'
-            }`}
-          >
-            <Flame className="h-3.5 w-3.5" /> {sequencia}
-          </span>
-        </div>
-        <p className="mt-2 text-xs font-bold text-neutral-400">
-          {repassandoErros ? 'Revisando · ' : ''}Questão {numero} de {total}
-        </p>
-        {repassandoErros && numero === 1 && (
-          <p className="mt-1 text-xs font-medium text-neutral-400">
-            É só treino — sua nota já foi enviada e não muda.
-          </p>
-        )}
-
-        <CorpoDaQuestao
-          questao={questao}
-          feedback={feedback}
-          aoResponder={aoResponder}
-          aoFalar={aoFalar}
-          aoLimparFeedback={aoLimparFeedback}
-        />
-
-        {feedback && (
-          <>
-            {/* O tom nunca é punitivo: no erro o card é rosa claro e a
-                explicação vem antes de qualquer cobrança (mockup A2b). */}
-            <div
-              className={`mt-4 flex gap-2.5 rounded-2xl px-4 py-3 ${
-                feedback.correta ? 'bg-emerald-100' : 'bg-rose-100'
+    <div className="flex min-h-dvh flex-col bg-areia">
+      <header className="px-5 pt-4 md:pt-8">
+        <div className="mx-auto w-full max-w-sm md:max-w-2xl">
+          <div className="flex items-center gap-3 md:gap-4">
+            {aoSair ? (
+              <button
+                onClick={aoSair}
+                title="Sair da tarefa"
+                aria-label="Sair da tarefa"
+                className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-neutral-400 transition hover:bg-white hover:text-neutral-700"
+              >
+                <X className="h-6 w-6" strokeWidth={2.5} />
+              </button>
+            ) : (
+              // Sem sessão não há para onde voltar — a tarefa é a única tela.
+              <span className="w-0" />
+            )}
+            <div className="h-4 flex-1 overflow-hidden rounded-full bg-neutral-200">
+              <div
+                className="relative h-full rounded-full bg-violet-500 transition-all duration-500"
+                style={{ width: `${progresso}%` }}
+              >
+                {/* O brilho na parte de cima é o que faz a barra parecer um
+                    tubo e não uma linha — só aparece com alguma largura. */}
+                {progresso > 0 && (
+                  <span className="absolute left-2.5 right-2.5 top-1 h-1 rounded-full bg-white/40" />
+                )}
+              </div>
+            </div>
+            <span
+              className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-sm font-extrabold ${
+                sequencia > 0 ? 'bg-amber-200 text-amber-900' : 'bg-white text-neutral-400'
               }`}
             >
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white">
+              <Flame className="h-4 w-4" fill={sequencia > 0 ? 'currentColor' : 'none'} /> {sequencia}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <main className="flex-1 px-5 pb-8 pt-4 md:pt-6">
+        <div className={`mx-auto w-full max-w-sm md:max-w-2xl ${LOUSA} md:px-10 md:py-8`}>
+          <p className="text-xs font-extrabold uppercase tracking-wide text-neutral-400">
+            {repassandoErros ? 'Revisando · ' : ''}Questão {numero} de {total}
+          </p>
+          {repassandoErros && numero === 1 && (
+            <p className="mt-1 text-xs font-medium text-neutral-400">
+              É só treino — sua nota já foi enviada e não muda.
+            </p>
+          )}
+
+          <CorpoDaQuestao
+            questao={questao}
+            feedback={feedback}
+            aoResponder={aoResponder}
+            aoFalar={aoFalar}
+            aoLimparFeedback={aoLimparFeedback}
+          />
+        </div>
+      </main>
+
+      {/* O tom nunca é punitivo: no erro o rodapé é rosa claro e a explicação
+          vem antes de qualquer cobrança (mockup A2b). */}
+      {feedback && (
+        <footer
+          className={`sticky bottom-0 z-10 border-t-2 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 md:pb-8 md:pt-6 ${
+            feedback.correta ? 'border-emerald-200 bg-emerald-100' : 'border-rose-200 bg-rose-100'
+          }`}
+        >
+          <div className="mx-auto w-full max-w-sm md:flex md:max-w-2xl md:items-end md:gap-8">
+            <div className="flex gap-3 md:min-w-0 md:flex-1">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white md:h-14 md:w-14">
                 {feedback.correta ? (
-                  <PartyPopper className="h-3.5 w-3.5 text-emerald-700" />
+                  <PartyPopper className="h-5 w-5 text-emerald-600 md:h-7 md:w-7" />
                 ) : (
-                  <Lightbulb className="h-3.5 w-3.5 text-rose-600" />
+                  <Lightbulb className="h-5 w-5 text-rose-500 md:h-7 md:w-7" />
                 )}
               </span>
-              <div>
+              <div className="min-w-0">
                 <p
-                  className={`text-sm font-extrabold ${
-                    feedback.correta ? 'text-emerald-900' : 'text-rose-900'
+                  className={`text-xl font-extrabold md:text-2xl ${
+                    feedback.correta ? 'text-emerald-800' : 'text-rose-800'
                   }`}
                 >
                   {feedback.correta ? 'Boa!' : 'Quase!'}
@@ -761,10 +825,12 @@ function TelaQuestao({
                       45 e 68 são os dois "quase", e a diferença entre eles é o
                       que mostra que ele está evoluindo entre as tentativas. */}
                   {feedback.pontuacao !== undefined && (
-                    <span className="ml-1.5 font-bold">{feedback.pontuacao}/100</span>
+                    <span className="ml-2 text-base font-bold opacity-80">{feedback.pontuacao}/100</span>
                   )}
                 </p>
-                <p className={`mt-0.5 text-xs ${feedback.correta ? 'text-emerald-800' : 'text-rose-800'}`}>
+                <p
+                  className={`mt-0.5 text-sm font-medium ${feedback.correta ? 'text-emerald-800' : 'text-rose-800'}`}
+                >
                   {feedback.explicacao}
                 </p>
                 {feedback.transcricao && (
@@ -777,15 +843,15 @@ function TelaQuestao({
               </div>
             </div>
 
-            <div className="mt-4">
-              <BotaoPrincipal onClick={aoAvancar}>
+            <div className="mt-4 md:mt-0 md:w-64 md:shrink-0">
+              <BotaoPrincipal onClick={aoAvancar} cor={feedback.correta ? 'verde' : 'rosa'}>
                 {numero === total ? 'Ver resultado' : feedback.correta ? 'Próxima' : 'Entendi, próxima'}
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
               </BotaoPrincipal>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </footer>
+      )}
     </div>
   )
 }
@@ -793,24 +859,30 @@ function TelaQuestao({
 /**
  * Instrução e frase-alvo, separadas (migration 0011).
  *
- * A instrução é moldura: pequena, sem negrito, cinza. A frase é o conteúdo —
- * bloco próprio, corpo maior, fundo lilás suave. Antes as duas saíam no mesmo
- * negrito e o olho não achava onde começava o inglês.
+ * A instrução é o TÍTULO da tela — grande e pesado, como o "Translate this
+ * sentence" do Duolingo: é a primeira coisa que o olho pega e diz o que fazer.
+ * A frase é o conteúdo — um balão branco com borda, corpo maior, como a fala
+ * do personagem. Antes as duas saíam no mesmo negrito miúdo e o olho não
+ * achava onde começava o inglês.
  */
 function Enunciado({ questao }: { questao: QuestaoTarefa }) {
   const { instrucao, frase } = dividirEnunciado(questao)
 
   return (
-    <div className="mt-4">
-      {instrucao && <p className="text-sm font-medium leading-snug text-neutral-500">{instrucao}</p>}
+    <div className="mt-3">
+      {instrucao && (
+        <h1 className="text-2xl font-extrabold leading-tight text-neutral-900 md:text-3xl">{instrucao}</h1>
+      )}
       {frase && (
-        <p
-          className={`rounded-2xl bg-violet-50 px-4 py-3.5 text-[17px] font-bold leading-relaxed text-neutral-900 ${
-            instrucao ? 'mt-2' : ''
-          }`}
-        >
-          <FraseComLacuna texto={frase} />
-        </p>
+        <div className={`relative ${instrucao ? 'mt-5' : ''}`}>
+          {/* A pontinha do balão: um quadrado girado, com a mesma borda, meio
+              escondido atrás do corpo. É o que faz o bloco ler como "alguém
+              disse isso" e não como mais um campo. */}
+          <span className="absolute -top-2 left-7 h-4 w-4 rotate-45 border-l-2 border-t-2 border-neutral-200 bg-white" />
+          <p className="relative rounded-2xl border-2 border-neutral-200 bg-white px-5 py-4 text-lg font-bold leading-relaxed text-neutral-900 md:text-xl">
+            <FraseComLacuna texto={frase} />
+          </p>
+        </div>
       )}
     </div>
   )
@@ -827,7 +899,7 @@ function FraseComLacuna({ texto }: { texto: string }) {
         <Fragment key={i}>
           {parte}
           {i < partes.length - 1 && (
-            <span className="mx-1 inline-block w-16 border-b-[3px] border-violet-300 align-baseline" />
+            <span className="mx-1 inline-block w-20 border-b-[3px] border-violet-400 align-baseline" />
           )}
         </Fragment>
       ))}
@@ -855,7 +927,7 @@ function FalaOuvida({
   const algumaErrada = palavras.some((p) => !p.bate)
 
   return (
-    <div className={`mt-1.5 text-xs ${correta ? 'text-emerald-700' : 'text-rose-700'}`}>
+    <div className={`mt-1.5 text-sm ${correta ? 'text-emerald-700' : 'text-rose-700'}`}>
       <p>
         Ouvi:{' '}
         <i>
@@ -985,45 +1057,55 @@ function RespostaOpcoes({
   }
 
   return (
-    <div className="space-y-2.5">
-      {questao.opcoes?.map((opcao) => {
+    <div className="space-y-3">
+      {questao.opcoes?.map((opcao, i) => {
         const escolhidaPeloAluno = escolhida === opcao
         const corretaRevelada = feedback && opcao === feedback.resposta_correta
         const acertou = escolhidaPeloAluno && feedback?.correta
         const errou = escolhidaPeloAluno && feedback && !feedback.correta
 
-        const estilo = !feedback
-          ? 'bg-white text-neutral-600'
+        const cor = !feedback
+          ? FICHA_COR.neutra
           : acertou
-            ? 'bg-emerald-200 font-extrabold text-emerald-950'
+            ? FICHA_COR.certa
             : errou
-              ? 'bg-rose-200 font-extrabold text-rose-950'
+              ? FICHA_COR.errada
               : corretaRevelada
-                ? 'bg-emerald-100 text-emerald-900'
-                : 'bg-white text-neutral-400'
+                ? FICHA_COR.certa
+                : FICHA_COR.apagada
 
         return (
           <button
             key={opcao}
             disabled={Boolean(feedback)}
             onClick={() => escolher(opcao)}
-            className={`flex w-full items-center justify-between gap-2 rounded-2xl px-4 py-3.5 text-left text-sm font-bold transition ${estilo}`}
+            className={`${FICHA_BASE} flex w-full items-center gap-3 px-4 py-3.5 text-base md:text-lg ${cor}`}
           >
+            {/* O número em caixinha é o atalho de teclado que o desktop
+                merece e o "pega aqui" que o celular entende. Vira o
+                veredito quando o feedback chega. */}
+            <span
+              className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border-2 text-sm font-extrabold ${
+                acertou || (corretaRevelada && !escolhidaPeloAluno)
+                  ? 'border-emerald-400 bg-emerald-400 text-white'
+                  : errou
+                    ? 'border-rose-400 bg-rose-400 text-white'
+                    : 'border-current opacity-40'
+              }`}
+            >
+              {acertou || (corretaRevelada && !escolhidaPeloAluno) ? (
+                <Check className="h-4 w-4" strokeWidth={3} />
+              ) : errou ? (
+                <X className="h-4 w-4" strokeWidth={3} />
+              ) : (
+                i + 1
+              )}
+            </span>
             <span className="min-w-0 flex-1 break-words">{rotulo ? rotulo(opcao) : opcao}</span>
-            {acertou && (
-              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white">
-                <Check className="h-3.5 w-3.5 text-emerald-700" />
-              </span>
-            )}
-            {errou && (
-              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white">
-                <X className="h-3.5 w-3.5 text-rose-600" />
-              </span>
-            )}
-            {/* Sem ícone, só um rótulo: a certa não deve competir com a
+            {/* Sem ícone extra, só um rótulo: a certa não deve competir com a
                 resposta do aluno pela atenção. */}
             {corretaRevelada && !escolhidaPeloAluno && (
-              <span className="shrink-0 text-xs font-semibold">correta</span>
+              <span className="shrink-0 text-xs font-extrabold uppercase tracking-wide">correta</span>
             )}
           </button>
         )
@@ -1055,11 +1137,17 @@ function RespostaTexto({
         onChange={(e) => setValor(e.target.value)}
         disabled={Boolean(feedback)}
         placeholder="Digite sua resposta"
-        className="w-full rounded-2xl border-2 border-neutral-200 px-4 py-3.5 text-sm outline-none focus:border-indigo-500 disabled:bg-neutral-50"
+        className={`w-full rounded-2xl border-2 bg-white px-4 py-4 text-base font-bold outline-none transition placeholder:font-medium placeholder:text-neutral-300 md:text-lg ${
+          !feedback
+            ? 'border-neutral-200 focus:border-violet-400'
+            : feedback.correta
+              ? 'border-emerald-400 bg-emerald-50 text-emerald-900'
+              : 'border-rose-400 bg-rose-50 text-rose-900'
+        }`}
       />
       {feedback && !feedback.correta && questao.tipo !== 'resposta_curta' && (
-        <p className="mt-2 text-xs text-neutral-500">
-          Resposta certa: <b className="text-neutral-700">{feedback.resposta_correta}</b>
+        <p className="mt-3 text-sm text-neutral-500">
+          Resposta certa: <b className="text-neutral-800">{feedback.resposta_correta}</b>
         </p>
       )}
 
@@ -1069,20 +1157,18 @@ function RespostaTexto({
       {podeOuvirDica && (
         <button
           onClick={() => falarEmIngles(questao.resposta_correta)}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-[1.5px] border-neutral-200 bg-white py-2.5 text-xs font-bold text-neutral-500"
+          className={`${BOTAO_CHUNKY} mt-3 w-full border-neutral-200 bg-white py-3 text-sm text-neutral-500 hover:bg-neutral-50`}
         >
-          <Volume2 className="h-3.5 w-3.5" /> Travou? Ouvir a pronúncia
+          <Volume2 className="h-4 w-4" /> Travou? Ouvir a pronúncia
         </button>
       )}
 
       {!feedback && (
-        <button
-          onClick={() => valor.trim() && aoResponder(valor.trim())}
-          disabled={!valor.trim()}
-          className="mt-3 w-full rounded-2xl bg-neutral-900 py-3 text-sm font-bold text-white disabled:opacity-40"
-        >
-          Responder
-        </button>
+        <div className="mt-5">
+          <BotaoPrincipal onClick={() => valor.trim() && aoResponder(valor.trim())} disabled={!valor.trim()}>
+            Responder
+          </BotaoPrincipal>
+        </div>
       )}
     </div>
   )
@@ -1113,29 +1199,46 @@ function RespostaOrdenarPalavras({
     return indices
   }
 
+  // As fichas montadas e as disponíveis são a MESMA peça: o que muda é a cor
+  // depois do feedback. Tamanho igual dos dois lados para a ficha não
+  // "encolher" ao subir para a frase.
+  const ficha = `${FICHA_BASE} px-4 py-2.5 text-base md:text-lg`
+  const corMontada = !feedback ? FICHA_COR.selecionada : feedback.correta ? FICHA_COR.certa : FICHA_COR.errada
+
   return (
     <div>
-      <div className="flex min-h-14 flex-wrap gap-2 rounded-2xl border-2 border-dashed border-neutral-200 p-3">
-        {escolhidas.length === 0 && <span className="text-sm text-neutral-300">Toque nas palavras abaixo</span>}
+      {/* As linhas de caderno por trás são o "escreva aqui" do Duolingo: dão
+          a altura de duas linhas mesmo com a área vazia, então a tela não
+          pula quando a primeira palavra sobe. */}
+      <div
+        className="relative flex min-h-[7.5rem] flex-wrap content-start gap-2 py-2"
+        style={{
+          backgroundImage: 'linear-gradient(to bottom, transparent calc(100% - 2px), #e5e5e5 calc(100% - 2px))',
+          backgroundSize: '100% 3.75rem',
+        }}
+      >
+        {escolhidas.length === 0 && (
+          <span className="self-center px-1 text-sm font-medium text-neutral-300">Toque nas palavras abaixo</span>
+        )}
         {escolhidas.map((palavra, i) => (
           <button
             key={i}
             disabled={Boolean(feedback)}
             onClick={() => setEscolhidas((atual) => atual.filter((_, j) => j !== i))}
-            className="rounded-xl bg-indigo-100 px-3 py-1.5 text-sm font-semibold text-indigo-800"
+            className={`${ficha} ${corMontada}`}
           >
             {palavra}
           </button>
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-5 flex flex-wrap justify-center gap-2.5">
         {disponiveis.map((palavra, i) => (
           <button
             key={i}
             disabled={Boolean(feedback)}
             onClick={() => setEscolhidas((atual) => [...atual, palavra])}
-            className="rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700"
+            className={`${ficha} ${feedback ? FICHA_COR.apagada : FICHA_COR.neutra}`}
           >
             {palavra}
           </button>
@@ -1143,18 +1246,19 @@ function RespostaOrdenarPalavras({
       </div>
 
       {feedback && !feedback.correta && (
-        <p className="mt-2 text-xs text-neutral-500">
-          Frase certa: <b className="text-neutral-700">{feedback.resposta_correta}</b>
+        <p className="mt-4 text-sm text-neutral-500">
+          Frase certa: <b className="text-neutral-800">{feedback.resposta_correta}</b>
         </p>
       )}
       {!feedback && (
-        <button
-          onClick={() => escolhidas.length && aoResponder(escolhidas.join(' '))}
-          disabled={escolhidas.length === 0}
-          className="mt-3 w-full rounded-2xl bg-neutral-900 py-3 text-sm font-bold text-white disabled:opacity-40"
-        >
-          Responder
-        </button>
+        <div className="mt-6">
+          <BotaoPrincipal
+            onClick={() => escolhidas.length && aoResponder(escolhidas.join(' '))}
+            disabled={escolhidas.length === 0}
+          >
+            Responder
+          </BotaoPrincipal>
+        </div>
       )}
     </div>
   )
@@ -1256,7 +1360,7 @@ function RespostaLigarColunas({
     <div>
       {/* Uma linha da grade = uma ficha de cada lado, mas os lados NÃO se
           correspondem: ambos estão embaralhados, e é o toque que liga. */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-3">
         {esquerda.map((item, pos) => (
           <Fragment key={item.indice}>
             <Ficha
@@ -1280,7 +1384,7 @@ function RespostaLigarColunas({
       </div>
 
       {!feedback && (
-        <p className="mt-3 text-center text-xs font-semibold text-neutral-400">
+        <p className="mt-4 text-center text-sm font-semibold text-neutral-400">
           {selecionado
             ? 'Agora toque no par do outro lado.'
             : faltam === pares.length
@@ -1292,7 +1396,7 @@ function RespostaLigarColunas({
       {/* Sem esta linha a tela se contradiz: a grade termina toda verde (par
           errado nunca gruda) enquanto o card do pai diz "Quase!". */}
       {feedback && !feedback.correta && errosDePrimeira > 0 && (
-        <p className="mt-3 rounded-2xl bg-neutral-50 px-4 py-2.5 text-center text-xs font-medium text-neutral-500">
+        <p className="mt-4 rounded-2xl bg-neutral-100 px-4 py-3 text-center text-sm font-medium text-neutral-600">
           Você fechou todos os pares, mas{' '}
           {errosDePrimeira === 1 ? 'errou 1 na primeira tentativa' : `errou ${errosDePrimeira} na primeira tentativa`}.
         </p>
@@ -1322,15 +1426,13 @@ function Ficha({
   aoTocar: () => void
 }) {
   const fechada = numero !== undefined
-  const base =
-    'flex min-h-11 items-center gap-2 rounded-2xl border-2 px-3 py-2.5 text-left text-sm font-bold transition'
   const aparencia = fechada
-    ? 'border-transparent bg-emerald-50 text-emerald-800'
+    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
     : errando
-      ? 'animate-treme border-rose-400 bg-rose-50 text-rose-700'
+      ? FICHA_COR.errando
       : selecionada
-        ? '-translate-y-px border-violet-500 bg-violet-100 text-violet-800'
-        : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
+        ? FICHA_COR.selecionada
+        : FICHA_COR.neutra
 
   return (
     <button
@@ -1338,10 +1440,10 @@ function Ficha({
       aria-pressed={selecionada}
       disabled={travada || fechada}
       onClick={aoTocar}
-      className={`${base} ${aparencia}`}
+      className={`${FICHA_BASE} flex min-h-14 items-center gap-2 px-3 py-3 text-base md:text-lg ${aparencia}`}
     >
       {fechada && (
-        <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500 text-[10px] font-extrabold text-white">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs font-extrabold text-white">
           {numero}
         </span>
       )}

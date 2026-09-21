@@ -180,6 +180,13 @@ export function SalaPage({ entrada }: { entrada: ModoDeEntrada }) {
         connect
         video
         audio
+        // Os dois cortam a banda pela metade numa turma grande, e é banda o
+        // que a sala custa (ver docs/LIVEKIT-SELF-HOST.md). `adaptiveStream`:
+        // o navegador pede ao servidor só a resolução do tamanho em que o
+        // vídeo está sendo exibido — um tile pequeno na tira não recebe 720p.
+        // `dynacast`: quem publica para de codificar as camadas de simulcast
+        // que ninguém está assistindo, o que poupa o celular do aluno.
+        options={{ adaptiveStream: true, dynacast: true }}
         onConnected={() => setEntrou(true)}
         // Sair da chamada não pode deixar a pessoa numa tela preta: o professor
         // volta para a ficha do aluno, o aluno para o painel, e o convidado sem

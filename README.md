@@ -93,7 +93,7 @@ npm run dev
    supabase secrets set LIVEKIT_API_KEY=sua_api_key
    supabase secrets set LIVEKIT_API_SECRET=seu_api_secret
    ```
-   Servem tanto para o LiveKit Cloud quanto para um servidor próprio (`livekit-server`, Apache 2.0) — a API é a mesma, e trocar um pelo outro é trocar estes três valores. Nenhum deles entra no `.env` do front: o navegador recebe a URL e um JWT de curta duração, emitidos por `sala-entrar`.
+   Servem tanto para o LiveKit Cloud quanto para um servidor próprio (`livekit-server`, Apache 2.0) — a API é a mesma, e trocar um pelo outro é trocar estes três valores. O passo a passo do servidor próprio (VPS na Hostinger, dimensionamento, firewall, verificação) está em [docs/LIVEKIT-SELF-HOST.md](docs/LIVEKIT-SELF-HOST.md). Nenhum deles entra no `.env` do front: o navegador recebe a URL e um JWT de curta duração, emitidos por `sala-entrar`.
 
 A chave `service_role` **nunca** entra no front — ela vive só nas Edge Functions, injetada automaticamente pelo Supabase como variável de ambiente (`SUPABASE_SERVICE_ROLE_KEY`).
 
