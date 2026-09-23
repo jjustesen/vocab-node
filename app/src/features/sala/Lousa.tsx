@@ -120,13 +120,13 @@ export function Lousa({
   aoDesligarMao?: () => void
 }) {
   /**
-   * A barra mora DENTRO do quadro e começa recolhida, como um botão pequeno no
-   * canto. Recolhida ela não é só um enfeite escondido: a camada inteira sai do
-   * caminho do ponteiro, e é isso que devolve o clique para o que está embaixo
-   * — virar a página do PDF, por exemplo. "Minimizar" aqui quer dizer
-   * literalmente "sair da frente".
+   * A barra mora DENTRO do quadro e começa aberta, com as ferramentas à mão.
+   * Recolhida — um botão pequeno no canto — ela não é só um enfeite escondido:
+   * a camada inteira sai do caminho do ponteiro, e é isso que devolve o clique
+   * para o que está embaixo — virar a página do PDF, por exemplo. "Minimizar"
+   * aqui quer dizer literalmente "sair da frente".
    */
-  const [querAberta, setQuerAberta] = useState(false)
+  const [querAberta, setQuerAberta] = useState(true)
   // Sem permissão a barra nem existe, e a camada some do caminho do ponteiro.
   const aberta = querAberta && podeAnotar
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -751,17 +751,19 @@ export function Lousa({
    * Quem recebe o ponteiro, camada por camada. Com a mão ligada, a página é
    * de quem arrasta: nem a caneta nem o clique-que-cria-texto respondem.
    *
-   * Os textos são a exceção deliberada: ficam clicáveis sempre que EU posso
-   * anotar — com a mão ligada, com a barra recolhida, com a caneta na mão —,
-   * porque clicar num texto é o gesto de "quero mexer neste". A única
-   * ferramenta que os deixa em paz é a borracha, que precisa do clique para
-   * chegar ao canvas e apagar por baixo.
+   * Os textos ficam clicáveis quando a ferramenta na mão é o mouse ou o texto
+   * — e também quando nenhuma ferramenta está na mão (mão ligada, barra
+   * recolhida), porque aí clicar num texto é o gesto de "quero mexer neste".
+   * Com caneta, forma ou borracha, o texto sai do caminho: desenhar por cima
+   * de uma palavra (circular, sublinhar, apagar o traço embaixo) não pode
+   * virar arrasto do texto.
    */
   const canvasAtivo = aberta && !mao && ferramenta !== 'texto' && ferramenta !== 'mouse'
   /** O que a barra mostra aceso: com a mão ligada, nenhuma ferramenta está na mão. */
   const ferramentaAtiva: Ferramenta | null = mao ? null : ferramenta
   const criaTexto = aberta && !mao && ferramenta === 'texto'
-  const textosInterativos = podeAnotar && (mao || !aberta || ferramenta !== 'borracha')
+  const textosInterativos =
+    podeAnotar && (mao || !aberta || ferramenta === 'mouse' || ferramenta === 'texto')
 
   const ferramentas = [
     ['mouse', MousePointer2, 'Mouse — mover e redimensionar textos'],
