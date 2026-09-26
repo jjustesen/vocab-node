@@ -33,6 +33,43 @@
       transform: translateX(5px);
     }
   }
+
+  /*
+    A reação da sala subindo pela tela (Reacoes.tsx). Entra rápido, flutua e
+    some antes de chegar ao meio — o centro é do exercício. A duração casa com
+    DURACAO_MS lá: é quando a reação sai do DOM.
+  */
+  --animate-sobe: sobe 3.2s ease-out forwards;
+  @keyframes sobe {
+    0% {
+      opacity: 0;
+      transform: translateY(0) scale(0.6);
+    }
+    10% {
+      opacity: 1;
+      transform: translateY(-16px) scale(1);
+    }
+    75% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-240px) scale(1);
+    }
+  }
+
+  /* A mesma reação para quem pediu menos movimento: aparece e some no lugar. */
+  --animate-esmaece: esmaece 3.2s ease-out forwards;
+  @keyframes esmaece {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    10%,
+    75% {
+      opacity: 1;
+    }
+  }
 }
 
 /*

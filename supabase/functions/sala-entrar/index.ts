@@ -21,6 +21,10 @@
 //   { token }                                  → 1:1, aluno sem conta
 //   { token, nome, email }                     → turma, aluno sem conta
 //
+// Qualquer porta de ALUNO pode, além disso, levar `espera: 'aguardar' |
+// 'pedir'` — ver `portaoDaEspera` (0018). Sem a sala de espera ligada, o campo
+// é ignorado e a resposta é o token de sempre.
+//
 // A função roda com --no-verify-jwt por causa das duas últimas: quem chega
 // pelo link pode não ter sessão nenhuma.
 //
@@ -66,7 +70,14 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
   if (req.method !== 'POST') return respostaErro('Método não permitido.', 405)
 
-  let corpo: { alunoId?: unknown; turmaId?: unknown; token?: unknown; nome?: unknown; email?: unknown }
+  let corpo: {
+    alunoId?: unknown
+    turmaId?: unknown
+    token?: unknown
+    nome?: unknown
+    email?: unknown
+    espera?: unknown
+  }
   try {
     corpo = await req.json()
   } catch {
@@ -114,6 +125,15 @@ Deno.serve(async (req) => {
   if ('erro' in acesso) return respostaErro(acesso.erro, acesso.status)
   if ('precisaIdentificar' in acesso) return respostaJson(acesso)
 
+  const salaDeEspera = await esperaLigada(db, acesso.salaId)
+
+  // O portão fica AQUI, depois de saber quem é a pessoa e antes de assinar
+  // qualquer coisa: quem espera não recebe token nenhum do LiveKit.
+  if (salaDeEspera && acesso.papel === 'aluno') {
+    const espera = await portaoDaEspera(db, acesso, corpo.espera)
+    if (espera) return respostaJson({ ...dadosPublicos(acesso), espera })
+  }
+
   const config = configLiveKit()
   const tokenSala = await tokenDoLiveKit(config, {
     sala: nomeDaSala(acesso.salaId),
@@ -124,13 +144,102 @@ Deno.serve(async (req) => {
   return respostaJson({
     url: config.url,
     token: tokenSala,
+    ...dadosPublicos(acesso),
+    // Só o professor precisa saber: é ele quem vê e atende a fila.
+    salaDeEspera: acesso.papel === 'professor' && salaDeEspera,
+  })
+})
+
+/** O que a antessala mostra — tudo do acesso, menos o que abre a chamada. */
+function dadosPublicos(acesso: Acesso) {
+  return {
+    salaId: acesso.salaId,
     papel: acesso.papel,
     participanteId: acesso.participanteId,
     nomeExibido: acesso.nomeExibido,
     professorNome: acesso.professorNome,
     contexto: acesso.contexto,
-  })
-})
+  }
+}
+
+/** O professor dono da sala ligou a sala de espera em Configurações? */
+async function esperaLigada(db: Db, salaId: string): Promise<boolean> {
+  const { data: sala } = await db.from('salas').select('professor_id').eq('id', salaId).maybeSingle()
+  if (!sala) return false
+  const { data } = await db
+    .from('professores')
+    .select('sala_de_espera')
+    .eq('id', sala.professor_id)
+    .maybeSingle()
+  return Boolean(data?.sala_de_espera)
+}
+
+type Espera = 'fora' | 'pendente' | 'recusado'
+
+/**
+ * A fila da sala de espera (0018). Devolve em que pé a pessoa está — ou null,
+ * quando ela foi admitida e o token pode sair.
+ *
+ * Três pedidos diferentes chegam aqui, e a diferença entre eles é o que
+ * impede a tela de "bater na porta" sozinha:
+ *
+ *   (nada)     → só consulta. É a antessala abrindo: ela precisa do nome e do
+ *                título, mas a pessoa ainda não clicou em entrar — criar o
+ *                pedido agora poria na fila do professor quem só abriu o link.
+ *   'aguardar' → entra na fila se não estiver e renova o pulso (`visto_em`).
+ *                É o que a tela repete a cada poucos segundos enquanto espera.
+ *                NÃO desfaz uma recusa: senão a própria consulta seguinte
+ *                apagaria o "não" do professor antes de o aluno vê-lo.
+ *   'pedir'    → como 'aguardar', mas um pedido recusado volta para a fila.
+ *                É o botão "pedir de novo", um gesto explícito do aluno.
+ *
+ * A admissão é consumida: a linha é apagada quando o token sai, e a próxima
+ * entrada bate de novo.
+ */
+async function portaoDaEspera(db: Db, acesso: Acesso, pedido: unknown): Promise<Espera | null> {
+  const chave = { sala_id: acesso.salaId, participante_id: acesso.participanteId }
+
+  const { data: linha } = await db
+    .from('sala_espera')
+    .select('status')
+    .match(chave)
+    .maybeSingle()
+
+  if (linha?.status === 'admitido') {
+    await db.from('sala_espera').delete().match(chave)
+    return null
+  }
+
+  if (pedido !== 'aguardar' && pedido !== 'pedir') {
+    return linha?.status === 'pendente' || linha?.status === 'recusado' ? linha.status : 'fora'
+  }
+
+  const agora = new Date().toISOString()
+
+  if (!linha) {
+    // `ignoreDuplicates`: duas consultas da mesma aba podem se cruzar no ar, e
+    // a segunda não pode falhar por chave repetida — a pessoa já está na fila.
+    await db
+      .from('sala_espera')
+      .upsert(
+        { ...chave, nome: acesso.nomeExibido, pedido_em: agora, visto_em: agora },
+        { onConflict: 'sala_id,participante_id', ignoreDuplicates: true },
+      )
+    return 'pendente'
+  }
+
+  if (linha.status === 'recusado' && pedido === 'aguardar') return 'recusado'
+
+  await db
+    .from('sala_espera')
+    .update(
+      linha.status === 'recusado'
+        ? { status: 'pendente', nome: acesso.nomeExibido, pedido_em: agora, visto_em: agora }
+        : { visto_em: agora },
+    )
+    .match(chave)
+  return 'pendente'
+}
 
 /** JWT (professor ou aluno — mesmo GoTrue) → id do usuário, ou null. */
 async function usuarioDoJwt(autorizacao: string): Promise<string | null> {

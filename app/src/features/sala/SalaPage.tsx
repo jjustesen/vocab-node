@@ -13,7 +13,9 @@ import { Track, type Participant } from 'livekit-client'
 import { isTrackReference, type TrackReferenceOrPlaceholder } from '@livekit/components-react'
 import {
   GraduationCap,
+  Hourglass,
   Loader2,
+  MessageSquare,
   Mic,
   PanelLeft,
   PanelRight,
@@ -26,7 +28,14 @@ import {
 } from 'lucide-react'
 import '@livekit/components-styles'
 import { useAulasDoAluno } from '@/features/aulas/api'
-import { pedeIdentificacao, useAcessoSala, type AcessoSala, type ModoDeEntrada } from './api'
+import {
+  estaEmEspera,
+  pedeIdentificacao,
+  useAcessoSala,
+  usePedirEntrada,
+  type AcessoSala,
+  type ModoDeEntrada,
+} from './api'
 import { useAlunosDaTurma } from '@/features/turmas/api'
 import { aulaDeAgora } from './aula-de-agora'
 import { useCanal, useSalaConectada } from './canal'
@@ -40,6 +49,9 @@ import {
 import { Palco } from './Palco'
 import { PainelDaAula } from './PainelDaAula'
 import { SeletorDeConteudo } from './SeletorDeConteudo'
+import { ChatDaSala, useChat } from './ChatDaSala'
+import { BotaoDeReagir, CamadaDeReacoes, useReacoes } from './Reacoes'
+import { FilaDeEspera } from './FilaDeEspera'
 import {
   nomeDo,
   PALCO_VAZIO,
@@ -72,8 +84,30 @@ export function SalaPage({ entrada }: { entrada: ModoDeEntrada }) {
   const entradaComNome: ModoDeEntrada =
     entrada.modo === 'convidado' && identificacao ? { ...entrada, ...identificacao } : entrada
 
-  const { data, isLoading, error } = useAcessoSala(entradaComNome)
+  /**
+   * O aluno já clicou em entrar e está na fila da sala de espera (0018). Só
+   * existe quando o professor ligou a espera — sem ela, a resposta já traz o
+   * token e este estado nunca muda.
+   */
+  const [aguardando, setAguardando] = useState(false)
+  const { data, isLoading, isPlaceholderData, error } = useAcessoSala(entradaComNome, aguardando)
+  const pedir = usePedirEntrada(entradaComNome)
   const [conectar, setConectar] = useState(false)
+
+  /**
+   * Admitido, entra sozinho: o aluno já clicou uma vez, e pedir um segundo
+   * clique depois de esperar seria cobrar o mesmo gesto duas vezes. Uma vez
+   * só — se a conexão cair antes de subir, a antessala volta com o motivo e o
+   * botão, em vez de tentar em laço.
+   */
+  const entrouSozinho = useRef(false)
+  const admitido = aguardando && Boolean(data) && !pedeIdentificacao(data!) && !estaEmEspera(data!)
+  useEffect(() => {
+    if (admitido && !entrouSozinho.current) {
+      entrouSozinho.current = true
+      setConectar(true)
+    }
+  }, [admitido])
   /**
    * `onDisconnected` do LiveKit dispara nos DOIS casos: quando a pessoa
    * desliga e quando a conexão nunca chegou a subir (servidor fora do ar, URL
@@ -124,7 +158,9 @@ export function SalaPage({ entrada }: { entrada: ModoDeEntrada }) {
     )
   }
 
-  if (!conectar) {
+  const emEspera = estaEmEspera(data)
+
+  if (!conectar || emEspera) {
     /**
      * O que dá nome à antessala. Numa TURMA é sempre o nome da turma, para os
      * dois lados: desde que o aluno pode ter várias salas na lista do painel,
@@ -137,6 +173,35 @@ export function SalaPage({ entrada }: { entrada: ModoDeEntrada }) {
         : data.papel === 'professor'
           ? data.contexto.alunoNome
           : `Aula com ${data.professorNome.split(' ')[0]}`
+    const primeiroNomeDoProfessor = data.professorNome.split(' ')[0]
+
+    // Enquanto a resposta nova não chega, a anterior (`isPlaceholderData`)
+    // ainda pode dizer "recusado" — mas o aluno acabou de pedir de novo, e a
+    // tela certa já é a de espera.
+    if (emEspera && aguardando && (isPlaceholderData || data.espera !== 'recusado')) {
+      return (
+        <TelaDeEspera
+          titulo={titulo}
+          professorNome={primeiroNomeDoProfessor}
+          aoDesistir={() => setAguardando(false)}
+        />
+      )
+    }
+
+    const recusou = emEspera && data.espera === 'recusado'
+
+    function pedirParaEntrar() {
+      // Pede câmera e microfone AGORA, dentro do clique: no iOS Safari é o
+      // único momento em que o navegador aceita perguntar. Quando o professor
+      // admitir, a conexão sobe sozinha e já encontra a permissão dada — sem
+      // isto ela pediria fora de um gesto e falharia calada.
+      navigator.mediaDevices
+        ?.getUserMedia({ audio: true, video: true })
+        .then((midia) => midia.getTracks().forEach((t) => t.stop()))
+        .catch(() => {})
+      pedir.mutate(undefined, { onSuccess: () => setAguardando(true) })
+    }
+
     return (
       <div className="grid min-h-dvh place-items-center bg-neutral-950 px-6">
         <div className="w-full max-w-sm text-center">
@@ -155,17 +220,40 @@ export function SalaPage({ entrada }: { entrada: ModoDeEntrada }) {
             </p>
           )}
 
+          {recusou && (
+            <p className="mt-5 rounded-2xl bg-rose-500/10 px-4 py-3 text-xs font-medium text-rose-300">
+              {primeiroNomeDoProfessor} não liberou sua entrada agora. Se foi engano, peça de novo.
+            </p>
+          )}
+
+          {pedir.isError && (
+            <p className="mt-5 rounded-2xl bg-rose-500/10 px-4 py-3 text-xs font-medium text-rose-300">
+              {pedir.error instanceof Error ? pedir.error.message : 'Não consegui pedir para entrar.'}
+            </p>
+          )}
+
           <button
             onClick={() => {
               setCaiuAntesDeEntrar(false)
-              setConectar(true)
+              if (emEspera) pedirParaEntrar()
+              else setConectar(true)
             }}
-            className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-violet-300 px-6 py-4 text-sm font-extrabold text-neutral-900"
+            disabled={pedir.isPending}
+            className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-violet-300 px-6 py-4 text-sm font-extrabold text-neutral-900 transition disabled:opacity-60"
           >
-            <Video className="h-4 w-4" /> {caiuAntesDeEntrar ? 'Tentar de novo' : 'Entrar na sala'}
+            {pedir.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}{' '}
+            {emEspera
+              ? recusou
+                ? 'Pedir de novo'
+                : 'Pedir para entrar'
+              : caiuAntesDeEntrar
+                ? 'Tentar de novo'
+                : 'Entrar na sala'}
           </button>
           <p className="mt-4 text-xs text-neutral-500">
-            O navegador vai pedir acesso à câmera e ao microfone.
+            {emEspera
+              ? `${primeiroNomeDoProfessor} libera a sua entrada. O navegador vai pedir acesso à câmera e ao microfone.`
+              : 'O navegador vai pedir acesso à câmera e ao microfone.'}
           </p>
         </div>
       </div>
@@ -248,7 +336,15 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
   const areaRef = useRef<HTMLDivElement>(null)
   const [arrastandoDivisor, setArrastandoDivisor] = useState(false)
   const [seletorAberto, setSeletorAberto] = useState(false)
-  const [painelAberto, setPainelAberto] = useState(true)
+  /**
+   * A coluna da direita mostra UMA coisa por vez: o painel do aluno ou o chat.
+   * Os dois lado a lado comeriam 640px do palco, e é o palco que a aula usa.
+   * O painel é só do professor, então para o aluno isto é "chat ou nada".
+   */
+  const [lateral, setLateral] = useState<'painel' | 'chat' | null>('painel')
+  const chatAberto = lateral === 'chat'
+  const chat = useChat({ eu, meuNome: acesso.nomeExibido, aberto: chatAberto })
+  const { noAr, reagir } = useReacoes(acesso.nomeExibido)
   /** Qual aluno o painel esta mostrando. Numa turma, o professor escolhe. */
   const [alunoNoPainel, setAlunoNoPainel] = useState<string | null>(null)
 
@@ -270,6 +366,8 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
   }, [ehProfessor, contexto, alunosDaTurma])
 
   const podeVerPainel = ehProfessor && alunosDoPainel.length > 0
+  const painelAberto = lateral === 'painel'
+  const fecharChat = () => setLateral(podeVerPainel ? 'painel' : null)
   const alunoSelecionado =
     alunosDoPainel.find((a) => a.id === alunoNoPainel) ?? alunosDoPainel[0] ?? null
 
@@ -429,7 +527,7 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
           // `flex-row-reverse` põe a coluna à direita sem mexer na ordem do
           // DOM: a tira continua vindo antes do palco no HTML e na leitura
           // por teclado, só a pintura espelha.
-          className={`flex min-w-0 flex-1 ${
+          className={`relative flex min-w-0 flex-1 ${
             !temDestaque || posicao === 'topo'
               ? 'flex-col'
               : posicao === 'esquerda'
@@ -483,7 +581,21 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
               }}
             />
           )}
+
+          <CamadaDeReacoes noAr={noAr} />
+          {ehProfessor && <FilaDeEspera salaId={acesso.salaId} ligada={Boolean(acesso.salaDeEspera)} />}
         </div>
+
+        {/*
+          No desktop o chat é uma coluna, como o painel. No celular não há
+          coluna que caiba: ele sobe como uma folha por cima da metade de baixo
+          da tela, e o vídeo continua à vista na metade de cima.
+        */}
+        {chatAberto && (
+          <aside className="fixed inset-x-2 bottom-2 top-[35%] z-40 lg:static lg:z-auto lg:w-80 lg:shrink-0">
+            <ChatDaSala mensagens={chat.mensagens} aoEnviar={chat.enviar} aoFechar={fecharChat} />
+          </aside>
+        )}
 
         {podeVerPainel && painelAberto && alunoSelecionado && (
           <aside className="hidden w-80 shrink-0 lg:block">
@@ -543,9 +655,28 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
           <BotaoDePosicao posicao={posicao} aoClicar={alternarPosicao} />
         )}
 
+        <BotaoDeReagir aoReagir={reagir} />
+
+        <button
+          onClick={() => (chatAberto ? fecharChat() : setLateral('chat'))}
+          aria-pressed={chatAberto}
+          title={chat.naoLidas > 0 ? `Chat — ${chat.naoLidas} mensagem(ns) nova(s)` : 'Chat da aula'}
+          className={`relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold transition ${
+            chatAberto ? 'bg-violet-300 text-neutral-900' : 'bg-neutral-800 text-neutral-200 hover:bg-neutral-700'
+          }`}
+        >
+          <MessageSquare className="h-4 w-4" />
+          <span className="hidden sm:inline">Chat</span>
+          {chat.naoLidas > 0 && (
+            <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-pink-300 px-1 text-[11px] font-extrabold text-neutral-900">
+              {chat.naoLidas > 9 ? '9+' : chat.naoLidas}
+            </span>
+          )}
+        </button>
+
         {podeVerPainel && (
           <button
-            onClick={() => setPainelAberto((v) => !v)}
+            onClick={() => setLateral(painelAberto ? null : 'painel')}
             title="Anotações e ficha do aluno"
             className="hidden items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-2 text-sm font-bold text-neutral-200 transition hover:bg-neutral-700 lg:flex"
           >
@@ -720,6 +851,47 @@ function TiraDeVideo({
             <ParticipantTile trackRef={track} className="h-full w-full" />
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * O aluno na sala de espera, esperando o professor admitir (0018).
+ *
+ * Diz o que vai acontecer — "você entra sozinho" — porque a dúvida de quem
+ * espera é se precisa fazer mais alguma coisa, e a resposta é não. A tela
+ * consulta sozinha a cada poucos segundos (`useAcessoSala`), inclusive com a
+ * aba em segundo plano.
+ */
+function TelaDeEspera({
+  titulo,
+  professorNome,
+  aoDesistir,
+}: {
+  titulo: string
+  professorNome: string
+  aoDesistir: () => void
+}) {
+  return (
+    <div className="grid min-h-dvh place-items-center bg-neutral-950 px-6">
+      <div className="w-full max-w-sm text-center" role="status">
+        <span className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-violet-300 text-neutral-900">
+          <Hourglass className="h-8 w-8 motion-safe:animate-pulse" />
+        </span>
+        <h1 className="mt-5 text-xl font-extrabold text-white">{titulo}</h1>
+        <p className="mt-2 text-sm text-neutral-300">
+          Você está na sala de espera. {professorNome} já sabe que você chegou.
+        </p>
+        <p className="mt-1 text-sm text-neutral-500">
+          Assim que sua entrada for liberada, você entra sozinho — pode deixar esta aba aberta.
+        </p>
+        <button
+          onClick={aoDesistir}
+          className="mt-7 rounded-full px-5 py-2.5 text-sm font-bold text-neutral-400 transition hover:bg-white/5 hover:text-white"
+        >
+          Sair da espera
+        </button>
       </div>
     </div>
   )

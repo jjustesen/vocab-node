@@ -5,6 +5,7 @@ import {
   Library,
   LogOut,
   Pencil,
+  Settings,
   Sun,
   Users,
   UsersRound,
@@ -89,6 +90,19 @@ export function Layout() {
               }
             >
               {inicial}
+            </NavLink>
+            <NavLink
+              to="/configuracoes"
+              title="Configurações"
+              aria-label="Configurações"
+              className={({ isActive }) =>
+                [
+                  "rounded-full p-2 transition",
+                  isActive ? "bg-white/15 text-white" : "text-neutral-400 hover:text-white",
+                ].join(" ")
+              }
+            >
+              <Settings className="h-4 w-4" />
             </NavLink>
             <button
               onClick={sair}

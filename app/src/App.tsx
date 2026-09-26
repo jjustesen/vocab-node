@@ -41,6 +41,7 @@ import { TrilhaDetalhePage } from '@/features/trilhas/TrilhaDetalhePage'
 import { TrilhaDoAlunoPage } from '@/features/trilhas/TrilhaDoAlunoPage'
 import { FinanceiroPage } from '@/features/financeiro/FinanceiroPage'
 import { PlanoPage } from '@/features/planos/PlanoPage'
+import { ConfiguracoesPage } from '@/features/configuracoes/ConfiguracoesPage'
 
 export default function App() {
   return (
@@ -109,6 +110,7 @@ export default function App() {
             <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/financeiro" element={<FinanceiroPage />} />
             <Route path="/plano" element={<PlanoPage />} />
+            <Route path="/configuracoes" element={<ConfiguracoesPage />} />
           </Route>
         </Route>
 

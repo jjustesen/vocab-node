@@ -32,6 +32,8 @@ export type Professor = {
   nome: string
   foto_url: string | null
   plano: PlanoTipo
+  /** Aluno só entra na chamada depois que o professor admite (0018). */
+  sala_de_espera: boolean
   criado_em: string
 }
 
@@ -111,6 +113,21 @@ export type Sala = {
    */
   token: string | null
   criada_em: string
+}
+
+/**
+ * Quem está batendo na porta da sala (0018). Uma linha por pessoa por sala;
+ * apagada quando o token é entregue.
+ */
+export type SalaEspera = {
+  sala_id: string
+  /** A identidade do LiveKit — `aluno-<id>`. */
+  participante_id: string
+  nome: string
+  status: 'pendente' | 'admitido' | 'recusado'
+  pedido_em: string
+  /** Renovado a cada consulta de quem espera — quem fechou a aba para de renovar. */
+  visto_em: string
 }
 
 /**
@@ -349,6 +366,11 @@ export type Database = {
       >
       aulas: Tabela<Aula, Insert<Aula, 'aluno_id' | 'data_hora'>, Partial<Aula>>
       salas: Tabela<Sala, Insert<Sala, 'professor_id' | 'token_hash'>, Partial<Sala>>
+      sala_espera: Tabela<
+        SalaEspera,
+        Insert<SalaEspera, 'sala_id' | 'participante_id' | 'nome'>,
+        Partial<SalaEspera>
+      >
       turmas: Tabela<Turma, Insert<Turma, 'professor_id' | 'nome'>, Partial<Turma>>
       turmas_alunos: Tabela<TurmaAluno, TurmaAluno, Partial<TurmaAluno>>
       documentos_aula: Tabela<

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 import { useConnectionState, useDataChannel } from '@livekit/components-react'
-import { ConnectionState } from 'livekit-client'
+import { ConnectionState, type Participant } from 'livekit-client'
 
 /**
  * Se a sala já está de pé para enviar.
@@ -36,18 +36,26 @@ export function useSalaConectada(): boolean {
  * a sala não está ouvindo ninguém. Passar uma callback estável que lê a versão
  * atual da ref inscreve UMA vez e continua enxergando o estado de agora.
  */
-export function useCanal<T>(topico: string, aoReceber: (mensagem: T) => void) {
+export function useCanal<T>(
+  topico: string,
+  /**
+   * `remetente` é quem o SERVIDOR diz que mandou — o nome dele saiu do token
+   * assinado em `sala-entrar`. Chat e reações usam este nome, e não um campo
+   * da mensagem: um campo da mensagem é o que o outro navegador quiser que seja.
+   */
+  aoReceber: (mensagem: T, remetente?: Participant) => void,
+) {
   const receberRef = useRef(aoReceber)
   receberRef.current = aoReceber
 
-  const aoChegar = useCallback((recebida: { payload: Uint8Array }) => {
+  const aoChegar = useCallback((recebida: { payload: Uint8Array; from?: Participant }) => {
     let mensagem: T
     try {
       mensagem = JSON.parse(new TextDecoder().decode(recebida.payload)) as T
     } catch {
       return // mensagem de uma versão futura do app: ignorar é melhor que quebrar
     }
-    receberRef.current(mensagem)
+    receberRef.current(mensagem, recebida.from)
   }, [])
 
   const { send } = useDataChannel(topico, aoChegar)
