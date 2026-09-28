@@ -125,6 +125,46 @@ function subtrairPalavras(todas: string[], aRemover: string[]): string[] {
   return restante
 }
 
+/** Quantas fichas a mais, além das palavras da frase — espelha MAXIMO_DISTRATORAS do servidor. */
+const MAXIMO_DISTRATORAS = 3
+
+/**
+ * As distratoras de verdade de um `ordenar_audio`, a partir de `opcoes`
+ * completas (frase + extras) OU só das extras — o resultado é o mesmo.
+ *
+ * É o que fecha a porta das fichas duplicadas: a questão gerada pela IA chega
+ * na revisão com `opcoes` JÁ contendo as palavras da frase, e o rascunho
+ * trata `opcoes` como "só as distratoras". Sem esta limpeza, salvar somava a
+ * frase de novo e o aluno via cada palavra duas vezes.
+ *
+ * Tira uma ocorrência de cada palavra da frase, descarta o que ainda repetir
+ * palavra da frase (não distrai ninguém) e as repetidas entre si.
+ */
+export function distratorasDe(opcoes: string[], frase: string): string[] {
+  const chave = (p: string) => p.trim().toLowerCase()
+  const palavras = palavrasDaFrase(frase)
+  const daFrase = new Set(palavras.map(chave))
+  const vistas = new Set<string>()
+  return subtrairPalavras(opcoes, palavras)
+    .map((o) => o.trim())
+    .filter((o) => {
+      if (!o || daFrase.has(chave(o)) || vistas.has(chave(o))) return false
+      vistas.add(chave(o))
+      return true
+    })
+    .slice(0, MAXIMO_DISTRATORAS)
+}
+
+/**
+ * Acerta um rascunho que veio de FORA do editor (a geração por IA) para o
+ * formato que o editor espera. Hoje só `ordenar_audio` precisa: ver
+ * `distratorasDe`.
+ */
+export function normalizarRascunho(r: QuestaoRascunho): QuestaoRascunho {
+  if (r.tipo !== 'ordenar_audio') return r
+  return { ...r, opcoes: distratorasDe(r.opcoes, r.resposta_correta) }
+}
+
 /**
  * Converte o rascunho para o formato do contrato antes de validar/salvar.
  * `ordenar_palavras`: o professor digita a frase correta; as palavras
@@ -150,7 +190,9 @@ export function paraQuestaoContrato(r: QuestaoRascunho) {
   // no fim, a ordem de `opcoes` já entregaria quais palavras sobram.
   if (r.tipo === 'ordenar_audio') {
     const palavras = palavrasDaFrase(r.resposta_correta)
-    const distratoras = r.opcoes.map((o) => o.trim()).filter(Boolean)
+    // `distratorasDe` e não as opções cruas: se a frase vier repetida aqui
+    // dentro (rascunho gerado pela IA), ela não pode entrar duas vezes.
+    const distratoras = distratorasDe(r.opcoes, r.resposta_correta)
     return {
       tipo: r.tipo,
       instrucao: r.instrucao.trim(),
@@ -199,9 +241,9 @@ export function questaoRowParaRascunho(q: QuestaoRow): QuestaoRascunho {
     // Em `ordenar_audio` o rascunho guarda só as distratoras, então voltamos
     // tirando de `opcoes` as fichas que a própria frase explica.
     opcoes:
-      q.tipo === 'ordenar_audio'
-        ? subtrairPalavras(q.opcoes ?? [], palavrasDaFrase(q.resposta_correta))
-        : (q.opcoes ?? []),
+      // `distratorasDe` também conserta, ao reabrir, as questões que já foram
+      // salvas com as palavras da frase em dobro.
+      q.tipo === 'ordenar_audio' ? distratorasDe(q.opcoes ?? [], q.resposta_correta) : (q.opcoes ?? []),
     resposta_correta: q.resposta_correta,
     respostas_aceitas: q.respostas_aceitas,
     pares: q.pares ?? [],

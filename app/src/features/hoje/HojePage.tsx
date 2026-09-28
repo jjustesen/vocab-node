@@ -42,6 +42,7 @@ export function HojePage() {
   const { data: pendentes } = useAtribuicoesPendentes()
   const { data: concluidas } = useConcluidasRecentes()
   const { data: concluidasHoje } = useContagemConcluidasHoje(inicioISO, fimISO)
+  const [verTodosPendentes, setVerTodosPendentes] = useState(false)
 
   const nome = ((session?.user.user_metadata.nome as string | undefined) ?? '').split(' ')[0]
   const hoje = new Date().toLocaleDateString('pt-BR', {
@@ -114,7 +115,7 @@ export function HojePage() {
         <Coluna titulo="Aguardando resposta" Icone={Bell}>
           {pendentes && pendentes.length > 0 ? (
             <div className="flex-1 space-y-3.5 overflow-y-auto rounded-3xl bg-white p-5">
-              {pendentes.slice(0, 5).map((p) => (
+              {(verTodosPendentes ? pendentes : pendentes.slice(0, 5)).map((p) => (
                 <div key={p.atribuicaoId} className="flex items-center gap-2 text-sm">
                   <span
                     className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-extrabold ${corDoAvatar(p.alunoId)}`}
@@ -143,10 +144,22 @@ export function HojePage() {
                   </a>
                 </div>
               ))}
+              {/* A lista inteira já veio na consulta: "ver todos" abre aqui
+                  mesmo, e o cartão rola — sem página nova para uma lista que
+                  só existe para cobrar no WhatsApp. */}
               {pendentes.length > 5 && (
-                <p className="pt-1 text-xs font-medium text-neutral-400">
-                  e mais {pendentes.length - 5} aguardando
-                </p>
+                <button
+                  onClick={() => setVerTodosPendentes((v) => !v)}
+                  className="flex items-center gap-1 pt-1 text-xs font-bold text-violet-700"
+                >
+                  {verTodosPendentes ? (
+                    'Ver menos'
+                  ) : (
+                    <>
+                      Ver todos os {pendentes.length} aguardando <ArrowRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
+                </button>
               )}
             </div>
           ) : (

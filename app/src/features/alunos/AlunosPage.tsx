@@ -4,6 +4,8 @@ import { ChevronRight, Loader2, Plus, Search, UserPlus } from 'lucide-react'
 import { useAlunos, useAlunosComConta, useCriarAluno } from './api'
 import { useUsoDoMes } from '@/features/planos/api'
 import { PLANOS } from '@/lib/planos'
+import { ordenar, useOrdem } from '@/lib/ordenar'
+import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
 import { NIVEIS } from '@/types/questao'
 import type { NivelCefr } from '@/types/db'
 
@@ -21,13 +23,14 @@ export function AlunosPage() {
   const { data: comConta } = useAlunosComConta()
   const [busca, setBusca] = useState('')
   const [abrindoNovo, setAbrindoNovo] = useState(false)
+  const [ordem, setOrdem] = useOrdem('alunos', 'nome')
 
   const filtrados = useMemo(() => {
     if (!alunos) return []
     const termo = busca.trim().toLowerCase()
-    if (!termo) return alunos
-    return alunos.filter((a) => a.nome.toLowerCase().includes(termo))
-  }, [alunos, busca])
+    const visiveis = termo ? alunos.filter((a) => a.nome.toLowerCase().includes(termo)) : alunos
+    return ordenar(visiveis, ordem, { nome: (a) => a.nome, data: (a) => a.criado_em })
+  }, [alunos, busca, ordem])
 
   const noLimite = uso?.limiteAlunos !== null && uso !== undefined && uso.alunosAtivos >= (uso.limiteAlunos ?? Infinity)
 
@@ -65,14 +68,17 @@ export function AlunosPage() {
         </p>
       )}
 
-      <div className="mt-4 flex items-center gap-2 rounded-full bg-white px-4 py-2.5">
-        <Search className="h-4 w-4 shrink-0 text-neutral-400" />
-        <input
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar aluno…"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
-        />
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="flex min-w-52 flex-1 items-center gap-2 rounded-full bg-white px-4 py-2.5">
+          <Search className="h-4 w-4 shrink-0 text-neutral-400" />
+          <input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar aluno…"
+            className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
+          />
+        </div>
+        <SeletorDeOrdem ordem={ordem} aoMudar={setOrdem} />
       </div>
 
       {isLoading && (

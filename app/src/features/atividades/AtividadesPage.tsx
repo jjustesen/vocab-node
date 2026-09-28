@@ -13,6 +13,8 @@ import {
   Target,
   Trash2,
 } from 'lucide-react'
+import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
+import { ordenar, useOrdem } from '@/lib/ordenar'
 import { BotaoNovaAtividade } from './BotaoNovaAtividade'
 import { EnvioModal } from './EnvioModal'
 import { ExcluirAtividadeModal } from './ExcluirAtividadeModal'
@@ -44,6 +46,7 @@ export function AtividadesPage() {
   const [busca, setBusca] = useState('')
   const [grupoNivel, setGrupoNivel] = useState(0)
   const [soRascunhos, setSoRascunhos] = useState(false)
+  const [ordem, setOrdem] = useOrdem('atividades', 'recentes')
   const [modalTrilha, setModalTrilha] = useState(false)
 
   // "Rascunho" aqui é a atividade que ainda não foi enviada a ninguém — e não
@@ -56,7 +59,7 @@ export function AtividadesPage() {
     if (!atividades) return []
     const termo = busca.trim().toLowerCase()
     const niveis = GRUPOS_NIVEL[grupoNivel].niveis
-    return atividades.filter((a) => {
+    const visiveis = atividades.filter((a) => {
       if (soRascunhos && a.enviada) return false
       const casaNivel = niveis.length === 0 || niveis.includes(a.nivel)
       const casaBusca =
@@ -65,7 +68,8 @@ export function AtividadesPage() {
         a.habilidades.some((h) => h.toLowerCase().includes(termo))
       return casaNivel && casaBusca
     })
-  }, [atividades, busca, grupoNivel, soRascunhos])
+    return ordenar(visiveis, ordem, { nome: (a) => a.titulo, data: (a) => a.criada_em })
+  }, [atividades, busca, grupoNivel, soRascunhos, ordem])
 
   return (
     <div>
@@ -122,6 +126,7 @@ export function AtividadesPage() {
               className="w-full rounded-full bg-white py-2.5 pl-11 pr-4 text-sm outline-none ring-neutral-900 focus:ring-2"
             />
           </div>
+          <SeletorDeOrdem ordem={ordem} aoMudar={setOrdem} />
           {GRUPOS_NIVEL.map((g, i) => (
             <Chip key={g.rotulo} ativo={grupoNivel === i} aoClicar={() => setGrupoNivel(i)}>
               {g.rotulo}

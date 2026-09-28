@@ -2,7 +2,12 @@ import { useState } from 'react'
 import { Check, Loader2, Plus } from 'lucide-react'
 import { Chip } from '@/components/Chip'
 import { QuestaoEditor } from './QuestaoEditor'
-import { questaoVazia, paraQuestaoContrato, type QuestaoRascunho } from './questaoRascunho'
+import {
+  questaoVazia,
+  normalizarRascunho,
+  paraQuestaoContrato,
+  type QuestaoRascunho,
+} from './questaoRascunho'
 import { questaoSchema, NIVEIS, HABILIDADES, ROTULO_HABILIDADE } from '@/types/questao'
 import type { Questao } from '@/types/questao'
 import type { NivelCefr } from '@/types/db'
@@ -42,7 +47,9 @@ export function AtividadeForm({
   const [nivel, setNivel] = useState<NivelCefr>(valoresIniciais?.nivel ?? 'B1')
   const [habilidades, setHabilidades] = useState<string[]>(valoresIniciais?.habilidades ?? [])
   const [questoes, setQuestoes] = useState<QuestaoRascunho[]>(
-    valoresIniciais?.questoes ?? [questaoVazia('multipla_escolha')],
+    // Normaliza na entrada: a revisão da geração por IA passa questões com a
+    // frase já dentro de `opcoes`, e o editor espera só as distratoras ali.
+    valoresIniciais?.questoes.map(normalizarRascunho) ?? [questaoVazia('multipla_escolha')],
   )
   const [erro, setErro] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)

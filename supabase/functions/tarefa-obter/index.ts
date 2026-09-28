@@ -10,6 +10,7 @@
 // casa de inglês, não uma prova — ver `docs/CONTRATO-QUESTOES.md` §7.
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { resolverAtribuicao } from '../_shared/atribuicao.ts'
+import { enxugarFichas } from '../_shared/questao-validacao.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 
 Deno.serve(async (req) => {
@@ -75,7 +76,7 @@ Deno.serve(async (req) => {
       tipo: q.tipo,
       instrucao: q.instrucao,
       enunciado: q.enunciado,
-      opcoes: q.opcoes,
+      opcoes: fichasSemDobra(q),
       pares: q.pares,
       resposta_correta: q.resposta_correta,
       respostas_aceitas: q.respostas_aceitas,
@@ -99,3 +100,19 @@ Deno.serve(async (req) => {
     questoes,
   })
 })
+
+/**
+ * Conserta, na entrega, as `ordenar_audio` que foram salvas com as palavras da
+ * frase em dobro (a revisão da geração por IA somava a frase de novo ao
+ * salvar — corrigido em questaoRascunho.ts, mas as tarefas já enviadas
+ * continuam no banco assim).
+ *
+ * Só mexe quando há o que tirar: uma questão sã volta intacta, na mesma ordem
+ * de fichas de sempre. A correção compara a frase montada, então sumir com uma
+ * ficha repetida não muda o que conta como acerto.
+ */
+function fichasSemDobra(q: { tipo: string; opcoes: string[] | null; resposta_correta: string }) {
+  if (q.tipo !== 'ordenar_audio' || !q.opcoes) return q.opcoes
+  const enxutas = enxugarFichas(q.opcoes, q.resposta_correta)
+  return enxutas.length < q.opcoes.length ? enxutas : q.opcoes
+}

@@ -993,7 +993,7 @@ export function CorpoDaQuestao({
             questao={questao}
             feedback={feedback}
             aoResponder={aoResponder}
-            rotulo={(o) => (o === 'true' ? 'Verdadeiro' : 'Falso')}
+            rotulo={(o) => (o === 'true' ? 'True' : 'False')}
           />
         )}
         {/* Digitar saiu de cena (13/08/2026): campo livre em frase dava

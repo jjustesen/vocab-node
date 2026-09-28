@@ -16,6 +16,8 @@ import {
 import { useAlunos } from '@/features/alunos/api'
 import type { Material, MaterialTipo, PastaMaterial } from '@/types/db'
 import { BotaoApagar } from '@/components/BotaoApagar'
+import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
+import { ordenar, useOrdem } from '@/lib/ordenar'
 import { SoltarArquivos } from './SoltarArquivos'
 import { EscolherAlunos } from './EscolherAlunos'
 import { VISUAL_TIPO } from './visual'
@@ -68,6 +70,9 @@ export function MateriaisPage() {
   const [pastaAberta, setPastaAberta] = useState<PastaAberta>('todas')
   const [busca, setBusca] = useState('')
   const [tipo, setTipo] = useState<MaterialTipo | 'todos'>('todos')
+  // A–Z por padrão: o acervo é procurado pelo nome ("Lesson 5"), e a ordem de
+  // envio só dizia em que dia o arquivo subiu — o que quase nunca importa.
+  const [ordem, setOrdem] = useOrdem('materiais', 'nome')
   const [distribuindo, setDistribuindo] = useState<Material | null>(null)
 
   /**
@@ -83,7 +88,7 @@ export function MateriaisPage() {
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase()
-    return (acervo ?? [])
+    const visiveis = (acervo ?? [])
       .filter((m) =>
         pastaAberta === 'todas'
           ? true
@@ -93,7 +98,8 @@ export function MateriaisPage() {
       )
       .filter((m) => tipo === 'todos' || m.tipo === tipo)
       .filter((m) => !termo || m.nome.toLowerCase().includes(termo))
-  }, [acervo, busca, tipo, pastaAberta])
+    return ordenar(visiveis, ordem, { nome: (m) => m.nome, data: (m) => m.criado_em })
+  }, [acervo, busca, tipo, pastaAberta, ordem])
 
   /** Quantos itens em cada prateleira — o número é metade da utilidade da aba. */
   const contagem = useMemo(() => {
@@ -155,6 +161,7 @@ export function MateriaisPage() {
             className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
           />
         </div>
+        <SeletorDeOrdem ordem={ordem} aoMudar={setOrdem} />
         <div className="flex flex-wrap gap-1">
           {FILTROS.map((f) => (
             <button

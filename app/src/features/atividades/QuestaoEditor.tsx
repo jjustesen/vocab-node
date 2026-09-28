@@ -286,7 +286,7 @@ function CamposVerdadeiroFalso({ valor, onMudar }: CamposProps) {
               : 'border-neutral-200 text-neutral-500'
           }`}
         >
-          {opcao === 'true' ? 'Verdadeiro' : 'Falso'}
+          {opcao === 'true' ? 'True' : 'False'}
         </button>
       ))}
     </div>

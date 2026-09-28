@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ChevronRight, Loader2, Plus, Users, Video, X } from 'lucide-react'
+import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
+import { ordenar, useOrdem } from '@/lib/ordenar'
 import { useCriarTurma, useTurmas } from './api'
 
 /**
@@ -14,6 +16,8 @@ import { useCriarTurma, useTurmas } from './api'
 export function TurmasPage() {
   const { data: turmas, isLoading, error } = useTurmas()
   const [criando, setCriando] = useState(false)
+  const [ordem, setOrdem] = useOrdem('turmas', 'nome')
+  const ordenadas = turmas ? ordenar(turmas, ordem, { nome: (t) => t.nome, data: (t) => t.criada_em }) : []
 
   return (
     <div>
@@ -60,9 +64,15 @@ export function TurmasPage() {
         </div>
       )}
 
+      {turmas && turmas.length > 1 && (
+        <div className="mt-4 flex justify-end">
+          <SeletorDeOrdem ordem={ordem} aoMudar={setOrdem} />
+        </div>
+      )}
+
       {turmas && turmas.length > 0 && (
-        <ul className="mt-4 divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
-          {turmas.map((turma) => (
+        <ul className="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
+          {ordenadas.map((turma) => (
             <li key={turma.id}>
               <Link
                 to={`/turmas/${turma.id}`}

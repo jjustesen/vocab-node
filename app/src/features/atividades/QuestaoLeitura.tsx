@@ -52,7 +52,7 @@ export function QuestaoLeitura({ valor }: { valor: QuestaoParaLeitura }) {
             {(['true', 'false'] as const).map((o) => (
               <Alternativa
                 key={o}
-                texto={o === 'true' ? 'Verdadeiro' : 'Falso'}
+                texto={o === 'true' ? 'True' : 'False'}
                 correta={valor.resposta_correta === o}
               />
             ))}
