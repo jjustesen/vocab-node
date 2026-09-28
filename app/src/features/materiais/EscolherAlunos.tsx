@@ -3,7 +3,7 @@ import { Check, Loader2, Search, Users } from 'lucide-react'
 import { useAlunos } from '@/features/alunos/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import type { Material } from '@/types/db'
-import { useDisponibilizar } from './api'
+import { useDisponibilizarPasta } from './api'
 
 /**
  * "Para quem vai este material?" — a metade nova do modelo de 0016.
@@ -11,18 +11,22 @@ import { useDisponibilizar } from './api'
  * Quem JÁ TEM aparece marcado e desligado, e não some da lista: o professor
  * precisa ver que a pessoa já recebeu, senão fica sem saber se esqueceu de
  * mandar ou se já mandou. Um nome ausente responderia a pergunta errada.
+ *
+ * Serve a um material ou a vários (seleção em lote do acervo). Com vários,
+ * "já tem" quer dizer "já tem TODOS" — quem tem só parte ainda aparece para
+ * marcar, e reentregar o que a pessoa já tinha não é erro (upsert).
  */
 export function EscolherAlunos({
-  material,
+  materiais,
   jaTem,
   aoFechar,
 }: {
-  material: Material
+  materiais: Material[]
   jaTem: string[]
   aoFechar: () => void
 }) {
   const { data: alunos, isLoading } = useAlunos('ativo')
-  const disponibilizar = useDisponibilizar()
+  const disponibilizar = useDisponibilizarPasta()
   const [busca, setBusca] = useState('')
   const [marcados, setMarcados] = useState<Set<string>>(new Set())
 
@@ -54,8 +58,12 @@ export function EscolherAlunos({
       className="fixed inset-0 z-50 grid place-items-center bg-neutral-950/50 p-4"
     >
       <div className="flex max-h-[80dvh] w-full max-w-md flex-col rounded-3xl bg-white p-5">
-        <h2 className="text-sm font-extrabold text-neutral-900">Disponibilizar material</h2>
-        <p className="mt-0.5 truncate text-xs text-neutral-500">{material.nome}</p>
+        <h2 className="text-sm font-extrabold text-neutral-900">
+          {materiais.length === 1 ? 'Disponibilizar material' : `Disponibilizar ${materiais.length} materiais`}
+        </h2>
+        <p className="mt-0.5 truncate text-xs text-neutral-500" title={materiais.map((m) => m.nome).join(', ')}>
+          {materiais.map((m) => m.nome).join(', ')}
+        </p>
 
         <div className="mt-4 flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2.5">
           <Search className="h-4 w-4 shrink-0 text-neutral-400" />
@@ -147,7 +155,7 @@ export function EscolherAlunos({
           <button
             onClick={() =>
               disponibilizar.mutate(
-                { materialId: material.id, alunoIds: [...marcados] },
+                { materialIds: materiais.map((m) => m.id), alunoIds: [...marcados] },
                 { onSuccess: aoFechar },
               )
             }

@@ -36,7 +36,18 @@ const TIPO_POR_MIME: { prefixo: string; tipo: MaterialTipo }[] = [
   },
 ]
 
-export function tipoDoArquivo(mime: string): MaterialTipo | null {
+/**
+ * `.txt` vira material de TEXTO, e não arquivo: o conteúdo vai para a coluna
+ * `texto`, que o app já sabe mostrar (inclusive para o aluno) e a geração de
+ * atividade já sabe ler. A extensão também conta porque o Windows às vezes
+ * entrega o .txt sem tipo MIME.
+ */
+function ehTxt(mime: string, nome?: string): boolean {
+  return mime === 'text/plain' || Boolean(nome?.toLowerCase().endsWith('.txt'))
+}
+
+export function tipoDoArquivo(mime: string, nome?: string): MaterialTipo | null {
+  if (ehTxt(mime, nome)) return 'texto'
   return TIPO_POR_MIME.find((t) => mime.startsWith(t.prefixo))?.tipo ?? null
 }
 
@@ -300,9 +311,25 @@ async function subirParaOAcervo(entrada: NovoMaterial, pastaId: string | null = 
   }
 
   const { arquivo } = entrada
-  const tipo = tipoDoArquivo(arquivo.type)
-  if (!tipo) throw new Error('Formato não aceito. Envie PDF, DOCX, imagem ou áudio.')
+  const tipo = tipoDoArquivo(arquivo.type, arquivo.name)
+  if (!tipo) throw new Error('Formato não aceito. Envie PDF, DOCX, imagem, áudio ou TXT.')
   if (arquivo.size > TAMANHO_MAX_MATERIAL) throw new Error('Arquivo muito grande — o limite é 25 MB.')
+
+  if (tipo === 'texto') {
+    const { data, error } = await supabase
+      .from('materiais')
+      .insert({
+        professor_id: professorId,
+        tipo,
+        nome: arquivo.name,
+        texto: await arquivo.text(),
+        pasta_id: pastaId,
+      })
+      .select('id')
+      .single()
+    if (error) throw error
+    return data.id
+  }
 
   // O path é `${professor_id}/...`, exigência da policy do bucket (0004).
   const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? 'bin'
@@ -441,6 +468,31 @@ export function useTirarDeVarios() {
  * caem por cascade (0016). Se o arquivo já não existir, a linha some do mesmo
  * jeito — o que importa é não deixar registro apontando para nada.
  */
+/**
+ * Apaga vários do acervo de uma vez (seleção em lote). Uma chamada ao Storage
+ * e uma ao banco, e não N de cada — apagar vinte PDFs um a um deixaria a lista
+ * piscando item por item.
+ */
+export function useExcluirMateriais() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (materiais: Material[]) => {
+      if (materiais.length === 0) return
+      const caminhos = materiais.map((m) => m.storage_path).filter((p): p is string => Boolean(p))
+      if (caminhos.length > 0) await supabase.storage.from('materiais').remove(caminhos)
+      const { error } = await supabase
+        .from('materiais')
+        .delete()
+        .in(
+          'id',
+          materiais.map((m) => m.id),
+        )
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['materiais'] }),
+  })
+}
+
 export function useExcluirMaterial() {
   const qc = useQueryClient()
   return useMutation({

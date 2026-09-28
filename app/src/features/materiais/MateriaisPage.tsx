@@ -8,7 +8,6 @@ import {
   Loader2,
   Pencil,
   Search,
-  Type,
   Upload,
   Users,
   X,
@@ -18,9 +17,12 @@ import type { Material, MaterialTipo, PastaMaterial } from '@/types/db'
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
 import { ordenar, useOrdem } from '@/lib/ordenar'
+import { baixarComoTxt } from '@/lib/baixar-texto'
 import { SoltarArquivos } from './SoltarArquivos'
 import { EscolherAlunos } from './EscolherAlunos'
 import { VISUAL_TIPO } from './visual'
+import { MenuDePasta } from './MenuDePasta'
+import { BotaoVisualizar, VisualizarMaterial } from './VisualizarMaterial'
 import {
   SEM_PASTA,
   urlAssinada,
@@ -28,6 +30,7 @@ import {
   useCriarPasta,
   useDonosDosMateriais,
   useExcluirMaterial,
+  useExcluirMateriais,
   useExcluirPasta,
   useMoverParaPasta,
   usePastas,
@@ -73,7 +76,18 @@ export function MateriaisPage() {
   // A–Z por padrão: o acervo é procurado pelo nome ("Lesson 5"), e a ordem de
   // envio só dizia em que dia o arquivo subiu — o que quase nunca importa.
   const [ordem, setOrdem] = useOrdem('materiais', 'nome')
-  const [distribuindo, setDistribuindo] = useState<Material | null>(null)
+  const [distribuindo, setDistribuindo] = useState<Material[] | null>(null)
+  /**
+   * Seleção em lote. Trocar de pasta ou de tipo limpa: a seleção é do recorte
+   * que está na tela, e agir sobre itens que sumiram da vista seria apagar o
+   * que a pessoa não está vendo.
+   */
+  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const [recorte, setRecorte] = useState({ pastaAberta, tipo })
+  if (recorte.pastaAberta !== pastaAberta || recorte.tipo !== tipo) {
+    setRecorte({ pastaAberta, tipo })
+    setSelecionados(new Set())
+  }
 
   /**
    * O arquivo novo cai NA PASTA ABERTA. Quem arrasta um PDF para dentro de
@@ -210,20 +224,41 @@ export function MateriaisPage() {
             <LinhaDoAcervo
               key={material.id}
               material={material}
+              selecionado={selecionados.has(material.id)}
+              emSelecao={selecionados.size > 0}
+              aoSelecionar={() =>
+                setSelecionados((atuais) => {
+                  const novo = new Set(atuais)
+                  if (novo.has(material.id)) novo.delete(material.id)
+                  else novo.add(material.id)
+                  return novo
+                })
+              }
               pastas={pastas ?? []}
               mostrarPasta={pastaAberta === 'todas'}
               donos={donos?.get(material.id) ?? []}
               nomePorAluno={nomePorAluno}
-              aoDistribuir={() => setDistribuindo(material)}
+              aoDistribuir={() => setDistribuindo([material])}
             />
           ))}
         </ul>
       )}
 
+      {selecionados.size > 0 && (
+        <BarraDeLote
+          escolhidos={filtrados.filter((m) => selecionados.has(m.id))}
+          totalNaTela={filtrados.length}
+          pastas={pastas ?? []}
+          aoSelecionarTodos={() => setSelecionados(new Set(filtrados.map((m) => m.id)))}
+          aoLimpar={() => setSelecionados(new Set())}
+          aoDistribuir={(materiais) => setDistribuindo(materiais)}
+        />
+      )}
+
       {distribuindo && (
         <EscolherAlunos
-          material={distribuindo}
-          jaTem={donos?.get(distribuindo.id) ?? []}
+          materiais={distribuindo}
+          jaTem={quemTemTodos(distribuindo, donos)}
           aoFechar={() => setDistribuindo(null)}
         />
       )}
@@ -478,8 +513,95 @@ function CampoDePasta({
   )
 }
 
+/** Quem já tem TODOS os materiais escolhidos — é esse que o modal mostra como "já tem". */
+function quemTemTodos(materiais: Material[], donos: Map<string, string[]> | undefined): string[] {
+  const [primeiro, ...resto] = materiais.map((m) => new Set(donos?.get(m.id) ?? []))
+  if (!primeiro) return []
+  return [...primeiro].filter((id) => resto.every((s) => s.has(id)))
+}
+
+/**
+ * O que se faz com vários de uma vez: disponibilizar, mover e apagar. Fica
+ * presa ao pé da tela enquanto houver seleção — a lista rola, e a ação tem de
+ * continuar ao alcance de quem marcou itens lá embaixo.
+ */
+function BarraDeLote({
+  escolhidos,
+  totalNaTela,
+  pastas,
+  aoSelecionarTodos,
+  aoLimpar,
+  aoDistribuir,
+}: {
+  escolhidos: Material[]
+  totalNaTela: number
+  pastas: PastaMaterial[]
+  aoSelecionarTodos: () => void
+  aoLimpar: () => void
+  aoDistribuir: (materiais: Material[]) => void
+}) {
+  const excluir = useExcluirMateriais()
+  const mover = useMoverParaPasta()
+  const n = escolhidos.length
+
+  return (
+    <div
+      role="toolbar"
+      aria-label="Ações nos materiais selecionados"
+      className="sticky bottom-4 z-30 mt-4 flex flex-wrap items-center gap-2 rounded-3xl bg-neutral-900 py-2 pr-2 pl-5 text-white shadow-xl shadow-black/20 sm:rounded-full"
+    >
+      <span className="text-sm font-extrabold">
+        {n} {n === 1 ? 'selecionado' : 'selecionados'}
+      </span>
+      {n < totalNaTela && (
+        <button onClick={aoSelecionarTodos} className="text-xs font-bold text-violet-300 hover:underline">
+          Selecionar os {totalNaTela}
+        </button>
+      )}
+
+      <span className="ml-auto flex flex-wrap items-center gap-2">
+        <MenuDePasta
+          pastaId={undefined}
+          pastas={pastas}
+          escuro
+          rotulo="Mover para…"
+          pendente={mover.isPending}
+          aoEscolher={(pastaId) => mover.mutate({ materialIds: escolhidos.map((m) => m.id), pastaId })}
+        />
+
+        <button
+          onClick={() => aoDistribuir(escolhidos)}
+          disabled={n === 0}
+          className="flex items-center gap-1.5 rounded-full bg-violet-300 px-3.5 py-2 text-xs font-extrabold text-neutral-900 disabled:opacity-40"
+        >
+          <Users className="h-3.5 w-3.5" /> Disponibilizar
+        </button>
+
+        <BotaoApagar
+          titulo="Apagar os selecionados do acervo"
+          confirmacao={`Apagar ${n}?`}
+          pendente={excluir.isPending}
+          aoConfirmar={() => excluir.mutate(escolhidos, { onSuccess: aoLimpar })}
+        />
+
+        <button
+          onClick={aoLimpar}
+          aria-label="Limpar seleção"
+          title="Limpar seleção"
+          className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 transition hover:bg-white/10 hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </span>
+    </div>
+  )
+}
+
 function LinhaDoAcervo({
   material,
+  selecionado,
+  emSelecao,
+  aoSelecionar,
   pastas,
   mostrarPasta,
   donos,
@@ -487,6 +609,10 @@ function LinhaDoAcervo({
   aoDistribuir,
 }: {
   material: Material
+  selecionado: boolean
+  /** Já há algo marcado: aí a caixa aparece em TODAS as linhas, não só na do mouse. */
+  emSelecao: boolean
+  aoSelecionar: () => void
   pastas: PastaMaterial[]
   /** Em "Todas", a pasta de cada item precisa aparecer; dentro dela, seria repetir o cabeçalho. */
   mostrarPasta: boolean
@@ -497,10 +623,12 @@ function LinhaDoAcervo({
   const excluir = useExcluirMaterial()
   const mover = useMoverParaPasta()
   const [baixando, setBaixando] = useState(false)
-  const [texto, setTexto] = useState(false)
+  const [vendo, setVendo] = useState(false)
   const { Icone, cor } = VISUAL_TIPO[material.tipo]
 
   async function baixar() {
+    // Texto não tem arquivo no Storage: o .txt é gerado aqui mesmo.
+    if (material.tipo === 'texto') return baixarComoTxt(material.nome, material.texto ?? '')
     if (!material.storage_path) return
     setBaixando(true)
     try {
@@ -514,7 +642,38 @@ function LinhaDoAcervo({
   const pastaDoItem = pastas.find((p) => p.id === material.pasta_id) ?? null
 
   return (
-    <li className="flex flex-wrap items-center gap-3 px-5 py-3.5">
+    <li
+      className={`group flex flex-wrap items-center gap-3 px-5 py-3.5 transition ${
+        selecionado ? 'bg-violet-50' : ''
+      }`}
+    >
+      {/*
+        A caixa só aparece com o mouse em cima: na maior parte do tempo o
+        acervo é consultado, não editado em lote, e uma coluna de caixas
+        vazias em toda linha seria ruído. Com um item marcado ela aparece em
+        todas — a pessoa já entrou no modo de seleção. Em tela de toque, onde
+        não existe "mouse em cima", fica sempre visível.
+
+        Escondida, ela não ocupa espaço nenhum: largura zero e `-mr-3` para
+        anular o `gap-3` da linha, senão sobraria um vão fantasma antes do
+        ícone. Ao aparecer, a largura cresce e EMPURRA o conteúdo, com
+        transição para o deslize não ser um tranco.
+      */}
+      <span
+        className={`flex shrink-0 items-center overflow-hidden transition-all duration-200 focus-within:mr-0 focus-within:w-4 focus-within:opacity-100 [@media(hover:none)]:mr-0 [@media(hover:none)]:w-4 [@media(hover:none)]:opacity-100 ${
+          emSelecao || selecionado
+            ? 'w-4 opacity-100'
+            : '-mr-3 w-0 opacity-0 group-hover:mr-0 group-hover:w-4 group-hover:opacity-100'
+        }`}
+      >
+        <input
+          type="checkbox"
+          checked={selecionado}
+          onChange={aoSelecionar}
+          aria-label={`Selecionar ${material.nome}`}
+          className="h-4 w-4 shrink-0 cursor-pointer accent-violet-600"
+        />
+      </span>
       <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${cor}`}>
         <Icone className="h-5 w-5" />
       </span>
@@ -548,25 +707,12 @@ function LinhaDoAcervo({
         o download acerta a lixeira.
       */}
       <span className="flex shrink-0 items-center gap-2">
-        {/*
-          `select` nativo, e não um menu desenhado: mover é um gesto raro e
-          arrastar-e-soltar entre abas não existe no celular. O nativo já traz
-          teclado, rolagem e busca por letra de graça.
-        */}
-        <select
-          value={material.pasta_id ?? ''}
-          disabled={mover.isPending}
-          onChange={(e) => mover.mutate({ materialIds: [material.id], pastaId: e.target.value || null })}
-          title="Mover para uma pasta"
-          className="max-w-32 rounded-full bg-neutral-100 px-3 py-2 text-xs font-bold text-neutral-600 outline-none"
-        >
-          <option value="">Sem pasta</option>
-          {pastas.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.nome}
-            </option>
-          ))}
-        </select>
+        <MenuDePasta
+          pastaId={material.pasta_id}
+          pastas={pastas}
+          pendente={mover.isPending}
+          aoEscolher={(pastaId) => mover.mutate({ materialIds: [material.id], pastaId })}
+        />
 
         <button
           onClick={aoDistribuir}
@@ -578,18 +724,12 @@ function LinhaDoAcervo({
 
         <span className="ml-1 h-6 w-px bg-neutral-200" />
 
-        {material.tipo === 'texto' ? (
-          <button
-            onClick={() => setTexto((v) => !v)}
-            title="Ver texto"
-            className="grid h-9 w-9 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"
-          >
-            <Type className="h-4 w-4" />
-          </button>
-        ) : (
+        <BotaoVisualizar material={material} aoAbrir={() => setVendo(true)} />
+
+        {(material.tipo === 'texto' || material.storage_path) && (
           <button
             onClick={baixar}
-            title="Baixar"
+            title={material.tipo === 'texto' ? 'Baixar como .txt' : 'Baixar'}
             className="grid h-9 w-9 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"
           >
             {baixando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
@@ -614,11 +754,7 @@ function LinhaDoAcervo({
         />
       </span>
 
-      {texto && material.texto && (
-        <p className="w-full rounded-2xl bg-neutral-50 p-4 text-xs whitespace-pre-wrap text-neutral-700">
-          {material.texto}
-        </p>
-      )}
+      {vendo && <VisualizarMaterial material={material} aoFechar={() => setVendo(false)} />}
     </li>
   )
 }

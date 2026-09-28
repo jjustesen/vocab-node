@@ -11,6 +11,8 @@ import {
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { EscolherDoAcervo } from './EscolherDoAcervo'
 import { VISUAL_TIPO } from './visual'
+import { baixarComoTxt } from '@/lib/baixar-texto'
+import { BotaoVisualizar, VisualizarMaterial } from './VisualizarMaterial'
 import { EtiquetaDePasta } from './EtiquetaDePasta'
 import type { Material } from '@/types/db'
 
@@ -94,10 +96,11 @@ function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: st
   const tirar = useTirarDoAluno()
   const [baixando, setBaixando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
-  const [textoAberto, setTextoAberto] = useState(false)
+  const [vendo, setVendo] = useState(false)
   const visual = VISUAL_TIPO[material.tipo]
 
   async function baixar() {
+    if (material.tipo === 'texto') return baixarComoTxt(material.nome, material.texto ?? '')
     if (!material.storage_path) return
     setErro(null)
     setBaixando(true)
@@ -129,20 +132,13 @@ function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: st
           </p>
         </div>
 
-        {material.texto !== null && (
-          <button
-            onClick={() => setTextoAberto((v) => !v)}
-            className="shrink-0 rounded-full px-3 py-1.5 text-xs font-bold text-neutral-500 hover:bg-neutral-100"
-          >
-            {textoAberto ? 'ocultar' : 'ver texto'}
-          </button>
-        )}
+        <BotaoVisualizar material={material} aoAbrir={() => setVendo(true)} />
 
-        {material.storage_path && (
+        {(material.tipo === 'texto' || material.storage_path) && (
           <button
             onClick={baixar}
             disabled={baixando}
-            title="Abrir arquivo"
+            title={material.tipo === 'texto' ? 'Baixar como .txt' : 'Abrir arquivo'}
             className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
           >
             {baixando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
@@ -159,11 +155,7 @@ function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: st
 
       {erro && <p className="mt-2 text-xs font-medium text-rose-700">{erro}</p>}
 
-      {textoAberto && material.texto && (
-        <p className="mt-3 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-2xl bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
-          {material.texto}
-        </p>
-      )}
+      {vendo && <VisualizarMaterial material={material} aoFechar={() => setVendo(false)} />}
     </div>
   )
 }
@@ -182,8 +174,8 @@ function ModalNovoMaterial({ alunoId, aoFechar }: { alunoId: string; aoFechar: (
     if (!escolhido) return
     setErroLocal(null)
 
-    if (!tipoDoArquivo(escolhido.type)) {
-      return setErroLocal('Formato não aceito. Envie PDF, DOCX, imagem ou áudio.')
+    if (!tipoDoArquivo(escolhido.type, escolhido.name)) {
+      return setErroLocal('Formato não aceito. Envie PDF, DOCX, imagem, áudio ou TXT.')
     }
     if (escolhido.size > TAMANHO_MAX_MATERIAL) {
       return setErroLocal('Arquivo muito grande — o limite é 25 MB.')
@@ -258,7 +250,7 @@ function ModalNovoMaterial({ alunoId, aoFechar }: { alunoId: string; aoFechar: (
                 <input type="file" onChange={escolherArquivo} className="hidden" />
                 <Upload className="h-5 w-5 text-neutral-400" />
                 <span className="text-sm font-bold text-neutral-600">Clique para escolher um arquivo</span>
-                <span className="text-xs text-neutral-400">PDF, DOCX, imagem ou áudio · até 25 MB</span>
+                <span className="text-xs text-neutral-400">PDF, DOCX, imagem, áudio ou TXT · até 25 MB</span>
               </label>
             )}
           </div>

@@ -36,8 +36,8 @@ export function SoltarArquivos({
       setRestantes(arquivos.length - indice)
       // As duas checagens ANTES de começar: a mensagem tem que vir antes de
       // subir 25 MB, não depois.
-      if (!tipoDoArquivo(arquivo.type)) {
-        setErro(`"${arquivo.name}": formato não aceito. Envie PDF, DOCX, imagem ou áudio.`)
+      if (!tipoDoArquivo(arquivo.type, arquivo.name)) {
+        setErro(`"${arquivo.name}": formato não aceito. Envie PDF, DOCX, imagem, áudio ou TXT.`)
         break
       }
       if (arquivo.size > TAMANHO_MAX_MATERIAL) {
@@ -94,7 +94,7 @@ export function SoltarArquivos({
           {enviando ? `Enviando… (faltam ${restantes})` : rotulo}
         </span>
         <span className="text-[11px] text-neutral-500">
-          ou clique para escolher · PDF, DOCX, imagem ou áudio · até 25 MB
+          ou clique para escolher · PDF, DOCX, imagem, áudio ou TXT · até 25 MB
         </span>
       </label>
 
