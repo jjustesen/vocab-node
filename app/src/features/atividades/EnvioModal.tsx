@@ -16,17 +16,20 @@ export function EnvioModal({
   atividadeId,
   atividadeTitulo,
   aoFechar,
+  preSelecionados,
 }: {
   atividadeId: string
   atividadeTitulo: string
   aoFechar: () => void
+  /** Quem já abre marcado — a turma inteira, quando o envio parte da tela da turma. */
+  preSelecionados?: string[]
 }) {
   const { data: alunos } = useAlunos('ativo')
   const { data: questoes } = useQuestoesDaAtividade(atividadeId)
   const enviar = useEnviarAtividade(atividadeId)
 
   const [aba, setAba] = useState<'alunos' | 'link'>('alunos')
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const [selecionados, setSelecionados] = useState<Set<string>>(() => new Set(preSelecionados))
   const [busca, setBusca] = useState('')
   const [prazo, setPrazo] = useState('')
   const [resultados, setResultados] = useState<EnvioResultado[] | null>(null)

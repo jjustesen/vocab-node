@@ -113,6 +113,82 @@ export function useTurmasComMembros() {
   })
 }
 
+export type TarefaDaTurma = {
+  atividadeId: string
+  titulo: string
+  /** O envio mais recente para alguém da turma — é a data que ordena a lista. */
+  enviadaEm: string
+  prazo: string | null
+  /** Quantos membros ATUAIS receberam e quantos concluíram. */
+  receberam: number
+  concluiram: number
+}
+
+/**
+ * O que foi mandado para a turma, visto por atividade.
+ *
+ * Não existe "atribuição da turma" no banco: a tarefa é sempre de cada aluno
+ * (é o aluno que responde, e a nota é dele). A turma é reconstruída aqui a
+ * partir de quem está nela AGORA — quem saiu da turma some da contagem, quem
+ * entrou depois aparece como "não recebeu", que é justamente o que o
+ * professor precisa ver para reenviar.
+ *
+ * A chave mora sob `['atividades', ...]`: enviar uma atividade já invalida
+ * esse prefixo, e a lista se atualiza sozinha ao fechar o envio.
+ */
+export function useTarefasDaTurma(turmaId: string, alunoIds: string[]) {
+  return useQuery({
+    queryKey: ['atividades', 'turma', turmaId, [...alunoIds].sort().join(',')] as const,
+    enabled: alunoIds.length > 0,
+    queryFn: async (): Promise<TarefaDaTurma[]> => {
+      const { data: atribuicoes, error } = await supabase
+        .from('atribuicoes')
+        .select('atividade_id, aluno_id, enviada_em, concluida_em, prazo')
+        .in('aluno_id', alunoIds)
+        .is('revogada_em', null)
+        .order('enviada_em', { ascending: false })
+      if (error) throw error
+      if (atribuicoes.length === 0) return []
+
+      const ids = [...new Set(atribuicoes.map((a) => a.atividade_id))]
+      const { data: atividades, error: erroAtividades } = await supabase
+        .from('atividades')
+        .select('id, titulo')
+        .in('id', ids)
+      if (erroAtividades) throw erroAtividades
+      const tituloPorId = new Map(atividades.map((a) => [a.id, a.titulo]))
+
+      // Um aluno pode ter recebido a mesma atividade mais de uma vez
+      // (tentativas): conta a pessoa uma vez só, concluída se QUALQUER envio
+      // dela foi concluído.
+      const porAtividade = new Map<
+        string,
+        { enviadaEm: string; prazo: string | null; receberam: Set<string>; concluiram: Set<string> }
+      >()
+      for (const a of atribuicoes) {
+        const item = porAtividade.get(a.atividade_id) ?? {
+          enviadaEm: a.enviada_em, // a lista vem do mais novo para o mais velho
+          prazo: a.prazo,
+          receberam: new Set<string>(),
+          concluiram: new Set<string>(),
+        }
+        item.receberam.add(a.aluno_id)
+        if (a.concluida_em) item.concluiram.add(a.aluno_id)
+        porAtividade.set(a.atividade_id, item)
+      }
+
+      return [...porAtividade.entries()].map(([atividadeId, item]) => ({
+        atividadeId,
+        titulo: tituloPorId.get(atividadeId) ?? 'Atividade apagada',
+        enviadaEm: item.enviadaEm,
+        prazo: item.prazo,
+        receberam: item.receberam.size,
+        concluiram: item.concluiram.size,
+      }))
+    },
+  })
+}
+
 export function useCriarTurma() {
   const qc = useQueryClient()
   return useMutation({

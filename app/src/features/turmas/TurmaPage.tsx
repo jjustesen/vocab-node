@@ -1,9 +1,11 @@
 import { useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   Check,
+  ClipboardList,
   Copy,
+  Library,
   Loader2,
   Pencil,
   Plus,
@@ -21,6 +23,7 @@ import { linkDaSala, useCriarSalaDaTurma, useSalaDaTurma } from '@/features/sala
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import type { Aluno } from '@/types/db'
 import { MateriaisDaTurma } from './MateriaisDaTurma'
+import { TarefasDaTurma } from './TarefasDaTurma'
 import {
   useAlunosDaTurma,
   useExcluirTurma,
@@ -60,6 +63,12 @@ export function TurmaPage() {
   const navigate = useNavigate()
   const { data: turma, isLoading } = useTurma(id)
   const excluir = useExcluirTurma()
+  // A aba vai na URL: recarregar a página ou voltar de uma atividade aberta
+  // pela aba Tarefas cai na mesma aba, e não de volta em Alunos.
+  const [params, setParams] = useSearchParams()
+  const aba: Aba = ABAS.some((a) => a.id === params.get('aba')) ? (params.get('aba') as Aba) : 'alunos'
+  const trocarAba = (nova: Aba) =>
+    setParams(nova === 'alunos' ? {} : { aba: nova }, { replace: true })
 
   if (isLoading) {
     return (
@@ -115,19 +124,69 @@ export function TurmaPage() {
         </div>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_20rem]">
-        <div className="space-y-4">
-          <Membros turmaId={turma.id} />
-          {/*
-            Materiais depende de QUEM está na turma, então vem depois: a lista
-            de membros é o que define para onde o arquivo vai.
-          */}
-          <MateriaisDaTurmaCarregando turmaId={turma.id} />
+      <AbasDaTurma aba={aba} aoTrocar={trocarAba} turmaId={turma.id} />
+
+      {/*
+        O link da sala fica ao lado em TODAS as abas: é o que o professor
+        procura em qualquer momento da aula, seja montando a turma, mandando
+        tarefa ou subindo material.
+      */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_20rem]">
+        <div className="min-w-0 space-y-4">
+          {aba === 'alunos' && <Membros turmaId={turma.id} />}
+          {aba === 'tarefas' && <TarefasDaTurmaCarregando turmaId={turma.id} />}
+          {aba === 'materiais' && <MateriaisDaTurmaCarregando turmaId={turma.id} />}
         </div>
         <LinkDaTurma turmaId={turma.id} />
       </div>
     </div>
   )
+}
+
+type Aba = 'alunos' | 'tarefas' | 'materiais'
+
+const ABAS: { id: Aba; rotulo: string; Icone: typeof Users }[] = [
+  { id: 'alunos', rotulo: 'Alunos', Icone: Users },
+  { id: 'tarefas', rotulo: 'Tarefas', Icone: ClipboardList },
+  { id: 'materiais', rotulo: 'Materiais', Icone: Library },
+]
+
+/**
+ * A turma em abas. Empilhadas, as três seções faziam da página um corredor:
+ * quem vinha mandar material rolava por toda a lista de alunos para chegar lá.
+ * O número de alunos vai na própria aba porque é o que diz, sem abrir, se a
+ * turma já está montada.
+ */
+function AbasDaTurma({ aba, aoTrocar, turmaId }: { aba: Aba; aoTrocar: (a: Aba) => void; turmaId: string }) {
+  const { data: membros } = useAlunosDaTurma(turmaId)
+  return (
+    <div role="tablist" aria-label="Seções da turma" className="mt-5 flex flex-wrap gap-1.5">
+      {ABAS.map(({ id, rotulo, Icone }) => (
+        <button
+          key={id}
+          role="tab"
+          aria-selected={aba === id}
+          onClick={() => aoTrocar(id)}
+          className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition ${
+            aba === id ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500 hover:text-neutral-900'
+          }`}
+        >
+          <Icone className="h-4 w-4" />
+          {rotulo}
+          {id === 'alunos' && membros && (
+            <span className={aba === id ? 'text-neutral-400' : 'text-neutral-300'}>{membros.length}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function TarefasDaTurmaCarregando({ turmaId }: { turmaId: string }) {
+  const { data: membros, isLoading } = useAlunosDaTurma(turmaId)
+  const ids = useMemo(() => (membros ?? []).map((a) => a.id), [membros])
+  if (isLoading) return null
+  return <TarefasDaTurma turmaId={turmaId} alunoIds={ids} />
 }
 
 /**
