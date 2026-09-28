@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronRight, Loader2, Plus, Search, UserPlus } from 'lucide-react'
+import { ChevronRight, Link2, Loader2, Plus, Search, UserPlus } from 'lucide-react'
 import { useAlunos, useAlunosComConta, useCriarAluno } from './api'
+import { ModalLinkDeCadastro } from './ModalLinkDeCadastro'
 import { useUsoDoMes } from '@/features/planos/api'
 import { PLANOS } from '@/lib/planos'
 import { ordenar, useOrdem } from '@/lib/ordenar'
@@ -23,6 +24,7 @@ export function AlunosPage() {
   const { data: comConta } = useAlunosComConta()
   const [busca, setBusca] = useState('')
   const [abrindoNovo, setAbrindoNovo] = useState(false)
+  const [abrindoLink, setAbrindoLink] = useState(false)
   const [ordem, setOrdem] = useOrdem('alunos', 'nome')
 
   const filtrados = useMemo(() => {
@@ -48,14 +50,26 @@ export function AlunosPage() {
             </p>
           )}
         </div>
-        <button
-          onClick={() => setAbrindoNovo(true)}
-          disabled={noLimite}
-          title={noLimite ? 'Limite de alunos do plano atingido' : undefined}
-          className="flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
-        >
-          <Plus className="h-4 w-4" /> Novo aluno
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Não desabilitado no limite de propósito: o modal explica por que
+              o link não vai aceitar ninguém agora, e o professor pode gerá-lo
+              antes de liberar a vaga. */}
+          <button
+            onClick={() => setAbrindoLink(true)}
+            title="Link para seus alunos se cadastrarem sozinhos"
+            className="flex items-center gap-2 rounded-full border-[1.5px] border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-900"
+          >
+            <Link2 className="h-4 w-4" /> <span className="hidden sm:inline">Link de cadastro</span>
+          </button>
+          <button
+            onClick={() => setAbrindoNovo(true)}
+            disabled={noLimite}
+            title={noLimite ? 'Limite de alunos do plano atingido' : undefined}
+            className="flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+          >
+            <Plus className="h-4 w-4" /> Novo aluno
+          </button>
+        </div>
       </div>
 
       {noLimite && (
@@ -142,6 +156,7 @@ export function AlunosPage() {
       )}
 
       {abrindoNovo && <ModalNovoAluno aoFechar={() => setAbrindoNovo(false)} />}
+      {abrindoLink && <ModalLinkDeCadastro aoFechar={() => setAbrindoLink(false)} noLimite={noLimite} />}
     </div>
   )
 }

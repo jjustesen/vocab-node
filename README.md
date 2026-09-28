@@ -68,6 +68,8 @@ npm run dev
    supabase functions deploy tarefa-concluir --no-verify-jwt
    supabase functions deploy convite-obter --no-verify-jwt
    supabase functions deploy convite-concluir --no-verify-jwt
+   supabase functions deploy link-cadastro-obter --no-verify-jwt
+   supabase functions deploy link-cadastro-concluir --no-verify-jwt
    supabase functions deploy gerar-atividade
    supabase functions deploy painel-aluno-obter
    supabase functions deploy materiais-aluno-obter
@@ -76,7 +78,7 @@ npm run dev
    supabase functions deploy atividade-gerar-audio
    supabase functions deploy sala-entrar --no-verify-jwt
    ```
-   `--no-verify-jwt` é obrigatório nas quatro primeiras e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter` e `salas-do-aluno` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
+   `--no-verify-jwt` é obrigatório nas funções tarefa-\*, convite-\*, link-cadastro-\* e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*, link-cadastro-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter` e `salas-do-aluno` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
 6. Gere uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e configure o secret (nunca entra no `.env` do front — só a Edge Function enxerga):
    ```bash
    supabase secrets set GEMINI_API_KEY=sua_chave_aqui
@@ -152,12 +154,14 @@ supabase/
     tarefa-concluir/      fecha a tentativa e devolve o placar
     convite-obter/        valida o link de cadastro/reset, devolve nome do aluno/professor
     convite-concluir/     cria contas_aluno após o signUp, marca o convite usado, grava auditoria
+    link-cadastro-obter/  valida o link de cadastro do professor (0019, 24h), devolve nome do professor e se há vaga
+    link-cadastro-concluir/ cria usuário de auth + alunos + contas_aluno (respeitando o limite do plano); o front entra em seguida
     painel-aluno-obter/   aluno logado (JWT) — trilhas, pendentes e concluídas, sem RLS (service_role)
     materiais-aluno-obter/ aluno logado (JWT) — lista os materiais dele e assina a URL do arquivo no clique
     gerar-atividade/      professor autenticado (JWT) — chama a IA, valida, registra custo em geracoes_ia
     sala-entrar/          token de acesso do LiveKit — professor (JWT), aluno logado (JWT) ou convidado (token por hash)
                           a sala tem lousa compartilhada (data channel) e painel de anotações/ficha, só do professor
-    _shared/              cors, hash do token, resolução dual de atribuição, correção, cliente service_role, validação Zod, livekit.ts (assina o JWT da sala), ia/ (prompt, schema, provedor Gemini)
+    _shared/              cors, hash do token, resolução dual de atribuição, cadastro-aluno.ts (link de cadastro, vaga no plano, alunos+contas_aluno), correção, cliente service_role, validação Zod, livekit.ts (assina o JWT da sala), ia/ (prompt, schema, provedor Gemini)
 docs/
 ```
 

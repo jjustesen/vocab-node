@@ -95,3 +95,41 @@ export function linkAbertoLembrado(atividadeId: string): string | null {
   const token = lerAbertos()[atividadeId]
   return token ? `${window.location.origin}/a/${token}` : null
 }
+
+// ---------------------------------------------------------------------------
+// LINK DE CADASTRO do professor (/cadastro/professor/:token, 0019) — um por
+// professor, então o mapa é por professor_id (o mesmo navegador pode servir a
+// mais de um professor).
+// ---------------------------------------------------------------------------
+
+const CHAVE_CADASTRO = 'vocab-node:tokens-link-cadastro'
+
+function lerCadastros(): Mapa {
+  try {
+    const cru = localStorage.getItem(CHAVE_CADASTRO)
+    if (!cru) return {}
+    const dados: unknown = JSON.parse(cru)
+    return dados && typeof dados === 'object' && !Array.isArray(dados) ? (dados as Mapa) : {}
+  } catch {
+    return {}
+  }
+}
+
+export function lembrarTokenLinkCadastro(professorId: string, token: string): void {
+  const mapa = lerCadastros()
+  mapa[professorId] = token
+  try {
+    localStorage.setItem(CHAVE_CADASTRO, JSON.stringify(mapa))
+  } catch {
+    /* sem espaço ou sem permissão — o modal apenas oferece "gerar novo link" */
+  }
+}
+
+/** Token cru do link de cadastro, ou null se este navegador não presenciou a geração. */
+export function tokenLinkCadastroLembrado(professorId: string): string | null {
+  return lerCadastros()[professorId] ?? null
+}
+
+export function urlDoLinkCadastro(token: string): string {
+  return `${window.location.origin}/cadastro/professor/${token}`
+}

@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import { BotaoApagar } from '@/components/BotaoApagar'
+import { EscolherMembros } from './EscolherMembros'
 import { useAlunos, useAlunosComConta } from '@/features/alunos/api'
 import { linkDaSala, useCriarSalaDaTurma, useSalaDaTurma } from '@/features/sala/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
@@ -184,6 +185,8 @@ function Membros({ turmaId }: { turmaId: string }) {
   const { data: membros, isLoading } = useAlunosDaTurma(turmaId)
   const { data: comConta } = useAlunosComConta()
   const mudar = useMudarAlunoDaTurma(turmaId)
+  const { data: turma } = useTurma(turmaId)
+  const [vendoTodos, setVendoTodos] = useState(false)
 
   const [busca, setBusca] = useState('')
   const buscaRef = useRef<HTMLInputElement>(null)
@@ -224,7 +227,22 @@ function Membros({ turmaId }: { turmaId: string }) {
           Quem entra nesta turma{' '}
           <span className="text-neutral-400">· {membros?.length ?? 0}</span>
         </h2>
+        <button
+          onClick={() => setVendoTodos(true)}
+          className="flex shrink-0 items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-bold text-neutral-700 transition hover:bg-neutral-200"
+        >
+          <Users className="h-3.5 w-3.5" /> Ver todos os alunos
+        </button>
       </div>
+
+      {vendoTodos && (
+        <EscolherMembros
+          turmaId={turmaId}
+          turmaNome={turma?.nome ?? 'Turma'}
+          jaEstao={dentro}
+          aoFechar={() => setVendoTodos(false)}
+        />
+      )}
 
       {/* Adicionar é BUSCAR. O campo fica no topo porque é a ação, e a lista
           embaixo porque é o estado. */}

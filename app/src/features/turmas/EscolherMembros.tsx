@@ -1,37 +1,35 @@
 import { useMemo, useState } from 'react'
-import { Check, Loader2, Search, Users } from 'lucide-react'
+import { Check, Loader2, Search, UserPlus } from 'lucide-react'
 import { useAlunos } from '@/features/alunos/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
-import type { Material } from '@/types/db'
-import { AtalhosDeTurma } from '@/features/turmas/AtalhosDeTurma'
-import { useDisponibilizarPasta } from './api'
+import { useAdicionarAlunosNaTurma } from './api'
 
 /**
- * "Para quem vai este material?" — a metade nova do modelo de 0016.
+ * Todos os alunos, para montar a turma de uma vez — o mesmo desenho do
+ * "Disponibilizar material" (EscolherAlunos), de propósito: é o mesmo gesto,
+ * "escolher várias pessoas de uma lista", e a tela certa para ele já existia.
  *
- * Quem JÁ TEM aparece marcado e desligado, e não some da lista: o professor
- * precisa ver que a pessoa já recebeu, senão fica sem saber se esqueceu de
- * mandar ou se já mandou. Um nome ausente responderia a pergunta errada.
+ * A busca da tela da turma continua sendo o caminho rápido para UM nome; isto
+ * é para quando a turma nasce e são oito de uma vez.
  *
- * Serve a um material ou a vários (seleção em lote do acervo). Com vários,
- * "já tem" quer dizer "já tem TODOS" — quem tem só parte ainda aparece para
- * marcar, e reentregar o que a pessoa já tinha não é erro (upsert).
+ * Quem já está na turma aparece marcado e desligado, sem sumir — mesma regra
+ * do material: ver que a pessoa já está responde se falta alguém.
  */
-export function EscolherAlunos({
-  materiais,
-  jaTem,
+export function EscolherMembros({
+  turmaId,
+  turmaNome,
+  jaEstao,
   aoFechar,
 }: {
-  materiais: Material[]
-  jaTem: string[]
+  turmaId: string
+  turmaNome: string
+  jaEstao: Set<string>
   aoFechar: () => void
 }) {
   const { data: alunos, isLoading } = useAlunos('ativo')
-  const disponibilizar = useDisponibilizarPasta()
+  const adicionar = useAdicionarAlunosNaTurma(turmaId)
   const [busca, setBusca] = useState('')
   const [marcados, setMarcados] = useState<Set<string>>(new Set())
-
-  const tem = useMemo(() => new Set(jaTem), [jaTem])
 
   const filtrados = useMemo(() => {
     const termo = busca.trim().toLowerCase()
@@ -40,7 +38,7 @@ export function EscolherAlunos({
     )
   }, [alunos, busca])
 
-  const faltando = (alunos ?? []).filter((a) => !tem.has(a.id))
+  const fora = (alunos ?? []).filter((a) => !jaEstao.has(a.id))
 
   function alternar(id: string) {
     setMarcados((atuais) => {
@@ -59,12 +57,8 @@ export function EscolherAlunos({
       className="fixed inset-0 z-50 grid place-items-center bg-neutral-950/50 p-4"
     >
       <div className="flex max-h-[80dvh] w-full max-w-md flex-col rounded-3xl bg-white p-5">
-        <h2 className="text-sm font-extrabold text-neutral-900">
-          {materiais.length === 1 ? 'Disponibilizar material' : `Disponibilizar ${materiais.length} materiais`}
-        </h2>
-        <p className="mt-0.5 truncate text-xs text-neutral-500" title={materiais.map((m) => m.nome).join(', ')}>
-          {materiais.map((m) => m.nome).join(', ')}
-        </p>
+        <h2 className="text-sm font-extrabold text-neutral-900">Adicionar à turma</h2>
+        <p className="mt-0.5 truncate text-xs text-neutral-500">{turmaNome}</p>
 
         <div className="mt-4 flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2.5">
           <Search className="h-4 w-4 shrink-0 text-neutral-400" />
@@ -77,16 +71,14 @@ export function EscolherAlunos({
           />
         </div>
 
-        <div className="mt-3">
-          <AtalhosDeTurma marcados={marcados} aoMudar={setMarcados} indisponiveis={tem} />
-        </div>
-
-        {faltando.length > 1 && (
+        {fora.length > 1 && (
           <button
-            onClick={() => setMarcados(new Set(faltando.map((a) => a.id)))}
+            onClick={() =>
+              setMarcados(marcados.size === fora.length ? new Set() : new Set(fora.map((a) => a.id)))
+            }
             className="mt-2 self-start text-xs font-bold text-violet-700 hover:underline"
           >
-            Marcar os {faltando.length} que ainda não têm
+            {marcados.size === fora.length ? 'Desmarcar todos' : `Marcar os ${fora.length} que não estão na turma`}
           </button>
         )}
 
@@ -99,18 +91,14 @@ export function EscolherAlunos({
 
           <ul className="divide-y divide-neutral-100">
             {filtrados.map((aluno) => {
-              const possui = tem.has(aluno.id)
+              const esta = jaEstao.has(aluno.id)
               return (
                 <li key={aluno.id}>
-                  <label
-                    className={`flex items-center gap-3 py-2.5 ${
-                      possui ? 'opacity-60' : 'cursor-pointer'
-                    }`}
-                  >
+                  <label className={`flex items-center gap-3 py-2.5 ${esta ? 'opacity-60' : 'cursor-pointer'}`}>
                     <input
                       type="checkbox"
-                      disabled={possui}
-                      checked={possui || marcados.has(aluno.id)}
+                      disabled={esta}
+                      checked={esta || marcados.has(aluno.id)}
                       onChange={() => alternar(aluno.id)}
                       className="h-4 w-4 shrink-0 accent-violet-500"
                     />
@@ -122,12 +110,10 @@ export function EscolherAlunos({
                       {inicial(aluno.nome)}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-neutral-900">
-                        {aluno.nome}
-                      </span>
-                      {possui && (
+                      <span className="block truncate text-sm font-medium text-neutral-900">{aluno.nome}</span>
+                      {esta && (
                         <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600">
-                          <Check className="h-3 w-3" /> já tem
+                          <Check className="h-3 w-3" /> já está na turma
                         </span>
                       )}
                     </span>
@@ -138,16 +124,14 @@ export function EscolherAlunos({
           </ul>
 
           {!isLoading && filtrados.length === 0 && (
-            <p className="py-6 text-center text-xs text-neutral-500">Nenhum aluno para “{busca}”.</p>
+            <p className="py-6 text-center text-xs text-neutral-500">
+              {busca ? `Nenhum aluno para “${busca}”.` : 'Nenhum aluno cadastrado ainda.'}
+            </p>
           )}
         </div>
 
-        {disponibilizar.isError && (
-          <p className="mt-2 text-xs font-medium text-rose-600">
-            {disponibilizar.error instanceof Error
-              ? disponibilizar.error.message
-              : 'Não consegui disponibilizar.'}
-          </p>
+        {adicionar.isError && (
+          <p className="mt-2 text-xs font-medium text-rose-600">Não consegui adicionar. Tente de novo.</p>
         )}
 
         <div className="mt-4 flex gap-2">
@@ -158,23 +142,12 @@ export function EscolherAlunos({
             Cancelar
           </button>
           <button
-            onClick={() =>
-              disponibilizar.mutate(
-                { materialIds: materiais.map((m) => m.id), alunoIds: [...marcados] },
-                { onSuccess: aoFechar },
-              )
-            }
-            disabled={marcados.size === 0 || disponibilizar.isPending}
+            onClick={() => adicionar.mutate([...marcados], { onSuccess: aoFechar })}
+            disabled={marcados.size === 0 || adicionar.isPending}
             className="flex flex-[2] items-center justify-center gap-2 rounded-full bg-neutral-900 px-4 py-3 text-sm font-extrabold text-white disabled:opacity-40"
           >
-            {disponibilizar.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Users className="h-4 w-4" />
-            )}
-            {marcados.size === 0
-              ? 'Escolha quem recebe'
-              : `Disponibilizar para ${marcados.size}`}
+            {adicionar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+            {marcados.size === 0 ? 'Escolha quem entra' : `Adicionar ${marcados.size}`}
           </button>
         </div>
       </div>

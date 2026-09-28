@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { gerarTokenDeAcesso } from '@/lib/token'
+import { gerarTokenDeAcesso, hashDoToken } from '@/lib/token'
+import { lembrarTokenLinkCadastro, tokenLinkCadastroLembrado, urlDoLinkCadastro } from '@/lib/links-lembrados'
 import { limiteAlunos } from '@/lib/planos'
-import type { Aluno, AlunoStatus, AlunoUpdate, ContaAluno, NivelCefr } from '@/types/db'
+import type { Aluno, AlunoStatus, AlunoUpdate, ContaAluno, LinkCadastro, NivelCefr } from '@/types/db'
 
 export const chavesAlunos = {
   todos: ['alunos'] as const,
@@ -13,6 +14,7 @@ export const chavesAlunos = {
   conta: (id: string) => ['alunos', id, 'conta'] as const,
   comConta: ['alunos', 'com-conta'] as const,
   ultimoReset: (id: string) => ['alunos', id, 'ultimo-reset'] as const,
+  linkCadastro: ['alunos', 'link-cadastro'] as const,
 }
 
 const SETE_DIAS_MS = 7 * 24 * 60 * 60 * 1000
@@ -359,5 +361,72 @@ export function useResetarAcesso(alunoId: string) {
       qc.invalidateQueries({ queryKey: chavesAlunos.comConta })
       qc.invalidateQueries({ queryKey: chavesAlunos.ultimoReset(alunoId) })
     },
+  })
+}
+
+export type LinkCadastroDoProfessor = {
+  registro: LinkCadastro
+  /**
+   * Link completo, ou null quando este navegador não presenciou a geração —
+   * o banco só tem o hash (RNF-09, ver 0019), então nesse caso o modal só
+   * pode oferecer gerar um link novo.
+   */
+  url: string | null
+}
+
+/** Link de cadastro do professor (0019) — null se nunca foi gerado ou foi desativado. */
+export function useLinkDeCadastro() {
+  return useQuery({
+    queryKey: chavesAlunos.linkCadastro,
+    queryFn: async (): Promise<LinkCadastroDoProfessor | null> => {
+      // RLS (prof_owns) já limita à linha do professor logado — e há no
+      // máximo uma (unique em professor_id).
+      const { data, error } = await supabase.from('links_cadastro').select('*').maybeSingle()
+      if (error) throw error
+      if (!data) return null
+
+      // O lembrete local pode estar velho (link regerado em outro navegador):
+      // só vale se o hash do token guardado bater com o da linha atual.
+      const token = tokenLinkCadastroLembrado(data.professor_id)
+      const url = token && (await hashDoToken(token)) === data.token_hash ? urlDoLinkCadastro(token) : null
+      return { registro: data, url }
+    },
+  })
+}
+
+/**
+ * Gera (ou regera) o link de cadastro. Upsert por `professor_id`: regerar
+ * troca o token na MESMA linha e o link anterior morre na hora. As datas
+ * (24h) não saem daqui — o trigger de 0019 as fixa no servidor.
+ */
+export function useGerarLinkDeCadastro() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (): Promise<string> => {
+      const { data: sessao } = await supabase.auth.getUser()
+      if (!sessao.user) throw new Error('Sessão expirada. Entre novamente.')
+
+      const { token, hash } = await gerarTokenDeAcesso()
+      const { error } = await supabase
+        .from('links_cadastro')
+        .upsert({ professor_id: sessao.user.id, token_hash: hash }, { onConflict: 'professor_id' })
+      if (error) throw error
+
+      lembrarTokenLinkCadastro(sessao.user.id, token)
+      return urlDoLinkCadastro(token)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesAlunos.linkCadastro }),
+  })
+}
+
+/** Derruba o link na hora (ex.: foi parar num grupo errado) sem gerar outro. */
+export function useDesativarLinkDeCadastro() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (linkId: string) => {
+      const { error } = await supabase.from('links_cadastro').delete().eq('id', linkId)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesAlunos.linkCadastro }),
   })
 }

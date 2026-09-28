@@ -33,6 +33,7 @@ import {
   type ProgressoAluno,
 } from './api'
 import { useAlunos, useAlunosComConta } from '@/features/alunos/api'
+import { AtalhosDeTurma } from '@/features/turmas/AtalhosDeTurma'
 import { useAtividades } from '@/features/atividades/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import type { Aluno, TrilhaEtapa } from '@/types/db'
@@ -443,7 +444,10 @@ function ModalAtribuir({
 
         {!links ? (
           <>
-            <div className="mt-4 max-h-56 space-y-1.5 overflow-y-auto">
+            <div className="mt-4">
+              <AtalhosDeTurma marcados={selecionados} aoMudar={setSelecionados} />
+            </div>
+            <div className="mt-3 max-h-56 space-y-1.5 overflow-y-auto">
               {alunos?.length === 0 && (
                 <p className="rounded-xl bg-neutral-50 px-3 py-3 text-sm text-neutral-500">
                   Nenhum aluno cadastrado ainda.

@@ -85,6 +85,34 @@ export function useAlunosDaTurma(turmaId: string | undefined) {
   })
 }
 
+export type TurmaComMembros = { id: string; nome: string; alunoIds: string[] }
+
+/**
+ * Todas as turmas com quem está em cada uma — o atalho "marcar a turma
+ * inteira" das listas de escolha de aluno (materiais, atividades, trilhas).
+ *
+ * Mora sob a chave `['turmas', ...]` de propósito: toda mutação de turma já
+ * invalida `chavesTurmas.todas`, que é prefixo desta — entrar ou sair da
+ * turma atualiza o atalho sem ninguém lembrar de invalidá-lo.
+ */
+export function useTurmasComMembros() {
+  return useQuery({
+    queryKey: ['turmas', 'membros'] as const,
+    queryFn: async (): Promise<TurmaComMembros[]> => {
+      const [{ data: turmas, error }, { data: vinculos, error: erroVinculos }] = await Promise.all([
+        supabase.from('turmas').select('id, nome').order('nome'),
+        supabase.from('turmas_alunos').select('turma_id, aluno_id'),
+      ])
+      if (error) throw error
+      if (erroVinculos) throw erroVinculos
+
+      const porTurma = new Map<string, string[]>()
+      for (const v of vinculos) porTurma.set(v.turma_id, [...(porTurma.get(v.turma_id) ?? []), v.aluno_id])
+      return turmas.map((t) => ({ id: t.id, nome: t.nome, alunoIds: porTurma.get(t.id) ?? [] }))
+    },
+  })
+}
+
 export function useCriarTurma() {
   const qc = useQueryClient()
   return useMutation({
@@ -131,6 +159,30 @@ export function useExcluirTurma() {
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: chavesTurmas.todas }),
+  })
+}
+
+/**
+ * Põe vários na turma de uma vez — o "ver todos" da tela da turma. Um upsert
+ * só: quem já estava continua como estava, sem erro de chave repetida.
+ */
+export function useAdicionarAlunosNaTurma(turmaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (alunoIds: string[]) => {
+      if (alunoIds.length === 0) return
+      const { error } = await supabase
+        .from('turmas_alunos')
+        .upsert(
+          alunoIds.map((aluno_id) => ({ turma_id: turmaId, aluno_id })),
+          { onConflict: 'turma_id,aluno_id', ignoreDuplicates: true },
+        )
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: chavesTurmas.alunos(turmaId) })
+      qc.invalidateQueries({ queryKey: chavesTurmas.todas })
+    },
   })
 }
 

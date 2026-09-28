@@ -19,6 +19,7 @@ import { EditarAtividadePage } from '@/features/atividades/EditarAtividadePage'
 import { PreviewAtividadePage } from '@/features/atividades/PreviewAtividadePage'
 import { TarefaPage } from '@/features/tarefa/TarefaPage'
 import { CadastroAlunoPage } from '@/features/cadastro/CadastroAlunoPage'
+import { CadastroPeloLinkPage } from '@/features/cadastro/CadastroPeloLinkPage'
 import { AlunoAuthProvider, useAlunoAuth } from '@/features/aluno-auth/AlunoAuthProvider'
 import { LinkAbertoPage } from '@/features/link-aberto/LinkAbertoPage'
 import { EntrarAlunoPage } from '@/features/aluno-auth/EntrarAlunoPage'
@@ -58,6 +59,10 @@ export default function App() {
 
         {/* Cadastro (RF-22/23/24): usa o cliente do aluno (@/lib/supabase-aluno) só pro signUp, sem precisar do provider abaixo. */}
         <Route path="/cadastro/:token" element={<CadastroAlunoPage />} />
+        {/* Link de cadastro do PROFESSOR (0019): uso múltiplo, 24h, cria o
+            aluno do zero. Não colide com a rota acima — `:token` casa um
+            segmento só e o segmento estático "professor" tem prioridade. */}
+        <Route path="/cadastro/professor/:token" element={<CadastroPeloLinkPage />} />
 
         {/* Área do aluno logado (RF-28) — sessão própria, nunca a do professor. */}
         <Route element={<ProvedorSessaoAluno />}>

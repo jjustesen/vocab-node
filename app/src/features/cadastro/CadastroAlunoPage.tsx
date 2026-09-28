@@ -203,7 +203,8 @@ export function CadastroAlunoPage() {
   )
 }
 
-function Beneficio({
+/** Também usado por CadastroPeloLinkPage — mesma vitrine de benefícios. */
+export function Beneficio({
   Icone,
   cor,
   children,

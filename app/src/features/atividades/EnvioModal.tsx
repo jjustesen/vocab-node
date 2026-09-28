@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Check, Copy, Link2, Loader2, MessageCircle, RefreshCw, Search, X } from 'lucide-react'
 import QRCode from 'qrcode'
 import { useAlunos } from '@/features/alunos/api'
+import { AtalhosDeTurma } from '@/features/turmas/AtalhosDeTurma'
 import { linkWhatsapp } from '@/lib/whatsapp'
 import {
   useEnviarAtividade,
@@ -86,6 +87,10 @@ export function EnvioModal({
         ) : !resultados ? (
           <>
             <p className="mt-4 text-xs font-bold text-neutral-600">Escolha os alunos</p>
+
+            <div className="mt-2">
+              <AtalhosDeTurma marcados={selecionados} aoMudar={setSelecionados} />
+            </div>
 
             {(alunos?.length ?? 0) > 0 && (
               <div className="relative mt-1.5">

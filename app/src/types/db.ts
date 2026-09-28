@@ -83,6 +83,19 @@ export type ConviteAluno = {
   criado_em: string
 }
 
+/**
+ * Link de cadastro do professor (0019_link_de_cadastro.sql) — um por
+ * professor, uso múltiplo, 24h. `expira_em`/`criado_em` são fixados por
+ * trigger no banco; o front só manda `token_hash`.
+ */
+export type LinkCadastro = {
+  id: string
+  professor_id: string
+  token_hash: string
+  expira_em: string
+  criado_em: string
+}
+
 export type EventoAcessoTipo = 'conta_criada' | 'acesso_resetado' | 'email_alterado'
 
 export type EventoAcessoAluno = {
@@ -384,6 +397,7 @@ export type Database = {
         Partial<Pagamento>
       >
       convites_aluno: Tabela<ConviteAluno, Insert<ConviteAluno, 'aluno_id' | 'token_hash' | 'expira_em'>, Partial<ConviteAluno>>
+      links_cadastro: Tabela<LinkCadastro, Insert<LinkCadastro, 'professor_id' | 'token_hash'>, Partial<LinkCadastro>>
       eventos_acesso_aluno: Tabela<
         EventoAcessoAluno,
         Insert<EventoAcessoAluno, 'aluno_id' | 'tipo'>,

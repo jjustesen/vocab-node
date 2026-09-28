@@ -8,6 +8,7 @@ import {
   MousePointer2,
   Palette,
   Pen,
+  Redo2,
   Square,
   Trash2,
   Type,
@@ -77,6 +78,12 @@ import type { ParticipanteId } from './estado-palco'
 const INTERVALO_ENVIO_MS = 80
 /** Abaixo disto, arrastar um texto conta como clique para editar, e não como mudança de lugar. */
 const ARRASTO_MINIMO = 6
+/**
+ * Quantos pontos por mensagem ao REFAZER um traço. O traço ao vivo sai em
+ * lotes pequenos sozinho; o refeito sai de uma vez, e um traço longo inteiro
+ * numa mensagem só passaria do limite do data channel.
+ */
+const PONTOS_POR_LOTE = 200
 
 export function Lousa({
   superficie,
@@ -136,6 +143,25 @@ export function Lousa({
   const anotacoes = useRef<Anotacao[]>([])
   /** Pilha de ids meus, para o desfazer. */
   const meus = useRef<string[]>([])
+  /**
+   * O que eu desfiz, para o refazer — a anotação INTEIRA, e não só o id: do
+   * outro lado ela já foi removida, e refazer é mandá-la de novo como se
+   * tivesse acabado de nascer.
+   */
+  const desfeitos = useRef<Anotacao[]>([])
+  /**
+   * As duas pilhas moram em refs (o handler do canal mexe nelas), mas os
+   * botões precisam saber se estão vazias para se apagar. Este estado é só o
+   * espelho disso — ver `contarPilhas`.
+   */
+  const [pilhas, setPilhas] = useState({ desfazer: 0, refazer: 0 })
+  const contarPilhas = useCallback(() => {
+    const desfazer = meus.current.length
+    const refazer = desfeitos.current.length
+    setPilhas((atual) =>
+      atual.desfazer === desfazer && atual.refazer === refazer ? atual : { desfazer, refazer },
+    )
+  }, [])
 
   const [ferramenta, setFerramenta] = useState<Ferramenta>('caneta')
   const [cor, setCor] = useState<string>(CORES[0])
@@ -402,6 +428,7 @@ export function Lousa({
         meus.current = meus.current.filter((id) => id !== msg.id)
         redesenhar()
         sincronizarTextos()
+        contarPilhas()
         break
       case 'limpar':
         anotacoes.current = anotacoes.current.filter(
@@ -410,6 +437,7 @@ export function Lousa({
         meus.current = meus.current.filter((id) => anotacoes.current.some((a) => a.id === id))
         redesenhar()
         sincronizarTextos()
+        contarPilhas()
         break
       case 'estado':
         anotacoes.current = msg.anotacoes
@@ -437,6 +465,18 @@ export function Lousa({
   }, [])
 
   // ── caneta ────────────────────────────────────────────────────────────────
+
+  /**
+   * Toda anotação que EU crio entra por aqui. Criar algo depois de desfazer
+   * abre outro caminho: o que estava na pilha do refazer deixa de ser o
+   * "próximo passo" de nada, e refazê-lo depois seria ressuscitar um item
+   * fora de ordem.
+   */
+  function anotarMinha(id: string) {
+    meus.current.push(id)
+    desfeitos.current = []
+    contarPilhas()
+  }
 
   function despejar() {
     const traco = tracoAtual.current
@@ -516,7 +556,7 @@ export function Lousa({
       const forma = formaNova(eu, superficie, cor, espessura, ferramenta, ponto)
       formaAtual.current = forma
       anotacoes.current.push(forma)
-      meus.current.push(forma.id)
+      anotarMinha(forma.id)
       redesenhar()
       despejarForma(true)
       return
@@ -533,7 +573,7 @@ export function Lousa({
     }
     tracoAtual.current = traco
     anotacoes.current.push(traco)
-    meus.current.push(traco.id)
+    anotarMinha(traco.id)
     naoEnviados.current = [ponto]
     const ctx = contexto()
     if (ctx) desenharTraco(ctx, traco)
@@ -601,21 +641,31 @@ export function Lousa({
       } else {
         anotacoes.current[indice] = texto
       }
+      // Escrever, arrastar ou escalar também é ação nova — mesma regra de
+      // `anotarMinha`, que não serve aqui por não ser estável entre renders.
+      desfeitos.current = []
+      contarPilhas()
       sincronizarTextos()
       enviarRef.current?.({ t: 'texto', texto })
     },
-    [sincronizarTextos],
+    [sincronizarTextos, contarPilhas],
   )
 
+  /**
+   * Remoção feita pela pessoa (borracha, Backspace na caixa vazia) — é ação
+   * nova, então também fecha o refazer.
+   */
   const removerAnotacao = useCallback(
     (id: string) => {
       anotacoes.current = anotacoes.current.filter((a) => a.id !== id)
       meus.current = meus.current.filter((outro) => outro !== id)
+      desfeitos.current = []
       redesenhar()
       sincronizarTextos()
+      contarPilhas()
       enviarRef.current?.({ t: 'remover', id })
     },
-    [redesenhar, sincronizarTextos],
+    [redesenhar, sincronizarTextos, contarPilhas],
   )
 
   /** Sair da edição descarta o que ficou vazio — caixa em branco é lixo na tela. */
@@ -632,6 +682,13 @@ export function Lousa({
       return null
     })
   }, [sincronizarTextos])
+
+  // A caixa vazia sai da pilha DENTRO do updater acima, e mexer em outro
+  // estado de lá é pedir problema. Toda saída de edição muda `editando`,
+  // então recontar depois do commit pega esse caso sem atalho.
+  useEffect(() => {
+    contarPilhas()
+  }, [editando, contarPilhas])
 
   /** Clique no vazio com a ferramenta de texto: nasce uma caixa ali mesmo. */
   function aoPressionarCamada(evento: React.PointerEvent<HTMLDivElement>) {
@@ -721,23 +778,113 @@ export function Lousa({
 
   // ── barra ─────────────────────────────────────────────────────────────────
 
+  /**
+   * No meio de um gesto — o botão ainda apertado — desfazer e refazer ficam
+   * quietos. Tirar o traço que a mão está desenhando não para a mão: o
+   * próximo lote de pontos recriaria o traço do outro lado, e só do outro.
+   */
+  function noMeioDeUmGesto() {
+    return tracoAtual.current !== null || formaAtual.current !== null
+  }
+
   function desfazer() {
+    if (noMeioDeUmGesto()) return
     const id = meus.current.pop()
     if (!id) return
+    const anotacao = anotacoes.current.find((a) => a.id === id)
     anotacoes.current = anotacoes.current.filter((a) => a.id !== id)
+    // Caixa de texto vazia não vai para o refazer: refazê-la traria de volta
+    // um item invisível, que só serviria para gastar o próximo desfazer.
+    if (anotacao && !textoVazio(anotacao)) desfeitos.current.push(anotacao)
+    setEditando((atual) => (atual === id ? null : atual))
     redesenhar()
     sincronizarTextos()
+    contarPilhas()
     enviar({ t: 'remover', id })
   }
+
+  /**
+   * Refazer é CRIAR de novo, pelas mesmas mensagens de quem cria — e não uma
+   * mensagem nova de "refazer". Assim quem está na sala não precisa saber que
+   * aquilo já existiu: recebe um traço, uma forma ou um texto como qualquer
+   * outro, e quem entra depois recebe no `estado` como qualquer outro. O id é
+   * o mesmo de antes, então um "remover" atrasado continua valendo para ele.
+   */
+  function refazer() {
+    if (noMeioDeUmGesto()) return
+    const anotacao = desfeitos.current.pop()
+    if (!anotacao) return
+    // Substitui se já estiver lá (um `estado` recebido no meio do caminho
+    // pode tê-la trazido de volta) — senão ela sairia em dobro.
+    const indice = anotacoes.current.findIndex((a) => a.id === anotacao.id)
+    if (indice === -1) anotacoes.current.push(anotacao)
+    else anotacoes.current[indice] = anotacao
+    meus.current.push(anotacao.id)
+    redesenhar()
+    sincronizarTextos()
+    contarPilhas()
+
+    if (anotacao.tipo === 'texto') enviar({ t: 'texto', texto: anotacao })
+    else if (anotacao.tipo === 'forma') enviar({ t: 'forma', forma: anotacao })
+    else {
+      // O primeiro lote cria o traço do outro lado; os seguintes se somam a
+      // ele — exatamente o caminho do traço ao vivo.
+      const { pontos, ...cabecalho } = anotacao
+      for (let i = 0; i < pontos.length; i += PONTOS_POR_LOTE) {
+        enviar({ t: 'pontos', traco: cabecalho, pontos: pontos.slice(i, i + PONTOS_POR_LOTE) })
+      }
+    }
+  }
+
+  /**
+   * Os atalhos de sempre: Ctrl/Cmd+Z desfaz; Ctrl/Cmd+Shift+Z e Ctrl/Cmd+Y
+   * refazem. Escutam a janela inteira — o foco quase nunca está na lousa,
+   * que é um canvas —, mas saem do caminho de qualquer campo de texto:
+   * dentro de uma caixa da lousa, do documento ou do chat, Ctrl+Z é desfazer
+   * a DIGITAÇÃO, e roubar isso apagaria um traço no lugar de uma letra.
+   *
+   * Passa por ref pelo mesmo motivo do canal: as funções mudam a cada
+   * render, e a inscrição é uma só.
+   */
+  const atalhosRef = useRef({ desfazer, refazer })
+  atalhosRef.current = { desfazer, refazer }
+  useEffect(() => {
+    if (!podeAnotar) return
+    const aoTeclar = (evento: KeyboardEvent) => {
+      if (!(evento.ctrlKey || evento.metaKey) || evento.altKey || evento.isComposing) return
+      const alvo = evento.target
+      if (
+        alvo instanceof HTMLElement &&
+        (alvo.isContentEditable || alvo.closest('input, textarea, select, [contenteditable]'))
+      ) {
+        return
+      }
+      const tecla = evento.key.toLowerCase()
+      if (tecla === 'z' && !evento.shiftKey) {
+        evento.preventDefault()
+        atalhosRef.current.desfazer()
+      } else if ((tecla === 'z' && evento.shiftKey) || (tecla === 'y' && !evento.shiftKey)) {
+        evento.preventDefault()
+        atalhosRef.current.refazer()
+      }
+    }
+    window.addEventListener('keydown', aoTeclar)
+    return () => window.removeEventListener('keydown', aoTeclar)
+  }, [podeAnotar])
 
   function limparMinhaCamada() {
     anotacoes.current = anotacoes.current.filter(
       (a) => !(a.autor === eu && a.superficie === superficie),
     )
     meus.current = meus.current.filter((id) => anotacoes.current.some((a) => a.id === id))
+    // Varrer a página não entra no desfazer (ver `anotacoes.ts`), e deixar o
+    // refazer aberto depois dela devolveria à página um item solto do que
+    // acabou de ser varrido.
+    desfeitos.current = []
     setEditando(null)
     redesenhar()
     sincronizarTextos()
+    contarPilhas()
     enviar({ t: 'limpar', autor: eu, superficie })
   }
 
@@ -842,10 +989,19 @@ export function Lousa({
 
           <button
             onClick={desfazer}
-            title="Desfazer o que eu fiz por último"
-            className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 hover:bg-neutral-800 hover:text-white"
+            disabled={pilhas.desfazer === 0}
+            title="Desfazer o que eu fiz por último (Ctrl+Z)"
+            className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 transition enabled:hover:bg-neutral-800 enabled:hover:text-white disabled:opacity-30"
           >
             <Undo2 className="h-4 w-4" />
+          </button>
+          <button
+            onClick={refazer}
+            disabled={pilhas.refazer === 0}
+            title="Refazer (Ctrl+Shift+Z)"
+            className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 transition enabled:hover:bg-neutral-800 enabled:hover:text-white disabled:opacity-30"
+          >
+            <Redo2 className="h-4 w-4" />
           </button>
           <button
             onClick={limparMinhaCamada}
