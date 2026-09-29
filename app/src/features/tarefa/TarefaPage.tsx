@@ -219,9 +219,8 @@ export function TarefaPage() {
     const questao = dados!.questoes[indice]
 
     // Sem transcrição do navegador mas com áudio: quem transcreve é o servidor
-    // (Gemini). É a rede de segurança quando o reconhecedor do navegador falha
-    // — e o caminho normal nos aparelhos que passaram a só gravar (ver
-    // soGravacaoNesteAparelho em RespostaPronuncia).
+    // (Gemini). É o caminho NORMAL no celular, onde o reconhecedor do navegador
+    // não é confiável — e a rede de segurança no desktop, quando ele falha.
     if (!desistiu && transcricao.trim() === '' && audioBase64) {
       try {
         const { data } = await apiTarefa.post<PronunciaResposta>('/tarefa-pronuncia', {
