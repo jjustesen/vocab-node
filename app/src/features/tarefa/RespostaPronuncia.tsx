@@ -132,13 +132,14 @@ const DURACAO_MAXIMA_MS = 30_000
  * isto a gravação ia até o aluno tocar em "Terminei" — ou até o teto de 30s, que
  * somado à transcrição no servidor dava quase um minuto de espera.
  *
- *  - SILENCIO_FIM_MS: pausa depois da fala que encerra. 1,5s passa das pausas
- *    normais entre palavras de quem lê devagar, sem deixar o aluno esperando.
+ *  - SILENCIO_FIM_MS: pausa depois da fala que encerra. 3s dá folga a quem
+ *    lê devagar ou hesita no meio da frase — cortar a leitura no meio custa
+ *    mais caro que esperar um pouco mais.
  *  - FALA_MINIMA_MS: um estalo ou uma tosse não conta como "já falou".
  *  - SEM_FALA_MS: ninguém falou — encerra e mostra "não te ouvi" em vez de
  *    esperar os 30s.
  */
-const SILENCIO_FIM_MS = 1_500
+const SILENCIO_FIM_MS = 3_000
 const FALA_MINIMA_MS = 300
 const SEM_FALA_MS = 7_000
 /** Se o reconhecedor do navegador não fechar depois do `stop()`, fechamos nós. */
