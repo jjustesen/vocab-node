@@ -76,6 +76,22 @@ function criarReconhecedor(): Reconhecedor | null {
  * é uma chamada paga ao Gemini, e navegador atualizado pode ter passado a dar
  * conta. Vencida, o aparelho volta a tentar o caminho grátis.
  */
+/**
+ * O celular continua só gravando (decisão de 13/08/2026, reafirmada em
+ * 29/09/2026): ligar o reconhecedor junto no celular, para economizar o
+ * Gemini, fez o microfone parar de funcionar em produção — a disputa pelo mic
+ * que motivou a decisão original. O aprendizado por aparelho abaixo vale para
+ * o computador, onde os dois convivem.
+ *
+ * `maxTouchPoints` em vez de user agent: string de UA mente, número de pontos
+ * de toque não.
+ */
+function ehCelular(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const toques = navigator.maxTouchPoints ?? 0
+  return toques > 1 && window.matchMedia('(pointer: coarse)').matches
+}
+
 const CHAVE_SO_GRAVACAO = 'pronuncia:so-gravacao-ate'
 const VALIDADE_SO_GRAVACAO_MS = 7 * 24 * 60 * 60 * 1000
 const CHAVE_FALHAS = 'pronuncia:falhas-do-navegador'
@@ -101,7 +117,7 @@ function gravarLocal(chave: string, valor: string) {
 
 /** Neste aparelho, pular o reconhecedor do navegador e ir direto de gravação? */
 function soGravacaoNesteAparelho(): boolean {
-  if (criarReconhecedor() === null) return true
+  if (ehCelular() || criarReconhecedor() === null) return true
   return Number(lerLocal(CHAVE_SO_GRAVACAO) ?? '0') > Date.now()
 }
 
@@ -237,7 +253,13 @@ export function RespostaPronuncia({
   const parcialRef = useRef('')
   /** Entrou som no microfone? Separa silêncio real de falha do motor. */
   const houveSomRef = useRef(false)
-  /** O medidor de volume está funcionando? Sem ele, `houveSomRef` não prova nada. */
+  /**
+   * O medidor está VIVO — já leu alguma variação na onda? Microfone de verdade
+   * nunca dá silêncio perfeito (há sempre ruído de fundo); onda cravada em 128
+   * é medidor sem sinal (contexto suspenso no iPhone, mic tomado por outro).
+   * Sem medidor vivo, `houveSomRef` não prova nada, e nem o fim automático
+   * nem a trava de silêncio podem agir.
+   */
   const medidorAtivoRef = useRef(false)
   const erroDoMotorRef = useRef<string | null>(null)
   const finalizadoRef = useRef(false)
@@ -385,7 +407,9 @@ export function RespostaPronuncia({
 
       const amostras = new Uint8Array(analisador.fftSize)
       const inicio = performance.now()
-      medidorAtivoRef.current = true
+      // De novo agora que o microfone abriu: no iPhone o contexto pode ter
+      // sido interrompido na troca para o modo de gravação.
+      void contexto.resume()
       let piso = 0.01
       let vozDesde = 0
       let ultimaVoz = 0
@@ -398,6 +422,7 @@ export function RespostaPronuncia({
         let pico = 0
         for (const amostra of amostras) {
           const desvio = amostra - 128
+          if (desvio !== 0) medidorAtivoRef.current = true
           soma += desvio * desvio
           pico = Math.max(pico, Math.abs(desvio))
         }
@@ -415,7 +440,9 @@ export function RespostaPronuncia({
 
         const falou = vozDesde > 0 && ultimaVoz - vozDesde >= FALA_MINIMA_MS
         if (falou && agora - ultimaVoz > SILENCIO_FIM_MS) return parar()
-        if (!falou && agora - inicio > SEM_FALA_MS) return parar()
+        // Só com medidor vivo: medidor mudo não é aluno calado, e parar aqui
+        // cortaria quem está lendo.
+        if (!falou && medidorAtivoRef.current && agora - inicio > SEM_FALA_MS) return parar()
 
         requestAnimationFrame(medir)
       }
