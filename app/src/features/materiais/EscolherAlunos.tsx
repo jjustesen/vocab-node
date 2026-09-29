@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Check, Loader2, Search, Users } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Check, Loader2, Search, Users, UsersRound } from 'lucide-react'
 import { useAlunos } from '@/features/alunos/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import type { Material } from '@/types/db'
 import { AtalhosDeTurma } from '@/features/turmas/AtalhosDeTurma'
-import { useDisponibilizarPasta } from './api'
+import { rotuloDosDestinos, useDestinos } from '@/features/turmas/turmas-do-envio'
+import { darMateriaisParaTurmas, invalidarConteudos } from '@/features/turmas/conteudos'
+import { vincular } from './api'
 
 /**
  * "Para quem vai este material?" — a metade nova do modelo de 0016.
@@ -27,9 +30,22 @@ export function EscolherAlunos({
   aoFechar: () => void
 }) {
   const { data: alunos, isLoading } = useAlunos('ativo')
-  const disponibilizar = useDisponibilizarPasta()
   const [busca, setBusca] = useState('')
-  const [marcados, setMarcados] = useState<Set<string>>(new Set())
+  const destinos = useDestinos()
+  const qc = useQueryClient()
+
+  // Turma: o material passa a ser dela e vai para todos os membros. Avulsos:
+  // o vínculo de sempre. Nos dois, reentregar a quem já tinha não é erro.
+  const disponibilizar = useMutation({
+    mutationFn: async () => {
+      const materialIds = materiais.map((m) => m.id)
+      if (destinos.turmaIds.length > 0) await darMateriaisParaTurmas(destinos.turmaIds, materialIds)
+      if (destinos.avulsos.length > 0) {
+        for (const id of materialIds) await vincular(id, destinos.avulsos)
+      }
+    },
+    onSuccess: () => invalidarConteudos(qc),
+  })
 
   const tem = useMemo(() => new Set(jaTem), [jaTem])
 
@@ -41,15 +57,6 @@ export function EscolherAlunos({
   }, [alunos, busca])
 
   const faltando = (alunos ?? []).filter((a) => !tem.has(a.id))
-
-  function alternar(id: string) {
-    setMarcados((atuais) => {
-      const novo = new Set(atuais)
-      if (novo.has(id)) novo.delete(id)
-      else novo.add(id)
-      return novo
-    })
-  }
 
   return (
     <div
@@ -78,12 +85,12 @@ export function EscolherAlunos({
         </div>
 
         <div className="mt-3">
-          <AtalhosDeTurma marcados={marcados} aoMudar={setMarcados} indisponiveis={tem} />
+          <AtalhosDeTurma destinos={destinos} />
         </div>
 
         {faltando.length > 1 && (
           <button
-            onClick={() => setMarcados(new Set(faltando.map((a) => a.id)))}
+            onClick={() => destinos.marcarAvulsos(faltando.map((a) => a.id))}
             className="mt-2 self-start text-xs font-bold text-violet-700 hover:underline"
           >
             Marcar os {faltando.length} que ainda não têm
@@ -99,19 +106,21 @@ export function EscolherAlunos({
 
           <ul className="divide-y divide-neutral-100">
             {filtrados.map((aluno) => {
+              const turma = destinos.pelaTurma.get(aluno.id)
               const possui = tem.has(aluno.id)
+              const travado = Boolean(turma) || possui
               return (
                 <li key={aluno.id}>
                   <label
                     className={`flex items-center gap-3 py-2.5 ${
-                      possui ? 'opacity-60' : 'cursor-pointer'
+                      turma ? '' : possui ? 'opacity-60' : 'cursor-pointer'
                     }`}
                   >
                     <input
                       type="checkbox"
-                      disabled={possui}
-                      checked={possui || marcados.has(aluno.id)}
-                      onChange={() => alternar(aluno.id)}
+                      disabled={travado}
+                      checked={travado || destinos.marcado(aluno.id)}
+                      onChange={() => destinos.alternarAluno(aluno.id)}
                       className="h-4 w-4 shrink-0 accent-violet-500"
                     />
                     <span
@@ -125,7 +134,11 @@ export function EscolherAlunos({
                       <span className="block truncate text-sm font-medium text-neutral-900">
                         {aluno.nome}
                       </span>
-                      {possui && (
+                      {turma ? (
+                        <span className="flex items-center gap-1 text-[11px] font-medium text-violet-700">
+                          <UsersRound className="h-3 w-3" /> pela turma {turma}
+                        </span>
+                      ) : possui && (
                         <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600">
                           <Check className="h-3 w-3" /> já tem
                         </span>
@@ -158,13 +171,8 @@ export function EscolherAlunos({
             Cancelar
           </button>
           <button
-            onClick={() =>
-              disponibilizar.mutate(
-                { materialIds: materiais.map((m) => m.id), alunoIds: [...marcados] },
-                { onSuccess: aoFechar },
-              )
-            }
-            disabled={marcados.size === 0 || disponibilizar.isPending}
+            onClick={() => disponibilizar.mutate(undefined, { onSuccess: aoFechar })}
+            disabled={destinos.vazio || disponibilizar.isPending}
             className="flex flex-[2] items-center justify-center gap-2 rounded-full bg-neutral-900 px-4 py-3 text-sm font-extrabold text-white disabled:opacity-40"
           >
             {disponibilizar.isPending ? (
@@ -172,9 +180,9 @@ export function EscolherAlunos({
             ) : (
               <Users className="h-4 w-4" />
             )}
-            {marcados.size === 0
-              ? 'Escolha quem recebe'
-              : `Disponibilizar para ${marcados.size}`}
+            <span className="truncate">
+              {destinos.vazio ? 'Escolha quem recebe' : `Disponibilizar para ${rotuloDosDestinos(destinos)}`}
+            </span>
           </button>
         </div>
       </div>

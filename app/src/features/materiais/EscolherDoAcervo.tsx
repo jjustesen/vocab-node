@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Check, Folder, FolderInput, Loader2, Search } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { darMateriaisParaTurmas, invalidarConteudos } from '@/features/turmas/conteudos'
 import { VISUAL_TIPO } from './visual'
 import { SEM_PASTA, useAcervo, useDisponibilizar, useDisponibilizarPasta, usePastas } from './api'
 
@@ -18,6 +20,7 @@ export function EscolherDoAcervo({
   alunoIds,
   paraQuem,
   jaTem,
+  turmaId,
   aoFechar,
 }: {
   /** Quem vai receber. Um na ficha do aluno; a turma inteira na sala de turma. */
@@ -26,12 +29,22 @@ export function EscolherDoAcervo({
   paraQuem: string
   /** material_id → alunos que já o têm, entre os `alunoIds` desta operação. */
   jaTem: Map<string, string[]>
+  /**
+   * Quando o destino é uma turma: o material é dado PARA A TURMA (0020) — passa
+   * a ser dela e vai para quem entrar depois, não só para `alunoIds`.
+   */
+  turmaId?: string
   aoFechar: () => void
 }) {
   const { data: acervo, isLoading } = useAcervo()
   const { data: pastas } = usePastas()
   const disponibilizar = useDisponibilizar()
   const disponibilizarPasta = useDisponibilizarPasta()
+  const qc = useQueryClient()
+  const darParaTurma = useMutation({
+    mutationFn: (materialIds: string[]) => darMateriaisParaTurmas([turmaId!], materialIds),
+    onSuccess: () => invalidarConteudos(qc),
+  })
   const [busca, setBusca] = useState('')
   const [pasta, setPasta] = useState<'todas' | string>('todas')
   const [enviando, setEnviando] = useState<string | null>(null)
@@ -70,21 +83,26 @@ export function EscolherDoAcervo({
     () => (pastaCorrente ? (acervo ?? []).filter((m) => m.pasta_id === pastaCorrente.id) : []),
     [acervo, pastaCorrente],
   )
-  const faltandoNaPasta = useMemo(
-    () =>
-      daPasta.filter((m) => {
-        const donos = jaTem.get(m.id) ?? []
-        return alunoIds.some((id) => !donos.includes(id))
-      }),
-    [daPasta, jaTem, alunoIds],
+  /**
+   * Para uma turma, "já tem" é "já é da turma" (`jaTem` traz só os dela) —
+   * não "cada membro tem". Senão uma turma ainda vazia pareceria ter tudo, e o
+   * PDF que um aluno ganhou por fora pareceria ser da turma.
+   */
+  const completo = useCallback(
+    (materialId: string) => {
+      if (turmaId) return jaTem.has(materialId)
+      const donos = jaTem.get(materialId) ?? []
+      return alunoIds.every((id) => donos.includes(id))
+    },
+    [turmaId, jaTem, alunoIds],
   )
+  const faltandoNaPasta = useMemo(() => daPasta.filter((m) => !completo(m.id)), [daPasta, completo])
 
   function dar(materialId: string, faltam: string[]) {
     setEnviando(materialId)
-    disponibilizar.mutate(
-      { materialId, alunoIds: faltam },
-      { onSettled: () => setEnviando(null) },
-    )
+    const aoTerminar = { onSettled: () => setEnviando(null) }
+    if (turmaId) darParaTurma.mutate([materialId], aoTerminar)
+    else disponibilizar.mutate({ materialId, alunoIds: faltam }, aoTerminar)
   }
 
   return (
@@ -143,16 +161,15 @@ export function EscolherDoAcervo({
         */}
         {pastaCorrente && faltandoNaPasta.length > 0 && (
           <button
-            onClick={() =>
-              disponibilizarPasta.mutate({
-                materialIds: faltandoNaPasta.map((m) => m.id),
-                alunoIds,
-              })
-            }
-            disabled={disponibilizarPasta.isPending}
+            onClick={() => {
+              const materialIds = faltandoNaPasta.map((m) => m.id)
+              if (turmaId) darParaTurma.mutate(materialIds)
+              else disponibilizarPasta.mutate({ materialIds, alunoIds })
+            }}
+            disabled={disponibilizarPasta.isPending || darParaTurma.isPending}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-neutral-900 px-4 py-3 text-xs font-extrabold text-white transition disabled:opacity-60"
           >
-            {disponibilizarPasta.isPending ? (
+            {disponibilizarPasta.isPending || darParaTurma.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <FolderInput className="h-4 w-4" />
@@ -165,7 +182,7 @@ export function EscolherDoAcervo({
         {pastaCorrente && daPasta.length > 0 && faltandoNaPasta.length === 0 && (
           <p className="mt-3 flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700">
             <Check className="h-3.5 w-3.5" />
-            {alunoIds.length === 1 ? 'Já tem' : 'Todos já têm'} a pasta inteira
+            {turmaId ? 'A turma já tem' : alunoIds.length === 1 ? 'Já tem' : 'Todos já têm'} a pasta inteira
           </p>
         )}
 
@@ -197,13 +214,13 @@ export function EscolherDoAcervo({
               const donos = jaTem.get(material.id) ?? []
               const faltam = alunoIds.filter((id) => !donos.includes(id))
               const { Icone, cor } = VISUAL_TIPO[material.tipo]
-              const completo = faltam.length === 0
+              const jaDado = completo(material.id)
 
               return (
                 <li key={material.id}>
                   <button
-                    onClick={() => !completo && dar(material.id, faltam)}
-                    disabled={completo || enviando !== null}
+                    onClick={() => !jaDado && dar(material.id, faltam)}
+                    disabled={jaDado || enviando !== null}
                     className="flex w-full items-center gap-3 py-2.5 text-left transition disabled:opacity-60"
                   >
                     <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${cor}`}>
@@ -213,14 +230,16 @@ export function EscolherDoAcervo({
                       <span className="block truncate text-sm font-medium text-neutral-900">
                         {material.nome}
                       </span>
-                      {completo ? (
+                      {jaDado ? (
                         <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600">
                           <Check className="h-3 w-3" />
-                          {alunoIds.length === 1 ? 'já tem' : 'todos já têm'}
+                          {turmaId ? 'já é da turma' : alunoIds.length === 1 ? 'já tem' : 'todos já têm'}
                         </span>
                       ) : (
                         <span className="block text-[11px] text-neutral-400">
-                          {alunoIds.length === 1
+                          {turmaId
+                            ? 'dar para a turma'
+                            : alunoIds.length === 1
                             ? 'disponibilizar'
                             : `falta para ${faltam.length} de ${alunoIds.length}`}
                         </span>

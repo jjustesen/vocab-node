@@ -1,68 +1,79 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ClipboardList, Loader2, Plus, Search, Send, X } from 'lucide-react'
-import { useAtividades, type AtividadeComEnvio } from '@/features/atividades/api'
-import { EnvioModal } from '@/features/atividades/EnvioModal'
+import { Loader2, Milestone, Plus, Search, Send, X } from 'lucide-react'
 import { CORES_NIVEL } from '@/features/atividades/visual-atividade'
-import { useTarefasDaTurma } from './api'
+import { useTrilhas, type TrilhaComProgresso } from '@/features/trilhas/api'
+import { ModalAtribuir } from '@/features/trilhas/TrilhaDetalhePage'
 import { CompletarNaTurma } from './CompletarNaTurma'
+import { useConteudosDaTurma } from './conteudos'
 
 /**
- * A aba de tarefas da turma: o que foi enviado PARA ELA (0020) e o botão de
- * mandar mais.
+ * As trilhas da turma, na aba Tarefas — irmã de `TarefasDaTurma`.
  *
- * Enviar daqui é o EnvioModal com a turma já escolhida como destino: a
- * atividade vira da turma, cada membro recebe a sua (é ele que responde e tem
- * a nota) e quem entrar depois recebe também. Uma turma ainda vazia já pode
- * receber — o conteúdo espera os alunos.
+ * A lista é o que foi enviado PARA A TURMA (0020) — não as trilhas que os
+ * membros fazem por fora. Cada aluno tem a sua (é ele que responde), e quem
+ * entrar depois recebe sozinho.
+ *
+ * Enviar daqui é o `ModalAtribuir` da própria trilha, com a turma já
+ * escolhida como destino.
  */
-export function TarefasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoIds: string[] }) {
-  const { data: tarefas, isLoading } = useTarefasDaTurma(turmaId, alunoIds)
+export function TrilhasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoIds: string[] }) {
+  const { data: trilhas, isLoading } = useTrilhas()
+  const { data: conteudos, isLoading: carregandoConteudos } = useConteudosDaTurma(turmaId)
   const [escolhendo, setEscolhendo] = useState(false)
-  const [enviando, setEnviando] = useState<AtividadeComEnvio | null>(null)
+  const [enviando, setEnviando] = useState<TrilhaComProgresso | null>(null)
+
+  const membros = useMemo(() => new Set(alunoIds), [alunoIds])
+  const trilhaPorId = new Map((trilhas ?? []).map((t) => [t.id, t]))
+  const daTurma = (conteudos?.trilhaIds ?? []).flatMap((id) => {
+    const t = trilhaPorId.get(id)
+    return t ? [{ trilha: t, naTurma: t.progresso.filter((p) => membros.has(p.alunoId)) }] : []
+  })
 
   return (
     <div className="rounded-3xl bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-extrabold text-neutral-900">
-          Tarefas da turma {tarefas && <span className="text-neutral-400">· {tarefas.length}</span>}
+          Trilhas da turma {conteudos && <span className="text-neutral-400">· {daTurma.length}</span>}
         </h2>
         <button
           onClick={() => setEscolhendo(true)}
           className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"
         >
-          <Plus className="h-3.5 w-3.5" /> Enviar tarefa
+          <Plus className="h-3.5 w-3.5" /> Enviar trilha
         </button>
       </div>
 
-      {isLoading ? (
+      {isLoading || carregandoConteudos ? (
         <div className="flex justify-center py-6">
           <Loader2 className="h-4 w-4 animate-spin text-neutral-400" />
         </div>
-      ) : !tarefas || tarefas.length === 0 ? (
+      ) : daTurma.length === 0 ? (
         <div className="mt-4 rounded-2xl bg-neutral-50 px-4 py-6 text-center">
-          <ClipboardList className="mx-auto h-5 w-5 text-neutral-300" />
-          <p className="mt-2 text-xs text-neutral-500">Nenhuma tarefa enviada para esta turma ainda.</p>
+          <Milestone className="mx-auto h-5 w-5 text-neutral-300" />
+          <p className="mt-2 text-xs text-neutral-500">Nenhuma trilha enviada para esta turma ainda.</p>
         </div>
       ) : (
         <ul className="mt-3 divide-y divide-neutral-100">
-          {tarefas.map((t) => {
-            const faltamReceber = alunoIds.length - t.receberam
-            const tudoFeito = t.concluiram === alunoIds.length
+          {daTurma.map(({ trilha, naTurma }) => {
+            const faltamReceber = alunoIds.length - naTurma.length
+            // Terminou = todas as etapas concluídas. Sobre o tamanho da turma,
+            // pelo mesmo motivo das tarefas: "2/2" esconderia quem nem recebeu.
+            const terminaram = naTurma.filter((p) => p.total > 0 && p.concluidas >= p.total).length
+            const tudoFeito = terminaram === alunoIds.length
             return (
-              <li key={t.atividadeId} className="flex items-center gap-2">
+              <li key={trilha.id} className="flex items-center gap-2">
                 <Link
-                  to={`/atividades/${t.atividadeId}`}
+                  to={`/trilhas/${trilha.id}`}
                   className="-mx-2 flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-2 py-3 transition hover:bg-neutral-50"
                 >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-amber-100 text-amber-800">
-                    <ClipboardList className="h-4 w-4" />
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-violet-100 text-violet-800">
+                    <Milestone className="h-4 w-4" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-neutral-900">{t.titulo}</span>
+                    <span className="block truncate text-sm font-bold text-neutral-900">{trilha.nome}</span>
                     <span className="block truncate text-xs text-neutral-500">
-                      enviada {dataCurta(t.enviadaEm)}
-                      {t.prazo && ` · prazo ${dataCurta(t.prazo)}`}
+                      {trilha.etapas} {trilha.etapas === 1 ? 'etapa' : 'etapas'}
                       {faltamReceber > 0 && (
                         <span className="font-medium text-amber-700">
                           {' '}
@@ -71,16 +82,14 @@ export function TarefasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoId
                       )}
                     </span>
                   </span>
-                  {/* Concluíram sobre o tamanho da turma, e não sobre quem
-                      recebeu: "3/3" esconderia os dois que nem receberam. */}
                   {alunoIds.length > 0 && (
                     <span
                       className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ${
                         tudoFeito ? 'bg-emerald-100 text-emerald-800' : 'bg-neutral-100 text-neutral-600'
                       }`}
-                      title="Quantos da turma concluíram"
+                      title="Quantos da turma terminaram a trilha"
                     >
-                      {t.concluiram}/{alunoIds.length}
+                      {terminaram}/{alunoIds.length}
                     </span>
                   )}
                 </Link>
@@ -94,19 +103,20 @@ export function TarefasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoId
       )}
 
       {escolhendo && (
-        <EscolherAtividade
+        <EscolherTrilha
           aoFechar={() => setEscolhendo(false)}
-          aoEscolher={(a) => {
+          aoEscolher={(t) => {
             setEscolhendo(false)
-            setEnviando(a)
+            setEnviando(t)
           }}
         />
       )}
 
       {enviando && (
-        <EnvioModal
-          atividadeId={enviando.id}
-          atividadeTitulo={enviando.titulo}
+        <ModalAtribuir
+          trilhaId={enviando.id}
+          trilhaNome={enviando.nome}
+          temEtapas={enviando.etapas > 0}
           turmaId={turmaId}
           aoFechar={() => setEnviando(null)}
         />
@@ -115,25 +125,21 @@ export function TarefasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoId
   )
 }
 
-function dataCurta(iso: string): string {
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-}
-
-/** Primeiro passo do envio pela turma: qual atividade da biblioteca vai. */
-function EscolherAtividade({
+/** Primeiro passo do envio pela turma: qual trilha vai. */
+function EscolherTrilha({
   aoEscolher,
   aoFechar,
 }: {
-  aoEscolher: (atividade: AtividadeComEnvio) => void
+  aoEscolher: (trilha: TrilhaComProgresso) => void
   aoFechar: () => void
 }) {
-  const { data: atividades, isLoading } = useAtividades()
+  const { data: trilhas, isLoading } = useTrilhas()
   const [busca, setBusca] = useState('')
 
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLowerCase()
-    return (atividades ?? []).filter((a) => !termo || a.titulo.toLowerCase().includes(termo))
-  }, [atividades, busca])
+    return (trilhas ?? []).filter((t) => !termo || t.nome.toLowerCase().includes(termo))
+  }, [trilhas, busca])
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-neutral-900/60 p-4" onClick={aoFechar}>
@@ -143,8 +149,8 @@ function EscolherAtividade({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-extrabold">Enviar tarefa para a turma</h2>
-            <p className="text-sm text-neutral-500">Escolha a atividade. Ela vai para a turma inteira, inclusive quem entrar depois.</p>
+            <h2 className="text-lg font-extrabold">Enviar trilha para a turma</h2>
+            <p className="text-sm text-neutral-500">Escolha a trilha. Ela vai para a turma inteira, inclusive quem entrar depois — quem já está nela segue de onde parou.</p>
           </div>
           <button onClick={aoFechar} aria-label="Fechar" className="shrink-0 text-neutral-400">
             <X className="h-5 w-5" />
@@ -157,7 +163,7 @@ function EscolherAtividade({
             autoFocus
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder="Buscar atividade…"
+            placeholder="Buscar trilha…"
             className="w-full rounded-2xl bg-neutral-100 py-2.5 pr-3 pl-10 text-sm outline-none ring-neutral-900 focus:ring-2"
           />
         </div>
@@ -170,19 +176,24 @@ function EscolherAtividade({
           )}
           {!isLoading && filtradas.length === 0 && (
             <p className="py-6 text-center text-xs text-neutral-500">
-              {busca ? `Nenhuma atividade para “${busca}”.` : 'Sua biblioteca ainda está vazia.'}
+              {busca ? `Nenhuma trilha para “${busca}”.` : 'Você ainda não criou nenhuma trilha.'}
             </p>
           )}
           <ul className="space-y-1">
-            {filtradas.map((a) => (
-              <li key={a.id}>
+            {filtradas.map((t) => (
+              <li key={t.id}>
                 <button
-                  onClick={() => aoEscolher(a)}
+                  onClick={() => aoEscolher(t)}
                   className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition hover:bg-neutral-50"
                 >
-                  <span className="min-w-0 flex-1 truncate text-sm font-bold text-neutral-900">{a.titulo}</span>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-extrabold ${CORES_NIVEL[a.nivel]}`}>
-                    {a.nivel}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-bold text-neutral-900">{t.nome}</span>
+                    <span className="text-[11px] text-neutral-400">
+                      {t.etapas} {t.etapas === 1 ? 'etapa' : 'etapas'}
+                    </span>
+                  </span>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-extrabold ${CORES_NIVEL[t.nivel]}`}>
+                    {t.nivel}
                   </span>
                   <Send className="h-4 w-4 shrink-0 text-neutral-300" />
                 </button>
@@ -192,10 +203,10 @@ function EscolherAtividade({
         </div>
 
         <Link
-          to="/atividades/nova"
+          to="/trilhas"
           className="mt-3 flex items-center justify-center gap-1.5 rounded-full bg-neutral-100 px-4 py-2.5 text-xs font-bold text-neutral-700 hover:bg-neutral-200"
         >
-          <Plus className="h-3.5 w-3.5" /> Criar uma atividade nova
+          <Plus className="h-3.5 w-3.5" /> Criar uma trilha nova
         </Link>
       </div>
     </div>

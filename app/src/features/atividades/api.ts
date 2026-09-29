@@ -440,43 +440,8 @@ export type EnvioResultado = { aluno: Aluno; link: string }
 export function useEnviarAtividade(atividadeId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({
-      alunos,
-      prazo,
-    }: {
-      alunos: Aluno[]
-      prazo?: string
-    }): Promise<EnvioResultado[]> => {
-      const resultados: EnvioResultado[] = []
-
-      for (const aluno of alunos) {
-        const { count } = await supabase
-          .from('atribuicoes')
-          .select('*', { count: 'exact', head: true })
-          .eq('atividade_id', atividadeId)
-          .eq('aluno_id', aluno.id)
-
-        const { token, hash } = await gerarTokenDeAcesso()
-
-        const { data: criada, error } = await supabase
-          .from('atribuicoes')
-          .insert({
-            atividade_id: atividadeId,
-            aluno_id: aluno.id,
-            token_hash: hash,
-            tentativa: (count ?? 0) + 1,
-            prazo: prazo || null,
-          })
-          .select('id')
-          .single()
-        if (error) throw error
-
-        lembrarToken(criada.id, token)
-        resultados.push({ aluno, link: `${window.location.origin}/t/${token}` })
-      }
-
-      return resultados
-    },
+    mutationFn: ({ alunos, prazo }: { alunos: Aluno[]; prazo?: string }) =>
+      enviarAtividade(atividadeId, alunos, prazo),
     // Enviar mexe em duas árvores de cache, não uma: os envios da atividade e o
     // histórico de cada aluno que recebeu. Invalidar só a primeira funcionava
     // enquanto o envio começava sempre pela atividade; com o envio a partir da
@@ -485,11 +450,52 @@ export function useEnviarAtividade(atividadeId: string) {
     onSuccess: (_resultados, { alunos }) => {
       qc.invalidateQueries({ queryKey: chavesAtividades.envios(atividadeId) })
       qc.invalidateQueries({ queryKey: chavesAtividades.todas })
+      qc.invalidateQueries({ queryKey: ['turmas'] })
       for (const aluno of alunos) {
         qc.invalidateQueries({ queryKey: chavesAlunos.historico(aluno.id) })
       }
     },
   })
+}
+
+/**
+ * O envio em si, fora do hook — a tela da turma também manda atividades (a
+ * quem chegou depois), sem estar presa a um `atividadeId` fixo.
+ */
+export async function enviarAtividade(
+  atividadeId: string,
+  alunos: Aluno[],
+  prazo?: string,
+): Promise<EnvioResultado[]> {
+  const resultados: EnvioResultado[] = []
+
+  for (const aluno of alunos) {
+    const { count } = await supabase
+      .from('atribuicoes')
+      .select('*', { count: 'exact', head: true })
+      .eq('atividade_id', atividadeId)
+      .eq('aluno_id', aluno.id)
+
+    const { token, hash } = await gerarTokenDeAcesso()
+
+    const { data: criada, error } = await supabase
+      .from('atribuicoes')
+      .insert({
+        atividade_id: atividadeId,
+        aluno_id: aluno.id,
+        token_hash: hash,
+        tentativa: (count ?? 0) + 1,
+        prazo: prazo || null,
+      })
+      .select('id')
+      .single()
+    if (error) throw error
+
+    lembrarToken(criada.id, token)
+    resultados.push({ aluno, link: `${window.location.origin}/t/${token}` })
+  }
+
+  return resultados
 }
 
 /**

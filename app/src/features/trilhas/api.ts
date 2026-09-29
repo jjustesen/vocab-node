@@ -660,100 +660,94 @@ export type LinkDaEtapa = {
  * Uma consulta descobre as tentativas já existentes e um insert em lote grava
  * tudo; atribuir 6 etapas a 3 alunos são 2 idas ao banco, não 36.
  */
-export function useAtribuirTrilha(trilhaId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (alunos: Aluno[]): Promise<LinkDaEtapa[]> => {
-      if (alunos.length === 0) return []
+export async function atribuirTrilha(trilhaId: string, alunos: Aluno[]): Promise<LinkDaEtapa[]> {
+  if (alunos.length === 0) return []
 
-      const { data: etapas, error: erroEtapas } = await supabase
-        .from('trilha_etapas')
-        .select('*')
-        .eq('trilha_id', trilhaId)
-        .order('ordem')
-      if (erroEtapas) throw erroEtapas
-      if (etapas.length === 0) throw new Error('Adicione ao menos uma etapa antes de atribuir a trilha.')
+  const { data: etapas, error: erroEtapas } = await supabase
+    .from('trilha_etapas')
+    .select('*')
+    .eq('trilha_id', trilhaId)
+    .order('ordem')
+  if (erroEtapas) throw erroEtapas
+  if (etapas.length === 0) throw new Error('Adicione ao menos uma etapa antes de atribuir a trilha.')
 
-      const idsAtividades = [...new Set(etapas.map((e) => e.atividade_id))]
-      const idsAlunos = alunos.map((a) => a.id)
+  const idsAtividades = [...new Set(etapas.map((e) => e.atividade_id))]
+  const idsAlunos = alunos.map((a) => a.id)
 
-      const [{ data: anteriores, error: erroAnteriores }, { data: atividades, error: erroAtividades }] =
-        await Promise.all([
-          supabase
-            .from('atribuicoes')
-            .select('atividade_id, aluno_id')
-            .in('atividade_id', idsAtividades)
-            .in('aluno_id', idsAlunos),
-          supabase.from('atividades').select('id, titulo').in('id', idsAtividades),
-        ])
-      if (erroAnteriores) throw erroAnteriores
-      if (erroAtividades) throw erroAtividades
-
-      const tituloPorAtividade = new Map(atividades.map((a) => [a.id, a.titulo]))
-      // Reenviar a mesma atividade ao mesmo aluno vira nova tentativa (RF-127),
-      // então a numeração continua de onde parou em vez de colidir no unique.
-      const tentativaPorPar = new Map<string, number>()
-      for (const a of anteriores) {
-        const chave = `${a.atividade_id}|${a.aluno_id}`
-        tentativaPorPar.set(chave, (tentativaPorPar.get(chave) ?? 0) + 1)
-      }
-
-      const links: LinkDaEtapa[] = []
-      const linhas = []
-      const tokenPorChave = new Map<string, string>()
-      for (const aluno of alunos) {
-        for (const etapa of etapas) {
-          const chave = `${etapa.atividade_id}|${aluno.id}`
-          const tentativa = (tentativaPorPar.get(chave) ?? 0) + 1
-          tentativaPorPar.set(chave, tentativa)
-
-          const { token, hash } = await gerarTokenDeAcesso()
-          // O insert é em lote, então os ids só aparecem depois. Guardamos o
-          // token pela chave única da tabela (atividade+aluno+tentativa) para
-          // casar com as linhas devolvidas — sem depender da ordem do retorno.
-          tokenPorChave.set(`${etapa.atividade_id}|${aluno.id}|${tentativa}`, token)
-          linhas.push({
-            atividade_id: etapa.atividade_id,
-            aluno_id: aluno.id,
-            trilha_etapa_id: etapa.id,
-            token_hash: hash,
-            tentativa,
-          })
-          links.push({
-            alunoId: aluno.id,
-            alunoNome: aluno.nome,
-            ordem: etapa.ordem,
-            atividadeTitulo: tituloPorAtividade.get(etapa.atividade_id) ?? 'Atividade',
-            link: `${window.location.origin}/t/${token}`,
-          })
-        }
-      }
-
-      const { data: criadas, error: erroInsert } = await supabase
+  const [{ data: anteriores, error: erroAnteriores }, { data: atividades, error: erroAtividades }] =
+    await Promise.all([
+      supabase
         .from('atribuicoes')
-        .insert(linhas)
-        .select('id, atividade_id, aluno_id, tentativa')
-      if (erroInsert) throw erroInsert
+        .select('atividade_id, aluno_id')
+        .in('atividade_id', idsAtividades)
+        .in('aluno_id', idsAlunos),
+      supabase.from('atividades').select('id, titulo').in('id', idsAtividades),
+    ])
+  if (erroAnteriores) throw erroAnteriores
+  if (erroAtividades) throw erroAtividades
 
-      for (const c of criadas ?? []) {
-        const token = tokenPorChave.get(`${c.atividade_id}|${c.aluno_id}|${c.tentativa}`)
-        if (token) lembrarToken(c.id, token)
-      }
+  const tituloPorAtividade = new Map(atividades.map((a) => [a.id, a.titulo]))
+  // Reenviar a mesma atividade ao mesmo aluno vira nova tentativa (RF-127),
+  // então a numeração continua de onde parou em vez de colidir no unique.
+  const tentativaPorPar = new Map<string, number>()
+  for (const a of anteriores) {
+    const chave = `${a.atividade_id}|${a.aluno_id}`
+    tentativaPorPar.set(chave, (tentativaPorPar.get(chave) ?? 0) + 1)
+  }
 
-      // ignoreDuplicates: reatribuir a um aluno que já estava na trilha manda
-      // as etapas de novo (nova tentativa) sem estourar o unique do vínculo.
-      const { error: erroVinculo } = await supabase
-        .from('trilha_alunos')
-        .upsert(
-          alunos.map((a) => ({ trilha_id: trilhaId, aluno_id: a.id })),
-          { onConflict: 'trilha_id,aluno_id', ignoreDuplicates: true },
-        )
-      if (erroVinculo) throw erroVinculo
+  const links: LinkDaEtapa[] = []
+  const linhas = []
+  const tokenPorChave = new Map<string, string>()
+  for (const aluno of alunos) {
+    for (const etapa of etapas) {
+      const chave = `${etapa.atividade_id}|${aluno.id}`
+      const tentativa = (tentativaPorPar.get(chave) ?? 0) + 1
+      tentativaPorPar.set(chave, tentativa)
 
-      return links
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.todas }),
-  })
+      const { token, hash } = await gerarTokenDeAcesso()
+      // O insert é em lote, então os ids só aparecem depois. Guardamos o
+      // token pela chave única da tabela (atividade+aluno+tentativa) para
+      // casar com as linhas devolvidas — sem depender da ordem do retorno.
+      tokenPorChave.set(`${etapa.atividade_id}|${aluno.id}|${tentativa}`, token)
+      linhas.push({
+        atividade_id: etapa.atividade_id,
+        aluno_id: aluno.id,
+        trilha_etapa_id: etapa.id,
+        token_hash: hash,
+        tentativa,
+      })
+      links.push({
+        alunoId: aluno.id,
+        alunoNome: aluno.nome,
+        ordem: etapa.ordem,
+        atividadeTitulo: tituloPorAtividade.get(etapa.atividade_id) ?? 'Atividade',
+        link: `${window.location.origin}/t/${token}`,
+      })
+    }
+  }
+
+  const { data: criadas, error: erroInsert } = await supabase
+    .from('atribuicoes')
+    .insert(linhas)
+    .select('id, atividade_id, aluno_id, tentativa')
+  if (erroInsert) throw erroInsert
+
+  for (const c of criadas ?? []) {
+    const token = tokenPorChave.get(`${c.atividade_id}|${c.aluno_id}|${c.tentativa}`)
+    if (token) lembrarToken(c.id, token)
+  }
+
+  // ignoreDuplicates: reatribuir a um aluno que já estava na trilha manda
+  // as etapas de novo (nova tentativa) sem estourar o unique do vínculo.
+  const { error: erroVinculo } = await supabase
+    .from('trilha_alunos')
+    .upsert(
+      alunos.map((a) => ({ trilha_id: trilhaId, aluno_id: a.id })),
+      { onConflict: 'trilha_id,aluno_id', ignoreDuplicates: true },
+    )
+  if (erroVinculo) throw erroVinculo
+
+  return links
 }
 
 /** RF-140: pausar não apaga nada — as atribuições e o histórico continuam de pé. */

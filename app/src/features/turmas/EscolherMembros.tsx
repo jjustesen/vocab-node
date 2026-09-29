@@ -3,6 +3,7 @@ import { Check, Loader2, Search, UserPlus } from 'lucide-react'
 import { useAlunos } from '@/features/alunos/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import { useAdicionarAlunosNaTurma } from './api'
+import type { ResultadoDaSincronizacao } from './conteudos'
 
 /**
  * Todos os alunos, para montar a turma de uma vez — o mesmo desenho do
@@ -19,11 +20,14 @@ export function EscolherMembros({
   turmaId,
   turmaNome,
   jaEstao,
+  aoAdicionar,
   aoFechar,
 }: {
   turmaId: string
   turmaNome: string
   jaEstao: Set<string>
+  /** Quem entrou, e o que recebeu da turma ao entrar. */
+  aoAdicionar?: (alunoIds: string[], resultado: ResultadoDaSincronizacao) => void
   aoFechar: () => void
 }) {
   const { data: alunos, isLoading } = useAlunos('ativo')
@@ -142,7 +146,14 @@ export function EscolherMembros({
             Cancelar
           </button>
           <button
-            onClick={() => adicionar.mutate([...marcados], { onSuccess: aoFechar })}
+            onClick={() =>
+              adicionar.mutate([...marcados], {
+                onSuccess: (resultado) => {
+                  if (resultado) aoAdicionar?.([...marcados], resultado)
+                  aoFechar()
+                },
+              })
+            }
             disabled={marcados.size === 0 || adicionar.isPending}
             className="flex flex-[2] items-center justify-center gap-2 rounded-full bg-neutral-900 px-4 py-3 text-sm font-extrabold text-white disabled:opacity-40"
           >

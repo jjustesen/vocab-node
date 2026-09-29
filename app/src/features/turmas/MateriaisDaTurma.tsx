@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Library, Loader2, Users } from 'lucide-react'
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { DisponibilizarATodos } from '@/features/materiais/DisponibilizarATodos'
@@ -7,40 +8,47 @@ import { QuemTem } from '@/features/materiais/QuemTem'
 import { EtiquetaDePasta } from '@/features/materiais/EtiquetaDePasta'
 import { SoltarArquivos } from '@/features/materiais/SoltarArquivos'
 import { VISUAL_TIPO } from '@/features/materiais/visual'
-import { useEnviarMaterial, useMateriaisDeVarios, useTirarDeVarios } from '@/features/materiais/api'
+import { useSubirAoAcervo, useTirarDeVarios } from '@/features/materiais/api'
+import { darMateriaisParaTurmas, desligarDaTurma, invalidarConteudos, useMateriaisDaTurma } from './conteudos'
 
 /**
- * Os materiais da turma, na aba de turmas.
+ * Os materiais DA turma, na aba de turmas.
  *
- * É a mesma pergunta que a sala de grupo faz, fora da aula: o professor
- * prepara a semana no domingo, não no meio da chamada. A lista é a UNIÃO das
- * fichas dos membros, sem repetir, e cada item diz quem já tem — concatenar
- * mostraria o mesmo PDF três vezes numa turma de três.
+ * A lista é o que foi dado para a turma (0020) — não a união das fichas dos
+ * membros. Um PDF que alguém ganhou por fora continua na ficha dele e não
+ * aparece aqui; o que está aqui vai para todo membro, inclusive quem entrar
+ * depois.
  *
  * Diferença em relação ao seletor do palco: ali só entram PDF e imagem, porque
  * o palco precisa desenhar o arquivo. Aqui entra tudo — áudio e DOCX são
  * material de estudo como qualquer outro, só não sobem à tela.
  */
-export function MateriaisDaTurma({ alunos }: { alunos: { id: string; nome: string }[] }) {
+export function MateriaisDaTurma({
+  turmaId,
+  alunos,
+}: {
+  turmaId: string
+  alunos: { id: string; nome: string }[]
+}) {
   const alunoIds = alunos.map((a) => a.id)
-  const { data: materiais, isLoading } = useMateriaisDeVarios(alunoIds)
-  const enviar = useEnviarMaterial(alunoIds)
-  const tirar = useTirarDeVarios()
+  const { data: materiais, isLoading } = useMateriaisDaTurma(turmaId, alunoIds)
+  const subir = useSubirAoAcervo()
+  const qc = useQueryClient()
   const [acervoAberto, setAcervoAberto] = useState(false)
 
-  const jaTem = new Map((materiais ?? []).map((m) => [m.id, m.donos]))
+  const tirarDosAlunos = useTirarDeVarios()
+  // Tirar da turma é desfazer o "dar para a turma": sai de quem está nela e
+  // deixa de ser dela — senão voltaria para cada um que entrasse depois.
+  const tirar = useMutation({
+    mutationFn: async (materialId: string) => {
+      await tirarDosAlunos.mutateAsync({ materialId, alunoIds })
+      await desligarDaTurma(turmaId, { materialId })
+    },
+    onSuccess: () => invalidarConteudos(qc),
+  })
 
-  if (alunos.length === 0) {
-    return (
-      <div className="rounded-3xl bg-white p-5">
-        <h2 className="text-sm font-extrabold text-neutral-900">Materiais da turma</h2>
-        <p className="mt-3 rounded-2xl bg-neutral-50 px-4 py-5 text-center text-xs text-neutral-500">
-          Adicione alunos à turma para disponibilizar materiais — é a lista deles que diz para quem
-          o arquivo vai.
-        </p>
-      </div>
-    )
-  }
+  // Para o acervo, "já tem" é "já é da turma".
+  const jaTem = new Map((materiais ?? []).map((m) => [m.id, m.donos]))
 
   return (
     <div className="rounded-3xl bg-white p-5">
@@ -65,7 +73,8 @@ export function MateriaisDaTurma({ alunos }: { alunos: { id: string; nome: strin
 
       {materiais && materiais.length === 0 && (
         <p className="mt-3 rounded-2xl bg-neutral-50 px-4 py-5 text-center text-xs text-neutral-500">
-          Ninguém da turma tem material ainda. Pegue do acervo ou arraste um arquivo abaixo.
+          A turma ainda não tem material. Pegue do acervo ou arraste um arquivo abaixo — vai para
+          todos da turma, e para quem entrar depois.
         </p>
       )}
 
@@ -86,9 +95,10 @@ export function MateriaisDaTurma({ alunos }: { alunos: { id: string; nome: strin
                   </span>
                   <span className="flex flex-wrap items-center gap-1.5">
                     <EtiquetaDePasta pastaId={material.pasta_id} />
-                    <QuemTem alunos={alunos} donos={material.donos} />
+                    {alunos.length > 0 && <QuemTem alunos={alunos} donos={material.donos} />}
                   </span>
                 </span>
+                {/* Só aparece se um envio automático falhou para alguém. */}
                 <DisponibilizarATodos
                   materialId={material.id}
                   faltam={alunoIds.filter((id) => !material.donos.includes(id))}
@@ -103,8 +113,8 @@ export function MateriaisDaTurma({ alunos }: { alunos: { id: string; nome: strin
                 <BotaoApagar
                   titulo="Tirar da turma — o arquivo continua no seu acervo"
                   confirmacao="Tirar da turma?"
-                  pendente={tirar.isPending && tirar.variables?.materialId === material.id}
-                  aoConfirmar={() => tirar.mutate({ materialId: material.id, alunoIds })}
+                  pendente={tirar.isPending && tirar.variables === material.id}
+                  aoConfirmar={() => tirar.mutate(material.id)}
                 />
               </li>
             )
@@ -115,11 +125,16 @@ export function MateriaisDaTurma({ alunos }: { alunos: { id: string; nome: strin
       <div className="mt-4">
         <SoltarArquivos
           compacto
-          aoReceber={(arquivo) => enviar.mutateAsync({ tipo: 'arquivo', arquivo })}
-          rotulo={`Arraste um arquivo — vai para os ${alunos.length} alunos`}
+          aoReceber={async (arquivo) => {
+            const materialId = await subir.mutateAsync({ tipo: 'arquivo', arquivo })
+            await darMateriaisParaTurmas([turmaId], [materialId])
+            invalidarConteudos(qc)
+          }}
+          rotulo="Arraste um arquivo — vai para a turma inteira"
         />
         <p className="mt-2 flex items-center gap-1.5 text-[11px] text-neutral-400">
-          <Users className="h-3 w-3" />O arquivo sobe uma vez e fica disponível para a turma inteira.
+          <Users className="h-3 w-3" />O arquivo sobe uma vez e fica disponível para a turma inteira,
+          inclusive para quem entrar depois.
         </p>
       </div>
 
@@ -127,6 +142,7 @@ export function MateriaisDaTurma({ alunos }: { alunos: { id: string; nome: strin
         <EscolherDoAcervo
           alunoIds={alunoIds}
           paraQuem="para a turma"
+          turmaId={turmaId}
           jaTem={jaTem}
           aoFechar={() => setAcervoAberto(false)}
         />

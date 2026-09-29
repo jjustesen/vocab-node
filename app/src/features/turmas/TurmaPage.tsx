@@ -24,6 +24,7 @@ import { corDoAvatar, inicial } from '@/lib/avatar'
 import type { Aluno } from '@/types/db'
 import { MateriaisDaTurma } from './MateriaisDaTurma'
 import { TarefasDaTurma } from './TarefasDaTurma'
+import { TrilhasDaTurma } from './TrilhasDaTurma'
 import {
   useAlunosDaTurma,
   useExcluirTurma,
@@ -31,6 +32,7 @@ import {
   useRenomearTurma,
   useTurma,
 } from './api'
+import type { ResultadoDaSincronizacao } from './conteudos'
 
 /**
  * A turma: quem entra, e por qual link.
@@ -186,7 +188,12 @@ function TarefasDaTurmaCarregando({ turmaId }: { turmaId: string }) {
   const { data: membros, isLoading } = useAlunosDaTurma(turmaId)
   const ids = useMemo(() => (membros ?? []).map((a) => a.id), [membros])
   if (isLoading) return null
-  return <TarefasDaTurma turmaId={turmaId} alunoIds={ids} />
+  return (
+    <>
+      <TrilhasDaTurma turmaId={turmaId} alunoIds={ids} />
+      <TarefasDaTurma turmaId={turmaId} alunoIds={ids} />
+    </>
+  )
 }
 
 /**
@@ -197,7 +204,9 @@ function TarefasDaTurmaCarregando({ turmaId }: { turmaId: string }) {
 function MateriaisDaTurmaCarregando({ turmaId }: { turmaId: string }) {
   const { data: membros, isLoading } = useAlunosDaTurma(turmaId)
   if (isLoading) return null
-  return <MateriaisDaTurma alunos={(membros ?? []).map((a) => ({ id: a.id, nome: a.nome }))} />
+  return (
+    <MateriaisDaTurma turmaId={turmaId} alunos={(membros ?? []).map((a) => ({ id: a.id, nome: a.nome }))} />
+  )
 }
 
 function NomeDaTurma({ turmaId, nome }: { turmaId: string; nome: string }) {
@@ -246,6 +255,11 @@ function Membros({ turmaId }: { turmaId: string }) {
   const mudar = useMudarAlunoDaTurma(turmaId)
   const { data: turma } = useTurma(turmaId)
   const [vendoTodos, setVendoTodos] = useState(false)
+  // O que a última entrada levou automaticamente — o professor precisa ver
+  // que a trilha foi junto, senão fica sem saber se ainda tem que mandar.
+  const [recebeu, setRecebeu] = useState<{ quem: string; resultado: ResultadoDaSincronizacao } | null>(
+    null,
+  )
 
   const [busca, setBusca] = useState('')
   const buscaRef = useRef<HTMLInputElement>(null)
@@ -274,7 +288,11 @@ function Membros({ turmaId }: { turmaId: string }) {
   const semAcesso = (membros ?? []).filter((a) => !entraPeloLink(a))
 
   function adicionar(alunoId: string) {
-    mudar.mutate({ alunoId, dentro: true })
+    const nome = todos?.find((a) => a.id === alunoId)?.nome.split(' ')[0] ?? 'O aluno'
+    mudar.mutate(
+      { alunoId, dentro: true },
+      { onSuccess: (resultado) => setRecebeu(resultado ? { quem: nome, resultado } : null) },
+    )
     setBusca('')
     buscaRef.current?.focus()
   }
@@ -299,6 +317,12 @@ function Membros({ turmaId }: { turmaId: string }) {
           turmaId={turmaId}
           turmaNome={turma?.nome ?? 'Turma'}
           jaEstao={dentro}
+          aoAdicionar={(ids, resultado) =>
+            setRecebeu({
+              quem: ids.length === 1 ? (todos?.find((a) => a.id === ids[0])?.nome.split(' ')[0] ?? '1 aluno') : `${ids.length} alunos`,
+              resultado,
+            })
+          }
           aoFechar={() => setVendoTodos(false)}
         />
       )}
@@ -412,6 +436,22 @@ function Membros({ turmaId }: { turmaId: string }) {
         </ul>
       </div>
 
+      {mudar.isPending && mudar.variables?.dentro && (
+        <p className="mt-4 flex items-center gap-2 rounded-2xl bg-neutral-50 px-4 py-3 text-xs text-neutral-500">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Enviando o que é da turma…
+        </p>
+      )}
+
+      {mudar.isError && (
+        <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">
+          {mudar.variables?.dentro
+            ? 'Entrou na turma, mas nem tudo da turma foi enviado. Use “enviar para quem falta” na aba Tarefas ou Materiais.'
+            : 'Não consegui tirar da turma. Tente de novo.'}
+        </p>
+      )}
+
+      {recebeu && !mudar.isPending && <RecebeuDaTurma {...recebeu} aoFechar={() => setRecebeu(null)} />}
+
       {semAcesso.length > 0 && (
         <p className="mt-4 flex gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
@@ -424,6 +464,45 @@ function Membros({ turmaId }: { turmaId: string }) {
           </span>
         </p>
       )}
+    </div>
+  )
+}
+
+/** "Ana recebeu da turma: 1 trilha, 2 materiais." Some sozinho ao fechar. */
+function RecebeuDaTurma({
+  quem,
+  resultado,
+  aoFechar,
+}: {
+  quem: string
+  resultado: ResultadoDaSincronizacao
+  aoFechar: () => void
+}) {
+  const partes = [
+    resultado.trilhas > 0 && `${resultado.trilhas} ${resultado.trilhas === 1 ? 'trilha' : 'trilhas'}`,
+    resultado.atividades > 0 &&
+      `${resultado.atividades} ${resultado.atividades === 1 ? 'atividade' : 'atividades'}`,
+    resultado.materiais > 0 && `${resultado.materiais} ${resultado.materiais === 1 ? 'material' : 'materiais'}`,
+  ].filter(Boolean)
+  if (partes.length === 0 && resultado.falhas.length === 0) return null
+
+  return (
+    <div className="mt-4 flex items-start gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-800">
+      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+      <span className="flex-1">
+        {partes.length > 0 && (
+          <>
+            {quem} recebeu o que é da turma: {partes.join(', ')}. Quem não tem conta encontra os links na
+            ficha do aluno.
+          </>
+        )}
+        {resultado.falhas.length > 0 && (
+          <span className="mt-1 block text-amber-800">Não foi: {resultado.falhas.join(' · ')}</span>
+        )}
+      </span>
+      <button onClick={aoFechar} title="Fechar" className="shrink-0 text-emerald-600">
+        <X className="h-3.5 w-3.5" />
+      </button>
     </div>
   )
 }

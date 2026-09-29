@@ -159,6 +159,19 @@ export type TurmaAluno = {
   aluno_id: string
 }
 
+/**
+ * O que é da turma (migration 0020): item que todos os membros receberam.
+ * Exatamente um dos três ids vem preenchido.
+ */
+export type TurmaConteudo = {
+  id: string
+  turma_id: string
+  trilha_id: string | null
+  atividade_id: string | null
+  material_id: string | null
+  criado_em: string
+}
+
 export type Aula = {
   id: string
   aluno_id: string
@@ -386,6 +399,7 @@ export type Database = {
       >
       turmas: Tabela<Turma, Insert<Turma, 'professor_id' | 'nome'>, Partial<Turma>>
       turmas_alunos: Tabela<TurmaAluno, TurmaAluno, Partial<TurmaAluno>>
+      turmas_conteudos: Tabela<TurmaConteudo, Insert<TurmaConteudo, 'turma_id'>, Partial<TurmaConteudo>>
       documentos_aula: Tabela<
         DocumentoAula,
         Insert<DocumentoAula, 'aula_id' | 'aluno_id' | 'professor_id'>,

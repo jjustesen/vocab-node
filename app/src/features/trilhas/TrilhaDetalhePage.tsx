@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ChevronDown,
   ChevronUp,
@@ -15,12 +16,13 @@ import {
   Unlock,
   UserPlus,
   X,
+  UsersRound,
 } from 'lucide-react'
 import {
   useAdicionarEtapa,
   useAlterarStatusNaTrilha,
   useAlunosDaTrilha,
-  useAtribuirTrilha,
+  atribuirTrilha,
   useDuplicarTrilha,
   useEtapasDaTrilha,
   useExcluirTrilha,
@@ -34,6 +36,8 @@ import {
 } from './api'
 import { useAlunos, useAlunosComConta } from '@/features/alunos/api'
 import { AtalhosDeTurma } from '@/features/turmas/AtalhosDeTurma'
+import { rotuloDosDestinos, useDestinos } from '@/features/turmas/turmas-do-envio'
+import { atribuirTrilhaParaTurmas, invalidarConteudos } from '@/features/turmas/conteudos'
 import { useAtividades } from '@/features/atividades/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import type { Aluno, TrilhaEtapa } from '@/types/db'
@@ -402,31 +406,45 @@ function ModalAdicionarAtividade({
   )
 }
 
-function ModalAtribuir({
+/** Também usado pela aba Tarefas da turma, abrindo com a turma já escolhida como destino. */
+export function ModalAtribuir({
   trilhaId,
+  trilhaNome,
   temEtapas,
+  preSelecionados,
+  turmaId,
   aoFechar,
 }: {
   trilhaId: string
+  trilhaNome?: string
   temEtapas: boolean
+  /** Quem já abre marcado como aluno avulso. */
+  preSelecionados?: string[]
+  /** A turma cuja tela abriu o envio — já vem escolhida como destino. */
+  turmaId?: string
   aoFechar: () => void
 }) {
   const { data: alunos } = useAlunos('ativo')
   const { data: comConta } = useAlunosComConta()
-  const atribuir = useAtribuirTrilha(trilhaId)
-  const [selecionados, setSelecionados] = useState<Set<string>>(new Set())
+  const destinos = useDestinos({ turmaInicial: turmaId, alunosIniciais: preSelecionados })
+  const qc = useQueryClient()
   const [links, setLinks] = useState<LinkDaEtapa[] | null>(null)
 
-  function alternar(id: string) {
-    setSelecionados((atual) => {
-      const novo = new Set(atual)
-      if (novo.has(id)) novo.delete(id)
-      else novo.add(id)
-      return novo
-    })
-  }
+  // Turma primeiro: liga a trilha e atribui a quem da turma ainda não está
+  // nela — quem já está segue de onde parou. Depois os avulsos, com a
+  // atribuição de sempre.
+  const atribuir = useMutation({
+    mutationFn: async (): Promise<LinkDaEtapa[]> => {
+      const pelaTurma =
+        destinos.turmaIds.length > 0 ? await atribuirTrilhaParaTurmas(destinos.turmaIds, trilhaId) : []
+      const avulsos = (alunos ?? []).filter((a) => destinos.avulsos.includes(a.id))
+      const individuais = avulsos.length > 0 ? await atribuirTrilha(trilhaId, avulsos) : []
+      return [...pelaTurma, ...individuais]
+    },
+    onSuccess: () => invalidarConteudos(qc),
+  })
 
-  const escolhidos: Aluno[] = (alunos ?? []).filter((a) => selecionados.has(a.id))
+  const escolhidos: Aluno[] = (alunos ?? []).filter((a) => destinos.marcado(a.id))
   const semConta = escolhidos.filter((a) => !comConta?.has(a.id))
 
   return (
@@ -435,7 +453,9 @@ function ModalAtribuir({
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-lg font-extrabold">Atribuir trilha</h2>
-            <p className="text-sm text-neutral-500">Todas as etapas são enviadas de uma vez.</p>
+            <p className="text-sm text-neutral-500">
+              {trilhaNome ? `${trilhaNome} · ` : ''}Todas as etapas são enviadas de uma vez.
+            </p>
           </div>
           <button onClick={aoFechar} className="text-neutral-400">
             <X className="h-5 w-5" />
@@ -445,7 +465,7 @@ function ModalAtribuir({
         {!links ? (
           <>
             <div className="mt-4">
-              <AtalhosDeTurma marcados={selecionados} aoMudar={setSelecionados} />
+              <AtalhosDeTurma destinos={destinos} />
             </div>
             <div className="mt-3 max-h-56 space-y-1.5 overflow-y-auto">
               {alunos?.length === 0 && (
@@ -454,23 +474,37 @@ function ModalAtribuir({
                 </p>
               )}
               {alunos?.map((a) => {
-                const marcado = selecionados.has(a.id)
+                const marcado = destinos.marcado(a.id)
+                const turma = destinos.pelaTurma.get(a.id)
                 return (
                   <button
                     key={a.id}
-                    onClick={() => alternar(a.id)}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left transition ${
-                      marcado ? 'bg-neutral-900 text-white' : 'bg-neutral-50 text-neutral-700'
+                    onClick={() => destinos.alternarAluno(a.id)}
+                    disabled={Boolean(turma)}
+                    title={turma ? `Recebe pela turma ${turma}` : undefined}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left transition disabled:cursor-default ${
+                      turma
+                        ? 'bg-violet-100 text-violet-900'
+                        : marcado
+                          ? 'bg-neutral-900 text-white'
+                          : 'bg-neutral-50 text-neutral-700'
                     }`}
                   >
                     <span
                       className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-extrabold ${
-                        marcado ? 'bg-white text-neutral-900' : corDoAvatar(a.id)
+                        marcado && !turma ? 'bg-white text-neutral-900' : corDoAvatar(a.id)
                       }`}
                     >
                       {inicial(a.nome)}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-sm font-bold">{a.nome}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold">{a.nome}</span>
+                      {turma && (
+                        <span className="flex items-center gap-1 text-[11px] font-medium text-violet-700">
+                          <UsersRound className="h-3 w-3" /> pela turma {turma}
+                        </span>
+                      )}
+                    </span>
                   </button>
                 )
               })}
@@ -492,14 +526,18 @@ function ModalAtribuir({
             )}
 
             <button
-              onClick={async () => setLinks(await atribuir.mutateAsync(escolhidos))}
-              disabled={selecionados.size === 0 || !temEtapas || atribuir.isPending}
+              onClick={async () => setLinks(await atribuir.mutateAsync())}
+              disabled={destinos.vazio || !temEtapas || atribuir.isPending}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-3.5 text-sm font-extrabold text-white disabled:opacity-40"
             >
               {atribuir.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              {temEtapas
-                ? `Atribuir a ${selecionados.size || ''} ${selecionados.size === 1 ? 'aluno' : 'alunos'}`
-                : 'Adicione uma etapa primeiro'}
+              <span className="truncate">
+                {!temEtapas
+                  ? 'Adicione uma etapa primeiro'
+                  : destinos.vazio
+                    ? 'Escolha para quem vai'
+                    : `Atribuir a ${rotuloDosDestinos(destinos)}`}
+              </span>
             </button>
           </>
         ) : (
@@ -507,6 +545,8 @@ function ModalAtribuir({
             <p className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-800">
               Trilha atribuída. Quem tem conta já vê a sequência no painel; os links abaixo servem para
               quem não tem.
+              {destinos.turmaIds.length > 0 &&
+                ' Quem já estava na trilha segue de onde parou, e quem entrar na turma depois recebe também.'}
             </p>
             <div className="mt-3 max-h-64 space-y-1.5 overflow-y-auto">
               {links.map((l) => (

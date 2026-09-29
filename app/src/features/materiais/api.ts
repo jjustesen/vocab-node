@@ -372,7 +372,7 @@ export function useEnviarMaterial(alunoIds: string[]) {
   })
 }
 
-async function vincular(materialId: string, alunoIds: string[]) {
+export async function vincular(materialId: string, alunoIds: string[]) {
   const { error } = await supabase
     .from('materiais_alunos')
     .upsert(

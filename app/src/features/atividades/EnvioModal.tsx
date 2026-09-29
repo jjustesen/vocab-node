@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Check, Copy, Link2, Loader2, MessageCircle, RefreshCw, Search, X } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Check, Copy, Link2, Loader2, MessageCircle, RefreshCw, Search, UsersRound, X } from 'lucide-react'
 import QRCode from 'qrcode'
 import { useAlunos } from '@/features/alunos/api'
 import { AtalhosDeTurma } from '@/features/turmas/AtalhosDeTurma'
+import { rotuloDosDestinos, useDestinos } from '@/features/turmas/turmas-do-envio'
+import { enviarAtividadeParaTurmas, invalidarConteudos } from '@/features/turmas/conteudos'
 import { linkWhatsapp } from '@/lib/whatsapp'
 import {
-  useEnviarAtividade,
+  enviarAtividade,
   useGerarLinkAberto,
   useLinkAberto,
   useQuestoesDaAtividade,
@@ -17,21 +20,40 @@ export function EnvioModal({
   atividadeTitulo,
   aoFechar,
   preSelecionados,
+  turmaId,
 }: {
   atividadeId: string
   atividadeTitulo: string
   aoFechar: () => void
-  /** Quem já abre marcado — a turma inteira, quando o envio parte da tela da turma. */
+  /** Quem já abre marcado como aluno avulso. */
   preSelecionados?: string[]
+  /** A turma cuja tela abriu o envio — já vem escolhida como destino. */
+  turmaId?: string
 }) {
   const { data: alunos } = useAlunos('ativo')
   const { data: questoes } = useQuestoesDaAtividade(atividadeId)
-  const enviar = useEnviarAtividade(atividadeId)
+  const destinos = useDestinos({ turmaInicial: turmaId, alunosIniciais: preSelecionados })
+  const qc = useQueryClient()
 
   const [aba, setAba] = useState<'alunos' | 'link'>('alunos')
-  const [selecionados, setSelecionados] = useState<Set<string>>(() => new Set(preSelecionados))
   const [busca, setBusca] = useState('')
   const [prazo, setPrazo] = useState('')
+
+  // Turma primeiro: ela liga a atividade e entrega a quem da turma ainda não
+  // tem. Depois os avulsos, com o envio de sempre (nova tentativa a quem já
+  // tinha, RF-127).
+  const enviar = useMutation({
+    mutationFn: async (): Promise<EnvioResultado[]> => {
+      const pelaTurma =
+        destinos.turmaIds.length > 0
+          ? await enviarAtividadeParaTurmas(destinos.turmaIds, atividadeId, prazo || undefined)
+          : []
+      const avulsos = alunos?.filter((a) => destinos.avulsos.includes(a.id)) ?? []
+      const individuais = avulsos.length > 0 ? await enviarAtividade(atividadeId, avulsos, prazo || undefined) : []
+      return [...pelaTurma, ...individuais]
+    },
+    onSuccess: () => invalidarConteudos(qc),
+  })
   const [resultados, setResultados] = useState<EnvioResultado[] | null>(null)
 
   const termo = busca.trim().toLowerCase()
@@ -39,21 +61,11 @@ export function EnvioModal({
   // professor filtra, marca alguém, digita outro nome e some com a seleção
   // anterior da tela, sem saber se ela ainda vale.
   const visiveis =
-    alunos?.filter((a) => !termo || a.nome.toLowerCase().includes(termo) || selecionados.has(a.id)) ?? []
-
-  function alternar(id: string) {
-    setSelecionados((atual) => {
-      const novo = new Set(atual)
-      novo.has(id) ? novo.delete(id) : novo.add(id)
-      return novo
-    })
-  }
+    alunos?.filter((a) => !termo || a.nome.toLowerCase().includes(termo) || destinos.marcado(a.id)) ?? []
 
   async function confirmarEnvio() {
-    const escolhidos = alunos?.filter((a) => selecionados.has(a.id)) ?? []
-    if (escolhidos.length === 0) return
-    const enviados = await enviar.mutateAsync({ alunos: escolhidos, prazo: prazo || undefined })
-    setResultados(enviados)
+    if (destinos.vazio) return
+    setResultados(await enviar.mutateAsync())
   }
 
   return (
@@ -89,10 +101,10 @@ export function EnvioModal({
           <AbaLinkAberto atividadeId={atividadeId} atividadeTitulo={atividadeTitulo} />
         ) : !resultados ? (
           <>
-            <p className="mt-4 text-xs font-bold text-neutral-600">Escolha os alunos</p>
+            <p className="mt-4 text-xs font-bold text-neutral-600">Para quem vai</p>
 
             <div className="mt-2">
-              <AtalhosDeTurma marcados={selecionados} aoMudar={setSelecionados} />
+              <AtalhosDeTurma destinos={destinos} />
             </div>
 
             {(alunos?.length ?? 0) > 0 && (
@@ -119,14 +131,17 @@ export function EnvioModal({
                 </p>
               )}
               {visiveis.map((a) => {
-                const marcado = selecionados.has(a.id)
+                const marcado = destinos.marcado(a.id)
+                const turma = destinos.pelaTurma.get(a.id)
                 return (
                   <button
                     key={a.id}
                     type="button"
-                    onClick={() => alternar(a.id)}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left transition ${
-                      marcado ? 'bg-neutral-900' : 'bg-neutral-50'
+                    onClick={() => destinos.alternarAluno(a.id)}
+                    disabled={Boolean(turma)}
+                    title={turma ? `Recebe pela turma ${turma}` : undefined}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left transition disabled:cursor-default ${
+                      turma ? 'bg-violet-100' : marcado ? 'bg-neutral-900' : 'bg-neutral-50'
                     }`}
                   >
                     <span
@@ -136,13 +151,20 @@ export function EnvioModal({
                     >
                       {a.nome.charAt(0).toUpperCase()}
                     </span>
-                    <span className={`flex-1 text-sm font-bold ${marcado ? 'text-white' : 'text-neutral-700'}`}>
+                    <span
+                      className={`min-w-0 flex-1 text-sm font-bold ${
+                        turma ? 'text-violet-900' : marcado ? 'text-white' : 'text-neutral-700'
+                      }`}
+                    >
                       {a.nome}
-                      {a.nivel_cefr && (
-                        <span className={marcado ? 'text-neutral-400' : 'text-neutral-400'}> · {a.nivel_cefr}</span>
+                      {a.nivel_cefr && <span className="text-neutral-400"> · {a.nivel_cefr}</span>}
+                      {turma && (
+                        <span className="flex items-center gap-1 text-[11px] font-medium text-violet-700">
+                          <UsersRound className="h-3 w-3" /> pela turma {turma}
+                        </span>
                       )}
                     </span>
-                    {marcado && (
+                    {marcado && !turma && (
                       <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white">
                         <Check className="h-3.5 w-3.5 text-neutral-900" />
                       </span>
@@ -170,17 +192,20 @@ export function EnvioModal({
 
             <button
               onClick={confirmarEnvio}
-              disabled={selecionados.size === 0 || enviar.isPending}
+              disabled={destinos.vazio || enviar.isPending}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-3.5 text-sm font-extrabold text-white disabled:opacity-50"
             >
               {enviar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Enviar para {selecionados.size || ''} {selecionados.size === 1 ? 'aluno' : 'alunos'}
+              <span className="truncate">
+                {destinos.vazio ? 'Escolha para quem vai' : `Enviar para ${rotuloDosDestinos(destinos)}`}
+              </span>
             </button>
           </>
         ) : (
           <div className="mt-4 space-y-3">
             <p className="rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-800">
               Enviado! Cada aluno recebe um link próprio.
+              {destinos.turmaIds.length > 0 && ' Quem entrar na turma depois recebe também.'}
             </p>
             {resultados.map((r) => (
               <LinkDoAluno key={r.aluno.id} resultado={r} atividadeTitulo={atividadeTitulo} />

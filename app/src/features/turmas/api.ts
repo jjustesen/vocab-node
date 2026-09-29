@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Aluno, Turma } from '@/types/db'
+import { invalidarConteudos, sincronizarTurma, type ResultadoDaSincronizacao } from './conteudos'
 
 /**
  * Turmas — a aula em grupo (migration 0015).
@@ -116,75 +117,81 @@ export function useTurmasComMembros() {
 export type TarefaDaTurma = {
   atividadeId: string
   titulo: string
-  /** O envio mais recente para alguém da turma — é a data que ordena a lista. */
+  /** Quando a atividade foi enviada PARA A TURMA — é a data que ordena a lista. */
   enviadaEm: string
   prazo: string | null
-  /** Quantos membros ATUAIS receberam e quantos concluíram. */
+  /** Quantos membros ATUAIS têm a atividade e quantos concluíram. */
   receberam: number
   concluiram: number
 }
 
 /**
- * O que foi mandado para a turma, visto por atividade.
+ * As atividades DA turma (0020): o que foi enviado para ela, não o que os
+ * membros têm por fora. Quem entrou depois já recebe ao entrar; "não recebeu"
+ * só aparece se um envio automático falhou no meio.
  *
- * Não existe "atribuição da turma" no banco: a tarefa é sempre de cada aluno
- * (é o aluno que responde, e a nota é dele). A turma é reconstruída aqui a
- * partir de quem está nela AGORA — quem saiu da turma some da contagem, quem
- * entrou depois aparece como "não recebeu", que é justamente o que o
- * professor precisa ver para reenviar.
- *
- * A chave mora sob `['atividades', ...]`: enviar uma atividade já invalida
- * esse prefixo, e a lista se atualiza sozinha ao fechar o envio.
+ * A contagem é sobre os membros de AGORA e só conta o envio avulso — etapa de
+ * trilha está na seção de trilhas.
  */
 export function useTarefasDaTurma(turmaId: string, alunoIds: string[]) {
   return useQuery({
-    queryKey: ['atividades', 'turma', turmaId, [...alunoIds].sort().join(',')] as const,
-    enabled: alunoIds.length > 0,
+    queryKey: ['turmas', turmaId, 'tarefas', [...alunoIds].sort().join(',')] as const,
     queryFn: async (): Promise<TarefaDaTurma[]> => {
-      const { data: atribuicoes, error } = await supabase
-        .from('atribuicoes')
-        .select('atividade_id, aluno_id, enviada_em, concluida_em, prazo')
-        .in('aluno_id', alunoIds)
-        .is('revogada_em', null)
-        .order('enviada_em', { ascending: false })
+      const { data: vinculos, error } = await supabase
+        .from('turmas_conteudos')
+        .select('atividade_id, criado_em')
+        .eq('turma_id', turmaId)
+        .not('atividade_id', 'is', null)
+        .order('criado_em', { ascending: false })
       if (error) throw error
-      if (atribuicoes.length === 0) return []
+      const ids = vinculos.flatMap((v) => (v.atividade_id ? [v.atividade_id] : []))
+      if (ids.length === 0) return []
 
-      const ids = [...new Set(atribuicoes.map((a) => a.atividade_id))]
-      const { data: atividades, error: erroAtividades } = await supabase
-        .from('atividades')
-        .select('id, titulo')
-        .in('id', ids)
+      const [{ data: atividades, error: erroAtividades }, { data: atribuicoes, error: erroAtribuicoes }] =
+        await Promise.all([
+          supabase.from('atividades').select('id, titulo').in('id', ids),
+          alunoIds.length > 0
+            ? supabase
+                .from('atribuicoes')
+                .select('atividade_id, aluno_id, concluida_em, prazo, enviada_em')
+                .in('atividade_id', ids)
+                .in('aluno_id', alunoIds)
+                .is('trilha_etapa_id', null)
+                .is('revogada_em', null)
+                .order('enviada_em', { ascending: false })
+            : Promise.resolve({
+                data: [] as {
+                  atividade_id: string
+                  aluno_id: string
+                  concluida_em: string | null
+                  prazo: string | null
+                  enviada_em: string
+                }[],
+                error: null,
+              }),
+        ])
       if (erroAtividades) throw erroAtividades
+      if (erroAtribuicoes) throw erroAtribuicoes
       const tituloPorId = new Map(atividades.map((a) => [a.id, a.titulo]))
 
-      // Um aluno pode ter recebido a mesma atividade mais de uma vez
-      // (tentativas): conta a pessoa uma vez só, concluída se QUALQUER envio
-      // dela foi concluído.
-      const porAtividade = new Map<
-        string,
-        { enviadaEm: string; prazo: string | null; receberam: Set<string>; concluiram: Set<string> }
-      >()
-      for (const a of atribuicoes) {
-        const item = porAtividade.get(a.atividade_id) ?? {
-          enviadaEm: a.enviada_em, // a lista vem do mais novo para o mais velho
-          prazo: a.prazo,
-          receberam: new Set<string>(),
-          concluiram: new Set<string>(),
-        }
-        item.receberam.add(a.aluno_id)
-        if (a.concluida_em) item.concluiram.add(a.aluno_id)
-        porAtividade.set(a.atividade_id, item)
-      }
-
-      return [...porAtividade.entries()].map(([atividadeId, item]) => ({
-        atividadeId,
-        titulo: tituloPorId.get(atividadeId) ?? 'Atividade apagada',
-        enviadaEm: item.enviadaEm,
-        prazo: item.prazo,
-        receberam: item.receberam.size,
-        concluiram: item.concluiram.size,
-      }))
+      return vinculos.flatMap((v) => {
+        if (!v.atividade_id) return []
+        const daAtividade = atribuicoes.filter((a) => a.atividade_id === v.atividade_id)
+        // Um aluno pode ter a mesma atividade mais de uma vez (tentativas):
+        // conta a pessoa uma vez só, concluída se QUALQUER envio dela foi.
+        const receberam = new Set(daAtividade.map((a) => a.aluno_id))
+        const concluiram = new Set(daAtividade.filter((a) => a.concluida_em).map((a) => a.aluno_id))
+        return [
+          {
+            atividadeId: v.atividade_id,
+            titulo: tituloPorId.get(v.atividade_id) ?? 'Atividade apagada',
+            enviadaEm: v.criado_em,
+            prazo: daAtividade[0]?.prazo ?? null,
+            receberam: receberam.size,
+            concluiram: concluiram.size,
+          },
+        ]
+      })
     },
   })
 }
@@ -241,12 +248,15 @@ export function useExcluirTurma() {
 /**
  * Põe vários na turma de uma vez — o "ver todos" da tela da turma. Um upsert
  * só: quem já estava continua como estava, sem erro de chave repetida.
+ *
+ * Entrar na turma é receber o que é dela: no mesmo gesto, cada um ganha as
+ * trilhas, atividades e materiais da turma que ainda não tinha.
  */
 export function useAdicionarAlunosNaTurma(turmaId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (alunoIds: string[]) => {
-      if (alunoIds.length === 0) return
+    mutationFn: async (alunoIds: string[]): Promise<ResultadoDaSincronizacao | null> => {
+      if (alunoIds.length === 0) return null
       const { error } = await supabase
         .from('turmas_alunos')
         .upsert(
@@ -254,23 +264,31 @@ export function useAdicionarAlunosNaTurma(turmaId: string) {
           { onConflict: 'turma_id,aluno_id', ignoreDuplicates: true },
         )
       if (error) throw error
+      return sincronizarTurma(turmaId, alunoIds)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: chavesTurmas.alunos(turmaId) })
-      qc.invalidateQueries({ queryKey: chavesTurmas.todas })
-    },
+    // Invalida mesmo se o envio falhar no meio: a pessoa já entrou, e o que
+    // chegou até ali já é dela.
+    onSettled: () => invalidarConteudos(qc),
   })
 }
 
 export function useMudarAlunoDaTurma(turmaId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ alunoId, dentro }: { alunoId: string; dentro: boolean }) => {
+    mutationFn: async ({
+      alunoId,
+      dentro,
+    }: {
+      alunoId: string
+      dentro: boolean
+    }): Promise<ResultadoDaSincronizacao | null> => {
       if (dentro) {
         const { error } = await supabase
           .from('turmas_alunos')
           .insert({ turma_id: turmaId, aluno_id: alunoId })
         if (error) throw error
+        // Mesma regra do adicionar em lote: entrar é receber o que é da turma.
+        return sincronizarTurma(turmaId, [alunoId])
       } else {
         const { error } = await supabase
           .from('turmas_alunos')
@@ -278,11 +296,11 @@ export function useMudarAlunoDaTurma(turmaId: string) {
           .eq('turma_id', turmaId)
           .eq('aluno_id', alunoId)
         if (error) throw error
+        // Sair da turma não tira nada: o que a pessoa já recebeu, e as
+        // respostas dela, continuam dela.
+        return null
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: chavesTurmas.alunos(turmaId) })
-      qc.invalidateQueries({ queryKey: chavesTurmas.todas })
-    },
+    onSettled: () => invalidarConteudos(qc),
   })
 }
