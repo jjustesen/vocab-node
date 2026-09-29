@@ -162,12 +162,6 @@ const SEM_FALA_MS = 7_000
 const ESPERA_RECONHECEDOR_MS = 3_000
 
 /**
- * Voz a 32 kbps mono: sobra para transcrever e para o professor ouvir, e uma
- * leitura de 4s vira poucos KB — o upload no 4G deixa de pesar na espera.
- */
-const BITS_POR_SEGUNDO = 32_000
-
-/**
  * O contexto de áudio precisa nascer DENTRO do toque do aluno. Criado depois
  * de um `await` (a permissão do microfone), o Safari do iPhone o deixa
  * suspenso — e o medidor de volume leria silêncio para sempre.
@@ -355,11 +349,10 @@ export function RespostaPronuncia({
     if (!formato) return
 
     try {
-      // Mono e com redução de ruído: é voz, e o ruído de fundo do celular é o
-      // que mais confunde a transcrição e o detector de fim de fala.
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      })
+      // Configuração padrão de propósito: forçar mono/redução de ruído/bitrate
+      // baixo (29/09/2026) coincidiu com o celular passar a mandar áudio que o
+      // Gemini não transcrevia. O áudio de uma frase já é pequeno sem isso.
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       // O aluno pode ter terminado de ler enquanto a permissão era resolvida.
       if (finalizadoRef.current) {
         stream.getTracks().forEach((t) => t.stop())
@@ -368,13 +361,7 @@ export function RespostaPronuncia({
 
       monitorarNivel(stream)
 
-      let gravador: MediaRecorder
-      try {
-        gravador = new MediaRecorder(stream, { mimeType: formato, audioBitsPerSecond: BITS_POR_SEGUNDO })
-      } catch {
-        // Algum navegador pode recusar o bitrate — grava no padrão dele.
-        gravador = new MediaRecorder(stream, { mimeType: formato })
-      }
+      const gravador = new MediaRecorder(stream, { mimeType: formato })
       gravadorRef.current = gravador
       gravador.ondataavailable = (e) => {
         if (e.data.size > 0) pedacosRef.current.push(e.data)

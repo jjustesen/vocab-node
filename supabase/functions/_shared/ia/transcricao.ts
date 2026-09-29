@@ -17,20 +17,27 @@
  */
 
 /**
- * 20s e não 30: o aluno está parado olhando "Conferindo o que você falou...".
- * Uma frase curta transcreve em poucos segundos; passar disso é o Gemini
- * sobrecarregado, e aí "não te ouvi, tente de novo" é melhor que esperar.
+ * 30s: lento é melhor que "não entendi". Baixar para 20s (29/09/2026) fez
+ * transcrições que chegariam virarem vazio no celular — quem encurta a espera
+ * é o raciocínio mínimo abaixo, não um timeout mais apertado.
  */
-const TIMEOUT_MS = 20_000
+const TIMEOUT_MS = 30_000
 
 /**
- * Raciocínio no mínimo: transcrever literalmente não se beneficia de o modelo
- * "pensar", e o raciocínio padrão dos modelos Flash é o que mais pesa na
- * latência. Se o modelo configurado não aceitar o parâmetro (400), repetimos
- * sem ele — trocar de modelo pela env não pode quebrar a pronúncia.
+ * Formas de pedir raciocínio mínimo, da mais nova para a mais antiga da API.
+ * Transcrever literalmente não se beneficia de o modelo "pensar", e o
+ * raciocínio padrão dos modelos Flash é o que mais pesa na latência.
+ *
+ * Cada modelo aceita uma forma diferente (e recusa as outras com 400, que
+ * volta na hora): tentamos em ordem e, no fim, sem configuração nenhuma —
+ * trocar de modelo pela env não pode quebrar a pronúncia.
  */
-const SEM_RACIOCINIO = { thinkingConfig: { thinkingLevel: 'minimal' } }
-
+const FORMAS_DE_RACIOCINIO_MINIMO: object[] = [
+  { thinkingConfig: { thinkingLevel: 'minimal' } },
+  { thinkingConfig: { thinkingLevel: 'low' } },
+  { thinkingConfig: { thinkingBudget: 0 } },
+  {},
+]
 
 const INSTRUCAO = `Transcreva literalmente o áudio, que é uma pessoa lendo uma frase curta em inglês em voz alta.
 
@@ -73,20 +80,39 @@ export async function transcreverFala(audioBase64: string, mimeType: string): Pr
     })
 
   try {
-    let resposta = await chamar(SEM_RACIOCINIO)
-    if (resposta.status === 400) resposta = await chamar({})
+    let resposta: Response | null = null
+    let forma = 0
+    for (; forma < FORMAS_DE_RACIOCINIO_MINIMO.length; forma++) {
+      resposta = await chamar(FORMAS_DE_RACIOCINIO_MINIMO[forma])
+      if (resposta.status !== 400) break
+      await resposta.body?.cancel()
+    }
 
-    if (!resposta.ok) {
-      console.warn(`[transcricao] ${modelo} respondeu ${resposta.status} em ${Date.now() - inicio}ms`)
+    if (!resposta || !resposta.ok) {
+      // O começo do corpo diz o motivo (modelo inexistente, cota, formato de
+      // áudio). A chave vai na URL, nunca no corpo — seguro de logar.
+      const corpo = resposta ? (await resposta.text()).slice(0, 300) : ''
+      console.warn(`[transcricao] ${modelo} respondeu ${resposta?.status} em ${Date.now() - inicio}ms: ${corpo}`)
       return ''
     }
 
     const json = await resposta.json()
-    const texto = json.candidates?.[0]?.content?.parts?.[0]?.text
+    // Junta todas as partes de texto, pulando as de raciocínio: dependendo do
+    // modelo a resposta vem em mais de uma parte, e ler só a primeira podia
+    // devolver vazio com a transcrição logo ao lado.
+    // deno-lint-ignore no-explicit-any
+    const partes: any[] = json.candidates?.[0]?.content?.parts ?? []
+    const texto = partes
+      .filter((p) => typeof p.text === 'string' && !p.thought)
+      .map((p) => p.text)
+      .join(' ')
+      .trim()
     // O tempo vai para o log da função: é como se confere, com número, se a
     // demora do aluno está aqui ou antes (gravação, upload).
-    console.info(`[transcricao] ${modelo} em ${Date.now() - inicio}ms, ${audioBase64.length} chars de base64`)
-    return typeof texto === 'string' ? texto.trim() : ''
+    console.info(
+      `[transcricao] ${modelo} em ${Date.now() - inicio}ms (forma ${forma}), ${audioBase64.length} chars de base64, ${texto ? 'com texto' : 'VAZIO: ' + JSON.stringify(json).slice(0, 300)}`,
+    )
+    return texto
   } catch {
     console.warn(`[transcricao] falhou ou estourou ${TIMEOUT_MS}ms (${Date.now() - inicio}ms)`)
     return ''
