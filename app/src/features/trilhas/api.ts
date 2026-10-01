@@ -767,9 +767,14 @@ export function useAlterarStatusNaTrilha(trilhaId: string) {
 }
 
 /**
- * Remove o aluno da trilha mantendo o histórico (RF-140): as atribuições
- * continuam existindo, só perdem o vínculo com a etapa — as tarefas que ele já
- * respondeu seguem na ficha dele, com nota e tudo.
+ * Remove o aluno da trilha mantendo o histórico (RF-140): as tarefas que ele
+ * já CONCLUIU continuam existindo, só perdem o vínculo com a etapa — seguem na
+ * ficha dele, com nota e tudo.
+ *
+ * As etapas que ele ainda não concluiu saem junto. Deixá-las seria manter
+ * tarefas soltas, com link vivo e "pendente" na ficha e no painel do aluno, de
+ * uma trilha da qual ele já não faz parte — e o professor teria de caçá-las
+ * uma a uma para terminar de remover o que pediu para remover.
  */
 export function useRemoverAlunoDaTrilha(trilhaId: string) {
   const qc = useQueryClient()
@@ -782,6 +787,17 @@ export function useRemoverAlunoDaTrilha(trilhaId: string) {
       if (erroEtapas) throw erroEtapas
 
       if (etapas.length > 0) {
+        const { error: erroPendentes } = await supabase
+          .from('atribuicoes')
+          .delete()
+          .eq('aluno_id', alunoId)
+          .is('concluida_em', null)
+          .in(
+            'trilha_etapa_id',
+            etapas.map((e) => e.id),
+          )
+        if (erroPendentes) throw erroPendentes
+
         const { error: erroSoltar } = await supabase
           .from('atribuicoes')
           .update({ trilha_etapa_id: null })
@@ -800,7 +816,11 @@ export function useRemoverAlunoDaTrilha(trilhaId: string) {
         .eq('aluno_id', alunoId)
       if (error) throw error
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.todas }),
+    onSuccess: (_, alunoId) => {
+      void qc.invalidateQueries({ queryKey: chavesTrilhas.todas })
+      // As pendentes que saíram somem também da lista de tarefas da ficha.
+      void qc.invalidateQueries({ queryKey: ['alunos', alunoId] })
+    },
   })
 }
 

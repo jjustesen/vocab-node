@@ -16,7 +16,8 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { BotaoNovaAtividade } from '@/features/atividades/BotaoNovaAtividade'
-import { useRegerarLinkDaTarefa } from '@/features/atividades/api'
+import { useApagarTarefaDoAluno, useRegerarLinkDaTarefa } from '@/features/atividades/api'
+import { BotaoApagar } from '@/components/BotaoApagar'
 import { linkLembrado } from '@/lib/links-lembrados'
 import {
   useAluno,
@@ -33,7 +34,7 @@ import { useAulasDoAluno } from '@/features/aulas/api'
 import { AbaMateriais } from '@/features/materiais/AbaMateriais'
 import { AbaPagamentos } from '@/features/financeiro/AbaPagamentos'
 import { mesReferenciaISO, usePagamentosDoAluno } from '@/features/financeiro/api'
-import { useTrilhasDoAluno } from '@/features/trilhas/api'
+import { useRemoverAlunoDaTrilha, useTrilhasDoAluno, type TrilhaNaFicha } from '@/features/trilhas/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import { ROTULO_HABILIDADE } from '@/types/questao'
 import { CartaoSala } from '@/features/sala/CartaoSala'
@@ -266,22 +267,7 @@ export function AlunoPage() {
           {trilhas && trilhas.length > 0 && (
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               {trilhas.map((t) => (
-                <Link
-                  key={t.trilhaId}
-                  to={`/alunos/${aluno.id}/trilhas/${t.trilhaId}`}
-                  className="flex items-center gap-3 rounded-3xl bg-violet-200 p-4 transition hover:shadow-sm"
-                >
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white text-violet-700">
-                    <Milestone className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-bold text-neutral-900">{t.nome}</span>
-                    <span className="block text-xs font-medium text-violet-900/70">
-                      {t.status === 'pausada' ? 'pausada · ' : ''}
-                      {t.concluidas}/{t.total} etapas
-                    </span>
-                  </span>
-                </Link>
+                <CartaoTrilha key={t.trilhaId} alunoId={aluno.id} trilha={t} />
               ))}
             </div>
           )}
@@ -384,18 +370,23 @@ export function AlunoPage() {
               // O botão de link só entra nas pendentes: numa tarefa já
               // concluída a linha inteira é um atalho para o resultado, e
               // reabrir o link só serviria para o aluno reler o gabarito.
+              // A lixeira fica FORA do link, senão o clique de apagar abriria
+              // o resultado.
               return h.concluidaEm ? (
-                <Link
-                  key={h.atribuicaoId}
-                  to={`/resultados/${h.atribuicaoId}`}
-                  className="flex items-center gap-3 px-5 py-3.5 text-sm transition hover:bg-neutral-50"
-                >
-                  {conteudo}
-                </Link>
+                <div key={h.atribuicaoId} className="flex items-center gap-1 pr-3 transition hover:bg-neutral-50">
+                  <Link
+                    to={`/resultados/${h.atribuicaoId}`}
+                    className="flex min-w-0 flex-1 items-center gap-3 py-3.5 pl-5 text-sm"
+                  >
+                    {conteudo}
+                  </Link>
+                  <BotaoApagarTarefa atribuicaoId={h.atribuicaoId} alunoId={aluno.id} concluida />
+                </div>
               ) : (
-                <div key={h.atribuicaoId} className="flex items-center gap-3 px-5 py-3.5 text-sm">
+                <div key={h.atribuicaoId} className="flex items-center gap-3 py-3.5 pr-3 pl-5 text-sm">
                   {conteudo}
                   <BotaoLinkDaTarefa atribuicaoId={h.atribuicaoId} alunoId={aluno.id} />
+                  <BotaoApagarTarefa atribuicaoId={h.atribuicaoId} alunoId={aluno.id} />
                 </div>
               )
             })}
@@ -544,6 +535,65 @@ function BotaoLinkDaTarefa({ atribuicaoId, alunoId }: { atribuicaoId: string; al
     >
       <RefreshCw className="h-3.5 w-3.5" /> Gerar novo link
     </button>
+  )
+}
+
+/**
+ * A trilha na ficha do aluno: o cartão leva ao progresso dele, e a lixeira
+ * tira a trilha DELE — a trilha continua existindo para os outros alunos.
+ */
+function CartaoTrilha({ alunoId, trilha }: { alunoId: string; trilha: TrilhaNaFicha }) {
+  const remover = useRemoverAlunoDaTrilha(trilha.trilhaId)
+  return (
+    <div className="flex items-center gap-1 rounded-3xl bg-violet-200 pr-2 transition hover:shadow-sm">
+      <Link
+        to={`/alunos/${alunoId}/trilhas/${trilha.trilhaId}`}
+        className="flex min-w-0 flex-1 items-center gap-3 py-4 pl-4"
+      >
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white text-violet-700">
+          <Milestone className="h-4 w-4" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-bold text-neutral-900">{trilha.nome}</span>
+          <span className="block text-xs font-medium text-violet-900/70">
+            {trilha.status === 'pausada' ? 'pausada · ' : ''}
+            {trilha.concluidas}/{trilha.total} etapas
+          </span>
+        </span>
+      </Link>
+      {/*
+        A confirmação diz o que fica: sem isso, o professor não tira a trilha
+        com medo de perder as notas das etapas que o aluno já fez.
+      */}
+      <BotaoApagar
+        titulo="Tirar a trilha deste aluno"
+        confirmacao={trilha.concluidas > 0 ? 'Tirar? As notas ficam' : 'Tirar a trilha?'}
+        pendente={remover.isPending}
+        aoConfirmar={() => remover.mutate(alunoId)}
+      />
+    </div>
+  )
+}
+
+/** Apaga UMA tarefa do aluno — ver `useApagarTarefaDoAluno`. */
+function BotaoApagarTarefa({
+  atribuicaoId,
+  alunoId,
+  concluida = false,
+}: {
+  atribuicaoId: string
+  alunoId: string
+  concluida?: boolean
+}) {
+  const apagar = useApagarTarefaDoAluno(alunoId)
+  return (
+    <BotaoApagar
+      titulo={concluida ? 'Apagar a tarefa e o resultado' : 'Apagar a tarefa — o link para de funcionar'}
+      // Numa concluída, o que se perde é a nota: é isso que tem de aparecer.
+      confirmacao={concluida ? 'Apagar com a nota?' : 'Apagar?'}
+      pendente={apagar.isPending}
+      aoConfirmar={() => apagar.mutate(atribuicaoId)}
+    />
   )
 }
 

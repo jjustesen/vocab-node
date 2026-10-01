@@ -525,6 +525,43 @@ export function useRegerarLinkDaTarefa(alunoId: string) {
   })
 }
 
+/**
+ * Tira uma tarefa do aluno de vez: o link para de abrir, ela some da ficha e
+ * do painel dele, e as respostas vão junto (cascade de `respostas`).
+ *
+ * É diferente de revogar (RF-30), que mantém o registro: aqui o professor está
+ * dizendo que a tarefa não devia estar ali — mandada para o aluno errado, em
+ * duplicidade, ou que não vai mais ser feita. Se era etapa de trilha, a etapa
+ * volta a contar como "não atribuída" para este aluno.
+ *
+ * Os áudios gravados nas respostas moram em outro bucket e não caem pelo
+ * cascade; saem antes, por melhor esforço — um arquivo órfão não quebra nada,
+ * só ocupa espaço.
+ */
+export function useApagarTarefaDoAluno(alunoId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (atribuicaoId: string) => {
+      const { data: audios } = await supabase
+        .from('respostas')
+        .select('audio_path')
+        .eq('atribuicao_id', atribuicaoId)
+        .not('audio_path', 'is', null)
+      const caminhos = (audios ?? []).map((r) => r.audio_path).filter((c): c is string => Boolean(c))
+      if (caminhos.length > 0) await supabase.storage.from('audio-respostas').remove(caminhos)
+
+      const { error } = await supabase.from('atribuicoes').delete().eq('id', atribuicaoId)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['alunos', alunoId] })
+      // Contagem de envios das atividades e progresso das trilhas também mudam.
+      void qc.invalidateQueries({ queryKey: chavesAtividades.todas })
+      void qc.invalidateQueries({ queryKey: ['trilhas'] })
+    },
+  })
+}
+
 export type LinkAbertoDaAtividade = {
   registro: LinkAberto
   /**

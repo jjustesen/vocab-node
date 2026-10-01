@@ -41,6 +41,7 @@ import { atribuirTrilhaParaTurmas, invalidarConteudos } from '@/features/turmas/
 import { useAtividades } from '@/features/atividades/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import type { Aluno, TrilhaEtapa } from '@/types/db'
+import { BotaoApagar } from '@/components/BotaoApagar'
 
 export function TrilhaDetalhePage() {
   const { id } = useParams<{ id: string }>()
@@ -323,13 +324,16 @@ function LinhaAluno({ trilhaId, progresso }: { trilhaId: string; progresso: Prog
           {pausada ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
           {pausada ? 'Retomar' : 'Pausar'}
         </button>
-        <button
-          onClick={() => removerAluno.mutate(progresso.alunoId)}
-          disabled={removerAluno.isPending}
-          className="ml-auto rounded-full px-2.5 py-1 text-xs font-bold text-neutral-400 hover:bg-rose-50 hover:text-rose-600"
-        >
-          Remover
-        </button>
+        {/* Remover agora apaga as etapas pendentes do aluno (ver
+            `useRemoverAlunoDaTrilha`) — por isso pede o segundo clique. */}
+        <span className="ml-auto">
+          <BotaoApagar
+            titulo="Remover da trilha — as etapas pendentes saem, as concluídas ficam"
+            confirmacao="Remover da trilha?"
+            pendente={removerAluno.isPending}
+            aoConfirmar={() => removerAluno.mutate(progresso.alunoId)}
+          />
+        </span>
       </div>
     </div>
   )
