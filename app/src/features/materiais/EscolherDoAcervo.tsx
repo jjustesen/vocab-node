@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { Check, Folder, FolderInput, Loader2, Search } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { darMateriaisParaTurmas, invalidarConteudos } from '@/features/turmas/conteudos'
-import { VISUAL_TIPO } from './visual'
+import { MiniaturaDoMaterial } from './MiniaturaDoMaterial'
 import { SEM_PASTA, useAcervo, useDisponibilizar, useDisponibilizarPasta, usePastas } from './api'
 
 /**
@@ -213,7 +213,6 @@ export function EscolherDoAcervo({
             {filtrados.map((material) => {
               const donos = jaTem.get(material.id) ?? []
               const faltam = alunoIds.filter((id) => !donos.includes(id))
-              const { Icone, cor } = VISUAL_TIPO[material.tipo]
               const jaDado = completo(material.id)
 
               return (
@@ -223,9 +222,7 @@ export function EscolherDoAcervo({
                     disabled={jaDado || enviando !== null}
                     className="flex w-full items-center gap-3 py-2.5 text-left transition disabled:opacity-60"
                   >
-                    <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${cor}`}>
-                      <Icone className="h-4 w-4" />
-                    </span>
+                    <MiniaturaDoMaterial material={material} tamanho="h-9 w-9 rounded-xl" icone="h-4 w-4" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium text-neutral-900">
                         {material.nome}

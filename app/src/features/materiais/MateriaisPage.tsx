@@ -22,6 +22,7 @@ import { SoltarArquivos } from './SoltarArquivos'
 import { EscolherAlunos } from './EscolherAlunos'
 import { VISUAL_TIPO } from './visual'
 import { MenuDePasta } from './MenuDePasta'
+import { MiniaturaDoMaterial } from './MiniaturaDoMaterial'
 import { BotaoVisualizar, VisualizarMaterial } from './VisualizarMaterial'
 import {
   SEM_PASTA,
@@ -34,6 +35,7 @@ import {
   useExcluirPasta,
   useMoverParaPasta,
   usePastas,
+  useRenomearMaterial,
   useRenomearPasta,
   useSubirAoAcervo,
 } from './api'
@@ -622,9 +624,30 @@ function LinhaDoAcervo({
 }) {
   const excluir = useExcluirMaterial()
   const mover = useMoverParaPasta()
+  const renomear = useRenomearMaterial()
   const [baixando, setBaixando] = useState(false)
   const [vendo, setVendo] = useState(false)
-  const { Icone, cor } = VISUAL_TIPO[material.tipo]
+  /** O nome em edição, SEM a extensão — ela volta sozinha ao salvar. `null` = não está editando. */
+  const [novoNome, setNovoNome] = useState<string | null>(null)
+  const [erroNome, setErroNome] = useState<string | null>(null)
+  const { base, extensao } = separarExtensao(material)
+
+  function comecarRenomeacao() {
+    setErroNome(null)
+    setNovoNome(base)
+  }
+
+  function confirmarRenomeacao(evento: React.FormEvent) {
+    evento.preventDefault()
+    if (novoNome === null) return
+    const nome = novoNome.trim() + extensao
+    if (nome === material.nome) return setNovoNome(null)
+    setErroNome(null)
+    renomear.mutate(
+      { id: material.id, nome },
+      { onSuccess: () => setNovoNome(null), onError: (e) => setErroNome(e.message) },
+    )
+  }
 
   async function baixar() {
     // Texto não tem arquivo no Storage: o .txt é gerado aqui mesmo.
@@ -674,12 +697,61 @@ function LinhaDoAcervo({
           className="h-4 w-4 shrink-0 cursor-pointer accent-violet-600"
         />
       </span>
-      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${cor}`}>
-        <Icone className="h-5 w-5" />
-      </span>
+      <MiniaturaDoMaterial material={material} tamanho="h-12 w-12 rounded-2xl" />
 
       <span className="min-w-40 flex-1">
-        <span className="block truncate text-sm font-bold text-neutral-900">{material.nome}</span>
+        {novoNome === null ? (
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="truncate text-sm font-bold text-neutral-900">{material.nome}</span>
+            {/*
+              O lápis mora colado no nome, e não na fileira de ações: renomear
+              é sobre ESTE texto, e a fileira já tem três riscos diferentes.
+              Aparece com o mouse em cima (sempre, no toque), como a caixa de
+              seleção.
+            */}
+            <button
+              onClick={comecarRenomeacao}
+              title="Renomear"
+              aria-label={`Renomear ${material.nome}`}
+              className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-neutral-400 opacity-0 transition group-hover:opacity-100 hover:bg-neutral-100 hover:text-neutral-700 focus:opacity-100 [@media(hover:none)]:opacity-100"
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+          </span>
+        ) : (
+          <form onSubmit={confirmarRenomeacao} className="flex min-w-0 items-center gap-1">
+            <input
+              autoFocus
+              value={novoNome}
+              onChange={(e) => setNovoNome(e.target.value)}
+              onFocus={(e) => e.currentTarget.select()}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setNovoNome(null)
+              }}
+              maxLength={200}
+              aria-label="Novo nome do material"
+              className="min-w-0 flex-1 rounded-lg bg-neutral-100 px-2 py-1 text-sm font-bold text-neutral-900 outline-none focus:ring-2 focus:ring-violet-300"
+            />
+            {extensao && <span className="shrink-0 text-sm font-bold text-neutral-400">{extensao}</span>}
+            <button
+              type="submit"
+              disabled={renomear.isPending || novoNome.trim().length === 0}
+              title="Salvar nome"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-neutral-900 text-white disabled:opacity-30"
+            >
+              {renomear.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setNovoNome(null)}
+              title="Cancelar"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-neutral-400 hover:bg-neutral-100"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </form>
+        )}
+        {erroNome && <span className="block text-xs font-medium text-rose-700">{erroNome}</span>}
         {/*
           "Quem já tem" é a informação que o acervo existe para dar. Sem ela, a
           lista seria só uma pasta — e o professor não teria como saber se
@@ -757,4 +829,18 @@ function LinhaDoAcervo({
       {vendo && <VisualizarMaterial material={material} aoFechar={() => setVendo(false)} />}
     </li>
   )
+}
+
+/**
+ * O nome sem a extensão, e a extensão à parte — para a edição mexer só no que
+ * é nome. Texto colado não tem arquivo, então não tem extensão a proteger.
+ */
+function separarExtensao(material: Material): { base: string; extensao: string } {
+  if (material.tipo === 'texto' && !material.nome.toLowerCase().endsWith('.txt')) {
+    return { base: material.nome, extensao: '' }
+  }
+  const ponto = material.nome.lastIndexOf('.')
+  // Ponto no começo (".pdf") ou extensão comprida demais não é extensão: é nome.
+  if (ponto <= 0 || material.nome.length - ponto > 6) return { base: material.nome, extensao: '' }
+  return { base: material.nome.slice(0, ponto), extensao: material.nome.slice(ponto) }
 }

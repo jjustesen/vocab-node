@@ -7,7 +7,7 @@ import { EscolherDoAcervo } from '@/features/materiais/EscolherDoAcervo'
 import { QuemTem } from '@/features/materiais/QuemTem'
 import { EtiquetaDePasta } from '@/features/materiais/EtiquetaDePasta'
 import { SoltarArquivos } from '@/features/materiais/SoltarArquivos'
-import { VISUAL_TIPO } from '@/features/materiais/visual'
+import { MiniaturaDoMaterial } from '@/features/materiais/MiniaturaDoMaterial'
 import { useSubirAoAcervo, useTirarDeVarios } from '@/features/materiais/api'
 import { darMateriaisParaTurmas, desligarDaTurma, invalidarConteudos, useMateriaisDaTurma } from './conteudos'
 
@@ -81,14 +81,11 @@ export function MateriaisDaTurma({
       {materiais && materiais.length > 0 && (
         <ul className="mt-2 divide-y divide-neutral-100">
           {materiais.map((material) => {
-            const { Icone, cor } = VISUAL_TIPO[material.tipo]
             return (
               // `group/linha`: é a LINHA que dispara a expansão do "Disponibilizar para todos",
               // e não o próprio botão — ver o cabeçalho de `DisponibilizarATodos`.
               <li key={material.id} className="group/linha flex items-center gap-3 py-2.5">
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${cor}`}>
-                  <Icone className="h-4 w-4" />
-                </span>
+                <MiniaturaDoMaterial material={material} tamanho="h-9 w-9 rounded-xl" icone="h-4 w-4" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium text-neutral-900">
                     {material.nome}

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Material, MaterialTipo, PastaMaterial } from '@/types/db'
+import { caminhosParaApagar, criarMiniaturaDoArquivo } from './miniatura'
 
 /**
  * Materiais — o acervo do professor, e quem tem acesso a cada peça.
@@ -250,6 +251,27 @@ export function useExcluirPasta() {
   })
 }
 
+/**
+ * Troca o NOME do material, e só ele: o arquivo no Storage continua no mesmo
+ * caminho, e quem já tinha o material passa a vê-lo com o nome novo.
+ *
+ * A extensão é de quem chama decidir — a tela a preserva, porque o nome é
+ * também o nome do arquivo baixado (ver `VisualizarMaterial`), e "Apostila"
+ * sem o ".pdf" baixaria um arquivo que o computador não sabe abrir.
+ */
+export function useRenomearMaterial() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, nome }: { id: string; nome: string }) => {
+      const limpo = nome.trim()
+      if (!limpo) throw new Error('Dê um nome ao material.')
+      const { error } = await supabase.from('materiais').update({ nome: limpo }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['materiais'] }),
+  })
+}
+
 /** Move materiais entre prateleiras. `pastaId` nulo devolve à raiz. */
 export function useMoverParaPasta() {
   const qc = useQueryClient()
@@ -338,6 +360,10 @@ async function subirParaOAcervo(entrada: NovoMaterial, pastaId: string | null = 
     .from('materiais')
     .upload(path, arquivo, { contentType: arquivo.type })
   if (erroUpload) throw erroUpload
+
+  // Antes do insert: quando a linha aparecer na lista, a miniatura já está lá
+  // — senão a lista não a acharia e geraria outra, baixando o que acabou de subir.
+  await criarMiniaturaDoArquivo(path, tipo, arquivo)
 
   const { data, error } = await supabase
     .from('materiais')
@@ -479,7 +505,7 @@ export function useExcluirMateriais() {
     mutationFn: async (materiais: Material[]) => {
       if (materiais.length === 0) return
       const caminhos = materiais.map((m) => m.storage_path).filter((p): p is string => Boolean(p))
-      if (caminhos.length > 0) await supabase.storage.from('materiais').remove(caminhos)
+      if (caminhos.length > 0) await supabase.storage.from('materiais').remove(caminhosParaApagar(caminhos))
       const { error } = await supabase
         .from('materiais')
         .delete()
@@ -498,7 +524,7 @@ export function useExcluirMaterial() {
   return useMutation({
     mutationFn: async (material: Material) => {
       if (material.storage_path) {
-        await supabase.storage.from('materiais').remove([material.storage_path])
+        await supabase.storage.from('materiais').remove(caminhosParaApagar([material.storage_path]))
       }
       const { error } = await supabase.from('materiais').delete().eq('id', material.id)
       if (error) throw error

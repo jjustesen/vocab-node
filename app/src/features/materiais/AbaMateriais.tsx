@@ -10,7 +10,7 @@ import {
 } from './api'
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { EscolherDoAcervo } from './EscolherDoAcervo'
-import { VISUAL_TIPO } from './visual'
+import { MiniaturaDoMaterial } from './MiniaturaDoMaterial'
 import { baixarComoTxt } from '@/lib/baixar-texto'
 import { BotaoVisualizar, VisualizarMaterial } from './VisualizarMaterial'
 import { EtiquetaDePasta } from './EtiquetaDePasta'
@@ -97,7 +97,6 @@ function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: st
   const [baixando, setBaixando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const [vendo, setVendo] = useState(false)
-  const visual = VISUAL_TIPO[material.tipo]
 
   async function baixar() {
     if (material.tipo === 'texto') return baixarComoTxt(material.nome, material.texto ?? '')
@@ -119,9 +118,7 @@ function CartaoMaterial({ material, alunoId }: { material: Material; alunoId: st
   return (
     <div className="rounded-2xl bg-white p-4">
       <div className="flex items-center gap-3">
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${visual.cor}`}>
-          <visual.Icone className="h-4 w-4" />
-        </span>
+        <MiniaturaDoMaterial material={material} icone="h-4 w-4" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-neutral-800">{material.nome}</p>
           <p className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-400">
