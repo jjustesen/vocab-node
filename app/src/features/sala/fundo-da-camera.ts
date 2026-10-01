@@ -72,15 +72,23 @@ export const FORCAS = {
 export type Forca = keyof typeof FORCAS
 
 /**
- * As imagens vêm de `public/fundos/` — geradas aqui mesmo, paredes lisas com
- * uma vinheta discreta. Não são fotos de escritório de propósito: uma cena
- * falsa atrás de uma borda imperfeita chama mais atenção que uma parede
- * neutra, e a aula é sobre a pessoa e o exercício.
+ * As imagens vêm de `public/fundos/`, todas geradas aqui mesmo, em dois grupos.
+ *
+ * PAREDES: lisas, com uma vinheta discreta. São a escolha mais segura: com uma
+ * parede atrás, a borda imperfeita do recorte não tem nada para revelar.
+ *
+ * CENAS: estante de livros e sala — o "escritório de professor" que muita
+ * gente quer atrás de si numa aula. Vêm já DESFOCADAS, como uma câmera de
+ * verdade faria com o que está a dois metros da pessoa: é o que as faz parecer
+ * atrás de quem fala, e não um pôster colado nas costas. Sem texto nenhum,
+ * porque a prévia local é espelhada e uma lombada escrita sairia ao contrário.
  */
 export const IMAGENS = [
-  { id: 'neutro', nome: 'Neutro', caminho: '/fundos/neutro.png' },
-  { id: 'areia', nome: 'Areia', caminho: '/fundos/areia.png' },
-  { id: 'grafite', nome: 'Grafite', caminho: '/fundos/grafite.png' },
+  { id: 'estante', nome: 'Estante', caminho: '/fundos/estante.jpg', grupo: 'cena' },
+  { id: 'sala', nome: 'Sala', caminho: '/fundos/sala.jpg', grupo: 'cena' },
+  { id: 'neutro', nome: 'Neutro', caminho: '/fundos/neutro.png', grupo: 'parede' },
+  { id: 'areia', nome: 'Areia', caminho: '/fundos/areia.png', grupo: 'parede' },
+  { id: 'grafite', nome: 'Grafite', caminho: '/fundos/grafite.png', grupo: 'parede' },
 ] as const
 export type ImagemId = (typeof IMAGENS)[number]['id']
 
@@ -88,6 +96,8 @@ export type Fundo =
   | { tipo: 'nenhum' }
   | { tipo: 'desfoque'; forca: Forca }
   | { tipo: 'imagem'; id: ImagemId }
+  /** Uma foto que a própria pessoa escolheu — ver `guardarImagemPropria`. */
+  | { tipo: 'propria' }
 
 export const FUNDO_NENHUM: Fundo = { tipo: 'nenhum' }
 
@@ -96,6 +106,58 @@ export function mesmoFundo(a: Fundo, b: Fundo): boolean {
   if (a.tipo === 'desfoque' && b.tipo === 'desfoque') return a.forca === b.forca
   if (a.tipo === 'imagem' && b.tipo === 'imagem') return a.id === b.id
   return true
+}
+
+// ── A imagem da própria pessoa ───────────────────────────────────────────────
+//
+// Guardada no navegador, como a escolha do fundo, e nunca enviada a lugar
+// nenhum: quem vê o fundo é o vídeo já tratado, não o arquivo. Reduzida ANTES
+// de guardar — uma foto de celular de 4000px estouraria o `localStorage` (que
+// tem uns 5 MB por site) e faria o segmentador redimensioná-la a cada troca.
+
+const CHAVE_IMAGEM = 'vocab-node:fundo-da-camera:imagem'
+/** O tamanho do vídeo da câmera; maior que isso, o pacote só reduz de novo. */
+const LARGURA_PROPRIA = 1280
+const ALTURA_PROPRIA = 720
+
+export function imagemPropria(): string | null {
+  try {
+    return localStorage.getItem(CHAVE_IMAGEM)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Recorta a foto para 16:9 pelo CENTRO (como `object-fit: cover`) e guarda
+ * como JPEG. Recortar em vez de esticar: a foto de celular em pé, esticada
+ * para deitada, viraria uma estante de livros gordos.
+ */
+export async function guardarImagemPropria(arquivo: File): Promise<string> {
+  if (!arquivo.type.startsWith('image/')) throw new Error('Escolha um arquivo de imagem.')
+  const bitmap = await createImageBitmap(arquivo).catch(() => {
+    throw new Error('Não consegui abrir esta imagem.')
+  })
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = LARGURA_PROPRIA
+    canvas.height = ALTURA_PROPRIA
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Não consegui processar a imagem neste navegador.')
+    const escala = Math.max(LARGURA_PROPRIA / bitmap.width, ALTURA_PROPRIA / bitmap.height)
+    const largura = bitmap.width * escala
+    const altura = bitmap.height * escala
+    ctx.drawImage(bitmap, (LARGURA_PROPRIA - largura) / 2, (ALTURA_PROPRIA - altura) / 2, largura, altura)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
+    try {
+      localStorage.setItem(CHAVE_IMAGEM, dataUrl)
+    } catch {
+      throw new Error('Não há espaço neste navegador para guardar a imagem.')
+    }
+    return dataUrl
+  } finally {
+    bitmap.close()
+  }
 }
 
 /**
@@ -130,6 +192,8 @@ function lembrado(): Fundo {
     if (dados.tipo === 'imagem' && IMAGENS.some((i) => i.id === dados.id)) {
       return { tipo: 'imagem', id: dados.id as ImagemId }
     }
+    // A foto pode ter sumido (dados do site limpos) e a escolha ficado.
+    if (dados.tipo === 'propria' && imagemPropria()) return { tipo: 'propria' }
     return FUNDO_NENHUM
   } catch {
     return FUNDO_NENHUM
@@ -191,13 +255,17 @@ export function useFundoDaCamera() {
           return
         }
 
-        const modo =
-          fundo.tipo === 'desfoque'
-            ? ({ mode: 'background-blur', blurRadius: FORCAS[fundo.forca] } as const)
-            : ({
-                mode: 'virtual-background',
-                imagePath: IMAGENS.find((i) => i.id === fundo.id)!.caminho,
-              } as const)
+        let modo
+        if (fundo.tipo === 'desfoque') {
+          modo = { mode: 'background-blur', blurRadius: FORCAS[fundo.forca] } as const
+        } else {
+          // O pacote carrega a imagem com `<img src>`, então o data URL da
+          // foto da pessoa serve tal e qual um caminho de `public/`.
+          const imagePath =
+            fundo.tipo === 'imagem' ? IMAGENS.find((i) => i.id === fundo.id)!.caminho : imagemPropria()
+          if (!imagePath) throw new Error('A imagem escolhida não está mais neste navegador.')
+          modo = { mode: 'virtual-background', imagePath } as const
+        }
 
         if (!processador.current) {
           setAplicando(true)
@@ -235,6 +303,25 @@ export function useFundoDaCamera() {
     setFundo(novo)
   }, [])
 
+  /** A foto que existe agora — muda quando a pessoa troca. */
+  const [propria, setPropria] = useState<string | null>(() => (suportado ? imagemPropria() : null))
+
+  const escolherImagemPropria = useCallback(
+    async (arquivo: File) => {
+      setErro(null)
+      try {
+        const dataUrl = await guardarImagemPropria(arquivo)
+        setPropria(dataUrl)
+        // Trocar a foto com ela já em uso não muda `fundo` ({tipo:'propria'}
+        // continua igual), e o efeito não rodaria: um objeto novo força.
+        escolher({ tipo: 'propria' })
+      } catch (e) {
+        setErro(e instanceof Error ? e.message : 'Não consegui usar esta imagem.')
+      }
+    },
+    [escolher],
+  )
+
   return {
     suportado,
     fundo,
@@ -244,5 +331,8 @@ export function useFundoDaCamera() {
     /** Sem câmera ligada não há fundo a trocar — as opções ficam visíveis, mas inertes. */
     temCamera: Boolean(trilha),
     escolher,
+    /** A foto da própria pessoa, se ela já escolheu uma (data URL). */
+    propria,
+    escolherImagemPropria,
   }
 }

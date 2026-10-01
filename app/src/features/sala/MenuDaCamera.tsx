@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { TrackToggle, useMediaDeviceSelect } from '@livekit/components-react'
 import { Track } from 'livekit-client'
-import { Check, Loader2 } from 'lucide-react'
+import { Check, ImagePlus, Loader2 } from 'lucide-react'
 import { FORCAS, IMAGENS, mesmoFundo, useFundoDaCamera, type Fundo } from './fundo-da-camera'
 
 /**
@@ -29,7 +29,9 @@ export function MenuDaCamera() {
     requestPermissions: false,
   })
 
-  const { suportado, fundo, aplicando, erro, temCamera, escolher } = useFundoDaCamera()
+  const { suportado, fundo, aplicando, erro, temCamera, escolher, propria, escolherImagemPropria } =
+    useFundoDaCamera()
+  const seletorDeArquivo = useRef<HTMLInputElement>(null)
 
   // Fecha ao clicar fora ou com Escape — o menu do LiveKit faz o mesmo, e um
   // menu que só fecha pelo próprio botão é um menu que fica esquecido aberto.
@@ -51,20 +53,24 @@ export function MenuDaCamera() {
 
   /**
    * As opções de fundo, em ordem de "quanto some o quarto": nada, borrado em
-   * três forças, parede lisa em três cores. A imagem vem depois do desfoque
-   * porque é o passo seguinte de quem achou o borrão insuficiente — ver o
-   * cabeçalho de `fundo-da-camera.ts`.
+   * três forças, cenas (estante, sala), parede lisa em três cores e, por
+   * último, a foto da própria pessoa. A imagem vem depois do desfoque porque
+   * é o passo seguinte de quem achou o borrão insuficiente — ver o cabeçalho
+   * de `fundo-da-camera.ts`. As imagens levam uma amostra ao lado do nome:
+   * "Areia" e "Grafite" não dizem nada até a pessoa ver a cor.
    */
-  const opcoesDeFundo: { rotulo: string; fundo: Fundo }[] = [
+  const opcoesDeFundo: { rotulo: string; fundo: Fundo; amostra?: string }[] = [
     { rotulo: 'Sem efeito', fundo: { tipo: 'nenhum' } },
     ...(Object.keys(FORCAS) as (keyof typeof FORCAS)[]).map((forca) => ({
       rotulo: `Desfoque ${forca === 'media' ? 'médio' : forca}`,
       fundo: { tipo: 'desfoque', forca } as Fundo,
     })),
     ...IMAGENS.map((imagem) => ({
-      rotulo: `Fundo ${imagem.nome.toLowerCase()}`,
+      rotulo: imagem.grupo === 'cena' ? imagem.nome : `Parede ${imagem.nome.toLowerCase()}`,
       fundo: { tipo: 'imagem', id: imagem.id } as Fundo,
+      amostra: imagem.caminho,
     })),
+    ...(propria ? [{ rotulo: 'Sua imagem', fundo: { tipo: 'propria' } as Fundo, amostra: propria }] : []),
   ]
 
   return (
@@ -135,6 +141,13 @@ export function MenuDaCamera() {
                           title={!temCamera ? 'Ligue a câmera primeiro' : undefined}
                           onClick={() => escolher(opcao.fundo)}
                         >
+                          {opcao.amostra && (
+                            <img
+                              src={opcao.amostra}
+                              alt=""
+                              className="mr-2 h-4 w-7 shrink-0 rounded-sm object-cover ring-1 ring-white/20"
+                            />
+                          )}
                           {opcao.rotulo}
                           {ativa && aplicando && <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin" />}
                           {ativa && !aplicando && <Check className="ml-auto h-3.5 w-3.5" />}
@@ -142,6 +155,36 @@ export function MenuDaCamera() {
                       </li>
                     )
                   })}
+                  {/*
+                    A foto da pessoa: escolher abre o seletor de arquivos; com
+                    uma já escolhida, o mesmo item TROCA. A imagem fica só
+                    neste navegador — ver `guardarImagemPropria`.
+                  */}
+                  <li>
+                    <button
+                      type="button"
+                      className="lk-button"
+                      disabled={!temCamera || aplicando}
+                      title={!temCamera ? 'Ligue a câmera primeiro' : 'A imagem fica só neste navegador'}
+                      onClick={() => seletorDeArquivo.current?.click()}
+                    >
+                      <ImagePlus className="mr-2 h-4 w-4 shrink-0" />
+                      {propria ? 'Trocar sua imagem…' : 'Usar sua imagem…'}
+                    </button>
+                    <input
+                      ref={seletorDeArquivo}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const arquivo = e.target.files?.[0]
+                        // Limpa já: escolher o MESMO arquivo de novo tem de
+                        // disparar o `change`, senão "trocar" não reaplica.
+                        e.target.value = ''
+                        if (arquivo) void escolherImagemPropria(arquivo)
+                      }}
+                    />
+                  </li>
                 </ul>
                 {erro && <p className="max-w-56 px-2 py-1 text-xs text-rose-300">{erro}</p>}
               </>
