@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import {
-  FileText,
-  Image as ImageIcon,
   Library,
   Loader2,
   Monitor,
@@ -19,6 +17,7 @@ import { SoltarArquivos } from '@/features/materiais/SoltarArquivos'
 import { DisponibilizarATodos } from '@/features/materiais/DisponibilizarATodos'
 import { QuemTem } from '@/features/materiais/QuemTem'
 import { EtiquetaDePasta } from '@/features/materiais/EtiquetaDePasta'
+import { MiniaturaDoMaterial } from '@/features/materiais/MiniaturaDoMaterial'
 import { carregarPdfjs } from '@/lib/arquivo'
 import type { Material } from '@/types/db'
 import type { Palco } from './estado-palco'
@@ -144,13 +143,15 @@ export function SeletorDeConteudo({
                     title="Colocar no palco"
                     className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-50"
                   >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-neutral-100 text-neutral-600">
-                      {abrindo === material.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : material.tipo === 'pdf' ? (
-                        <FileText className="h-4 w-4" />
-                      ) : (
-                        <ImageIcon className="h-4 w-4" />
+                    {/* A miniatura é a mesma do acervo: no meio da aula o
+                        professor procura "aquela página", e o nome do
+                        arquivo raramente diz qual é. */}
+                    <span className="relative shrink-0">
+                      <MiniaturaDoMaterial material={material} tamanho="h-11 w-11 rounded-xl" icone="h-4 w-4" />
+                      {abrindo === material.id && (
+                        <span className="absolute inset-0 grid place-items-center rounded-xl bg-white/70">
+                          <Loader2 className="h-4 w-4 animate-spin text-neutral-600" />
+                        </span>
                       )}
                     </span>
                     <span className="min-w-0 flex-1">
