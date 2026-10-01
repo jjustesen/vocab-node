@@ -84,6 +84,10 @@ const ARRASTO_MINIMO = 6
  * numa mensagem só passaria do limite do data channel.
  */
 const PONTOS_POR_LOTE = 200
+/** Altura da linha do texto, em múltiplos do tamanho da letra — a mesma do estilo de `CaixaDeTexto`. */
+const ALTURA_DA_LINHA = 1.25
+/** O `px-1` do campo de texto: a letra começa este tanto à direita do canto da caixa. */
+const RECUO_DO_CAMPO_PX = 4
 
 export function Lousa({
   superficie,
@@ -700,7 +704,17 @@ export function Lousa({
     // a pessoa digitar a primeira letra.
     evento.preventDefault()
     encerrarEdicao()
-    const [x, y] = paraLogico(evento.clientX, evento.clientY)
+    const [cliqueX, cliqueY] = paraLogico(evento.clientX, evento.clientY)
+    // A caixa é presa pelo canto de cima à esquerda, mas o clique é onde a
+    // pessoa quer VER a letra: a linha nasce centrada na altura do ponteiro,
+    // e o cursor piscando cai em cima dele. Sem o ajuste, o clique virava a
+    // borda de cima da caixa e o texto aparecia meia linha abaixo do mouse.
+    // `tamanho` e `y` estão na mesma régua (milésimos da altura), então meia
+    // linha é `tamanho * ALTURA_DA_LINHA / 2`; o recuo em x desconta o `px-1`
+    // do campo, que é em pixel e precisa virar milésimo da largura.
+    const largura = camadaRef.current?.getBoundingClientRect().width || 1
+    const x = Math.max(0, cliqueX - (RECUO_DO_CAMPO_PX / largura) * NORMA)
+    const y = Math.max(0, cliqueY - (tamanho * ALTURA_DA_LINHA) / 2)
     const novo = textoNovo(eu, superficie, cor, tamanho, fonte, x, y)
     guardarTexto(novo)
     setEditando(novo.id)
@@ -1203,7 +1217,7 @@ function CaixaDeTexto({
     fontFamily: `var(--font-anotacao-${texto.fonte ?? FONTE_PADRAO})`,
     fontSize: `${texto.tamanho / 10}cqh`,
     color: texto.cor,
-    lineHeight: 1.25,
+    lineHeight: ALTURA_DA_LINHA,
     whiteSpace: 'pre',
     WebkitTextStroke: '0.09em #ffffff',
     paintOrder: 'stroke fill',
