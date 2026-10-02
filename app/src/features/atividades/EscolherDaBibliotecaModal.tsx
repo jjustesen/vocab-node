@@ -73,8 +73,20 @@ function ListaDeAtividades({
   // Quantas vezes esta atividade já foi para ESTE aluno. Reenviar é permitido
   // (cria nova tentativa, RF-80/127), mas o professor precisa saber que está
   // repetindo antes de clicar, não depois.
+  //
+  // Só os envios AVULSOS contam como "já enviada": a mesma atividade como
+  // etapa de uma trilha é outro caminho, e somar os dois fazia parecer que a
+  // atividade já tinha ido sozinha quando só estava na trilha. A trilha
+  // aparece à parte, pelo nome.
   const enviosPorAtividade = new Map<string, number>()
+  const trilhasPorAtividade = new Map<string, Set<string>>()
   for (const item of historico ?? []) {
+    if (item.trilha) {
+      const nomes = trilhasPorAtividade.get(item.atividadeId) ?? new Set<string>()
+      nomes.add(item.trilha.nome)
+      trilhasPorAtividade.set(item.atividadeId, nomes)
+      continue
+    }
     enviosPorAtividade.set(item.atividadeId, (enviosPorAtividade.get(item.atividadeId) ?? 0) + 1)
   }
 
@@ -135,6 +147,7 @@ function ListaDeAtividades({
             key={a.id}
             atividade={a}
             jaEnviada={enviosPorAtividade.get(a.id) ?? 0}
+            naTrilha={[...(trilhasPorAtividade.get(a.id) ?? [])]}
             aoEscolher={() => aoEscolher(a)}
           />
         ))}
@@ -146,10 +159,14 @@ function ListaDeAtividades({
 function ItemAtividade({
   atividade,
   jaEnviada,
+  naTrilha,
   aoEscolher,
 }: {
   atividade: AtividadeComEnvio
+  /** Envios avulsos para este aluno — as etapas de trilha vêm em `naTrilha`. */
   jaEnviada: number
+  /** Nomes das trilhas deste aluno em que a atividade é etapa. */
+  naTrilha: string[]
   aoEscolher: () => void
 }) {
   const visual = visualDaHabilidade(atividade.habilidades)
@@ -176,6 +193,7 @@ function ItemAtividade({
           {rotuloHabilidades && `${rotuloHabilidades} · `}
           {vazia ? 'sem questões' : `${atividade.questoes} ${atividade.questoes === 1 ? 'questão' : 'questões'}`}
           {jaEnviada > 0 && ` · já enviada ${jaEnviada}×`}
+          {naTrilha.length > 0 && ` · na trilha ${naTrilha.join(', ')}`}
         </span>
       </span>
       <span

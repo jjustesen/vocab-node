@@ -370,8 +370,15 @@ function FichaDoAluno({ alunoId, alunoNome }: { alunoId: string; alunoNome: stri
                 onClick={() => setAberta(h.atribuicaoId)}
                 className="flex w-full items-center gap-2 rounded-xl bg-neutral-100 px-3 py-2 text-left transition hover:bg-neutral-200"
               >
-                <span className="min-w-0 flex-1 truncate text-xs font-bold text-neutral-700">
-                  {h.atividadeTitulo}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-bold text-neutral-700">{h.atividadeTitulo}</span>
+                  {/* Sem a marca, a "Atividade 1" avulsa e a mesma como etapa
+                      da trilha eram duas linhas iguais. */}
+                  {h.trilha && (
+                    <span className="block truncate text-[11px] font-medium text-violet-700">
+                      Trilha {h.trilha.nome} · etapa {h.trilha.etapa}
+                    </span>
+                  )}
                 </span>
                 {h.acertos !== null && h.total !== null && (
                   <span

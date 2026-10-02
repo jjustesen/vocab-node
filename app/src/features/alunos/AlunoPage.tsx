@@ -18,8 +18,11 @@ import {
 import { BotaoNovaAtividade } from '@/features/atividades/BotaoNovaAtividade'
 import { useApagarTarefaDoAluno, useRegerarLinkDaTarefa } from '@/features/atividades/api'
 import { BotaoApagar } from '@/components/BotaoApagar'
+import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
+import { ordenar, useOrdem } from '@/lib/ordenar'
 import { linkLembrado } from '@/lib/links-lembrados'
 import {
+  type ItemHistoricoAluno,
   useAluno,
   useAtualizarAluno,
   useContaDoAluno,
@@ -288,7 +291,15 @@ export function AlunoPage() {
                 <div className="space-y-2.5">
                   {historico.slice(0, 3).map((h) => (
                     <div key={h.atribuicaoId} className="flex items-center gap-3 text-sm">
-                      <span className="min-w-0 flex-1 truncate text-neutral-700">{h.atividadeTitulo}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-neutral-700">{h.atividadeTitulo}</span>
+                        {h.trilha && (
+                          <span className="flex items-center gap-1 truncate text-xs font-medium text-violet-700">
+                            <Milestone className="h-3 w-3 shrink-0" />
+                            {h.trilha.nome} · etapa {h.trilha.etapa}
+                          </span>
+                        )}
+                      </span>
                       {h.concluidaEm ? (
                         <span
                           className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ${corDoPlacar(h.acertos, h.total)}`}
@@ -343,54 +354,7 @@ export function AlunoPage() {
             </p>
           </div>
         ) : (
-          <div className="mt-4 divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
-            {historico.map((h) => {
-              const conteudo = (
-                <>
-                  <div className="flex-1">
-                    <p className="font-bold text-neutral-800">
-                      {h.atividadeTitulo}
-                      {h.tentativa > 1 && (
-                        <span className="ml-1 text-xs font-medium text-neutral-400">tentativa {h.tentativa}</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-neutral-400">{h.nivel}</p>
-                  </div>
-                  {h.concluidaEm ? (
-                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-extrabold text-emerald-800">
-                      {h.acertos}/{h.total}
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-bold text-neutral-500">
-                      pendente
-                    </span>
-                  )}
-                </>
-              )
-              // O botão de link só entra nas pendentes: numa tarefa já
-              // concluída a linha inteira é um atalho para o resultado, e
-              // reabrir o link só serviria para o aluno reler o gabarito.
-              // A lixeira fica FORA do link, senão o clique de apagar abriria
-              // o resultado.
-              return h.concluidaEm ? (
-                <div key={h.atribuicaoId} className="flex items-center gap-1 pr-3 transition hover:bg-neutral-50">
-                  <Link
-                    to={`/resultados/${h.atribuicaoId}`}
-                    className="flex min-w-0 flex-1 items-center gap-3 py-3.5 pl-5 text-sm"
-                  >
-                    {conteudo}
-                  </Link>
-                  <BotaoApagarTarefa atribuicaoId={h.atribuicaoId} alunoId={aluno.id} concluida />
-                </div>
-              ) : (
-                <div key={h.atribuicaoId} className="flex items-center gap-3 py-3.5 pr-3 pl-5 text-sm">
-                  {conteudo}
-                  <BotaoLinkDaTarefa atribuicaoId={h.atribuicaoId} alunoId={aluno.id} />
-                  <BotaoApagarTarefa atribuicaoId={h.atribuicaoId} alunoId={aluno.id} />
-                </div>
-              )
-            })}
-          </div>
+          <AtividadesSeparadas historico={historico} alunoId={aluno.id} trilhas={trilhas ?? []} />
         ))}
 
       {aba === 'Aulas' && <AbaAulas alunoId={aluno.id} alunoNome={aluno.nome} />}
@@ -398,6 +362,205 @@ export function AlunoPage() {
       {aba === 'Materiais' && <AbaMateriais alunoId={aluno.id} alunoNome={aluno.nome} />}
 
       {aba === 'Pagamentos' && <AbaPagamentos alunoId={aluno.id} valorMensal={aluno.valor_mensal} />}
+    </div>
+  )
+}
+
+/**
+ * A aba Atividades, separada pelo CAMINHO por que cada tarefa chegou: avulsa
+ * ou etapa de uma trilha.
+ *
+ * Numa lista só, a "Atividade 1" enviada sozinha e a mesma "Atividade 1" como
+ * etapa da trilha eram duas linhas idênticas, e o professor não sabia qual
+ * delas estava olhando — nem qual reenviar. Cada trilha vira o seu bloco, na
+ * ordem das etapas; o que não é de trilha fica em "Avulsas", do mais recente
+ * para o mais antigo.
+ *
+ * A ordem escolhida no seletor vale para todos os blocos. Padrão: "Mais
+ * recentes", que é como a lista sempre veio; o número da etapa continua à
+ * vista em cada linha da trilha, então a sequência não se perde com outra ordem.
+ *
+ * A "tentativa" também é contada DENTRO de cada bloco. No banco ela é uma só
+ * por atividade e aluno (o unique de `atribuicoes`), então a segunda vez que a
+ * atividade ia avulsa podia aparecer como "tentativa 5" só porque a trilha já
+ * a tinha mandado três vezes.
+ */
+function AtividadesSeparadas({
+  historico,
+  alunoId,
+  trilhas,
+}: {
+  historico: ItemHistoricoAluno[]
+  alunoId: string
+  trilhas: TrilhaNaFicha[]
+}) {
+  const [ordem, setOrdem] = useOrdem('atividades-do-aluno', 'recentes')
+  const emOrdem = (itens: ItemHistoricoAluno[]) =>
+    ordenar(itens, ordem, { nome: (h) => h.atividadeTitulo, data: (h) => h.enviadaEm })
+  const avulsas = emOrdem(historico.filter((h) => !h.trilha))
+
+  // Na ordem em que aparecem no histórico (mais recente primeiro): a trilha
+  // mexida por último fica no topo.
+  const blocos = new Map<string, { nome: string; itens: ItemHistoricoAluno[] }>()
+  for (const h of historico) {
+    if (!h.trilha) continue
+    const bloco = blocos.get(h.trilha.id) ?? { nome: h.trilha.nome, itens: [] }
+    bloco.itens.push(h)
+    blocos.set(h.trilha.id, bloco)
+  }
+
+  const tentativa = numerarTentativas(historico)
+  const progressoPorTrilha = new Map(trilhas.map((t) => [t.trilhaId, t]))
+
+  return (
+    <div className="mt-4 space-y-6">
+      {historico.length > 1 && (
+        <div className="-mb-2 flex justify-end">
+          <SeletorDeOrdem ordem={ordem} aoMudar={setOrdem} />
+        </div>
+      )}
+      {[...blocos].map(([trilhaId, bloco]) => {
+        const progresso = progressoPorTrilha.get(trilhaId)
+        const itens = emOrdem(bloco.itens)
+        return (
+          <section key={trilhaId}>
+            <div className="mb-2 flex flex-wrap items-center gap-2 px-1">
+              <span className="grid h-7 w-7 place-items-center rounded-xl bg-violet-200 text-violet-800">
+                <Milestone className="h-3.5 w-3.5" />
+              </span>
+              <h2 className="min-w-0 truncate text-sm font-extrabold text-neutral-900">
+                <span className="font-bold text-violet-700">Trilha · </span>
+                {bloco.nome}
+              </h2>
+              {progresso && (
+                <span className="text-xs font-medium text-neutral-400">
+                  {progresso.concluidas}/{progresso.total} etapas
+                  {progresso.status === 'pausada' ? ' · pausada' : ''}
+                </span>
+              )}
+              {/* Sem progresso = o aluno já saiu desta trilha; a página dela não teria o que mostrar. */}
+              {progresso && (
+                <Link
+                  to={`/alunos/${alunoId}/trilhas/${trilhaId}`}
+                  className="ml-auto text-xs font-bold text-violet-700 hover:underline"
+                >
+                  Ver trilha
+                </Link>
+              )}
+            </div>
+            <div className="divide-y divide-neutral-100 overflow-hidden rounded-3xl border-l-4 border-violet-300 bg-white">
+              {itens.map((h) => (
+                <LinhaDaTarefa
+                  key={h.atribuicaoId}
+                  h={h}
+                  alunoId={alunoId}
+                  tentativa={tentativa.get(h.atribuicaoId) ?? 1}
+                />
+              ))}
+            </div>
+          </section>
+        )
+      })}
+
+      {avulsas.length > 0 && (
+        <section>
+          <div className="mb-2 flex flex-wrap items-center gap-2 px-1">
+            <span className="grid h-7 w-7 place-items-center rounded-xl bg-neutral-200 text-neutral-700">
+              <FileText className="h-3.5 w-3.5" />
+            </span>
+            <h2 className="text-sm font-extrabold text-neutral-900">Atividades avulsas</h2>
+            <span className="text-xs font-medium text-neutral-400">enviadas fora de trilha</span>
+          </div>
+          <div className="divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
+            {avulsas.map((h) => (
+              <LinhaDaTarefa
+                key={h.atribuicaoId}
+                h={h}
+                alunoId={alunoId}
+                tentativa={tentativa.get(h.atribuicaoId) ?? 1}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Tentativa de cada envio contada no bloco dele: por atividade entre as
+ * avulsas, por etapa dentro de cada trilha. Do mais antigo para o mais novo,
+ * então o primeiro envio é sempre o 1.
+ */
+function numerarTentativas(historico: ItemHistoricoAluno[]): Map<string, number> {
+  const contagem = new Map<string, number>()
+  const resultado = new Map<string, number>()
+  for (const h of historico.toSorted((a, b) => a.enviadaEm.localeCompare(b.enviadaEm))) {
+    const chave = h.trilha ? `trilha|${h.trilha.id}|${h.trilha.etapa}` : `avulsa|${h.atividadeId}`
+    const n = (contagem.get(chave) ?? 0) + 1
+    contagem.set(chave, n)
+    resultado.set(h.atribuicaoId, n)
+  }
+  return resultado
+}
+
+function LinhaDaTarefa({
+  h,
+  alunoId,
+  tentativa,
+}: {
+  h: ItemHistoricoAluno
+  alunoId: string
+  tentativa: number
+}) {
+  const conteudo = (
+    <>
+      {h.trilha && (
+        <span
+          title={`Etapa ${h.trilha.etapa}`}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-violet-100 text-xs font-extrabold text-violet-800"
+        >
+          {h.trilha.etapa}
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="font-bold text-neutral-800">
+          {h.atividadeTitulo}
+          {tentativa > 1 && <span className="ml-1 text-xs font-medium text-neutral-400">tentativa {tentativa}</span>}
+        </p>
+        <p className="text-xs text-neutral-400">
+          {h.trilha ? `Etapa ${h.trilha.etapa} · ` : ''}
+          {h.nivel}
+        </p>
+      </div>
+      {h.concluidaEm ? (
+        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-extrabold text-emerald-800">
+          {h.acertos}/{h.total}
+        </span>
+      ) : (
+        <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-bold text-neutral-500">pendente</span>
+      )}
+    </>
+  )
+  // O botão de link só entra nas pendentes: numa tarefa já concluída a linha
+  // inteira é um atalho para o resultado, e reabrir o link só serviria para o
+  // aluno reler o gabarito. A lixeira fica FORA do link, senão o clique de
+  // apagar abriria o resultado.
+  return h.concluidaEm ? (
+    <div className="flex items-center gap-1 pr-3 transition hover:bg-neutral-50">
+      <Link
+        to={`/resultados/${h.atribuicaoId}`}
+        className="flex min-w-0 flex-1 items-center gap-3 py-3.5 pl-5 text-sm"
+      >
+        {conteudo}
+      </Link>
+      <BotaoApagarTarefa atribuicaoId={h.atribuicaoId} alunoId={alunoId} concluida />
+    </div>
+  ) : (
+    <div className="flex items-center gap-3 py-3.5 pr-3 pl-5 text-sm">
+      {conteudo}
+      <BotaoLinkDaTarefa atribuicaoId={h.atribuicaoId} alunoId={alunoId} />
+      <BotaoApagarTarefa atribuicaoId={h.atribuicaoId} alunoId={alunoId} />
     </div>
   )
 }

@@ -134,6 +134,15 @@ export type ItemHistoricoAluno = {
   concluidaEm: string | null
   acertos: number | null
   total: number | null
+  /**
+   * De que trilha esta tarefa é etapa — ou `null` quando foi enviada avulsa.
+   *
+   * A mesma atividade pode ir para o aluno pelos dois caminhos (a "Atividade
+   * 1" sozinha e como etapa 1 de uma trilha), e sem esta marca as duas
+   * apareciam iguais na ficha. Quem tirou o aluno da trilha deixa as
+   * concluídas soltas (ver `useRemoverAlunoDaTrilha`): essas voltam a ser avulsas.
+   */
+  trilha: { id: string; nome: string; etapa: number } | null
 }
 
 /** RF-93/94: histórico de tarefas do aluno, mais recente primeiro. */
@@ -144,7 +153,7 @@ export function useHistoricoDoAluno(alunoId: string | undefined) {
     queryFn: async (): Promise<ItemHistoricoAluno[]> => {
       const { data: atribuicoes, error } = await supabase
         .from('atribuicoes')
-        .select('id, atividade_id, tentativa, enviada_em, concluida_em')
+        .select('id, atividade_id, trilha_etapa_id, tentativa, enviada_em, concluida_em')
         .eq('aluno_id', alunoId!)
         .order('enviada_em', { ascending: false })
       if (error) throw error
@@ -157,6 +166,10 @@ export function useHistoricoDoAluno(alunoId: string | undefined) {
         .in('id', idsAtividades)
       if (erroAtividades) throw erroAtividades
       const atividadePorId = new Map(atividades.map((a) => [a.id, a]))
+
+      const trilhaPorEtapa = await buscarTrilhasDasEtapas(
+        atribuicoes.map((a) => a.trilha_etapa_id).filter((id): id is string => Boolean(id)),
+      )
 
       const idsConcluidas = atribuicoes.filter((a) => a.concluida_em).map((a) => a.id)
       const contagemPorAtribuicao = new Map<string, { acertos: number; total: number }>()
@@ -187,10 +200,39 @@ export function useHistoricoDoAluno(alunoId: string | undefined) {
           concluidaEm: a.concluida_em,
           acertos: contagem?.acertos ?? null,
           total: contagem?.total ?? null,
+          trilha: (a.trilha_etapa_id && trilhaPorEtapa.get(a.trilha_etapa_id)) || null,
         }
       })
     },
   })
+}
+
+/** Etapa → trilha e posição dela. Duas consultas planas, como o resto deste arquivo. */
+async function buscarTrilhasDasEtapas(
+  idsEtapas: string[],
+): Promise<Map<string, { id: string; nome: string; etapa: number }>> {
+  const mapa = new Map<string, { id: string; nome: string; etapa: number }>()
+  const unicos = [...new Set(idsEtapas)]
+  if (unicos.length === 0) return mapa
+
+  const { data: etapas, error } = await supabase
+    .from('trilha_etapas')
+    .select('id, trilha_id, ordem')
+    .in('id', unicos)
+  if (error) throw error
+  if (etapas.length === 0) return mapa
+
+  const { data: trilhas, error: erroTrilhas } = await supabase
+    .from('trilhas')
+    .select('id, nome')
+    .in('id', [...new Set(etapas.map((e) => e.trilha_id))])
+  if (erroTrilhas) throw erroTrilhas
+  const nomePorTrilha = new Map(trilhas.map((t) => [t.id, t.nome]))
+
+  for (const e of etapas) {
+    mapa.set(e.id, { id: e.trilha_id, nome: nomePorTrilha.get(e.trilha_id) ?? 'Trilha', etapa: e.ordem })
+  }
+  return mapa
 }
 
 export type ErroRecorrente = { habilidade: string; erros: number }
