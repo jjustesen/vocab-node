@@ -4,6 +4,7 @@ import {
   Loader2,
   Monitor,
   Presentation,
+  Search,
   Square,
   X,
 } from 'lucide-react'
@@ -11,6 +12,7 @@ import {
   urlAssinada,
   useEnviarMaterial,
   useMateriaisDeVarios,
+  usePastas,
 } from '@/features/materiais/api'
 import { EscolherDoAcervo } from '@/features/materiais/EscolherDoAcervo'
 import { SoltarArquivos } from '@/features/materiais/SoltarArquivos'
@@ -51,6 +53,8 @@ export function SeletorDeConteudo({
   const [abrindo, setAbrindo] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [acervoAberto, setAcervoAberto] = useState(false)
+  const [busca, setBusca] = useState('')
+  const { data: pastas } = usePastas()
 
   const enviar = useEnviarMaterial(alunoIds)
   const emTurma = alunos.length > 1
@@ -60,6 +64,20 @@ export function SeletorDeConteudo({
   // servidor — nenhum dos dois cabe nesta entrega.
   const exibiveis = materiais?.filter((m) => m.tipo === 'pdf' || m.tipo === 'imagem') ?? []
   const jaTem = new Map((materiais ?? []).map((m) => [m.id, m.donos]))
+
+  /**
+   * A busca casa o nome do arquivo E o da pasta: no meio da aula o professor
+   * pensa "o do Livro 1, lição 41", e digitar "livro 1" tem de trazer a
+   * prateleira inteira. Sem acento e sem caixa, porque ninguém acerta o til
+   * digitando com pressa enquanto o aluno espera.
+   */
+  const nomeDaPasta = new Map((pastas ?? []).map((p) => [p.id, p.nome]))
+  const termo = normalizar(busca.trim())
+  const encontrados = termo
+    ? exibiveis.filter((m) =>
+        normalizar(`${m.nome} ${m.pasta_id ? (nomeDaPasta.get(m.pasta_id) ?? '') : ''}`).includes(termo),
+      )
+    : exibiveis
 
   async function escolherMaterial(material: Material) {
     setAbrindo(material.id)
@@ -127,8 +145,45 @@ export function SeletorDeConteudo({
               </p>
             )}
 
+            {/* Com três ou menos, a lista inteira já cabe no olho: a busca
+                seria um campo a mais para ignorar. */}
+            {exibiveis.length > 3 && (
+              <div className="mt-3 flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2.5">
+                <Search className="h-4 w-4 shrink-0 text-neutral-400" />
+                <input
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setBusca('')
+                  }}
+                  placeholder="Buscar material ou pasta…"
+                  aria-label="Buscar material"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-neutral-400"
+                />
+                {busca && (
+                  <button
+                    onClick={() => setBusca('')}
+                    title="Limpar busca"
+                    className="grid h-5 w-5 shrink-0 place-items-center rounded-full text-neutral-400 hover:bg-neutral-200"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {exibiveis.length > 0 && encontrados.length === 0 && (
+              <p className="mt-3 rounded-2xl bg-neutral-50 px-4 py-3 text-xs text-neutral-500">
+                Nada com “{busca.trim()}” {emTurma ? 'na turma' : 'com este aluno'}. Procure em{' '}
+                <button onClick={() => setAcervoAberto(true)} className="font-bold text-neutral-800 underline">
+                  Do acervo
+                </button>
+                .
+              </p>
+            )}
+
             <div className="mt-3 space-y-1">
-              {exibiveis.map((material) => (
+              {encontrados.map((material) => (
                 // A linha deixou de ser UM botão: "colocar no palco" e "dar a
                 // todos" são duas ações, e botão dentro de botão é HTML
                 // inválido. O `div` carrega o `group/linha` que expande o
@@ -207,6 +262,11 @@ export function SeletorDeConteudo({
       )}
     </div>
   )
+}
+
+/** Minúsculas e sem acento — "Lição" e "licao" casam. */
+function normalizar(texto: string): string {
+  return texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 }
 
 function Opcao({
