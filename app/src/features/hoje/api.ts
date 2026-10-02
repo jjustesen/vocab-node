@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
 export const chavesHoje = {
   todas: ['hoje'] as const,
   pendentes: ['hoje', 'pendentes'] as const,
   concluidas: (limite: number) => ['hoje', 'concluidas', limite] as const,
+  todasConcluidas: (alunoId: string | null) => ['hoje', 'todas-concluidas', alunoId ?? 'todos'] as const,
   concluidasHoje: (diaISO: string) => ['hoje', 'concluidas-hoje', diaISO] as const,
 }
 
@@ -81,51 +82,93 @@ export function useAtribuicoesPendentes() {
   })
 }
 
-/** RF-95: últimas tarefas entregues, com o placar já somado a partir de `respostas`. */
+/**
+ * Uma página de tarefas entregues, da mais recente para a mais antiga, com o
+ * placar já somado a partir de `respostas`. `alunoId` restringe a um aluno.
+ */
+async function buscarConcluidas({
+  inicio,
+  limite,
+  alunoId = null,
+}: {
+  inicio: number
+  limite: number
+  alunoId?: string | null
+}): Promise<AtribuicaoConcluida[]> {
+  let consulta = supabase
+    .from('atribuicoes')
+    .select('id, aluno_id, atividade_id, concluida_em')
+    .not('concluida_em', 'is', null)
+    .order('concluida_em', { ascending: false })
+    // Desempate estável: duas entregas no mesmo instante não podem trocar de
+    // página entre uma consulta e a seguinte.
+    .order('id', { ascending: false })
+    .range(inicio, inicio + limite - 1)
+  if (alunoId) consulta = consulta.eq('aluno_id', alunoId)
+  const { data: atribuicoes, error } = await consulta
+  if (error) throw error
+  if (atribuicoes.length === 0) return []
+
+  const [alunoPorId, tituloPorId, respostas] = await Promise.all([
+    buscarAlunos([...new Set(atribuicoes.map((a) => a.aluno_id))]),
+    buscarTitulos([...new Set(atribuicoes.map((a) => a.atividade_id))]),
+    supabase
+      .from('respostas')
+      .select('atribuicao_id, correta')
+      .in('atribuicao_id', atribuicoes.map((a) => a.id)),
+  ])
+  if (respostas.error) throw respostas.error
+
+  const placarPorAtribuicao = new Map<string, { acertos: number; total: number }>()
+  for (const r of respostas.data) {
+    const atual = placarPorAtribuicao.get(r.atribuicao_id) ?? { acertos: 0, total: 0 }
+    atual.total += 1
+    if (r.correta) atual.acertos += 1
+    placarPorAtribuicao.set(r.atribuicao_id, atual)
+  }
+
+  return atribuicoes.map((a) => {
+    const placar = placarPorAtribuicao.get(a.id) ?? { acertos: 0, total: 0 }
+    return {
+      atribuicaoId: a.id,
+      alunoId: a.aluno_id,
+      alunoNome: alunoPorId.get(a.aluno_id)?.nome ?? 'Aluno',
+      atividadeTitulo: tituloPorId.get(a.atividade_id) ?? 'Atividade removida',
+      concluidaEm: a.concluida_em!,
+      acertos: placar.acertos,
+      total: placar.total,
+    }
+  })
+}
+
+/** RF-95: as últimas entregas, para o cartão "Concluídas" da tela Hoje. */
 export function useConcluidasRecentes(limite = 6) {
   return useQuery({
     queryKey: chavesHoje.concluidas(limite),
-    queryFn: async (): Promise<AtribuicaoConcluida[]> => {
-      const { data: atribuicoes, error } = await supabase
-        .from('atribuicoes')
-        .select('id, aluno_id, atividade_id, concluida_em')
-        .not('concluida_em', 'is', null)
-        .order('concluida_em', { ascending: false })
-        .limit(limite)
-      if (error) throw error
-      if (atribuicoes.length === 0) return []
+    queryFn: () => buscarConcluidas({ inicio: 0, limite }),
+  })
+}
 
-      const [alunoPorId, tituloPorId, respostas] = await Promise.all([
-        buscarAlunos([...new Set(atribuicoes.map((a) => a.aluno_id))]),
-        buscarTitulos([...new Set(atribuicoes.map((a) => a.atividade_id))]),
-        supabase
-          .from('respostas')
-          .select('atribuicao_id, correta')
-          .in('atribuicao_id', atribuicoes.map((a) => a.id)),
-      ])
-      if (respostas.error) throw respostas.error
+/** Quantas entregas cada "carregar mais" traz. */
+export const CONCLUIDAS_POR_PAGINA = 30
 
-      const placarPorAtribuicao = new Map<string, { acertos: number; total: number }>()
-      for (const r of respostas.data) {
-        const atual = placarPorAtribuicao.get(r.atribuicao_id) ?? { acertos: 0, total: 0 }
-        atual.total += 1
-        if (r.correta) atual.acertos += 1
-        placarPorAtribuicao.set(r.atribuicao_id, atual)
-      }
-
-      return atribuicoes.map((a) => {
-        const placar = placarPorAtribuicao.get(a.id) ?? { acertos: 0, total: 0 }
-        return {
-          atribuicaoId: a.id,
-          alunoId: a.aluno_id,
-          alunoNome: alunoPorId.get(a.aluno_id)?.nome ?? 'Aluno',
-          atividadeTitulo: tituloPorId.get(a.atividade_id) ?? 'Atividade removida',
-          concluidaEm: a.concluida_em!,
-          acertos: placar.acertos,
-          total: placar.total,
-        }
-      })
-    },
+/**
+ * TODAS as entregas, aos poucos — o "ver todos" do cartão "Concluídas".
+ *
+ * Paginado porque o histórico só cresce: um professor com dez alunos e duas
+ * tarefas por semana passa de mil entregas no primeiro ano, e cada uma puxa as
+ * respostas para somar o placar. Trinta por vez cobre o que se olha de
+ * verdade (a última semana, o último mês) sem carregar o ano inteiro.
+ */
+export function useTodasConcluidas(alunoId: string | null) {
+  return useInfiniteQuery({
+    queryKey: chavesHoje.todasConcluidas(alunoId),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => buscarConcluidas({ inicio: pageParam, limite: CONCLUIDAS_POR_PAGINA, alunoId }),
+    // Página incompleta = acabou. Uma página cheia que por acaso era a última
+    // custa só um "carregar mais" que volta vazio.
+    getNextPageParam: (ultima, todas) =>
+      ultima.length === CONCLUIDAS_POR_PAGINA ? todas.length * CONCLUIDAS_POR_PAGINA : undefined,
   })
 }
 

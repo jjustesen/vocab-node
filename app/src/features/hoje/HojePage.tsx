@@ -9,6 +9,7 @@ import { ModalAula } from '@/features/aulas/AbaAulas'
 import { useUsoDoMes } from '@/features/planos/api'
 import { PLANOS } from '@/lib/planos'
 import { useAtribuicoesPendentes, useConcluidasRecentes, useContagemConcluidasHoje } from './api'
+import { TodasConcluidasModal } from './TodasConcluidasModal'
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import { linkWhatsapp } from '@/lib/whatsapp'
 import type { AulaComAluno } from '@/features/aulas/api'
@@ -43,6 +44,7 @@ export function HojePage() {
   const { data: concluidas } = useConcluidasRecentes()
   const { data: concluidasHoje } = useContagemConcluidasHoje(inicioISO, fimISO)
   const [verTodosPendentes, setVerTodosPendentes] = useState(false)
+  const [verTodasConcluidas, setVerTodasConcluidas] = useState(false)
 
   const nome = ((session?.user.user_metadata.nome as string | undefined) ?? '').split(' ')[0]
   const hoje = new Date().toLocaleDateString('pt-BR', {
@@ -85,27 +87,37 @@ export function HojePage() {
           {aulasDeHoje && aulasDeHoje.length > 0 ? (
             <>
               <ProximaAula aula={aulasDeHoje[0]} nivel={nivelPorAluno.get(aulasDeHoje[0].aluno_id) ?? null} />
-              {aulasDeHoje.slice(1).map((a) => (
-                <Link
-                  key={a.id}
-                  to={`/alunos/${a.aluno_id}`}
-                  className="flex shrink-0 items-center gap-3 rounded-3xl bg-white p-4 transition hover:bg-neutral-50"
-                >
-                  <span
-                    className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-extrabold ${corDoAvatar(a.aluno_id)}`}
+              {/*
+                O destaque fica parado no topo e o RESTO rola: a coluna tem
+                altura fixa no desktop (ver `Coluna`), e num dia cheio as aulas
+                seguintes passavam do cartão e atropelavam o que vem embaixo.
+                `min-h-0` é o que deixa este filho encolher dentro do flex para
+                o `overflow` ter onde agir.
+              */}
+              <div className="-mr-1 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
+                {aulasDeHoje.slice(1).map((a) => (
+                  <Link
+                    key={a.id}
+                    to={`/alunos/${a.aluno_id}`}
+                    className="flex shrink-0 items-center gap-3 rounded-3xl bg-white p-4 transition hover:bg-neutral-50"
                   >
-                    {inicial(a.alunoNome)}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-neutral-900">{a.alunoNome}</p>
-                    <p className="text-xs text-neutral-400">
-                      {horaDe(a.data_hora)} · {a.duracao_min} min
-                      {nivelPorAluno.get(a.aluno_id) && ` · ${nivelPorAluno.get(a.aluno_id)}`}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-              <EspacoVago texto="Horário vago" soDesktop />
+                    <span
+                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-extrabold ${corDoAvatar(a.aluno_id)}`}
+                    >
+                      {inicial(a.alunoNome)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-neutral-900">{a.alunoNome}</p>
+                      <p className="text-xs text-neutral-400">
+                        {horaDe(a.data_hora)} · {a.duracao_min} min
+                        {nivelPorAluno.get(a.aluno_id) && ` · ${nivelPorAluno.get(a.aluno_id)}`}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+                {/* Só sobra espaço vago quando as aulas não enchem a coluna. */}
+                {aulasDeHoje.length <= 3 && <EspacoVago texto="Horário vago" soDesktop />}
+              </div>
             </>
           ) : (
             <EspacoVago texto="Nenhuma aula agendada para hoje." />
@@ -194,18 +206,22 @@ export function HojePage() {
                   </span>
                 </Link>
               ))}
-              <Link
-                to="/atividades"
+              {/* Abre a lista inteira aqui mesmo. Antes levava a /atividades,
+                  que é a biblioteca — não o que os alunos entregaram. */}
+              <button
+                onClick={() => setVerTodasConcluidas(true)}
                 className="flex items-center gap-1 pt-1 text-xs font-bold text-violet-700"
               >
-                Ver todos os resultados <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+                Ver todas as concluídas <ArrowRight className="h-3.5 w-3.5" />
+              </button>
             </div>
           ) : (
             <CartaoVazioEsticado texto="Nada concluído ainda." />
           )}
         </Coluna>
       </div>
+
+      {verTodasConcluidas && <TodasConcluidasModal aoFechar={() => setVerTodasConcluidas(false)} />}
 
       {uso && (
         <div className="mt-4 rounded-3xl bg-white p-5">
