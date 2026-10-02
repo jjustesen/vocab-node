@@ -534,7 +534,8 @@ function LinhaDaTarefa({
         </p>
       </div>
       {h.concluidaEm ? (
-        <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-extrabold text-emerald-800">
+        // A mesma régua das "Últimas atividades": 0/5 não pode sair verde.
+        <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${corDoPlacar(h.acertos, h.total)}`}>
           {h.acertos}/{h.total}
         </span>
       ) : (
