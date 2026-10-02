@@ -59,8 +59,11 @@ export function MiniaturaDoMaterial({
     )
   }
 
+  // `block`: dentro de um `span` comum (o seletor da sala embrulha a
+  // miniatura para o spinner) um span inline ignora altura e largura, e a
+  // imagem sai no tamanho natural.
   return (
-    <span className={`relative shrink-0 overflow-hidden bg-neutral-100 ring-1 ring-neutral-200 ${tamanho}`}>
+    <span className={`relative block shrink-0 overflow-hidden bg-neutral-100 ring-1 ring-neutral-200 ${tamanho}`}>
       <img
         src={url}
         alt=""
