@@ -310,7 +310,23 @@ function FichaDoAluno({ alunoId, alunoNome }: { alunoId: string; alunoNome: stri
   const { data: aluno } = useAluno(alunoId)
   const { data: historico } = useHistoricoDoAluno(alunoId)
   const { data: erros } = useErrosRecorrentes(alunoId)
+  const { data: aulas } = useAulasDoAluno(alunoId)
   const [aberta, setAberta] = useState<string | null>(null)
+  const [todasAsAnotacoes, setTodasAsAnotacoes] = useState(false)
+
+  /**
+   * As anotações das aulas ANTERIORES, da mais recente para a mais antiga.
+   *
+   * A aula de agora fica de fora: ela está sendo escrita na aba Anotações, e
+   * repeti-la aqui mostraria uma cópia velha do que o professor está digitando
+   * ao lado. Aula futura também — anotação adiantada não é histórico.
+   */
+  const anotacoesDasAulas = useMemo(() => {
+    const atual = aulaDeAgora(aulas)?.id
+    const agora = new Date().toISOString()
+    return (aulas ?? []).filter((a) => a.id !== atual && a.anotacao?.trim() && a.data_hora <= agora)
+  }, [aulas])
+  const anotacoesVisiveis = todasAsAnotacoes ? anotacoesDasAulas : anotacoesDasAulas.slice(0, 3)
 
   const feitas = (historico ?? []).filter((h) => h.concluidaEm)
   const ultimas = feitas.slice(0, 8)
@@ -329,12 +345,49 @@ function FichaDoAluno({ alunoId, alunoNome }: { alunoId: string; alunoNome: stri
         </p>
       </div>
 
+      {/*
+        "Observações GERAIS" e não só "Observações": é o campo da ficha do
+        aluno, um só, e ficava parecendo a anotação da aula — que mora em cada
+        aula e vem logo abaixo.
+      */}
       {aluno?.observacoes && (
         <div>
-          <p className="text-xs font-extrabold uppercase tracking-wider text-neutral-400">Observações</p>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-neutral-400">Observações gerais</p>
           <p className="mt-1.5 whitespace-pre-wrap rounded-2xl bg-neutral-100 px-3 py-2.5 text-xs text-neutral-600">
             {aluno.observacoes}
           </p>
+        </div>
+      )}
+
+      {/* Vem antes dos erros: "Próxima aula: phrasal verbs" é o que o
+          professor combinou consigo mesmo para ESTA aula. */}
+      {anotacoesDasAulas.length > 0 && (
+        <div>
+          <p className="text-xs font-extrabold uppercase tracking-wider text-neutral-400">
+            Anotações das aulas
+          </p>
+          <div className="mt-1.5 space-y-1.5">
+            {anotacoesVisiveis.map((a) => (
+              <div key={a.id} className="rounded-2xl bg-neutral-100 px-3 py-2.5">
+                <p className="text-[11px] font-bold text-neutral-500 first-letter:uppercase">
+                  {new Date(a.data_hora).toLocaleDateString('pt-BR', {
+                    weekday: 'short',
+                    day: '2-digit',
+                    month: '2-digit',
+                  })}
+                </p>
+                <p className="mt-0.5 whitespace-pre-wrap text-xs text-neutral-700">{a.anotacao}</p>
+              </div>
+            ))}
+          </div>
+          {anotacoesDasAulas.length > 3 && (
+            <button
+              onClick={() => setTodasAsAnotacoes((v) => !v)}
+              className="mt-1.5 text-xs font-bold text-violet-700 hover:underline"
+            >
+              {todasAsAnotacoes ? 'Ver menos' : `Ver todas as ${anotacoesDasAulas.length}`}
+            </button>
+          )}
         </div>
       )}
 
