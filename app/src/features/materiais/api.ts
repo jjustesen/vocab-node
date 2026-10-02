@@ -73,12 +73,15 @@ export function useAcervo() {
   })
 }
 
+/** Material na ficha de um aluno: `recebido_em` é quando ESTE aluno ganhou acesso. */
+export type MaterialDoAluno = Material & { recebido_em: string }
+
 /** RF-52: o que ESTE aluno tem. Ordenado por quando ele recebeu, não por quando o arquivo nasceu. */
 export function useMateriaisDoAluno(alunoId: string | undefined) {
   return useQuery({
     queryKey: chavesMateriais.doAluno(alunoId!),
     enabled: Boolean(alunoId),
-    queryFn: async (): Promise<Material[]> => {
+    queryFn: async (): Promise<MaterialDoAluno[]> => {
       const { data: vinculos, error } = await supabase
         .from('materiais_alunos')
         .select('material_id, criado_em')
@@ -96,7 +99,10 @@ export function useMateriaisDoAluno(alunoId: string | undefined) {
       // Reordena pela data do VÍNCULO: `in` devolve na ordem do banco, e o que
       // interessa aqui é a ordem em que este aluno recebeu as coisas.
       const porId = new Map(materiais.map((m) => [m.id, m]))
-      return vinculos.map((v) => porId.get(v.material_id)).filter((m): m is Material => Boolean(m))
+      return vinculos.flatMap((v) => {
+        const material = porId.get(v.material_id)
+        return material ? [{ ...material, recebido_em: v.criado_em }] : []
+      })
     },
   })
 }

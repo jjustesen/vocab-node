@@ -9,6 +9,8 @@ import {
   useTirarDoAluno,
 } from './api'
 import { BotaoApagar } from '@/components/BotaoApagar'
+import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
+import { ordenar, useOrdem } from '@/lib/ordenar'
 import { EscolherDoAcervo } from './EscolherDoAcervo'
 import { MiniaturaDoMaterial } from './MiniaturaDoMaterial'
 import { baixarComoTxt } from '@/lib/baixar-texto'
@@ -23,6 +25,10 @@ function formatarData(iso: string): string {
 /** RF-50/51/52: material avulso do professor vinculado a este aluno. */
 export function AbaMateriais({ alunoId, alunoNome }: { alunoId: string; alunoNome: string }) {
   const { data: materiais, isLoading } = useMateriaisDoAluno(alunoId)
+  // "Mais recentes" é o que esta aba sempre mostrou: o último que o aluno
+  // RECEBEU no topo — a data do vínculo, não a do arquivo no acervo.
+  const [ordem, setOrdem] = useOrdem('materiais-do-aluno', 'recentes')
+  const ordenados = ordenar(materiais ?? [], ordem, { nome: (m) => m.nome, data: (m) => m.recebido_em })
   const [modalAberto, setModalAberto] = useState(false)
   const [acervoAberto, setAcervoAberto] = useState(false)
 
@@ -33,7 +39,8 @@ export function AbaMateriais({ alunoId, alunoNome }: { alunoId: string; alunoNom
     <div className="mt-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-bold text-neutral-900">Materiais</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {materiais && materiais.length > 1 && <SeletorDeOrdem ordem={ordem} aoMudar={setOrdem} />}
           {/*
             Duas portas desde 0016, e a ordem importa: o acervo vem primeiro
             porque reaproveitar é o caso comum. Subir de novo o mesmo PDF que
@@ -72,7 +79,7 @@ export function AbaMateriais({ alunoId, alunoNome }: { alunoId: string; alunoNom
 
       {materiais && materiais.length > 0 && (
         <div className="mt-4 space-y-2">
-          {materiais.map((m) => (
+          {ordenados.map((m) => (
             <CartaoMaterial key={m.id} material={m} alunoId={alunoId} />
           ))}
         </div>
