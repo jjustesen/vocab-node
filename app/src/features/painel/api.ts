@@ -60,6 +60,15 @@ export type PainelAluno = {
  */
 export class ContaNaoEDeAluno extends Error {}
 
+/**
+ * 401 da função: o navegador ainda guarda uma sessão (token dentro da
+ * validade), mas o servidor não a reconhece mais — conta apagada e recriada,
+ * sessão revogada. O supabase-js confia no token local até ele vencer, então
+ * sem tratar isto o aluno caía sempre no mesmo erro: /entrar-aluno via a
+ * sessão "válida" e mandava de volta ao painel, sem nunca mostrar o formulário.
+ */
+export class SessaoDoAlunoInvalida extends Error {}
+
 export function usePainelAluno() {
   return useQuery({
     queryKey: ['painel-aluno'],
@@ -71,12 +80,15 @@ export function usePainelAluno() {
         // sessão e não achou o aluno. Sem essa distinção o professor logado
         // ficava preso numa tela de erro genérica, sem saber que errou a porta.
         if (statusDoErro(error) === 404) throw new ContaNaoEDeAluno(mensagem)
+        if (statusDoErro(error) === 401) throw new SessaoDoAlunoInvalida(mensagem)
         throw new Error(mensagem)
       }
       return data as PainelAluno
     },
-    // Reautenticar não conserta identidade errada — só gastaria 3 chamadas.
-    retry: (falhas, erro) => !(erro instanceof ContaNaoEDeAluno) && falhas < 3,
+    // Repetir não conserta identidade errada nem sessão recusada — só gastaria
+    // 3 chamadas (~7s de spinner) antes do mesmo erro.
+    retry: (falhas, erro) =>
+      !(erro instanceof ContaNaoEDeAluno) && !(erro instanceof SessaoDoAlunoInvalida) && falhas < 3,
   })
 }
 

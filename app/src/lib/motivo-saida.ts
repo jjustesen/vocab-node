@@ -12,7 +12,7 @@
  */
 const CHAVE = 'vocabnode:motivo-saida'
 
-export type MotivoDaSaida = 'conta-de-professor' | 'conta-de-aluno'
+export type MotivoDaSaida = 'conta-de-professor' | 'conta-de-aluno' | 'sessao-expirada'
 
 export function guardarMotivoDaSaida(motivo: MotivoDaSaida) {
   sessionStorage.setItem(CHAVE, motivo)

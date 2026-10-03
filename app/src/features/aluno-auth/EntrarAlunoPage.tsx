@@ -14,11 +14,12 @@ export function EntrarAlunoPage() {
   // Lido uma vez, na montagem: o painel deixa o motivo aqui quando a sessão era
   // válida mas não era de aluno. Sem isto a pessoa é devolvida ao login sem
   // nenhuma explicação, que foi exatamente o que aconteceu no primeiro teste.
-  const [erro, setErro] = useState(() =>
-    consumirMotivoDaSaida() === 'conta-de-professor'
-      ? 'Essa conta é de professor. Entre pela área do professor, no link abaixo.'
-      : '',
-  )
+  const [erro, setErro] = useState(() => {
+    const motivo = consumirMotivoDaSaida()
+    if (motivo === 'conta-de-professor') return 'Essa conta é de professor. Entre pela área do professor, no link abaixo.'
+    if (motivo === 'sessao-expirada') return 'Sua sessão expirou. Entre de novo com seu e-mail e senha.'
+    return ''
+  })
   const [entrando, setEntrando] = useState(false)
 
   if (!carregandoSessao && session) return <Navigate to="/painel" replace />

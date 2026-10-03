@@ -1,30 +1,37 @@
 import { useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { ChevronRight, Clock, Loader2, LogOut, Milestone, Play, TrendingUp } from 'lucide-react'
+import { ChevronRight, Clock, Loader2, LogOut, Milestone, Play, RotateCw, TrendingUp } from 'lucide-react'
 import { useAlunoAuth } from '@/features/aluno-auth/AlunoAuthProvider'
 import { corDaNota, minutosEstimados } from '@/features/tarefa/formato'
 import { guardarMotivoDaSaida } from '@/lib/motivo-saida'
-import { usePainelAluno, ContaNaoEDeAluno, type TrilhaDoAluno } from './api'
+import { usePainelAluno, ContaNaoEDeAluno, SessaoDoAlunoInvalida, type TrilhaDoAluno } from './api'
 import { NavAluno } from './NavAluno'
 
 /** /painel — RF-28. Tudo vem de painel-aluno-obter; nenhuma tabela é lida direto (ver lib/supabase-aluno.ts). */
 export function PainelAlunoPage() {
   const { sair } = useAlunoAuth()
-  const { data, isLoading, error } = usePainelAluno()
+  const { data, isLoading, error, refetch, isFetching } = usePainelAluno()
 
   // Professor que entrou pela porta do aluno: a senha confere (mesmo GoTrue),
   // mas não existe aluno nenhum por trás. Derruba a sessão em vez de deixar a
   // pessoa parada numa tela de erro — sem isso ela fica "logada" num app que
   // não tem nada para mostrar, e nem o botão de sair aparece.
-  const contaNaoEDeAluno = error instanceof ContaNaoEDeAluno
+  // Sessão recusada pelo servidor (401) segue o mesmo caminho: só o formulário
+  // de login conserta, e ele só aparece depois que a sessão local cai.
+  const motivoDaSaida =
+    error instanceof ContaNaoEDeAluno
+      ? 'conta-de-professor'
+      : error instanceof SessaoDoAlunoInvalida
+        ? 'sessao-expirada'
+        : null
   useEffect(() => {
-    if (!contaNaoEDeAluno) return
+    if (!motivoDaSaida) return
     // Grava ANTES de sair: derrubar a sessão dispara o redirect do guard pai,
     // e a partir daí esta tela já não decide mais para onde se vai.
-    guardarMotivoDaSaida('conta-de-professor')
+    guardarMotivoDaSaida(motivoDaSaida)
     void sair()
-  }, [contaNaoEDeAluno, sair])
-  if (contaNaoEDeAluno) return <Navigate to="/entrar-aluno" replace />
+  }, [motivoDaSaida, sair])
+  if (motivoDaSaida) return <Navigate to="/entrar-aluno" replace />
 
   if (isLoading) {
     return (
@@ -37,7 +44,22 @@ export function PainelAlunoPage() {
   if (error || !data) {
     return (
       <div className="grid min-h-dvh place-items-center bg-areia px-6 text-center">
-        <p className="font-bold text-neutral-800">Não consegui carregar seu painel.</p>
+        <div>
+          <p className="font-bold text-neutral-800">Não consegui carregar seu painel.</p>
+          {/* Sem saída nesta tela o aluno ficava preso: a sessão continuava
+              salva, e "Entrar como aluno" o trazia de volta aqui. */}
+          <button
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            className="mx-auto mt-5 flex items-center gap-2 rounded-full bg-neutral-900 px-6 py-3 text-sm font-bold text-white disabled:opacity-60"
+          >
+            {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCw className="h-4 w-4" />}
+            Tentar de novo
+          </button>
+          <button onClick={() => void sair()} className="mt-4 text-sm font-bold text-neutral-500 underline">
+            Sair e entrar de novo
+          </button>
+        </div>
       </div>
     )
   }
