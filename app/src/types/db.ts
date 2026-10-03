@@ -380,6 +380,17 @@ export type AlunoUpdate = Partial<Omit<Aluno, 'id' | 'professor_id' | 'criado_em
  */
 type Tabela<Row, Ins, Upd> = { Row: Row; Insert: Ins; Update: Upd; Relationships: [] }
 
+/** O que `copiar_dados_do_aluno` devolve: quantas linhas entraram no destino. */
+export type ResumoDaCopia = {
+  tarefas: number
+  respostas: number
+  trilhas: number
+  turmas: number
+  materiais: number
+  aulas: number
+  pagamentos: number
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -478,6 +489,11 @@ export type Database = {
           p_duracao_min: number | null
         }
         Returns: number
+      }
+      /** Copia tarefas, respostas, vínculos, aulas e pagamentos — ver 0021_copiar_dados_do_aluno.sql. */
+      copiar_dados_do_aluno: {
+        Args: { p_origem: string; p_destino: string }
+        Returns: ResumoDaCopia
       }
     }
     Enums: Record<string, never>

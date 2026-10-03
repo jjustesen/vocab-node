@@ -3,7 +3,8 @@ import { supabase } from '@/lib/supabase'
 import { gerarTokenDeAcesso, hashDoToken } from '@/lib/token'
 import { lembrarTokenLinkCadastro, tokenLinkCadastroLembrado, urlDoLinkCadastro } from '@/lib/links-lembrados'
 import { limiteAlunos } from '@/lib/planos'
-import type { Aluno, AlunoStatus, AlunoUpdate, ContaAluno, LinkCadastro, NivelCefr } from '@/types/db'
+import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
+import type { Aluno, AlunoStatus, AlunoUpdate, ContaAluno, LinkCadastro, NivelCefr, ResumoDaCopia } from '@/types/db'
 
 export const chavesAlunos = {
   todos: ['alunos'] as const,
@@ -403,6 +404,71 @@ export function useResetarAcesso(alunoId: string) {
       qc.invalidateQueries({ queryKey: chavesAlunos.comConta })
       qc.invalidateQueries({ queryKey: chavesAlunos.ultimoReset(alunoId) })
     },
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Saídas do professor quando o login do aluno dá problema — tudo por
+// aluno-conta-gerenciar, que precisa de service_role (auth.admin) e por isso
+// decide a posse do aluno do lado do servidor.
+// ---------------------------------------------------------------------------
+
+async function gerenciarConta(corpo: {
+  acao: 'excluir-login' | 'redefinir-senha' | 'excluir-aluno'
+  alunoId: string
+  senha?: string
+}) {
+  const { error } = await supabase.functions.invoke('aluno-conta-gerenciar', { body: corpo })
+  if (error) throw new Error(await extrairMensagemDeErro(error))
+}
+
+/** Apaga o login do aluno (libera o e-mail para um cadastro novo); a ficha fica. */
+export function useExcluirLoginDoAluno(alunoId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => gerenciarConta({ acao: 'excluir-login', alunoId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: chavesAlunos.conta(alunoId) })
+      qc.invalidateQueries({ queryKey: chavesAlunos.comConta })
+      qc.invalidateQueries({ queryKey: chavesAlunos.ultimoReset(alunoId) })
+    },
+  })
+}
+
+/** Troca a senha do login do aluno pela que o professor digitou. */
+export function useRedefinirSenhaDoAluno(alunoId: string) {
+  return useMutation({
+    mutationFn: (senha: string) => gerenciarConta({ acao: 'redefinir-senha', alunoId, senha }),
+  })
+}
+
+/** Apaga o aluno, o login e tudo o que é dele. Irreversível. */
+export function useExcluirAluno(alunoId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => gerenciarConta({ acao: 'excluir-aluno', alunoId }),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: chavesAlunos.um(alunoId) })
+      qc.invalidateQueries({ queryKey: chavesAlunos.todos })
+    },
+  })
+}
+
+/** Copia os dados de `origemId` para outro aluno — ver 0021_copiar_dados_do_aluno.sql. */
+export function useCopiarDadosDoAluno(origemId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (destinoId: string): Promise<ResumoDaCopia> => {
+      const { data, error } = await supabase.rpc('copiar_dados_do_aluno', {
+        p_origem: origemId,
+        p_destino: destinoId,
+      })
+      if (error) throw new Error(error.message)
+      return data
+    },
+    // O destino ganhou tarefas, aulas, pagamentos, trilhas… — invalidar tudo
+    // é mais simples e mais seguro do que listar cada chave de cada feature.
+    onSuccess: () => qc.invalidateQueries(),
   })
 }
 

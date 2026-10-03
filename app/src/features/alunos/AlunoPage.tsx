@@ -6,7 +6,9 @@ import {
   CheckCircle2,
   Clock,
   Copy,
+  CopyPlus,
   FileText,
+  KeyRound,
   Link2,
   Loader2,
   Milestone,
@@ -14,6 +16,8 @@ import {
   Pencil,
   RefreshCw,
   RotateCcw,
+  Trash2,
+  UserX,
 } from 'lucide-react'
 import { BotaoNovaAtividade } from '@/features/atividades/BotaoNovaAtividade'
 import { useApagarTarefaDoAluno, useRegerarLinkDaTarefa } from '@/features/atividades/api'
@@ -32,6 +36,7 @@ import {
 } from './api'
 import { AcessoAlunoModal } from './AcessoAlunoModal'
 import { EditarAlunoModal } from './EditarAlunoModal'
+import { type AcaoDeConta, GerenciarContaModal } from './GerenciarContaModal'
 import { AbaAulas } from '@/features/aulas/AbaAulas'
 import { useAulasDoAluno } from '@/features/aulas/api'
 import { AbaMateriais } from '@/features/materiais/AbaMateriais'
@@ -61,6 +66,7 @@ export function AlunoPage() {
   const [modalAcessoAberto, setModalAcessoAberto] = useState(false)
   const [modalEditarAberto, setModalEditarAberto] = useState(false)
   const [menuAberto, setMenuAberto] = useState(false)
+  const [acaoDeConta, setAcaoDeConta] = useState<AcaoDeConta | null>(null)
   const [aba, setAba] = useState<Aba>('Resumo')
 
   const concluidas = historico?.filter((h) => h.concluidaEm) ?? []
@@ -160,7 +166,7 @@ export function AlunoPage() {
             <>
               {/* Camada invisível: clicar em qualquer lugar fora fecha o menu. */}
               <div className="fixed inset-0 z-10" onClick={() => setMenuAberto(false)} />
-              <div className="absolute right-0 top-11 z-20 w-56 overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-neutral-200">
+              <div className="absolute right-0 top-11 z-20 w-64 overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-neutral-200">
                 <div className="p-1.5">
                   <ItemMenu
                     Icone={Pencil}
@@ -191,6 +197,48 @@ export function AlunoPage() {
                     />
                   )}
                 </div>
+                {/* Para o professor resolver sozinho quando o login do aluno dá
+                    problema — cada item abre um modal que explica o que faz. */}
+                <div className="border-t border-neutral-100 p-1.5">
+                  {conta && (
+                    <>
+                      <ItemMenu
+                        Icone={KeyRound}
+                        rotulo="Redefinir senha"
+                        aoClicar={() => {
+                          setMenuAberto(false)
+                          setAcaoDeConta('redefinir-senha')
+                        }}
+                      />
+                      <ItemMenu
+                        Icone={UserX}
+                        rotulo="Excluir login"
+                        perigo
+                        aoClicar={() => {
+                          setMenuAberto(false)
+                          setAcaoDeConta('excluir-login')
+                        }}
+                      />
+                    </>
+                  )}
+                  <ItemMenu
+                    Icone={CopyPlus}
+                    rotulo="Copiar dados"
+                    aoClicar={() => {
+                      setMenuAberto(false)
+                      setAcaoDeConta('copiar-dados')
+                    }}
+                  />
+                  <ItemMenu
+                    Icone={Trash2}
+                    rotulo="Excluir aluno"
+                    perigo
+                    aoClicar={() => {
+                      setMenuAberto(false)
+                      setAcaoDeConta('excluir-aluno')
+                    }}
+                  />
+                </div>
                 <p className="border-t border-neutral-100 px-4 py-2 text-xs text-neutral-400">
                   Último reset: {ultimoReset ? new Date(ultimoReset).toLocaleDateString('pt-BR') : 'nunca'}
                 </p>
@@ -209,6 +257,15 @@ export function AlunoPage() {
         />
       )}
       {modalEditarAberto && <EditarAlunoModal aluno={aluno} aoFechar={() => setModalEditarAberto(false)} />}
+      {acaoDeConta && (
+        <GerenciarContaModal
+          acao={acaoDeConta}
+          alunoId={aluno.id}
+          alunoNome={aluno.nome}
+          email={conta?.email ?? null}
+          aoFechar={() => setAcaoDeConta(null)}
+        />
+      )}
 
       <div className="mt-6 flex flex-wrap gap-1 text-sm">
         {ABAS.map((a) => (
