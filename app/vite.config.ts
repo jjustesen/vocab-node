@@ -41,6 +41,12 @@ function roteamentoDaVercelEmDev(): Plugin {
           return next()
         }
 
+        // A POC do tutor, no caminho escondido (o mesmo do vercel.json).
+        if (url === '/lab-1084b4c851' || url.startsWith('/lab-1084b4c851?')) {
+          req.url = '/laboratorio.html'
+          return next()
+        }
+
         const rotaDoAppSemArquivo = !url.startsWith('/@') && !url.startsWith('/src') && !url.includes('.')
         if (rotaDoAppSemArquivo) req.url = '/app.html'
         next()
@@ -53,13 +59,18 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), roteamentoDaVercelEmDev()],
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
+    // A POC (../poc-tutor) importa react de fora de app/: sem isto o Vite
+    // procuraria um node_modules que não existe no build da Vercel.
+    dedupe: ['react', 'react-dom'],
   },
-  server: { port: Number(process.env.PORT) || 5173 },
+  // Deixa o servidor de dev ler a POC, que mora fora da raiz do app.
+  server: { port: Number(process.env.PORT) || 5173, fs: { allow: ['..'] } },
   build: {
     rollupOptions: {
       input: {
         landing: path.resolve(import.meta.dirname, 'index.html'),
         app: path.resolve(import.meta.dirname, 'app.html'),
+        laboratorio: path.resolve(import.meta.dirname, 'laboratorio.html'),
       },
     },
   },

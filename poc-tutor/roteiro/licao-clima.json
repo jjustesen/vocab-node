@@ -1,0 +1,793 @@
+{
+  "id": "clima-was-were",
+  "titulo": "Was/were e o clima no passado",
+  "abertura": "Hoje vamos praticar was e were e falar sobre o clima no passado.",
+  "painel": {
+    "estruturas": [
+      "I / he / she / it was",
+      "you / we / they were",
+      "I wasn't · you weren't",
+      "Was + sujeito …? · Were + sujeito …?",
+      "What was the weather like …?",
+      "What's the weather like …?"
+    ],
+    "vocabulario": [
+      {
+        "en": "sunny",
+        "pt": "ensolarado"
+      },
+      {
+        "en": "windy",
+        "pt": "com vento"
+      },
+      {
+        "en": "cloudy",
+        "pt": "nublado"
+      },
+      {
+        "en": "rainy",
+        "pt": "chuvoso"
+      },
+      {
+        "en": "cold",
+        "pt": "frio"
+      },
+      {
+        "en": "hot",
+        "pt": "quente"
+      },
+      {
+        "en": "weather",
+        "pt": "tempo (clima)"
+      },
+      {
+        "en": "neighbor",
+        "pt": "vizinho"
+      },
+      {
+        "en": "co-worker",
+        "pt": "colega de trabalho"
+      },
+      {
+        "en": "have dinner",
+        "pt": "jantar"
+      },
+      {
+        "en": "work out",
+        "pt": "malhar, treinar"
+      }
+    ],
+    "exemplos": [
+      "I'm cold. I need some hot tea.",
+      "Where were you this morning?",
+      "Was it sunny at the beach last weekend?",
+      "Was the coffee good? It was incredible."
+    ],
+    "alertas": [
+      "Frase sobre o clima precisa de sujeito: It was sunny.",
+      "I'm cold = estou com frio · I have a cold = estou resfriado."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "clima",
+      "objetivo": "Sujeito it + was com adjetivos de clima e marcadores de tempo.",
+      "itens": [
+        {
+          "id": "clima.base",
+          "tipo": "construcao",
+          "calibracao": true,
+          "solicitacao": "estava ensolarado hoje de manhã",
+          "alvo": "It was sunny this morning.",
+          "variantes": [
+            "This morning it was sunny."
+          ],
+          "habilidades": [
+            "sujeito_it",
+            "was"
+          ],
+          "ajudas": [
+            "Em inglês a frase precisa de um sujeito. Qual palavra usamos para falar do tempo?",
+            "Como se diz 'estava' quando falamos do tempo? E qual palavra vem antes?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Was sunny this morning.",
+              "habilidade": "sujeito_it",
+              "pista": "Falta o sujeito. Em frases sobre o clima, qual palavra começa a frase?"
+            },
+            {
+              "exemplo": "It is sunny this morning.",
+              "habilidade": "was",
+              "pista": "Estava é passado. Qual é o passado de is?"
+            }
+          ]
+        },
+        {
+          "id": "clima.windy",
+          "tipo": "substituicao",
+          "pista": "Windy.",
+          "alvo": "It was windy this morning.",
+          "habilidades": [
+            "adjetivo_clima"
+          ],
+          "ajudas": [
+            "Troque só o adjetivo: em vez de sunny, windy.",
+            "Que palavra eu te dei? Ela entra no lugar de sunny; o resto continua igual."
+          ]
+        },
+        {
+          "id": "clima.rainy",
+          "tipo": "substituicao",
+          "pista": "Rainy.",
+          "alvo": "It was rainy this morning.",
+          "habilidades": [
+            "adjetivo_clima"
+          ],
+          "ajudas": [
+            "Troque só o adjetivo: em vez de windy, rainy.",
+            "Que palavra eu te dei? Ela entra no lugar de windy; o resto continua igual."
+          ]
+        },
+        {
+          "id": "clima.yesterday",
+          "tipo": "substituicao",
+          "pista": "Yesterday.",
+          "alvo": "It was rainy yesterday.",
+          "habilidades": [
+            "marcador_tempo",
+            "preservar_cadeia"
+          ],
+          "ajudas": [
+            "Mantém rainy; troque this morning por yesterday.",
+            "Como se diz 'ontem' em inglês? O resto da frase continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "It was sunny yesterday.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Mantém rainy; muda só o tempo."
+            }
+          ]
+        },
+        {
+          "id": "clima.cold",
+          "tipo": "substituicao",
+          "pista": "Cold.",
+          "alvo": "It was cold yesterday.",
+          "habilidades": [
+            "adjetivo_clima"
+          ],
+          "ajudas": [
+            "Troque rainy por cold e mantenha yesterday.",
+            "Que palavra eu te dei? Ela entra no lugar de rainy; o resto continua."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sujeito",
+      "objetivo": "Concordância was/were com mudança de sujeito, e negativas.",
+      "itens": [
+        {
+          "id": "sujeito.base",
+          "tipo": "construcao",
+          "solicitacao": "eu estava em casa",
+          "alvo": "I was at home.",
+          "habilidades": [
+            "was"
+          ],
+          "ajudas": [
+            "Com I, usamos was ou were?",
+            "Como se diz 'eu estava' em inglês?"
+          ]
+        },
+        {
+          "id": "sujeito.she",
+          "tipo": "substituicao",
+          "pista": "She.",
+          "alvo": "She was at home.",
+          "habilidades": [
+            "was"
+          ],
+          "ajudas": [
+            "Troque I por she. O verbo muda?",
+            "Como se diz 'ela estava' em inglês?"
+          ]
+        },
+        {
+          "id": "sujeito.they",
+          "tipo": "substituicao",
+          "pista": "They.",
+          "alvo": "They were at home.",
+          "habilidades": [
+            "concordancia_were"
+          ],
+          "ajudas": [
+            "Com they, usamos was ou were?",
+            "Como se diz 'eles estavam' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "They was at home.",
+              "habilidade": "concordancia_were",
+              "pista": "Com they, usamos was ou were?"
+            }
+          ]
+        },
+        {
+          "id": "sujeito.not",
+          "tipo": "substituicao",
+          "pista": "Not.",
+          "alvo": "They weren't at home.",
+          "variantes": [
+            "They were not at home."
+          ],
+          "habilidades": [
+            "negativa"
+          ],
+          "ajudas": [
+            "Como se diz 'não estavam'? Onde entra o 'não' na frase?",
+            "Como se diz 'eles não estavam' em inglês?"
+          ]
+        },
+        {
+          "id": "sujeito.i",
+          "tipo": "substituicao",
+          "pista": "I.",
+          "alvo": "I wasn't at home.",
+          "variantes": [
+            "I was not at home."
+          ],
+          "habilidades": [
+            "concordancia_was",
+            "negativa"
+          ],
+          "ajudas": [
+            "Com I, usamos wasn't ou weren't?",
+            "Como se diz 'eu não estava' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I weren't at home.",
+              "habilidade": "concordancia_was",
+              "pista": "Com I, usamos wasn't ou weren't?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pergunta_pessoa",
+      "objetivo": "Perguntas com inversão (Was/Were + sujeito) e substituição de substantivo.",
+      "itens": [
+        {
+          "id": "pessoa.base",
+          "tipo": "construcao",
+          "solicitacao": "ele foi seu professor no ano passado?",
+          "alvo": "Was he your teacher last year?",
+          "habilidades": [
+            "pergunta_inversao"
+          ],
+          "ajudas": [
+            "Na pergunta, was vem antes ou depois de he?",
+            "Como se pergunta 'ele foi…?' em inglês? Por qual palavra a pergunta começa?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "He was your teacher last year?",
+              "habilidade": "pergunta_inversao",
+              "pista": "Na pergunta, was vem antes ou depois de he?"
+            }
+          ]
+        },
+        {
+          "id": "pessoa.neighbor",
+          "tipo": "substituicao",
+          "pista": "Neighbor.",
+          "alvo": "Was he your neighbor last year?",
+          "variantes": [
+            "Was he your neighbour last year?"
+          ],
+          "habilidades": [
+            "substantivo"
+          ],
+          "ajudas": [
+            "Mantenha a pergunta; troque teacher por neighbor.",
+            "Como se diz 'vizinho' em inglês? O resto da pergunta continua igual."
+          ]
+        },
+        {
+          "id": "pessoa.coworker",
+          "tipo": "substituicao",
+          "pista": "Co-worker.",
+          "alvo": "Was he your co-worker last year?",
+          "variantes": [
+            "Was he your coworker last year?"
+          ],
+          "habilidades": [
+            "substantivo"
+          ],
+          "ajudas": [
+            "Mantenha a pergunta; troque neighbor por co-worker.",
+            "Como se diz 'colega de trabalho' em inglês? O resto da pergunta continua igual."
+          ]
+        },
+        {
+          "id": "pessoa.they",
+          "tipo": "substituicao",
+          "pista": "They.",
+          "alvo": "Were they your co-workers last year?",
+          "variantes": [
+            "Were they your coworkers last year?"
+          ],
+          "habilidades": [
+            "concordancia_were",
+            "plural"
+          ],
+          "ajudas": [
+            "Com they, a pergunta começa com was ou were?",
+            "Como se pergunta 'eles foram seus colegas' em inglês? Lembre que são vários colegas."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Was they your co-workers last year?",
+              "habilidade": "concordancia_were",
+              "pista": "Com they, a pergunta começa com was ou were?"
+            },
+            {
+              "exemplo": "Were they your co-worker last year?",
+              "habilidade": "plural",
+              "pista": "Eles são mais de um. Co-worker ou co-workers?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pergunta_clima",
+      "objetivo": "Pergunta What … like no passado e no presente, com mudança de tempo e lugar.",
+      "itens": [
+        {
+          "id": "tempo.base",
+          "tipo": "construcao",
+          "solicitacao": "como estava o tempo ontem? (faça a pergunta)",
+          "alvo": "What was the weather like yesterday?",
+          "variantes": [
+            "How was the weather yesterday?"
+          ],
+          "habilidades": [
+            "what_like"
+          ],
+          "ajudas": [
+            "Falta uma palavra no fim da pergunta. Como se diz 'como' nessa pergunta sobre o tempo?",
+            "Como se pergunta 'como estava o tempo' em inglês? Pense em 'o tempo estava como?'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What was the weather yesterday?",
+              "habilidade": "what_like",
+              "pista": "Falta uma palavra no fim. Como se diz 'como' nessa pergunta sobre o tempo?"
+            }
+          ]
+        },
+        {
+          "id": "tempo.weekend",
+          "tipo": "substituicao",
+          "pista": "Last weekend.",
+          "alvo": "What was the weather like last weekend?",
+          "variantes": [
+            "How was the weather last weekend?"
+          ],
+          "habilidades": [
+            "marcador_tempo"
+          ],
+          "ajudas": [
+            "Troque yesterday por last weekend.",
+            "Como se diz 'fim de semana passado' em inglês?"
+          ]
+        },
+        {
+          "id": "tempo.beach",
+          "tipo": "substituicao",
+          "pista": "At the beach.",
+          "alvo": "What was the weather like at the beach last weekend?",
+          "variantes": [
+            "How was the weather at the beach last weekend?"
+          ],
+          "habilidades": [
+            "lugar",
+            "preservar_cadeia"
+          ],
+          "ajudas": [
+            "Acrescente o lugar e mantenha last weekend.",
+            "Como se diz 'na praia' em inglês? Em que parte da pergunta ele entra?"
+          ]
+        },
+        {
+          "id": "tempo.now",
+          "tipo": "substituicao",
+          "pista": "Now.",
+          "alvo": "What's the weather like at the beach now?",
+          "variantes": [
+            "What is the weather like at the beach now?",
+            "How's the weather at the beach now?"
+          ],
+          "habilidades": [
+            "presente_passado",
+            "preservar_cadeia"
+          ],
+          "ajudas": [
+            "Agora é presente: como fica 'está' em vez de 'estava'? E o lugar continua?",
+            "Agora é presente: como se pergunta 'como está o tempo'?"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jantar",
+      "objetivo": "Pergunta no passado progressivo com have + refeição.",
+      "itens": [
+        {
+          "id": "jantar.base",
+          "tipo": "construcao",
+          "solicitacao": "eles estavam jantando juntos?",
+          "alvo": "Were they having dinner together?",
+          "habilidades": [
+            "having_refeicao",
+            "pergunta_inversao"
+          ],
+          "apoio": "refeicoes",
+          "ajudas": [
+            "Como se diz 'jantar' em inglês? E como fica 'jantando'?",
+            "Como se diz 'jantar' em inglês? E 'jantando'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Were they dinner together?",
+              "habilidade": "having_refeicao",
+              "pista": "Falta o verbo. Como se diz 'jantar' em inglês?"
+            },
+            {
+              "exemplo": "Were they dinnering together?",
+              "habilidade": "having_refeicao",
+              "pista": "Dinner não vira verbo. Como se diz 'jantar' em inglês?"
+            }
+          ]
+        },
+        {
+          "id": "jantar.workout",
+          "tipo": "substituicao",
+          "pista": "Working out.",
+          "alvo": "Were they working out together?",
+          "habilidades": [
+            "progressivo"
+          ],
+          "ajudas": [
+            "Que expressão eu te dei? Ela entra no lugar de 'jantando'.",
+            "Como se diz 'malhando' em inglês? Ele entra no lugar de 'jantando'."
+          ]
+        },
+        {
+          "id": "jantar.yesterday",
+          "tipo": "substituicao",
+          "pista": "Yesterday.",
+          "alvo": "Were they working out together yesterday?",
+          "habilidades": [
+            "marcador_tempo",
+            "preservar_cadeia"
+          ],
+          "ajudas": [
+            "Como se diz 'ontem'? Em que parte da pergunta ele entra?",
+            "Como se diz 'ontem'? Em que parte da pergunta ele entra?"
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "refeicoes": {
+      "objetivo": "Reconstruir have + refeição e o progressivo antes de voltar à pergunta no passado.",
+      "degraus": [
+        {
+          "id": "refeicoes.have",
+          "tipo": "repeticao",
+          "modelo": "Have dinner.",
+          "alvo": "Have dinner.",
+          "habilidades": [
+            "having_refeicao"
+          ]
+        },
+        {
+          "id": "refeicoes.i",
+          "tipo": "construcao",
+          "solicitacao": "eu janto",
+          "alvo": "I have dinner.",
+          "habilidades": [
+            "having_refeicao"
+          ],
+          "ajudas": [
+            "Como se diz 'jantar' em inglês? E 'eu janto'?",
+            "Como se diz 'eu janto' em inglês?"
+          ]
+        },
+        {
+          "id": "refeicoes.they_ing",
+          "tipo": "construcao",
+          "solicitacao": "eles estão jantando",
+          "alvo": "They are having dinner.",
+          "variantes": [
+            "They're having dinner."
+          ],
+          "habilidades": [
+            "having_refeicao",
+            "progressivo"
+          ],
+          "ajudas": [
+            "Como se diz 'jantando'? Em qual palavra entra o -ing?",
+            "Como se diz 'eles estão' em inglês? E 'jantando'?"
+          ]
+        },
+        {
+          "id": "refeicoes.together",
+          "tipo": "substituicao",
+          "pista": "Together.",
+          "alvo": "They are having dinner together.",
+          "variantes": [
+            "They're having dinner together."
+          ],
+          "habilidades": [
+            "progressivo"
+          ],
+          "ajudas": [
+            "Como se diz 'juntos' em inglês? Onde ele entra?",
+            "Como se diz 'juntos' em inglês?"
+          ]
+        },
+        {
+          "id": "refeicoes.pergunta",
+          "tipo": "substituicao",
+          "pista": "Make it a question.",
+          "alvo": "Are they having dinner together?",
+          "habilidades": [
+            "pergunta_inversao"
+          ],
+          "ajudas": [
+            "Para virar pergunta, o verbo vem antes ou depois do sujeito?",
+            "Para virar pergunta, o verbo vem antes ou depois do sujeito?"
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.cidade",
+      "tipo": "conversa",
+      "pergunta": "What was the weather like in your city yesterday?",
+      "criterio": "Resposta pertinente sobre o clima de ontem, no passado (It was …). Qualquer clima verdadeiro é válido.",
+      "exemplos": [
+        "It was rainy and cold.",
+        "It was sunny and hot."
+      ],
+      "acompanhamentos": [
+        "Were you at home?",
+        "Was it cold at night?"
+      ],
+      "habilidades": [
+        "sujeito_it",
+        "was"
+      ]
+    },
+    {
+      "id": "conversa.onde",
+      "tipo": "conversa",
+      "pergunta": "Where were you yesterday afternoon?",
+      "criterio": "Resposta pertinente com I was … (qualquer lugar).",
+      "exemplos": [
+        "I was at work.",
+        "I was at home."
+      ],
+      "acompanhamentos": [
+        "Were you with your family?"
+      ],
+      "habilidades": [
+        "was"
+      ]
+    },
+    {
+      "id": "conversa.fimdesemana",
+      "tipo": "conversa",
+      "pergunta": "Were you with your friends last weekend?",
+      "criterio": "Yes, I was / No, I wasn't, ou resposta completa e pertinente.",
+      "exemplos": [
+        "Yes, I was.",
+        "No, I wasn't. I was with my family."
+      ],
+      "acompanhamentos": [
+        "What was the weather like?"
+      ],
+      "habilidades": [
+        "concordancia_was",
+        "negativa"
+      ]
+    }
+  ],
+  "recuperacao": {
+    "sujeito_it": {
+      "id": "rec.sujeito_it",
+      "tipo": "construcao",
+      "solicitacao": "estava frio ontem à noite",
+      "alvo": "It was cold last night.",
+      "habilidades": [
+        "sujeito_it"
+      ],
+      "ajudas": [
+        "Lembre do sujeito das frases sobre o clima.",
+        "Como se diz 'estava frio'? Lembre da palavra que começa as frases sobre o clima."
+      ]
+    },
+    "was": {
+      "id": "rec.was",
+      "tipo": "construcao",
+      "solicitacao": "ela estava no trabalho ontem",
+      "alvo": "She was at work yesterday.",
+      "habilidades": [
+        "was"
+      ],
+      "ajudas": [
+        "Com she, was ou were?",
+        "Como se diz 'ela estava' em inglês?"
+      ]
+    },
+    "adjetivo_clima": {
+      "id": "rec.adjetivo_clima",
+      "tipo": "construcao",
+      "solicitacao": "estava nublado hoje de manhã",
+      "alvo": "It was cloudy this morning.",
+      "habilidades": [
+        "adjetivo_clima"
+      ],
+      "ajudas": [
+        "Como se diz 'nublado' em inglês?",
+        "Como se diz 'nublado' em inglês?"
+      ]
+    },
+    "marcador_tempo": {
+      "id": "rec.marcador_tempo",
+      "tipo": "construcao",
+      "solicitacao": "estava quente no fim de semana passado",
+      "alvo": "It was hot last weekend.",
+      "habilidades": [
+        "marcador_tempo"
+      ],
+      "ajudas": [
+        "Como se diz 'fim de semana passado' em inglês?",
+        "Como se diz 'fim de semana passado' em inglês?"
+      ]
+    },
+    "concordancia_were": {
+      "id": "rec.concordancia_were",
+      "tipo": "construcao",
+      "solicitacao": "vocês estavam no shopping ontem?",
+      "alvo": "Were you at the mall yesterday?",
+      "habilidades": [
+        "concordancia_were",
+        "pergunta_inversao"
+      ],
+      "ajudas": [
+        "Com you, was ou were?",
+        "Como se pergunta 'vocês estavam' em inglês?"
+      ]
+    },
+    "concordancia_was": {
+      "id": "rec.concordancia_was",
+      "tipo": "construcao",
+      "solicitacao": "eu não estava com medo",
+      "alvo": "I wasn't scared.",
+      "variantes": [
+        "I was not scared."
+      ],
+      "habilidades": [
+        "concordancia_was",
+        "negativa"
+      ],
+      "ajudas": [
+        "Com I, wasn't ou weren't?",
+        "Como se diz 'eu não estava' em inglês?"
+      ]
+    },
+    "negativa": {
+      "id": "rec.negativa",
+      "tipo": "construcao",
+      "solicitacao": "nós não estávamos em casa",
+      "alvo": "We weren't at home.",
+      "variantes": [
+        "We were not at home."
+      ],
+      "habilidades": [
+        "negativa"
+      ],
+      "ajudas": [
+        "Como se diz 'nós não estávamos'? Onde entra o 'não'?",
+        "Como se diz 'nós não estávamos' em inglês?"
+      ]
+    },
+    "pergunta_inversao": {
+      "id": "rec.pergunta_inversao",
+      "tipo": "construcao",
+      "solicitacao": "ela foi educada com você?",
+      "alvo": "Was she polite to you?",
+      "variantes": [
+        "Was she polite with you?"
+      ],
+      "habilidades": [
+        "pergunta_inversao"
+      ],
+      "ajudas": [
+        "Na pergunta, o verbo vem antes ou depois do sujeito?",
+        "Como se pergunta 'ela foi…?' em inglês? Por qual palavra começa?"
+      ]
+    },
+    "plural": {
+      "id": "rec.plural",
+      "tipo": "construcao",
+      "solicitacao": "eles foram seus vizinhos?",
+      "alvo": "Were they your neighbors?",
+      "variantes": [
+        "Were they your neighbours?"
+      ],
+      "habilidades": [
+        "plural",
+        "concordancia_were"
+      ],
+      "ajudas": [
+        "Eles são mais de um: neighbor ou neighbors?",
+        "Como se diz 'vizinhos', no plural, em inglês?"
+      ]
+    },
+    "what_like": {
+      "id": "rec.what_like",
+      "tipo": "construcao",
+      "solicitacao": "como estava o tempo na praia? (faça a pergunta)",
+      "alvo": "What was the weather like at the beach?",
+      "variantes": [
+        "How was the weather at the beach?"
+      ],
+      "habilidades": [
+        "what_like"
+      ],
+      "ajudas": [
+        "Como se pergunta 'como estava o tempo' em inglês?",
+        "Como se pergunta 'como estava o tempo' em inglês?"
+      ]
+    },
+    "having_refeicao": {
+      "id": "rec.having_refeicao",
+      "tipo": "construcao",
+      "solicitacao": "ela estava almoçando com você?",
+      "alvo": "Was she having lunch with you?",
+      "habilidades": [
+        "having_refeicao",
+        "pergunta_inversao"
+      ],
+      "ajudas": [
+        "Como se diz 'almoçar' em inglês? E 'almoçando'?",
+        "Como se diz 'almoçando' em inglês?"
+      ]
+    },
+    "progressivo": {
+      "id": "rec.progressivo",
+      "tipo": "construcao",
+      "solicitacao": "nós estávamos malhando juntos",
+      "alvo": "We were working out together.",
+      "habilidades": [
+        "progressivo"
+      ],
+      "ajudas": [
+        "Como se diz 'malhar' em inglês? E 'malhando'?",
+        "Como se diz 'malhando' em inglês?"
+      ]
+    }
+  }
+}

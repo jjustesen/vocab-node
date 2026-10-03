@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* As classes da POC moram fora de app/: sem isto o Tailwind não as enxerga. */
+@source "../../../poc-tutor/web";
+@source "../../../poc-tutor/src";
+
+:root {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #171717;
+  background: #f5f4ef;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  background: #f5f4ef;
+}

@@ -3,6 +3,7 @@
   "redirects": [{ "source": "/", "destination": "/entrar", "permanent": false }],
   "rewrites": [
     { "source": "/landing", "destination": "/index.html" },
+    { "source": "/lab-1084b4c851", "destination": "/laboratorio.html" },
     { "source": "/(.+)", "destination": "/app.html" }
   ]
 }
