@@ -35,9 +35,12 @@ export async function gerar(fala: Fala): Promise<AudioGerado> {
 let tocando: HTMLAudioElement | null = null
 
 /** Toca e resolve ao terminar (ou ao ser parado). `false` se foi interrompido. */
-export function tocar(audio: AudioGerado): Promise<boolean> {
+export function tocar(audio: AudioGerado, velocidade = 1): Promise<boolean> {
   return new Promise((resolve) => {
     const el = new Audio(audio.url)
+    el.playbackRate = velocidade
+    // Sem isto o navegador "corrige" o tom ao desacelerar só em alguns aparelhos.
+    el.preservesPitch = true
     tocando = el
     const fim = (concluiu: boolean) => {
       if (tocando === el) tocando = null

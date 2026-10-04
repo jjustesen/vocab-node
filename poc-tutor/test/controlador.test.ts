@@ -251,6 +251,17 @@ describe('critério 9 — o registro explica cada decisão', () => {
   })
 })
 
+describe('pular', () => {
+  it('deixa o item pendente, registra para revisão e segue', () => {
+    const s = ate(iniciar(roteiro).sessao, 'sujeito.they')
+    const r = receber(s, { tipo: 'pular' })
+    assert.equal(r.acoes[0].tipo, 'registrar_pendente')
+    assert.equal(r.sessao.resultados.at(-1)?.resultado, 'pendente')
+    assert.ok(r.sessao.dificuldades.some((d) => d.itemId === 'sujeito.they'))
+    assert.equal(r.sessao.atual?.item.id, 'sujeito.not')
+  })
+})
+
 describe('imutabilidade', () => {
   it('receber não altera a sessão anterior', () => {
     const s = ate(iniciar(roteiro).sessao, 'sujeito.they')

@@ -89,7 +89,8 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
       return [pt('Vamos montar essa frase por partes, e depois voltamos a ela.')]
 
     case 'registrar_pendente':
-      return [pt('Essa ainda está difícil, tudo bem. A frase é:'), en(a.modelo), pt('Vamos voltar a ela depois.')]
+      if (!a.modelo) return [pt('Tudo bem, vamos seguir. Voltamos a isso depois.')]
+      return [pt('Tudo bem. A frase é:'), en(a.modelo), pt('Vamos voltar a ela depois.')]
 
     case 'iniciar_conversa':
       return [pt('Ótimo treino! Agora vamos conversar um pouco. Responda em inglês, com a sua realidade.')]

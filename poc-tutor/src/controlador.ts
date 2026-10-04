@@ -119,6 +119,12 @@ export function receber(anterior: Sessao, avaliacao: Avaliacao): { sessao: Sessa
     case 'silencio':
       ajudarSemTentativa(s, 'silencio', acoes)
       break
+    case 'pular':
+      // Travar a aula num item custa mais que deixá-lo para depois. Fica
+      // pendente — nunca dominado — e entra na revisão.
+      if (t.origem === 'bloco' || t.origem === 'conversa') adicionarDificuldade(s, t.item.habilidades[0], t)
+      deixarPendente(s, acoes, 'O aluno pulou o item')
+      break
   }
 
   registrarAcoes(s, acoes)
@@ -288,13 +294,13 @@ function abrirApoio(s: Sessao, av: Extract<Avaliacao, { tipo: 'falta_prerequisit
 }
 
 /** Depois do modelo, a frase ainda não saiu: encerra o item como pendente — nunca como dominado. */
-function deixarPendente(s: Sessao, acoes: Acao[]) {
+function deixarPendente(s: Sessao, acoes: Acao[], porque = 'Sem produção adequada mesmo após o modelo') {
   const t = s.atual!
   concluir(s, t, 'pendente', null)
   // A cadeia continua da frase que o tutor modelou: as próximas pistas foram
   // escritas a partir dela, e o aluno acabou de ouvi-la inteira.
   if (t.item.alvo && t.origem !== 'conversa') s.ultimaAceita = t.item.alvo
-  decidir(s, `Sem produção adequada mesmo após o modelo: ${t.item.id} fica pendente para revisão.`, t.item.id)
+  decidir(s, `${porque}: ${t.item.id} fica pendente para revisão.`, t.item.id)
   acoes.push({ tipo: 'registrar_pendente', item: t.item, modelo: modeloDe(t.item) })
   s.atual = null
   avancar(s, acoes)

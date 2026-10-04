@@ -122,6 +122,8 @@ export type Avaliacao =
   /** `ajuda`: o pedaço específico que o aluno pediu ("Educada é polite."), quando pediu algo específico. */
   | { tipo: 'pedido_ajuda'; ajuda?: string }
   | { tipo: 'silencio' }
+  /** O aluno escolheu pular: o item fica pendente (com o modelo dito), e a aula segue. */
+  | { tipo: 'pular' }
 
 // ── Ações (saída do controlador) ─────────────────────────────────────────────
 

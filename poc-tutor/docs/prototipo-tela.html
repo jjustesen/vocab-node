@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Tutor oral · protótipo</title>
+<!--
+  Protótipo da tela do tutor SEM chat (melhorias-sugeridas.md, item 8).
+  Simulação: toque no microfone e o "aluno" responde sozinho, seguindo um
+  roteiro curto — acerto, substituições, um erro corrigido por pergunta,
+  conversa e resumo. Nada aqui fala com IA; é só para sentir a dinâmica.
+-->
+<style>
+  :root {
+    --fundo: #f5f4ef; --cartao: #ffffff; --texto: #171717; --suave: #737373; --linha: #e7e5e0;
+    --roxo: #7c3aed; --roxo-claro: #ede9fe; --verde: #059669; --verde-claro: #d1fae5;
+    --ambar: #b45309; --ambar-claro: #fef3c7; --vermelho: #e11d48; --vermelho-claro: #ffe4e6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fundo: #121212; --cartao: #1c1c1e; --texto: #f5f5f4; --suave: #a3a3a3; --linha: #2c2c2e;
+      --roxo: #a78bfa; --roxo-claro: #2e2648; --verde: #34d399; --verde-claro: #12352a;
+      --ambar: #fbbf24; --ambar-claro: #3a2e12; --vermelho: #fb7185; --vermelho-claro: #3b1720;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--fundo); color: var(--texto);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tela { max-width: 520px; margin: 0 auto; height: 100dvh; display: flex; flex-direction: column; padding: 0 16px; }
+
+  /* ── topo: progresso da aula ─────────────────────────────── */
+  .topo { padding: 14px 0 8px; display: flex; align-items: center; gap: 10px; }
+  .trilha { flex: 1; display: flex; gap: 4px; }
+  .etapa { flex: 1; }
+  .etapa .barra { height: 5px; border-radius: 99px; background: var(--linha); overflow: hidden; }
+  .etapa .barra i { display: block; height: 100%; width: 0; background: var(--roxo); transition: width .5s ease; }
+  .etapa span { display: block; margin-top: 4px; font-size: 10px; color: var(--suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .etapa.atual span { color: var(--texto); font-weight: 700; }
+  .modo-prof { border: 0; background: var(--cartao); color: var(--suave); border-radius: 99px; padding: 6px 10px; font-size: 11px; font-weight: 700; cursor: pointer; }
+  .modo-prof[aria-pressed="true"] { background: var(--texto); color: var(--fundo); }
+
+  .habilidades { display: flex; flex-wrap: wrap; gap: 6px; min-height: 24px; }
+  .hab { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 99px; animation: surge .35s ease; }
+  .hab.dominada { background: var(--verde-claro); color: var(--verde); }
+  .hab.revisao { background: var(--ambar-claro); color: var(--ambar); }
+
+  /* ── palco: a frase em construção ────────────────────────── */
+  .palco { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 18px; min-height: 0; }
+  .rotulo { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--suave); }
+  .pedido { font-size: 17px; color: var(--suave); max-width: 22em; }
+  .pedido b { color: var(--texto); }
+  .pista { display: inline-block; font-size: 22px; font-weight: 800; color: var(--roxo); background: var(--roxo-claro); padding: 8px 18px; border-radius: 16px; animation: surge .35s ease; }
+  .frase { font-size: clamp(28px, 8vw, 40px); font-weight: 800; line-height: 1.25; letter-spacing: -.01em; min-height: 1.3em; }
+  .palavra { display: inline-block; margin: 0 .12em; transition: color .3s; }
+  .palavra.nova { color: var(--roxo); animation: entra .45s cubic-bezier(.2,.9,.3,1.3); }
+  .palavra.saindo { color: var(--vermelho); text-decoration: line-through; animation: sai .4s ease forwards; }
+  .palavra.fantasma { color: var(--linha); }
+  .tentativa { font-size: 17px; color: var(--suave); min-height: 1.4em; }
+  .tentativa .errada { color: var(--vermelho); background: var(--vermelho-claro); border-radius: 6px; padding: 0 4px; text-decoration: underline wavy; text-underline-offset: 4px; }
+  .pergunta-conversa { font-size: clamp(22px, 6vw, 28px); font-weight: 800; max-width: 16em; animation: surge .35s ease; }
+
+  /* pista socrática em degraus */
+  .socratico { display: none; width: 100%; background: var(--cartao); border-radius: 20px; padding: 14px 16px; text-align: left; box-shadow: 0 6px 24px rgba(0,0,0,.06); animation: sobe .35s ease; }
+  .socratico.visivel { display: block; }
+  .socratico .cabeca { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; color: var(--ambar); text-transform: uppercase; letter-spacing: .06em; }
+  .degraus { display: flex; gap: 4px; margin-left: auto; }
+  .degraus i { width: 18px; height: 5px; border-radius: 99px; background: var(--linha); }
+  .degraus i.on { background: var(--ambar); }
+  .socratico p { margin: 8px 0 0; font-size: 17px; font-weight: 600; }
+  .socratico.resolvido .cabeca { color: var(--verde); }
+  .socratico.resolvido .degraus i.on { background: var(--verde); }
+
+  /* ── legenda: o que o tutor está dizendo ─────────────────── */
+  .legenda { min-height: 56px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 15px; color: var(--texto); text-align: center; padding: 0 8px; }
+  .onda { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; opacity: 0; transition: opacity .2s; }
+  .onda.ativa { opacity: 1; }
+  .onda i { width: 3px; background: var(--roxo); border-radius: 2px; animation: onda .9s ease-in-out infinite; }
+  .onda i:nth-child(2) { animation-delay: .15s; } .onda i:nth-child(3) { animation-delay: .3s; }
+
+  /* ── base: microfone e atalhos ───────────────────────────── */
+  .base { padding: 8px 0 max(18px, env(safe-area-inset-bottom)); }
+  .ao-vivo { text-align: center; font-size: 15px; color: var(--suave); min-height: 22px; margin-bottom: 10px; font-style: italic; }
+  .controles { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+  .atalho { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; background: var(--cartao); color: var(--texto); border-radius: 14px; padding: 10px 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .atalhos-esq, .atalhos-dir { display: flex; flex-direction: column; gap: 6px; }
+  .ico { width: 15px; height: 15px; flex: none; }
+  .mic { position: relative; width: 84px; height: 84px; border-radius: 50%; border: 0; background: var(--roxo); color: #fff; cursor: pointer; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(124,58,237,.35); transition: transform .15s, background .2s; }
+  .mic:active { transform: scale(.96); }
+  .mic svg { width: 32px; height: 32px; }
+  .mic::before { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 3px solid var(--roxo); opacity: 0; transform: scale(var(--nivel, 1)); transition: transform .08s; }
+  .mic.ouvindo { background: var(--vermelho); box-shadow: 0 10px 30px rgba(225,29,72,.35); }
+  .mic.ouvindo::before { opacity: .45; border-color: var(--vermelho); }
+  .mic.pensando { background: var(--suave); box-shadow: none; }
+  .mic.pensando svg { animation: gira 1s linear infinite; }
+  .dica-mic { text-align: center; font-size: 11px; color: var(--suave); margin-top: 8px; }
+
+  /* resumo final */
+  .resumo { width: 100%; background: var(--cartao); border-radius: 24px; padding: 20px; text-align: left; animation: sobe .4s ease; }
+  .resumo h2 { margin: 0 0 4px; font-size: 20px; }
+  .resumo .linha { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--linha); font-size: 14px; }
+  .resumo .linha:first-of-type { border-top: 0; }
+
+  /* modo professor */
+  .painel-prof { position: fixed; right: 0; top: 0; bottom: 0; width: min(340px, 88vw); background: var(--cartao); box-shadow: -10px 0 30px rgba(0,0,0,.12); transform: translateX(100%); transition: transform .3s ease; padding: 18px 16px; overflow-y: auto; z-index: 10; font-size: 12px; }
+  .painel-prof.aberto { transform: none; }
+  .painel-prof h3 { margin: 0 0 10px; font-size: 13px; }
+  .decisao { padding: 8px 0; border-top: 1px solid var(--linha); color: var(--suave); }
+  .decisao b { color: var(--texto); }
+  .custo { display: flex; justify-content: space-between; padding: 4px 0; }
+
+  @keyframes surge { from { opacity: 0; transform: translateY(6px); } }
+  @keyframes sobe { from { opacity: 0; transform: translateY(14px); } }
+  @keyframes entra { from { opacity: 0; transform: translateY(-18px) scale(.8); } }
+  @keyframes sai { to { opacity: 0; transform: translateY(14px) scale(.8); max-width: 0; margin: 0; } }
+  @keyframes onda { 0%, 100% { height: 4px; } 50% { height: 14px; } }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="tela">
+  <header class="topo">
+    <div class="trilha" id="trilha"></div>
+    <button class="modo-prof" id="botaoProf" aria-pressed="false">Professor</button>
+  </header>
+  <div class="habilidades" id="habilidades"></div>
+
+  <main class="palco" id="palco"></main>
+
+  <div class="legenda"><span class="onda" id="onda"><i></i><i></i><i></i></span><span id="legenda"></span></div>
+
+  <footer class="base">
+    <div class="ao-vivo" id="aoVivo"></div>
+    <div class="controles">
+      <div class="atalhos-esq">
+        <button class="atalho" data-atalho="devagar"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg> Devagar</button>
+        <button class="atalho" data-atalho="naoentendi"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> Não entendi</button>
+      </div>
+      <button class="mic" id="mic" aria-label="Falar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v4"/></svg>
+      </button>
+      <div class="atalhos-dir">
+        <button class="atalho" data-atalho="ajuda"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg> Ajuda</button>
+        <button class="atalho" data-atalho="pular"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4l10 8-10 8V4z"/><path d="M19 5v14"/></svg> Pular</button>
+      </div>
+    </div>
+    <div class="dica-mic" id="dicaMic">Toque para responder</div>
+  </footer>
+</div>
+
+<aside class="painel-prof" id="painelProf">
+  <h3>Modo professor</h3>
+  <p style="color:var(--suave);margin:0 0 10px">O que o aluno não vê: por que o tutor decidiu cada passo, e quanto custou.</p>
+  <div id="custos"></div>
+  <h3 style="margin-top:14px">Decisões</h3>
+  <div id="decisoes"></div>
+</aside>
+
+<script>
+/*
+ * Roteiro da simulação. Cada passo: o que o tutor diz, o que o palco mostra,
+ * o que o "aluno" responde ao tocar no microfone, e a decisão do tutor.
+ */
+const ETAPAS = ['Calibração', 'Clima', 'Correção', 'Conversa', 'Resumo']
+const PASSOS = [
+  { etapa: 0, rotulo: 'Diga em inglês', pedido: 'estava ensolarado hoje de manhã',
+    tutor: 'Primeiro, diga em inglês: estava ensolarado hoje de manhã.',
+    aluno: 'It was sunny this morning.', resultado: 'certo', frase: ['It', 'was', 'sunny', 'this', 'morning.'],
+    decisao: '<b>Jev · 0,3 s</b> — adequada sem ajuda. Calibração autônoma: pular o modelo.', hab: ['was', 'dominada'] },
+  { etapa: 1, rotulo: 'Substituição', pista: 'Windy.', tutor: 'Windy.',
+    aluno: 'It was windy this morning.', resultado: 'certo', troca: { de: 'sunny', para: 'windy' },
+    decisao: '<b>Jev · 0,2 s</b> — transformação feita, resto preservado.' },
+  { etapa: 1, rotulo: 'Substituição', pista: 'Rainy.', tutor: 'Rainy.',
+    aluno: 'It was rainy this morning.', resultado: 'certo', troca: { de: 'windy', para: 'rainy' },
+    decisao: '<b>Jev · 0,2 s</b> — transformação feita.' },
+  { etapa: 2, rotulo: 'Substituição', pista: 'Yesterday.', tutor: 'Yesterday.',
+    aluno: 'It was sunny yesterday.', resultado: 'erro', errada: 'sunny',
+    socratico: { degrau: 1, texto: 'Quase! Qual palavra mudou na frase anterior?' },
+    decisao: '<b>Jev → Gemini · 1,6 s</b> — perdeu a mudança anterior (rainy). Degrau "lembrar a cadeia": pergunta, sem dar a resposta.',
+    hab: ['manter a cadeia', 'revisao'] },
+  { etapa: 2, rotulo: 'Pista', aluno: 'Rainy.', resultado: 'parte',
+    tutor: 'Isso, rainy! Agora a frase inteira.',
+    decisao: '<b>Gemini · 1,4 s</b> — respondeu só à pergunta, e certo. Não conta tentativa: pedir a frase inteira.' },
+  { etapa: 2, rotulo: 'Substituição', aluno: 'It was rainy yesterday.', resultado: 'certo',
+    troca: { de: ['this', 'morning.'], para: 'yesterday.' }, voltaRainy: true,
+    decisao: '<b>Jev · 0,3 s</b> — adequada depois de pista. "Manter a cadeia" volta mais tarde, em outro contexto.' },
+  { etapa: 3, rotulo: 'Conversa', conversa: 'What was the weather like in your city yesterday?',
+    tutor: 'Agora me conta de verdade: what was the weather like in your city yesterday?',
+    aluno: 'It was hot and sunny, perfect for the beach.', resultado: 'conversa',
+    reacao: 'Hot and sunny! Lucky you. Did you go to the beach?',
+    decisao: '<b>Jev → Gemini · 1,5 s</b> — conversa: resposta pertinente (diferente do exemplo) aceita; reação ao conteúdo.' },
+  { etapa: 4, final: true,
+    tutor: 'Terminamos! Você fez quase tudo sozinho. Para revisar: manter as mudanças anteriores da frase.',
+    decisao: '<b>Fim</b> — 5 de 6 produções autônomas; 1 com pista. Pendência para a próxima aula: manter a cadeia.' },
+]
+
+const $ = (id) => document.getElementById(id)
+const svg = (d) => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`
+const ICONE_CHECK = svg('<path d="M20 6 9 17l-5-5"/>')
+const ICONE_REVISAO = svg('<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>')
+let passo = -1
+let frase = []
+let ocupado = false
+
+// ── topo ─────────────────────────────────────────────────────
+$('trilha').innerHTML = ETAPAS.map((e, i) => `<div class="etapa" data-i="${i}"><div class="barra"><i></i></div><span>${e}</span></div>`).join('')
+function progresso(etapa, fracao) {
+  document.querySelectorAll('.etapa').forEach((el, i) => {
+    el.classList.toggle('atual', i === etapa)
+    el.querySelector('i').style.width = i < etapa ? '100%' : i === etapa ? `${Math.round(fracao * 100)}%` : '0'
+  })
+}
+function habilidade(nome, tipo) {
+  const existente = [...document.querySelectorAll('.hab')].find((h) => h.dataset.nome === nome)
+  if (existente) { existente.className = `hab ${tipo}`; return }
+  const el = document.createElement('span')
+  el.className = `hab ${tipo}`; el.dataset.nome = nome
+  el.innerHTML = (tipo === 'dominada' ? ICONE_CHECK : ICONE_REVISAO) + nome
+  $('habilidades').appendChild(el)
+}
+
+// ── palco ────────────────────────────────────────────────────
+function desenharFrase(destaques = {}) {
+  return `<div class="frase">${frase.map((w) => `<span class="palavra ${destaques[w] || ''}">${w}</span>`).join('')}</div>`
+}
+function palco(html) { $('palco').innerHTML = html }
+
+// ── tutor fala (legenda + "onda") ────────────────────────────
+function falar(texto) {
+  return new Promise((ok) => {
+    $('legenda').textContent = texto
+    $('onda').classList.add('ativa')
+    setTimeout(() => { $('onda').classList.remove('ativa'); ok() }, Math.min(2600, 700 + texto.length * 28))
+  })
+}
+
+// ── modo professor ───────────────────────────────────────────
+const gasto = { 'Gemini 3.6 Flash': 0, 'Flash-Lite TTS': 0, 'Jev': 0 }
+function registrar(decisao) {
+  if (!decisao) return
+  const el = document.createElement('div'); el.className = 'decisao'; el.innerHTML = decisao
+  $('decisoes').prepend(el)
+  gasto['Flash-Lite TTS'] += 0.0008; gasto['Jev'] += 0.00002
+  if (decisao.includes('Gemini')) gasto['Gemini 3.6 Flash'] += 0.0004
+  const total = Object.values(gasto).reduce((a, b) => a + b, 0)
+  $('custos').innerHTML = Object.entries(gasto).map(([k, v]) => `<div class="custo"><span>${k}</span><span>US$ ${v.toFixed(4)}</span></div>`).join('') +
+    `<div class="custo" style="font-weight:800;border-top:1px solid var(--linha);margin-top:4px;padding-top:6px"><span>Total</span><span>US$ ${total.toFixed(4)}</span></div>`
+}
+$('botaoProf').onclick = () => {
+  const aberto = $('painelProf').classList.toggle('aberto')
+  $('botaoProf').setAttribute('aria-pressed', aberto)
+}
+
+// ── um passo do roteiro ──────────────────────────────────────
+async function mostrarPasso(p) {
+  progresso(p.etapa, (PASSOS.filter((x) => x.etapa === p.etapa).indexOf(p) + 1) / PASSOS.filter((x) => x.etapa === p.etapa).length)
+  if (p.final) return final(p)
+  if (p.conversa) {
+    palco(`<div class="rotulo">${p.rotulo}</div><div class="pergunta-conversa">${p.conversa}</div><div class="tentativa" id="tentativa"></div>`)
+  } else if (p.pedido) {
+    palco(`<div class="rotulo">${p.rotulo}</div><div class="pedido">Diga em inglês: <b>${p.pedido}</b></div>${desenharFrase()}<div class="tentativa" id="tentativa"></div><div class="socratico" id="socratico"></div>`)
+  } else if (p.pista) {
+    palco(`<div class="rotulo">${p.rotulo}</div><div class="pista">${p.pista}</div>${desenharFrase()}<div class="tentativa" id="tentativa"></div><div class="socratico" id="socratico"></div>`)
+  }
+  // Passo de continuação (resposta à pergunta da pista): o palco fica como está,
+  // e a fala do tutor só vem DEPOIS de o aluno responder.
+  const abrePedido = p.pedido || p.pista || p.conversa
+  if (p.tutor && abrePedido) await falar(p.tutor)
+  $('dicaMic').textContent = 'Toque para responder'
+}
+
+async function responder() {
+  if (ocupado || passo >= PASSOS.length - 1) return
+  const p = PASSOS[passo]
+  if (!p.aluno) return
+  ocupado = true
+
+  // ouvindo: o "aluno" fala e a transcrição aparece ao vivo
+  $('mic').classList.add('ouvindo'); $('dicaMic').textContent = 'Ouvindo… toque quando terminar'
+  const nivel = setInterval(() => $('mic').style.setProperty('--nivel', 1 + Math.random() * 0.25), 90)
+  for (let i = 1; i <= p.aluno.length; i++) { $('aoVivo').textContent = p.aluno.slice(0, i); await espera(38) }
+  await espera(500)
+  clearInterval(nivel); $('mic').style.setProperty('--nivel', 1)
+  $('mic').classList.replace('ouvindo', 'pensando'); $('dicaMic').textContent = ''
+  await espera(p.resultado === 'certo' ? 450 : 1100)
+  $('mic').classList.remove('pensando'); $('aoVivo').textContent = ''
+  registrar(p.decisao)
+  if (p.hab) habilidade(...p.hab)
+
+  if (p.resultado === 'certo') {
+    if (passo === 0) { frase = p.frase; $('palco').querySelector('.frase').outerHTML = desenharFrase(Object.fromEntries(frase.map((w) => [w, 'nova']))) }
+    else trocar(p)
+    $('tentativa') && ($('tentativa').textContent = '')
+    const soc = $('socratico'); if (soc && soc.classList.contains('visivel')) { soc.classList.add('resolvido'); soc.querySelector('p').textContent = 'Isso, agora sim!' }
+    await falar(p.voltaRainy ? 'Isso, agora sim.' : ['Isso!', 'Muito bem.', 'Perfeito.'][passo % 3])
+  } else if (p.resultado === 'erro') {
+    $('tentativa').innerHTML = p.aluno.replace(p.errada, `<span class="errada">${p.errada}</span>`)
+    const soc = $('socratico')
+    soc.innerHTML = `<div class="cabeca">Pergunta do tutor <span class="degraus">${[1, 2, 3].map((d) => `<i class="${d <= p.socratico.degrau ? 'on' : ''}"></i>`).join('')}</span></div><p>${p.socratico.texto}</p>`
+    soc.classList.add('visivel')
+    await falar(p.socratico.texto)
+  } else if (p.resultado === 'parte') {
+    const soc = $('socratico'); soc.querySelector('p').innerHTML = `<span style="color:var(--verde);display:inline-flex;align-items:center;gap:4px">${ICONE_CHECK}Rainy</span> — agora a frase inteira.`
+    await falar(p.tutor)
+  } else if (p.resultado === 'conversa') {
+    $('tentativa').textContent = `“${p.aluno}”`
+    habilidade('conversa', 'dominada')
+    await falar(p.reacao)
+  }
+
+  ocupado = false
+  passo++
+  await mostrarPasso(PASSOS[passo])
+}
+
+function trocar(p) {
+  const de = [].concat(p.troca.de)
+  const el = $('palco').querySelector('.frase')
+  // a palavra antiga sai riscada, a nova entra no lugar
+  el.querySelectorAll('.palavra').forEach((s) => { if (de.includes(s.textContent)) s.classList.add('saindo') })
+  setTimeout(() => {
+    const i = frase.indexOf(de[0])
+    frase.splice(i, de.length, p.troca.para)
+    el.outerHTML = desenharFrase({ [p.troca.para]: 'nova' })
+  }, 380)
+}
+
+async function final(p) {
+  $('mic').disabled = true; $('mic').style.opacity = .4
+  palco(`<div class="resumo">
+      <h2>Aula concluída</h2>
+      <p style="color:var(--suave);margin:0 0 10px">Was/were e o clima no passado</p>
+      <div class="linha"><span>Frases sozinho</span><b>5</b></div>
+      <div class="linha"><span>Com uma pista</span><b>1</b></div>
+      <div class="linha"><span>Dominado</span><b style="color:var(--verde)">was · conversa</b></div>
+      <div class="linha"><span>Revisar na próxima</span><b style="color:var(--ambar)">manter a cadeia</b></div>
+      <button class="atalho" style="width:100%;margin-top:12px" onclick="location.reload()">Fazer de novo</button>
+    </div>`)
+  $('dicaMic').textContent = ''
+  registrar(p.decisao)
+  progresso(4, 1)
+  await falar(p.tutor)
+}
+
+const espera = (ms) => new Promise((r) => setTimeout(r, ms))
+$('mic').onclick = responder
+document.querySelectorAll('[data-atalho]').forEach((b) => b.onclick = () => {
+  const textos = {
+    devagar: 'Repetindo devagar… ' + ($('legenda').textContent || ''),
+    naoentendi: 'Vou perguntar de outro jeito: a frase anterior tinha qual tipo de tempo, sunny ou rainy?',
+    ajuda: 'Pista: pense no que mudou na última frase.',
+    pular: 'Tudo bem, vamos voltar a esta depois.',
+  }
+  falar(textos[b.dataset.atalho])
+})
+
+// começa
+passo = 0
+mostrarPasso(PASSOS[0])
+</script>
+</body>
+</html>

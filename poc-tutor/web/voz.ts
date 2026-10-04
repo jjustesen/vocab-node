@@ -55,23 +55,23 @@ export function cancelarFala() {
 }
 
 /** Fala as partes em sequência; resolve quando termina ou é cancelada. */
-export async function falar(fala: Fala, vozes: Vozes): Promise<void> {
+export async function falar(fala: Fala, vozes: Vozes, velocidade = 1): Promise<void> {
   if (!disponivel()) return
   for (const parte of fala) {
     if (!parte.texto.trim()) continue
     const voz = parte.idioma === 'en' ? (vozes.en ?? vozes.pt) : (vozes.pt ?? vozes.en)
-    const concluiu = await falarParte(parte.texto, voz, parte.idioma)
+    const concluiu = await falarParte(parte.texto, voz, parte.idioma, velocidade)
     if (!concluiu) return // cancelada: não segue para a próxima parte
   }
 }
 
-function falarParte(texto: string, voz: SpeechSynthesisVoice | null, idioma: 'pt' | 'en'): Promise<boolean> {
+function falarParte(texto: string, voz: SpeechSynthesisVoice | null, idioma: 'pt' | 'en', velocidade: number): Promise<boolean> {
   return new Promise((resolve) => {
     const fala = new SpeechSynthesisUtterance(texto)
     if (voz) fala.voice = voz
     fala.lang = voz?.lang ?? (idioma === 'en' ? 'en-US' : 'pt-BR')
     // Inglês um pouco mais devagar: é o modelo que o aluno vai reproduzir.
-    fala.rate = idioma === 'en' ? 0.9 : 1.05
+    fala.rate = (idioma === 'en' ? 0.9 : 1.05) * velocidade
 
     let acabou = false
     const fim = (concluiu: boolean) => {

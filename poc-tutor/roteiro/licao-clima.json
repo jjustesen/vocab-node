@@ -139,14 +139,14 @@
             "preservar_cadeia"
           ],
           "ajudas": [
-            "Mantém rainy; troque this morning por yesterday.",
+            "Qual palavra mudou na frase anterior? Ela continua; só o tempo muda.",
             "Como se diz 'ontem' em inglês? O resto da frase continua igual."
           ],
           "errosPrevistos": [
             {
               "exemplo": "It was sunny yesterday.",
               "habilidade": "preservar_cadeia",
-              "pista": "Mantém rainy; muda só o tempo."
+              "pista": "Quase! Qual palavra mudou na frase anterior?"
             }
           ]
         },
