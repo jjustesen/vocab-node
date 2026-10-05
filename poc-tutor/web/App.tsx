@@ -7,7 +7,7 @@ import { validarRoteiro } from '../src/validacao.ts'
 import type { Acao, Avaliacao, Resumo, Roteiro, Sessao } from '../src/tipos.ts'
 import { avaliarNoServidor, codigoDeAcesso, entrarComSenha } from './api.ts'
 import { custoPorServico, somar, type Custo, type Gasto } from './custo.ts'
-import { gerar, pararAudio, tocar, type AudioGerado } from './vozGemini.ts'
+import { destravarAudio, pararAudio, preparar, type VozPreparada } from './vozGemini.ts'
 import { blobParaBase64, Microfone } from './microfone.ts'
 import { cancelarFala, carregarVozes, destravarVoz, falar, type Vozes } from './voz.ts'
 import {
@@ -139,8 +139,14 @@ function Aula() {
 
   useEffect(() => () => microfone.current?.fechar(), [])
 
-  function anotar(linha: SemId<LinhaDoHistorico>) {
-    setHistorico((h) => [...h, { ...linha, id: proximoId++ }])
+  function anotar(linha: SemId<LinhaDoHistorico>): number {
+    const id = proximoId++
+    setHistorico((h) => [...h, { ...linha, id }])
+    return id
+  }
+
+  function detalhar(id: number, detalhe: string) {
+    setHistorico((h) => h.map((l) => (l.id === id ? { ...l, detalhe } : l)))
   }
 
   function atualizarSessao(s: Sessao) {
@@ -153,6 +159,7 @@ function Aula() {
   async function comecar() {
     // Tudo que precisa do gesto do toque vem ANTES do primeiro await.
     destravarVoz()
+    destravarAudio()
     const mic = microfone.current ?? new Microfone()
     const abrindo = microfone.current ? Promise.resolve() : mic.abrir()
 
@@ -229,17 +236,21 @@ function Aula() {
 
     const falas = acoes.map((acao) => falaDaAcao(acao, s))
     ultimasFalas.current = falas
-    // Todas as falas do turno pedidas JUNTAS ao TTS: enquanto a primeira toca,
-    // as outras já estão chegando.
-    const audios = opcoesRef.current.vozNatural ? falas.map((f) => gerar(f).catch(() => null)) : []
+    // Todas as falas do turno preparadas JUNTAS: as pré-gravadas já estão
+    // aqui, e os streams das outras começam agora, enquanto a primeira toca.
+    const vozesDoTurno = opcoesRef.current.vozNatural ? falas.map(preparar) : []
 
     for (const [i, acao] of acoes.entries()) {
       const texto = textoDaFala(falas[i])
       aplicarNoPalco(acao)
       setLegenda(texto)
-      anotar({ quem: 'tutor', texto })
+      const voz = vozesDoTurno[i]
+      const linha = anotar({ quem: 'tutor', texto, detalhe: voz && (voz.origem === 'gravada' ? 'voz pré-gravada' : 'voz em stream…') })
+      if (voz?.origem === 'stream') {
+        void voz.primeiroSomMs.then((ms) => detalhar(linha, ms === null ? 'stream falhou: voz do aparelho' : `voz em stream: 1º som em ${ms} ms`))
+      }
       // Interrompido: o palco e a legenda continuam mudando, só não é lido.
-      if (!interrompido.current) await dizer(falas[i], audios[i])
+      if (!interrompido.current) await dizer(falas[i], voz)
     }
 
     if (s.encerrada) {
@@ -257,18 +268,16 @@ function Aula() {
   }
 
   /**
-   * Uma fala: o áudio do Gemini, se chegou; senão a voz do aparelho. A aula
-   * não para porque o TTS falhou.
+   * Uma fala: a voz do Gemini (pré-gravada ou em stream); se ela falhar sem
+   * soar nada, a voz do aparelho. A aula não para porque o TTS falhou.
    */
-  async function dizer(fala: Fala, pedido?: Promise<AudioGerado | null>, velocidade = 1) {
-    const audio = pedido ? await pedido : null
-    if (audio) {
-      registrarCustos(audio.custos)
+  async function dizer(fala: Fala, voz?: VozPreparada, velocidade = 1) {
+    if (voz) {
+      void voz.custos.then(registrarCustos)
+      if (await voz.tocar(velocidade)) return
       if (interrompido.current) return
-      await tocar(audio, velocidade)
-    } else {
-      await falar(fala, vozes.current, velocidade)
     }
+    await falar(fala, vozes.current, velocidade)
   }
 
   function registrarCustos(custos: Custo[] = []) {
@@ -294,7 +303,7 @@ function Aula() {
     interrompido.current = false
     for (const fala of ultimasFalas.current) {
       if (interrompido.current) break
-      await dizer(fala, opcoesRef.current.vozNatural ? gerar(fala).catch(() => null) : undefined, 0.75)
+      await dizer(fala, opcoesRef.current.vozNatural ? preparar(fala) : undefined, 0.75)
     }
     if (microfone.current && !digitandoRef.current && opcoesRef.current.escutaAutomatica) ouvir()
     else setStatus('aguardando')
@@ -416,6 +425,7 @@ function Aula() {
     !microfone.current && emAula ? 'desligado' : status === 'inicio' || status === 'fim' ? 'aguardando' : (status as EstadoMic)
 
   function tocarMic() {
+    destravarAudio()
     if (status === 'falando') return interromper()
     if (status === 'ouvindo') return void enviarGravacao()
     if (status === 'aguardando' || status === 'confirmando') return ouvir()

@@ -6,7 +6,10 @@
 //   avaliar → ouve o turno do aluno e CLASSIFICA a resposta. Quem decide o que
 //             o tutor faz depois é o controlador, no navegador
 //             (poc-tutor/src/controlador.ts) — aqui só se ouve e se avalia.
-//   falar   → a voz do tutor, gerada na hora pelo Gemini TTS.
+//   falar   → a voz do tutor, gerada na hora pelo Gemini TTS (WAV inteiro).
+//   falar_stream → a mesma voz em pedaços (NDJSON), tocada enquanto chega.
+//             Só para falas que não existem pré-gravadas (pista do Gemini,
+//             o que o aluno disse): as fixas a página já tem em arquivo.
 //
 // ── Avaliar: Gemini ouve, Jev decide, Gemini só quando precisa ──────────────
 //
@@ -47,7 +50,7 @@ type Parte = { idioma: 'pt' | 'en'; texto: string }
 
 type Pedido = {
   codigo?: string
-  acao?: 'avaliar' | 'falar' | 'verificar'
+  acao?: 'avaliar' | 'falar' | 'falar_stream' | 'verificar'
   // avaliar
   audio?: { base64: string; mimeType: string }
   texto?: string
@@ -97,6 +100,7 @@ Deno.serve(async (req) => {
 
   try {
     if (pedido.acao === 'falar') return await falar(chave, pedido)
+    if (pedido.acao === 'falar_stream') return await falarEmStream(chave, pedido)
     return await avaliar(chave, pedido)
   } catch (e) {
     console.error('poc-tutor:', e)
@@ -337,6 +341,164 @@ async function falar(chave: string, pedido: Pedido): Promise<Response> {
   } finally {
     clearTimeout(timeoutId)
   }
+}
+
+/**
+ * A fala em pedaços: o Gemini manda o áudio por SSE e cada pedaço sai na hora,
+ * como uma linha NDJSON `{"pcm": base64}` (PCM 16-bit mono, taxa na primeira
+ * linha). A última linha traz custos e tempos. O aluno começa a ouvir no
+ * primeiro pedaço, não quando a fala inteira ficou pronta.
+ *
+ * As duas limpezas do WAV inteiro valem aqui também, pedaço a pedaço: o bloco
+ * de metadados (C2PA/SynthID) é cortado onde aparece, e pedaços só de silêncio
+ * ficam retidos — só saem se vier som depois. No fim, sobra no máximo 300 ms.
+ */
+async function falarEmStream(chave: string, pedido: Pedido): Promise<Response> {
+  const texto = (pedido.fala ?? []).map((p) => p.texto).join(' ').trim()
+  if (!texto) return respostaErro('Fala vazia.')
+  if (texto.length > 1500) return respostaErro('Fala longa demais.', 413)
+
+  const inicio = Date.now()
+  const controlador = new AbortController()
+  const timeoutId = setTimeout(() => controlador.abort(), TIMEOUT_MS)
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODELO_TTS}:streamGenerateContent?alt=sse&key=${chave}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controlador.signal,
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: texto }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          seed: 7,
+          maxOutputTokens: 150 + texto.length * 6,
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: VOZ_TTS } } },
+        },
+      }),
+    },
+  )
+  if (!r.ok || !r.body) {
+    clearTimeout(timeoutId)
+    throw new Error(`TTS respondeu ${r.status}: ${(await r.text()).slice(0, 300)}`)
+  }
+
+  const codificador = new TextEncoder()
+  const corpo = new ReadableStream<Uint8Array>({
+    async start(saida) {
+      const linha = (o: unknown) => saida.enqueue(codificador.encode(JSON.stringify(o) + '\n'))
+      let taxa = 0
+      let primeiroMs: number | null = null
+      let uso: { promptTokenCount?: number; candidatesTokenCount?: number } = {}
+      let silencioRetido: Uint8Array[] = []
+      let sobra: Uint8Array | null = null
+      let acabou = false
+      let pedacos = 0
+
+      const emitir = (pcm: Uint8Array) => {
+        if (!pcm.length) return
+        if (primeiroMs === null) primeiroMs = Date.now() - inicio
+        pedacos++
+        linha({ pcm: bytesParaBase64(pcm) })
+      }
+      const receberPcm = (bruto: Uint8Array) => {
+        let pcm = bruto
+        if (sobra) {
+          const junto = new Uint8Array(sobra.length + pcm.length)
+          junto.set(sobra)
+          junto.set(pcm, sobra.length)
+          pcm = junto
+          sobra = null
+        }
+        let corte = pcm.length
+        for (const marca of ['jumb', 'c2pa', 'SynthID']) {
+          const i = indiceDe(pcm, marca)
+          if (i !== -1) corte = Math.min(corte, i)
+        }
+        if (corte < pcm.length) {
+          acabou = true
+          corte = Math.max(0, corte - 64)
+          while (corte > 2 && pcm[corte - 1] !== 0 && pcm[corte - 2] !== 0) corte -= 2
+        }
+        if (corte % 2) {
+          if (!acabou) sobra = pcm.slice(corte - 1, corte)
+          corte -= 1
+        }
+        pcm = pcm.subarray(0, corte)
+        if (soSilencio(pcm, taxa || 24_000)) {
+          silencioRetido.push(pcm.slice())
+          return
+        }
+        for (const s of silencioRetido) emitir(s)
+        silencioRetido = []
+        emitir(pcm)
+      }
+
+      try {
+        const leitor = r.body!.pipeThrough(new TextDecoderStream()).getReader()
+        let buffer = ''
+        while (true) {
+          const { value, done } = await leitor.read()
+          if (done) break
+          buffer += value
+          let fimEvento
+          while ((fimEvento = buffer.indexOf('\n\n')) !== -1 || (fimEvento = buffer.indexOf('\r\n\r\n')) !== -1) {
+            const evento = buffer.slice(0, fimEvento)
+            buffer = buffer.slice(fimEvento + (buffer.startsWith('\r\n\r\n', fimEvento) ? 4 : 2))
+            const dados = evento.split(/\r?\n/).filter((l) => l.startsWith('data:')).map((l) => l.slice(5).trim()).join('')
+            if (!dados) continue
+            const j = JSON.parse(dados)
+            if (j.usageMetadata) uso = j.usageMetadata
+            if (acabou) continue
+            for (const parte of j.candidates?.[0]?.content?.parts ?? []) {
+              if (!parte.inlineData?.data) continue
+              if (!taxa) {
+                taxa = taxaDeAmostragem(parte.inlineData.mimeType)
+                linha({ taxa, formatoOriginal: parte.inlineData.mimeType })
+              }
+              receberPcm(base64ParaBytes(parte.inlineData.data))
+            }
+          }
+        }
+        // Silêncio do fim: no máximo 300 ms.
+        let resta = Math.round((taxa || 24_000) * 0.3) * 2
+        for (const s of silencioRetido) {
+          if (resta <= 0) break
+          emitir(s.subarray(0, Math.min(s.length, resta - (resta % 2))))
+          resta -= s.length
+        }
+        linha({
+          fim: true,
+          custos: [{ servico: MODELO_TTS, entrada: uso.promptTokenCount ?? 0, saida: uso.candidatesTokenCount ?? 0 }],
+          tempos: { primeiroPedacoMs: primeiroMs, ttsMs: Date.now() - inicio, pedacos },
+        })
+      } catch (e) {
+        console.error('poc-tutor falar_stream:', e)
+        linha({ erro: e instanceof Error ? e.message : 'Falha no TTS.' })
+      } finally {
+        clearTimeout(timeoutId)
+        saida.close()
+      }
+    },
+  })
+  return new Response(corpo, { headers: { ...CORS_HEADERS, 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store' } })
+}
+
+/** Um pedaço de PCM sem nenhuma janela de 50 ms acima do limiar de som. */
+function soSilencio(pcm: Uint8Array, taxa: number): boolean {
+  const vista = new DataView(pcm.buffer, pcm.byteOffset, pcm.byteLength)
+  const amostras = Math.floor(pcm.length / 2)
+  const janela = Math.max(1, Math.round(taxa / 20))
+  for (let i = 0; i < amostras; i += janela) {
+    let soma = 0
+    const fim = Math.min(amostras, i + janela)
+    for (let k = i; k < fim; k++) {
+      const v = vista.getInt16(k * 2, true) / 32768
+      soma += v * v
+    }
+    if (Math.sqrt(soma / (fim - i)) > 0.01) return false
+  }
+  return true
 }
 
 /**
