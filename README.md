@@ -27,7 +27,7 @@ Landing (marketing, SEO) e o SPA do professor/aluno são o **mesmo deploy do Ver
 | [app/index.html](app/index.html) | Landing estática (preços, recursos) — o que o Google indexa | `/landing` |
 | [app/app.html](app/app.html) | Shell do React Router | qualquer outra rota (`/entrar`, `/hoje`, `/t/:token`, …) |
 
-**A raiz não é a landing: `/` responde 307 para `/entrar`.** Quem digita o domínio é quase sempre um professor voltando para trabalhar, não um visitante decidindo se assina — a vitrine mora em `/landing`, para onde vão os anúncios, as redes e os links.
+**A raiz não é a landing: `/` responde 307 para `/entrar`.** A tela inicial é o login do aluno, com um botão para `/entrar-professor`. A vitrine mora em `/landing`.
 
 Quem decide isso em produção é [app/vercel.json](app/vercel.json), e a ordem importa: a Vercel aplica `redirects` **antes** de servir arquivo estático, então o 307 da raiz ganha do `index.html` que está no `dist`; depois `/landing` é reescrito (internamente, sem salto) para esse mesmo `index.html`; e só então tudo o mais cai em `app.html`. O `vite.config.ts` replica os três passos no `npm run dev`, senão abrir `/entrar` direto no navegador cairia na landing.
 
@@ -35,7 +35,7 @@ O redirect é **307 e não 301** de propósito: 301 mandaria o Google consolidar
 
 SEO da landing depois da mudança: `<link rel="canonical">` absoluta apontando para `/landing` (a única URL indexável dela), `og:url` no mesmo endereço, e [app/public/sitemap.xml](app/public/sitemap.xml) declarando `/landing` — referenciado no `robots.txt`. O que se perde é a raiz como URL de ranking; se a landing já tinha histórico em `/`, vale reenviar o sitemap no Search Console e atualizar os links externos que apontam para o domínio pelado.
 
-Os CTAs da landing ("Começar grátis" etc.) linkam para `/entrar?modo=criar`, que já abre a [LoginPage](app/src/features/auth/LoginPage.tsx) no modo de cadastro.
+Os CTAs da landing ("Começar grátis" etc.) linkam para `/entrar-professor?modo=criar`, que já abre a [LoginPage](app/src/features/auth/LoginPage.tsx) no modo de cadastro.
 
 ---
 
@@ -312,3 +312,10 @@ Três decisões de produto tomadas nesse redesign, por não haver dado que suste
 - **`ordenar_palavras` não valida solvabilidade** — diferente de `ordenar_audio`, ele não checa se as fichas cobrem a frase. Bug pré-existente, não tocado ao adicionar os tipos novos.
 - **Sem cobrança (RF-113)** — sem gateway integrado, o professor não assina nem cancela o plano pago pela própria plataforma; troca de plano é manual, direto no banco.
 - **Cota de alunos é só do lado do cliente** — dá pra burlar chamando o Postgrest direto (confirmado em teste). A cota de gerações por IA, essa sim, é aplicada no servidor de verdade (é a que custa dinheiro de verdade a cada chamada).
+
+## E-mail com os dois perfis
+
+Aluno e professor podem usar a mesma conta de autenticação e a mesma senha.
+Para adicionar o perfil de professor, abra `/entrar-professor?modo=criar` e informe o e-mail e a senha atuais. Para adicionar o perfil de aluno, use o convite ou link de cadastro do professor com as mesmas credenciais. O cadastro de aluno continua limitado a um professor por conta.
+
+Para disponibilizar esta alteração, aplique a migration `0022_perfis_aluno_e_professor.sql`, publique `link-cadastro-concluir` com `--no-verify-jwt` e publique o frontend atualizado. A função SQL cria apenas o perfil do próprio usuário autenticado; a inclusão do perfil de aluno valida o convite/link e a senha existente.

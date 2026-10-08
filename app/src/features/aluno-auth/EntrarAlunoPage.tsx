@@ -40,7 +40,7 @@ export function EntrarAlunoPage() {
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-indigo-100 text-indigo-700">
           <GraduationCap className="h-6 w-6" />
         </span>
-        <h1 className="mt-3 text-center text-lg font-extrabold text-neutral-900">Entrar</h1>
+        <h1 className="mt-3 text-center text-lg font-extrabold text-neutral-900">Entrar como aluno</h1>
         <p className="mt-1 text-center text-xs text-neutral-400">Para ver suas tarefas e seu progresso</p>
 
         {erro && (
@@ -83,8 +83,8 @@ export function EntrarAlunoPage() {
             engano fica sem saída visível. */}
         <p className="mt-5 text-center text-xs text-neutral-400">
           É professor?{' '}
-          <Link to="/entrar" className="font-bold text-violet-700">
-            Entrar na sua área
+          <Link to="/entrar-professor" className="mt-2 flex w-full items-center justify-center rounded-full border border-neutral-300 py-3 text-sm font-bold text-violet-700">
+            Entrar como professor
           </Link>
         </p>
       </form>

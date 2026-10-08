@@ -1,3 +1,4 @@
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 // Deno Edge Function — sem verify-jwt: quem chama ainda não tem conta. A
 // autorização é a posse do token do link (0019), validado por hash.
 //
@@ -70,44 +71,40 @@ Deno.serve(async (req) => {
     )
   }
 
-  // `perfil: 'aluno'` NÃO é decorativo: sem ele o trigger on_auth_user_created
-  // cria também uma conta de PROFESSOR para esta pessoa (migrations 0002/0009).
-  const { data: criado, error: erroAuth } = await db.auth.admin.createUser({
-    email,
-    password: senha,
-    email_confirm: true,
-    user_metadata: { perfil: 'aluno', nome },
+  // A senha atual comprova a posse da conta; não alteramos sua senha ou perfil.
+  const auth = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    auth: { persistSession: false, autoRefreshToken: false },
   })
-
-  if (erroAuth || !criado?.user) {
-    const codigo = (erroAuth as { code?: string } | null)?.code
-    if (codigo === 'email_exists' || /already/i.test(erroAuth?.message ?? '')) {
-      // O painel resolve a conta do aluno por user_id com maybeSingle — uma
-      // segunda linha em contas_aluno para o mesmo usuário quebraria o login
-      // dele em tudo. Sem multi-professor no produto, barramos com clareza.
-      const { data: emOutroProfessor } = await db.from('contas_aluno').select('id').eq('email', email).limit(1)
-      return respostaErro(
-        emOutroProfessor?.length
-          ? 'Este e-mail já tem conta de aluno com outro professor. Use outro e-mail para se cadastrar aqui.'
-          : 'Este e-mail já tem cadastro na plataforma. Use outro e-mail para se cadastrar como aluno.',
-        409,
-      )
+  const existente = await auth.auth.signInWithPassword({ email, password: senha })
+  let userId = existente.data.user?.id
+  let criouUsuario = false
+  if (userId) {
+    const { data: outraConta, error } = await db.from('contas_aluno').select('id').eq('user_id', userId).limit(1)
+    if (error) return respostaErro('Não foi possível verificar a conta.', 500)
+    if (outraConta?.length) return respostaErro('Esta conta já tem cadastro de aluno. Entre com sua senha.', 409)
+  } else {
+    const { data: criado, error } = await db.auth.admin.createUser({
+      email, password: senha, email_confirm: true, user_metadata: { perfil: 'aluno', nome },
+    })
+    if (error || !criado.user) {
+      if (error?.code === 'email_exists' || /already/i.test(error?.message ?? '')) {
+        return respostaErro('Se este e-mail já tem cadastro, use a senha atual para adicionar o perfil de aluno.', 409)
+      }
+      return respostaErro(error?.message ?? 'Não foi possível criar a conta.', 400)
     }
-    if (codigo === 'weak_password') {
-      return respostaErro('Senha fraca demais. Use uma senha mais longa, misturando letras e números.')
-    }
-    return respostaErro(erroAuth?.message ?? 'Não foi possível criar a conta.', 500)
+    userId = criado.user.id
+    criouUsuario = true
   }
 
   const resultado = await criarAlunoComConta(db, {
     professorId: link.professor_id,
-    userId: criado.user.id,
+    userId,
     email,
     nome,
   })
   if (ehFalha(resultado)) {
     // Sem aluno por trás, a conta de auth só serviria para ocupar o e-mail.
-    await db.auth.admin.deleteUser(criado.user.id)
+    if (criouUsuario) await db.auth.admin.deleteUser(userId)
     return respostaErro(resultado.mensagem, resultado.status)
   }
 

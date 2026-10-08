@@ -1,7 +1,8 @@
+import { supabaseAluno } from '@/lib/supabase-aluno'
+import { autenticarOuCadastrarAluno } from '@/lib/cadastro-auth'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Bell, Check, CheckCircle2, Loader2, Mail, TrendingUp, XCircle } from 'lucide-react'
-import { supabaseAluno } from '@/lib/supabase-aluno'
 import { mensagemDeErro } from '@/lib/api-tarefa'
 import { inicial } from '@/lib/avatar'
 import { BotaoPrincipal, TelaAluno } from '@/features/tarefa/visual'
@@ -49,11 +50,7 @@ export function CadastroAlunoPage() {
       // (migration 0002) cria uma linha em `professores` para todo signUp que
       // não se declare aluno. Sem este metadado, cada aluno cadastrado ganhava
       // também uma conta de professor funcional — ver migration 0009.
-      const { data, error } = await supabaseAluno.auth.signUp({
-        email,
-        password: senha,
-        options: { data: { perfil: 'aluno' } },
-      })
+      const { data, error } = await autenticarOuCadastrarAluno(email, senha)
       if (error) throw error
 
       if (!data.session) {
@@ -66,6 +63,8 @@ export function CadastroAlunoPage() {
       }
 
       await concluirConvite(token!, data.session.access_token)
+      const { error: erroSessao } = await supabaseAluno.auth.setSession(data.session)
+      if (erroSessao) throw erroSessao
       setTela('sucesso')
     } catch (e) {
       setErro(mensagemDeErro(e))
@@ -165,7 +164,7 @@ export function CadastroAlunoPage() {
           </div>
         </label>
         <label className="mt-3 block">
-          <span className="text-xs font-bold text-neutral-600">Crie uma senha</span>
+          <span className="text-xs font-bold text-neutral-600">Senha (se já tem conta, use a atual)</span>
           <input
             type="password"
             required

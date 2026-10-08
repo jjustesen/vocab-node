@@ -48,7 +48,7 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/entrar" element={<LoginPage />} />
+        <Route path="/entrar-professor" element={<LoginPage />} />
 
         {/* Rota do aluno: sem sessão, sem RLS. Ver features/tarefa/TarefaPage.tsx. */}
         <Route path="/t/:token" element={<TarefaPage />} />
@@ -69,6 +69,7 @@ export default function App() {
           {/* Link ABERTO da atividade (0010): rota pública, mas dentro do
               provider — se já houver sessão de aluno, o link vira atalho. */}
           <Route path="/a/:token" element={<LinkAbertoPage />} />
+          <Route path="/entrar" element={<EntrarAlunoPage />} />
           <Route path="/entrar-aluno" element={<EntrarAlunoPage />} />
           <Route element={<ExigeSessaoAluno />}>
             <Route path="/painel" element={<PainelAlunoPage />} />
@@ -119,7 +120,7 @@ export default function App() {
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to="/hoje" replace />} />
+        <Route path="*" element={<Navigate to="/entrar" replace />} />
       </Routes>
     </AuthProvider>
   )
@@ -150,7 +151,7 @@ function ExigeSessao() {
     )
   }
 
-  if (!session || contaNaoEDeProfessor) return <Navigate to="/entrar" replace />
+  if (!session || contaNaoEDeProfessor) return <Navigate to="/entrar-professor" replace />
 
   // O <Layout /> vem da rota filha; aqui só liberamos a passagem.
   return <Outlet />

@@ -478,6 +478,7 @@ export type Database = {
     }
     Views: Record<string, never>
     Functions: {
+      cadastrar_perfil_professor: { Args: { p_nome: string }; Returns: undefined }
       /** Desloca uma série de aulas no tempo — ver 0007_aulas_serie.sql. */
       mover_aulas_da_serie: {
         Args: {

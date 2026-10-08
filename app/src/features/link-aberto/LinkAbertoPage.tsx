@@ -1,3 +1,4 @@
+import { autenticarOuCadastrarAluno } from '@/lib/cadastro-auth'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle2, ChevronLeft, Hourglass, Loader2, Lock, Mail, XCircle } from 'lucide-react'
@@ -73,11 +74,7 @@ export function LinkAbertoPage() {
     try {
       // `perfil: 'aluno'` NÃO é decorativo — sem ele o trigger de signUp cria
       // uma conta de PROFESSOR para o aluno (ver migrations 0002/0009).
-      const { data, error } = await supabaseAluno.auth.signUp({
-        email,
-        password: senha,
-        options: { data: { perfil: 'aluno', nome } },
-      })
+      const { data, error } = await autenticarOuCadastrarAluno(email, senha, nome)
       if (error) throw error
       if (!data.session) {
         // Projeto com confirmação de e-mail ligada — mesma limitação do
@@ -86,7 +83,10 @@ export function LinkAbertoPage() {
         setEnviando(false)
         return
       }
-      await concluirComSessao(data.session.access_token, nome)
+      const { data: atividade } = await entrarPeloLinkAberto(token!, data.session.access_token, nome)
+      const { error: erroSessao } = await supabaseAluno.auth.setSession(data.session)
+      if (erroSessao) throw erroSessao
+      navigate(`/painel/tarefa/${atividade.atribuicaoId}`, { replace: true })
     } catch (e) {
       setErro(mensagemDeErro(e))
       setEnviando(false)
@@ -242,7 +242,7 @@ export function LinkAbertoPage() {
           <BotaoVoltar aoVoltar={() => setModo('escolha')} />
           <Campo rotulo="Seu nome" tipo="text" valor={nome} aoMudar={setNome} desabilitado={enviando} />
           <Campo rotulo="Seu e-mail" tipo="email" valor={email} aoMudar={setEmail} desabilitado={enviando} comIconeEmail />
-          <Campo rotulo="Crie uma senha" tipo="password" valor={senha} aoMudar={setSenha} desabilitado={enviando} />
+          <Campo rotulo="Senha (se já tem conta, use a atual)" tipo="password" valor={senha} aoMudar={setSenha} desabilitado={enviando} />
           <Campo
             rotulo="Confirme a senha"
             tipo="password"

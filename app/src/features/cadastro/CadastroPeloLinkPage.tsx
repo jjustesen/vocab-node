@@ -205,7 +205,7 @@ export function CadastroPeloLinkPage() {
           </div>
         </label>
         <label className="mt-3 block">
-          <span className="text-xs font-bold text-neutral-600">Crie uma senha</span>
+          <span className="text-xs font-bold text-neutral-600">Senha (se já tem conta, use a atual)</span>
           <input
             type="password"
             required

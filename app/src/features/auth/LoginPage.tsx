@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, BookOpen, GraduationCap, Loader2 } from 'lucide-react'
+import { clienteCadastro } from '@/lib/cadastro-auth'
 import { supabase } from '@/lib/supabase'
 import { consumirMotivoDaSaida } from '@/lib/motivo-saida'
 import { useAuth } from './AuthProvider'
@@ -9,6 +11,7 @@ type Modo = 'entrar' | 'criar'
 
 export function LoginPage() {
   const { session, carregando } = useAuth()
+  const queryClient = useQueryClient()
   // A landing (app/index.html, fora do SPA) linka "Começar grátis" com
   // ?modo=criar — só lido na primeira renderização, de propósito: depois
   // disso quem manda é o toggle abaixo, não a URL.
@@ -34,16 +37,24 @@ export function LoginPage() {
     evento.preventDefault()
     setErro(null)
     setEnviando(true)
+    queryClient.removeQueries({ queryKey: ['perfil-professor'] })
 
     try {
       if (modo === 'criar') {
-        // `nome` vai nos metadados; um trigger no banco copia para `professores`.
-        const { error } = await supabase.auth.signUp({
-          email,
-          password: senha,
-          options: { data: { nome } },
-        })
-        if (error) throw error
+        const cliente = clienteCadastro()
+        const existente = await cliente.auth.signInWithPassword({ email, password: senha })
+        if (existente.data.session) {
+          const { error } = await cliente.rpc('cadastrar_perfil_professor', { p_nome: nome.trim() })
+          if (error) throw error
+          const { error: erroLogin } = await supabase.auth.signInWithPassword({ email, password: senha })
+          if (erroLogin) throw erroLogin
+        } else {
+          const { error } = await supabase.auth.signUp({
+            email, password: senha, options: { data: { nome, perfil: 'professor' } },
+          })
+          if (error) throw error
+          setErro('Se já tem cadastro, use sua senha atual. Para uma conta nova, confira seu e-mail caso a confirmação seja solicitada.')
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
         if (error) throw error
@@ -80,12 +91,12 @@ export function LoginPage() {
           className="rounded-3xl border border-neutral-200 bg-white p-7 shadow-sm"
         >
           <h1 className="text-xl font-extrabold">
-            {modo === 'entrar' ? 'Entrar' : 'Criar conta grátis'}
+            {modo === 'entrar' ? 'Entrar como professor' : 'Criar conta de professor'}
           </h1>
           <p className="mt-1 text-sm text-neutral-500">
             {modo === 'entrar'
               ? 'Bem-vindo de volta.'
-              : 'Leva menos de um minuto.'}
+              : 'Já é aluno? Use o mesmo e-mail e a senha atual.'}
           </p>
 
           {modo === 'criar' && (
