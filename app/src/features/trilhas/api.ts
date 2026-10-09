@@ -779,49 +779,51 @@ export function useAlterarStatusNaTrilha(trilhaId: string) {
 export function useRemoverAlunoDaTrilha(trilhaId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (alunoId: string) => {
-      const { data: etapas, error: erroEtapas } = await supabase
-        .from('trilha_etapas')
-        .select('id')
-        .eq('trilha_id', trilhaId)
-      if (erroEtapas) throw erroEtapas
-
-      if (etapas.length > 0) {
-        const { error: erroPendentes } = await supabase
-          .from('atribuicoes')
-          .delete()
-          .eq('aluno_id', alunoId)
-          .is('concluida_em', null)
-          .in(
-            'trilha_etapa_id',
-            etapas.map((e) => e.id),
-          )
-        if (erroPendentes) throw erroPendentes
-
-        const { error: erroSoltar } = await supabase
-          .from('atribuicoes')
-          .update({ trilha_etapa_id: null })
-          .eq('aluno_id', alunoId)
-          .in(
-            'trilha_etapa_id',
-            etapas.map((e) => e.id),
-          )
-        if (erroSoltar) throw erroSoltar
-      }
-
-      const { error } = await supabase
-        .from('trilha_alunos')
-        .delete()
-        .eq('trilha_id', trilhaId)
-        .eq('aluno_id', alunoId)
-      if (error) throw error
-    },
+    mutationFn: (alunoId: string) => removerAlunosDaTrilha(trilhaId, [alunoId]),
     onSuccess: (_, alunoId) => {
       void qc.invalidateQueries({ queryKey: chavesTrilhas.todas })
       // As pendentes que saíram somem também da lista de tarefas da ficha.
       void qc.invalidateQueries({ queryKey: ['alunos', alunoId] })
     },
   })
+}
+
+/**
+ * O miolo de `useRemoverAlunoDaTrilha`, para vários de uma vez — é o que o
+ * "tirar da turma" usa para tirar a trilha de todos os membros.
+ */
+export async function removerAlunosDaTrilha(trilhaId: string, alunoIds: string[]) {
+  if (alunoIds.length === 0) return
+  const { data: etapas, error: erroEtapas } = await supabase
+    .from('trilha_etapas')
+    .select('id')
+    .eq('trilha_id', trilhaId)
+  if (erroEtapas) throw erroEtapas
+
+  if (etapas.length > 0) {
+    const etapaIds = etapas.map((e) => e.id)
+    const { error: erroPendentes } = await supabase
+      .from('atribuicoes')
+      .delete()
+      .in('aluno_id', alunoIds)
+      .is('concluida_em', null)
+      .in('trilha_etapa_id', etapaIds)
+    if (erroPendentes) throw erroPendentes
+
+    const { error: erroSoltar } = await supabase
+      .from('atribuicoes')
+      .update({ trilha_etapa_id: null })
+      .in('aluno_id', alunoIds)
+      .in('trilha_etapa_id', etapaIds)
+    if (erroSoltar) throw erroSoltar
+  }
+
+  const { error } = await supabase
+    .from('trilha_alunos')
+    .delete()
+    .eq('trilha_id', trilhaId)
+    .in('aluno_id', alunoIds)
+  if (error) throw error
 }
 
 /** RF-141: copia trilha e sequência; alunos não vêm junto. */

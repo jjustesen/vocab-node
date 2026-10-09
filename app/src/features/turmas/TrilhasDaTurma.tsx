@@ -4,8 +4,9 @@ import { Loader2, Milestone, Plus, Search, Send, X } from 'lucide-react'
 import { CORES_NIVEL } from '@/features/atividades/visual-atividade'
 import { useTrilhas, type TrilhaComProgresso } from '@/features/trilhas/api'
 import { ModalAtribuir } from '@/features/trilhas/TrilhaDetalhePage'
+import { BotaoApagar } from '@/components/BotaoApagar'
 import { CompletarNaTurma } from './CompletarNaTurma'
-import { useConteudosDaTurma } from './conteudos'
+import { useConteudosDaTurma, useTirarDaTurma } from './conteudos'
 
 /**
  * As trilhas da turma, na aba Tarefas — irmã de `TarefasDaTurma`.
@@ -22,6 +23,8 @@ export function TrilhasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoId
   const { data: conteudos, isLoading: carregandoConteudos } = useConteudosDaTurma(turmaId)
   const [escolhendo, setEscolhendo] = useState(false)
   const [enviando, setEnviando] = useState<TrilhaComProgresso | null>(null)
+  const tirar = useTirarDaTurma(turmaId)
+  const tirando = tirar.isPending && tirar.variables && 'trilhaId' in tirar.variables ? tirar.variables.trilhaId : null
 
   const membros = useMemo(() => new Set(alunoIds), [alunoIds])
   const trilhaPorId = new Map((trilhas ?? []).map((t) => [t.id, t]))
@@ -96,6 +99,12 @@ export function TrilhasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoId
                 {faltamReceber > 0 && (
                   <CompletarNaTurma turmaId={turmaId} faltam={faltamReceber} />
                 )}
+                <BotaoApagar
+                  titulo="Tirar da turma — sai de todos; etapas concluídas ficam na ficha e a trilha continua sua"
+                  confirmacao="Tirar da turma?"
+                  pendente={tirando === trilha.id}
+                  aoConfirmar={() => tirar.mutate({ trilhaId: trilha.id })}
+                />
               </li>
             )
           })}

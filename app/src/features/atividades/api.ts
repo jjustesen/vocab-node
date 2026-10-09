@@ -562,6 +562,36 @@ export function useApagarTarefaDoAluno(alunoId: string) {
   })
 }
 
+/**
+ * Apaga, de vários alunos, o envio AVULSO da atividade que ainda não foi
+ * concluído — o mesmo gesto de `useApagarTarefaDoAluno`, em lote. Concluída
+ * fica (é a nota do aluno), e etapa de trilha é assunto da trilha.
+ */
+export async function apagarPendentesDaAtividade(atividadeId: string, alunoIds: string[]) {
+  const { data: pendentes, error: erroPendentes } = await supabase
+    .from('atribuicoes')
+    .select('id')
+    .eq('atividade_id', atividadeId)
+    .in('aluno_id', alunoIds)
+    .is('trilha_etapa_id', null)
+    .is('concluida_em', null)
+  if (erroPendentes) throw erroPendentes
+  const ids = pendentes.map((a) => a.id)
+  if (ids.length === 0) return
+
+  // Áudios de uma resposta começada: melhor esforço, como no apagar avulso.
+  const { data: audios } = await supabase
+    .from('respostas')
+    .select('audio_path')
+    .in('atribuicao_id', ids)
+    .not('audio_path', 'is', null)
+  const caminhos = (audios ?? []).map((r) => r.audio_path).filter((c): c is string => Boolean(c))
+  if (caminhos.length > 0) await supabase.storage.from('audio-respostas').remove(caminhos)
+
+  const { error } = await supabase.from('atribuicoes').delete().in('id', ids)
+  if (error) throw error
+}
+
 export type LinkAbertoDaAtividade = {
   registro: LinkAberto
   /**

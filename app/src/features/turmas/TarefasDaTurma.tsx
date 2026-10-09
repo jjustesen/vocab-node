@@ -4,8 +4,10 @@ import { ClipboardList, Loader2, Plus, Search, Send, X } from 'lucide-react'
 import { useAtividades, type AtividadeComEnvio } from '@/features/atividades/api'
 import { EnvioModal } from '@/features/atividades/EnvioModal'
 import { CORES_NIVEL } from '@/features/atividades/visual-atividade'
+import { BotaoApagar } from '@/components/BotaoApagar'
 import { useTarefasDaTurma } from './api'
 import { CompletarNaTurma } from './CompletarNaTurma'
+import { useTirarDaTurma } from './conteudos'
 
 /**
  * A aba de tarefas da turma: o que foi enviado PARA ELA (0020) e o botão de
@@ -20,6 +22,8 @@ export function TarefasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoId
   const { data: tarefas, isLoading } = useTarefasDaTurma(turmaId, alunoIds)
   const [escolhendo, setEscolhendo] = useState(false)
   const [enviando, setEnviando] = useState<AtividadeComEnvio | null>(null)
+  const tirar = useTirarDaTurma(turmaId)
+  const tirando = tirar.isPending && tirar.variables && 'atividadeId' in tirar.variables ? tirar.variables.atividadeId : null
 
   return (
     <div className="rounded-3xl bg-white p-5">
@@ -87,6 +91,12 @@ export function TarefasDaTurma({ turmaId, alunoIds }: { turmaId: string; alunoId
                 {faltamReceber > 0 && (
                   <CompletarNaTurma turmaId={turmaId} faltam={faltamReceber} />
                 )}
+                <BotaoApagar
+                  titulo="Tirar da turma — sai de quem não concluiu; a atividade continua na sua biblioteca"
+                  confirmacao="Tirar da turma?"
+                  pendente={tirando === t.atividadeId}
+                  aoConfirmar={() => tirar.mutate({ atividadeId: t.atividadeId })}
+                />
               </li>
             )
           })}

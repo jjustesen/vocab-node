@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { enviarAtividade, type EnvioResultado } from '@/features/atividades/api'
+import { apagarPendentesDaAtividade, enviarAtividade, type EnvioResultado } from '@/features/atividades/api'
 import { vincular } from '@/features/materiais/api'
-import { atribuirTrilha, type LinkDaEtapa } from '@/features/trilhas/api'
+import { atribuirTrilha, removerAlunosDaTrilha, type LinkDaEtapa } from '@/features/trilhas/api'
 import type { Aluno, Material } from '@/types/db'
 
 /**
@@ -52,6 +52,25 @@ export async function desligarDaTurma(turmaId: string, item: ItemDaTurma) {
   const { coluna, id } = colunas(item)
   const { error } = await supabase.from('turmas_conteudos').delete().eq('turma_id', turmaId).eq(coluna, id)
   if (error) throw error
+}
+
+/**
+ * Tira a trilha ou a atividade da turma — o par de `atribuirTrilhaParaTurmas`
+ * e `enviarAtividadeParaTurmas`, como `MateriaisDaTurma` faz com material.
+ *
+ * Sai dos membros de agora e deixa de ser da turma (senão voltaria para cada
+ * um que entrasse depois). O que alguém já CONCLUIU fica: a resposta e a nota
+ * são dele — na trilha, as etapas feitas viram tarefas soltas na ficha, como
+ * no "remover da trilha" (RF-140). Só o pendente sai.
+ */
+export async function tirarDaTurma(turmaId: string, item: { trilhaId: string } | { atividadeId: string }) {
+  const membros = (await membrosDe([turmaId])).map((a) => a.id)
+  if ('trilhaId' in item) {
+    await removerAlunosDaTrilha(item.trilhaId, membros)
+  } else if (membros.length > 0) {
+    await apagarPendentesDaAtividade(item.atividadeId, membros)
+  }
+  await desligarDaTurma(turmaId, item)
 }
 
 /** Os membros de uma ou mais turmas, sem repetir quem está em duas. */
@@ -269,6 +288,16 @@ export function invalidarConteudos(qc: ReturnType<typeof useQueryClient>) {
   for (const prefixo of ['turmas', 'trilhas', 'atividades', 'materiais', 'alunos']) {
     qc.invalidateQueries({ queryKey: [prefixo] })
   }
+}
+
+/** A lixeira das listas de tarefas e trilhas da turma. */
+export function useTirarDaTurma(turmaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (item: { trilhaId: string } | { atividadeId: string }) => tirarDaTurma(turmaId, item),
+    // Mesmo com falha no meio: o que já saiu de alguém, saiu.
+    onSettled: () => invalidarConteudos(qc),
+  })
 }
 
 /**
