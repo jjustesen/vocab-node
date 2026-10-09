@@ -7,7 +7,11 @@ import { supabase } from '@/lib/supabase'
 import { consumirMotivoDaSaida } from '@/lib/motivo-saida'
 import { useAuth } from './AuthProvider'
 
-type Modo = 'entrar' | 'criar'
+type Modo = 'entrar' | 'criar' | 'recuperar'
+
+function modoInicial(param: string | null): Modo {
+  return param === 'criar' || param === 'recuperar' ? param : 'entrar'
+}
 
 export function LoginPage() {
   const { session, carregando } = useAuth()
@@ -16,7 +20,7 @@ export function LoginPage() {
   // ?modo=criar — só lido na primeira renderização, de propósito: depois
   // disso quem manda é o toggle abaixo, não a URL.
   const [params] = useSearchParams()
-  const [modo, setModo] = useState<Modo>(params.get('modo') === 'criar' ? 'criar' : 'entrar')
+  const [modo, setModo] = useState<Modo>(modoInicial(params.get('modo')))
   // Lido uma vez, na montagem — ver lib/motivo-saida.ts para o porquê de não
   // ser um parâmetro na URL.
   const [avisoDePerfil] = useState(() =>
@@ -28,7 +32,14 @@ export function LoginPage() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
+
+  function trocarModo(novo: Modo) {
+    setModo(novo)
+    setErro(null)
+    setAviso(null)
+  }
 
   if (carregando) return null
   if (session) return <Navigate to="/hoje" replace />
@@ -36,11 +47,20 @@ export function LoginPage() {
   async function enviar(evento: React.FormEvent) {
     evento.preventDefault()
     setErro(null)
+    setAviso(null)
     setEnviando(true)
     queryClient.removeQueries({ queryKey: ['perfil-professor'] })
 
     try {
-      if (modo === 'criar') {
+      if (modo === 'recuperar') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/redefinir-senha`,
+        })
+        if (error) throw error
+        // Mesma resposta com ou sem conta: dizer "esse e-mail não existe"
+        // entregaria quem é cliente da plataforma.
+        setAviso(`Se ${email} tiver conta, o link para criar uma senha nova chega em alguns minutos. Confira o spam.`)
+      } else if (modo === 'criar') {
         const cliente = clienteCadastro()
         const existente = await cliente.auth.signInWithPassword({ email, password: senha })
         if (existente.data.session) {
@@ -91,12 +111,18 @@ export function LoginPage() {
           className="rounded-3xl border border-neutral-200 bg-white p-7 shadow-sm"
         >
           <h1 className="text-xl font-extrabold">
-            {modo === 'entrar' ? 'Entrar como professor' : 'Criar conta de professor'}
+            {modo === 'entrar'
+              ? 'Entrar como professor'
+              : modo === 'criar'
+                ? 'Criar conta de professor'
+                : 'Esqueci minha senha'}
           </h1>
           <p className="mt-1 text-sm text-neutral-500">
             {modo === 'entrar'
               ? 'Bem-vindo de volta.'
-              : 'Já é aluno? Use o mesmo e-mail e a senha atual.'}
+              : modo === 'criar'
+                ? 'Já é aluno? Use o mesmo e-mail e a senha atual.'
+                : 'Mandamos para o seu e-mail um link para criar uma senha nova.'}
           </p>
 
           {modo === 'criar' && (
@@ -126,19 +152,37 @@ export function LoginPage() {
             />
           </label>
 
-          <label className="mt-4 block">
-            <span className="text-xs font-bold text-neutral-600">Senha</span>
-            <input
-              required
-              type="password"
-              minLength={8}
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              autoComplete={modo === 'criar' ? 'new-password' : 'current-password'}
-              placeholder="mínimo 8 caracteres"
-              className="mt-1 w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-neutral-900"
-            />
-          </label>
+          {modo !== 'recuperar' && (
+            <label className="mt-4 block">
+              <span className="text-xs font-bold text-neutral-600">Senha</span>
+              <input
+                required
+                type="password"
+                minLength={8}
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                autoComplete={modo === 'criar' ? 'new-password' : 'current-password'}
+                placeholder="mínimo 8 caracteres"
+                className="mt-1 w-full rounded-2xl border border-neutral-300 px-4 py-3 text-sm outline-none focus:border-neutral-900"
+              />
+            </label>
+          )}
+
+          {modo === 'entrar' && (
+            <button
+              type="button"
+              onClick={() => trocarModo('recuperar')}
+              className="mt-2 text-xs font-bold text-violet-700"
+            >
+              Esqueci minha senha
+            </button>
+          )}
+
+          {aviso && (
+            <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-800">
+              {aviso}
+            </p>
+          )}
 
           {(erro || avisoDePerfil) && (
             <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">
@@ -152,17 +196,14 @@ export function LoginPage() {
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-3.5 text-sm font-extrabold text-white disabled:opacity-60"
           >
             {enviando && <Loader2 className="h-4 w-4 animate-spin" />}
-            {modo === 'entrar' ? 'Entrar' : 'Criar conta'}
+            {modo === 'entrar' ? 'Entrar' : modo === 'criar' ? 'Criar conta' : 'Enviar link'}
           </button>
 
           <p className="mt-5 text-center text-xs text-neutral-500">
-            {modo === 'entrar' ? 'Ainda não tem conta? ' : 'Já tem conta? '}
+            {modo === 'entrar' ? 'Ainda não tem conta? ' : modo === 'criar' ? 'Já tem conta? ' : 'Lembrou? '}
             <button
               type="button"
-              onClick={() => {
-                setModo(modo === 'entrar' ? 'criar' : 'entrar')
-                setErro(null)
-              }}
+              onClick={() => trocarModo(modo === 'entrar' ? 'criar' : 'entrar')}
               className="font-bold text-violet-700"
             >
               {modo === 'entrar' ? 'Criar conta grátis' : 'Entrar'}
@@ -194,5 +235,7 @@ function traduzirErro(e: unknown): string {
   if (msg.includes('User already registered')) return 'Já existe uma conta com esse e-mail.'
   if (msg.includes('Password should be')) return 'A senha precisa de ao menos 8 caracteres.'
   if (msg.includes('Email not confirmed')) return 'Confirme seu e-mail antes de entrar.'
+  if (msg.includes('rate limit') || msg.includes('only request this after'))
+    return 'Muitos pedidos seguidos. Espere alguns minutos e tente de novo.'
   return msg
 }

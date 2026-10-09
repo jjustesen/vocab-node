@@ -1,5 +1,6 @@
-import { useId } from 'react'
-import { DoorOpen, Loader2 } from 'lucide-react'
+import { useId, useState } from 'react'
+import { DoorOpen, KeyRound, Loader2 } from 'lucide-react'
+import { FormNovaSenha } from '@/features/auth/NovaSenha'
 import { useProfessor } from '@/features/planos/api'
 import { useSalvarConfiguracoes } from './api'
 
@@ -43,6 +44,66 @@ export function ConfiguracoesPage() {
         <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
           Não consegui salvar. Verifique sua internet e tente de novo.
         </p>
+      )}
+
+      <h2 className="mt-8 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Conta</h2>
+
+      <div className="mt-3">
+        <TrocarSenha />
+      </div>
+    </div>
+  )
+}
+
+/** Fechado por padrão: é um ajuste raro, e três campos de senha abertos poluem a página. */
+function TrocarSenha() {
+  const [aberto, setAberto] = useState(false)
+  const [trocada, setTrocada] = useState(false)
+
+  return (
+    <div className="rounded-3xl bg-white p-5">
+      <div className="flex items-start gap-4">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-violet-100 text-violet-700">
+          <KeyRound className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-extrabold">Senha</p>
+          <p className="mt-1 text-sm text-neutral-500">
+            {trocada
+              ? 'Senha trocada. Use a nova na próxima vez que entrar.'
+              : 'Esqueceu a atual? Saia e use "Esqueci minha senha" na tela de login.'}
+          </p>
+        </div>
+        {!aberto && (
+          <button
+            onClick={() => {
+              setAberto(true)
+              setTrocada(false)
+            }}
+            className="shrink-0 rounded-full bg-neutral-100 px-4 py-2 text-xs font-bold text-neutral-700 transition hover:bg-neutral-200"
+          >
+            Trocar senha
+          </button>
+        )}
+      </div>
+
+      {aberto && (
+        <div className="mt-2 max-w-sm sm:ml-14">
+          <FormNovaSenha
+            pedirSenhaAtual
+            rotulo="Salvar nova senha"
+            aoConcluir={() => {
+              setAberto(false)
+              setTrocada(true)
+            }}
+          />
+          <button
+            onClick={() => setAberto(false)}
+            className="mt-2 w-full py-2 text-xs font-bold text-neutral-500"
+          >
+            Cancelar
+          </button>
+        </div>
       )}
     </div>
   )

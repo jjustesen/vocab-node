@@ -11,6 +11,15 @@ if (!url || !anonKey) {
 }
 
 /**
+ * Chegou pelo link de "esqueci minha senha"? Lido ANTES de criar o cliente:
+ * com `detectSessionInUrl` ele consome o `#...type=recovery` e limpa a URL, e
+ * o evento PASSWORD_RECOVERY pode disparar antes de alguém estar ouvindo.
+ * Ver `RedefinirSenhaPage`.
+ */
+export const chegouPeloLinkDeRecuperacao =
+  typeof window !== 'undefined' && new URLSearchParams(window.location.hash.slice(1)).get('type') === 'recovery'
+
+/**
  * Cliente do professor autenticado. Toda leitura e escrita daqui passa pelo
  * RLS definido em supabase/migrations/0001_init.sql.
  *

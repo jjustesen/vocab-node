@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from '@/features/auth/AuthProvider'
 import { usePerfilProfessor } from '@/features/auth/perfil'
 import { guardarMotivoDaSaida } from '@/lib/motivo-saida'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { RedefinirSenhaPage } from '@/features/auth/RedefinirSenhaPage'
 import { HojePage } from '@/features/hoje/HojePage'
 import { AlunosPage } from '@/features/alunos/AlunosPage'
 import { AlunoPage } from '@/features/alunos/AlunoPage'
@@ -49,6 +50,8 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/entrar-professor" element={<LoginPage />} />
+        {/* Fora do ExigeSessao: sem sessão, a página explica que o link venceu. */}
+        <Route path="/redefinir-senha" element={<RedefinirSenhaPage />} />
 
         {/* Rota do aluno: sem sessão, sem RLS. Ver features/tarefa/TarefaPage.tsx. */}
         <Route path="/t/:token" element={<TarefaPage />} />
