@@ -16,6 +16,7 @@ import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { resolverAtribuicao } from '../_shared/atribuicao.ts'
 import { corretaPorPontuacao, pontuarPronuncia } from '../_shared/correcao.ts'
 import { transcreverFala } from '../_shared/ia/transcricao.ts'
+import { camposDoRefazer } from '../_shared/refazer.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 
 /** ~1,5 MB de base64 ≈ 1,1 MB de áudio ≈ 60s de webm/opus mono. */
@@ -35,8 +36,10 @@ Deno.serve(async (req) => {
     audio_base64?: unknown
     mime_type?: unknown
     tempo_ms?: unknown
-    /** Modo treino: transcreve e pontua sem gravar nada (RF-86). */
+    /** Modo treino: transcreve e pontua sem gravar nada (clientes antigos). */
     apenas_transcrever?: unknown
+    /** Refazer um erro DEPOIS de concluir: vale nota (0023). */
+    refazer?: unknown
   }
   try {
     corpo = await req.json()
@@ -75,12 +78,13 @@ Deno.serve(async (req) => {
 
   if (!atribuicao) return respostaErro('Link inválido ou expirado.', 404)
   if (atribuicao.revogada_em) return respostaErro('Este link foi desativado pelo professor.', 410)
-  // O repasse dos erros (RF-86) acontece DEPOIS de concluir, e é justamente
-  // quando o aluno relê para treinar. Por isso a trava de conclusão vale só
-  // para quem vai gravar resposta — `apenas_transcrever` não grava nada.
-  if (atribuicao.concluida_em && corpo.apenas_transcrever !== true) {
-    return respostaErro('Esta atividade já foi concluída.', 409)
-  }
+  // Depois de concluir, só grava o refazer de um erro (0023);
+  // `apenas_transcrever` não grava nada e passa sempre.
+  const refazer =
+    corpo.apenas_transcrever === true
+      ? ({ ok: true, extras: null } as const)
+      : await camposDoRefazer(db, atribuicao, questaoId, corpo.refazer)
+  if (!refazer.ok) return respostaErro(refazer.erro, 409)
 
   const { data: questao } = await db
     .from('questoes')
@@ -148,6 +152,7 @@ Deno.serve(async (req) => {
       pontuacao,
       audio_path: audioPath,
       tempo_ms: typeof tempoMs === 'number' ? tempoMs : null,
+      ...refazer.extras,
     },
     { onConflict: 'atribuicao_id,questao_id' },
   )

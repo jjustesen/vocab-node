@@ -358,10 +358,13 @@ export function AlunoPage() {
                         )}
                       </span>
                       {h.concluidaEm ? (
-                        <span
-                          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ${corDoPlacar(h.acertos, h.total)}`}
-                        >
-                          {h.acertos}/{h.total}
+                        <span className="flex shrink-0 items-center gap-1.5">
+                          <NotaDaPrimeiraVez h={h} />
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${corDoPlacar(h.acertos, h.total)}`}
+                          >
+                            {h.acertos}/{h.total}
+                          </span>
                         </span>
                       ) : (
                         <span className="shrink-0 rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-bold text-neutral-500">
@@ -592,8 +595,11 @@ function LinhaDaTarefa({
       </div>
       {h.concluidaEm ? (
         // A mesma régua das "Últimas atividades": 0/5 não pode sair verde.
-        <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${corDoPlacar(h.acertos, h.total)}`}>
-          {h.acertos}/{h.total}
+        <span className="flex items-center gap-1.5">
+          <NotaDaPrimeiraVez h={h} />
+          <span className={`rounded-full px-2.5 py-1 text-xs font-extrabold ${corDoPlacar(h.acertos, h.total)}`}>
+            {h.acertos}/{h.total}
+          </span>
         </span>
       ) : (
         <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-bold text-neutral-500">pendente</span>
@@ -838,5 +844,18 @@ function ItemMenu({
     >
       <Icone className="h-3.5 w-3.5" /> {rotulo}
     </button>
+  )
+}
+
+/**
+ * O aluno refez os erros e a nota subiu (0023): a nota da primeira vez fica
+ * ao lado, riscada, para o professor ver de onde ele partiu.
+ */
+function NotaDaPrimeiraVez({ h }: { h: ItemHistoricoAluno }) {
+  if (h.acertosNaPrimeira === null || h.acertos === null || h.acertosNaPrimeira >= h.acertos) return null
+  return (
+    <span className="text-xs font-semibold text-neutral-400" title="Nota da primeira vez, antes de refazer os erros">
+      <s>{h.acertosNaPrimeira}/{h.total}</s> →
+    </span>
   )
 }

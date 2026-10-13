@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       .from('questoes')
       .select('*', { count: 'exact', head: true })
       .eq('atividade_id', atribuicao.atividade_id),
-    db.from('respostas').select('correta, tempo_ms').eq('atribuicao_id', atribuicao.id),
+    db.from('respostas').select('correta, correta_na_primeira, tempo_ms').eq('atribuicao_id', atribuicao.id),
   ])
 
   const total = totalQuestoes ?? 0
@@ -42,10 +42,13 @@ Deno.serve(async (req) => {
   }
 
   const acertos = respostas?.filter((r) => r.correta).length ?? 0
+  // A nota da primeira vez, antes de refazer os erros (0023).
+  const acertosNaPrimeira = respostas?.filter((r) => r.correta_na_primeira ?? r.correta).length ?? 0
   const tempoTotalMs = respostas?.reduce((soma, r) => soma + (r.tempo_ms ?? 0), 0) ?? null
 
   return respostaJson({
     acertos,
+    acertos_na_primeira: acertosNaPrimeira,
     total,
     tempo_total_ms: tempoTotalMs,
     proxima_etapa: await proximaEtapaDaTrilha(db, atribuicao),

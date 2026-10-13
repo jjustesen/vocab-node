@@ -134,6 +134,8 @@ export type ItemHistoricoAluno = {
   enviadaEm: string
   concluidaEm: string | null
   acertos: number | null
+  /** Acertos antes de refazer os erros (0023) — igual a `acertos` se não refez. */
+  acertosNaPrimeira: number | null
   total: number | null
   /**
    * De que trilha esta tarefa é etapa — ou `null` quando foi enviada avulsa.
@@ -173,17 +175,18 @@ export function useHistoricoDoAluno(alunoId: string | undefined) {
       )
 
       const idsConcluidas = atribuicoes.filter((a) => a.concluida_em).map((a) => a.id)
-      const contagemPorAtribuicao = new Map<string, { acertos: number; total: number }>()
+      const contagemPorAtribuicao = new Map<string, { acertos: number; naPrimeira: number; total: number }>()
       if (idsConcluidas.length > 0) {
         const { data: respostas, error: erroRespostas } = await supabase
           .from('respostas')
-          .select('atribuicao_id, correta')
+          .select('atribuicao_id, correta, correta_na_primeira')
           .in('atribuicao_id', idsConcluidas)
         if (erroRespostas) throw erroRespostas
         for (const r of respostas) {
-          const atual = contagemPorAtribuicao.get(r.atribuicao_id) ?? { acertos: 0, total: 0 }
+          const atual = contagemPorAtribuicao.get(r.atribuicao_id) ?? { acertos: 0, naPrimeira: 0, total: 0 }
           atual.total += 1
           if (r.correta) atual.acertos += 1
+          if (r.correta_na_primeira ?? r.correta) atual.naPrimeira += 1
           contagemPorAtribuicao.set(r.atribuicao_id, atual)
         }
       }
@@ -200,6 +203,7 @@ export function useHistoricoDoAluno(alunoId: string | undefined) {
           enviadaEm: a.enviada_em,
           concluidaEm: a.concluida_em,
           acertos: contagem?.acertos ?? null,
+          acertosNaPrimeira: contagem?.naPrimeira ?? null,
           total: contagem?.total ?? null,
           trilha: (a.trilha_etapa_id && trilhaPorEtapa.get(a.trilha_etapa_id)) || null,
         }

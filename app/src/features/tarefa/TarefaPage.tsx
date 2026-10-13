@@ -70,10 +70,10 @@ export function TarefaPage() {
   const [melhorSequencia, setMelhorSequencia] = useState(0)
   const [resultadoFinal, setResultadoFinal] = useState<ConcluirResposta | null>(null)
   /**
-   * RF-86 — repasse dos erros. É TREINO: as respostas não são reenviadas, o
-   * placar já registrado não muda. Refazer valendo nota exigiria reabrir uma
-   * tentativa concluída (`tarefa-responder` recusa com 409), o que reescreveria
-   * o resultado que o professor já viu.
+   * RF-86 — repasse dos erros. VALE NOTA (0023): cada erro refeito vai ao
+   * servidor com `refazer: true` e substitui a resposta errada, então a nota
+   * sobe. O resultado da primeira vez não se perde — o servidor o guarda em
+   * `respostas.correta_na_primeira`, e o professor vê os dois.
    */
   const [indicesParaRefazer, setIndicesParaRefazer] = useState<number[] | null>(null)
   const [posicaoNoRepasse, setPosicaoNoRepasse] = useState(0)
@@ -186,13 +186,18 @@ export function TarefaPage() {
       return nova
     })
 
-    // No repasse dos erros nada é enviado nem regravado — ver indicesParaRefazer.
-    if (indicesParaRefazer) return
     resultadosLocais.current.set(questao.id, correta)
 
     const tempoMs = Date.now() - inicioQuestaoRef.current
     const promessa = apiTarefa
-      .post('/tarefa-responder', { ...identificador, questao_id: questao.id, valor, tempo_ms: tempoMs })
+      .post('/tarefa-responder', {
+        ...identificador,
+        questao_id: questao.id,
+        valor,
+        tempo_ms: tempoMs,
+        // No repasse dos erros a resposta refeita substitui a errada (0023).
+        refazer: Boolean(indicesParaRefazer),
+      })
       .catch(() => {
         // Sem retry aqui de propósito: se faltar ao concluir, o servidor
         // rejeita com "faltam N questões" e o aluno vê a tela de erro com
@@ -230,8 +235,8 @@ export function TarefaPage() {
           audio_base64: audioBase64,
           mime_type: mimeType,
           tempo_ms: Date.now() - inicioQuestaoRef.current,
-          // No repasse dos erros o servidor transcreve e pontua sem gravar.
-          apenas_transcrever: Boolean(indicesParaRefazer),
+          // No repasse dos erros a resposta refeita substitui a errada (0023).
+          refazer: Boolean(indicesParaRefazer),
         })
 
         if (!data.transcricao?.trim()) return { ouviu: false }
@@ -251,7 +256,7 @@ export function TarefaPage() {
         })
         // A resposta já foi gravada pela própria chamada acima — nada de
         // reenviar em segundo plano como no caminho local.
-        if (!indicesParaRefazer) resultadosLocais.current.set(questao.id, data.correta)
+        resultadosLocais.current.set(questao.id, data.correta)
         return { ouviu: true }
       } catch {
         // Servidor fora do ar ou áudio recusado: tratamos como "não te ouvi",
@@ -282,7 +287,6 @@ export function TarefaPage() {
       return nova
     })
 
-    if (indicesParaRefazer) return { ouviu: true }
     resultadosLocais.current.set(questao.id, correta)
 
     const promessa = apiTarefa
@@ -293,6 +297,7 @@ export function TarefaPage() {
         audio_base64: audioBase64,
         mime_type: mimeType,
         tempo_ms: Date.now() - inicioQuestaoRef.current,
+        refazer: Boolean(indicesParaRefazer),
       })
       .catch(() => {
         // Mesma regra de tarefa-responder: sem retry aqui — se faltar resposta
@@ -309,9 +314,10 @@ export function TarefaPage() {
     if (indicesParaRefazer) {
       const seguinte = posicaoNoRepasse + 1
       if (seguinte >= indicesParaRefazer.length) {
-        // Fim do repasse: volta para a mesma tela final, com o mesmo placar.
+        // Fim do repasse: espera as respostas refeitas chegarem e busca o
+        // placar de novo — agora com os erros corrigidos contando.
         setIndicesParaRefazer(null)
-        setTela('final')
+        void concluirTarefa()
         return
       }
       setPosicaoNoRepasse(seguinte)
@@ -341,6 +347,7 @@ export function TarefaPage() {
     const erradas = indicesErrados()
     if (erradas.length === 0) return
 
+    pendentesRef.current = []
     setIndicesParaRefazer(erradas)
     setPosicaoNoRepasse(0)
     setIndice(erradas[0])
@@ -565,9 +572,11 @@ function TelaFinal({
                   : 'Continue praticando!'}
         </p>
         <p className="mt-1 text-base font-medium text-neutral-500">
-          {erros === 0
-            ? 'Você não errou nenhuma questão'
-            : `Você acertou ${resultado.acertos} de ${resultado.total}`}
+          {(resultado.acertos_na_primeira ?? resultado.acertos) < resultado.acertos
+            ? `Sua nota subiu de ${resultado.acertos_na_primeira} para ${resultado.acertos} de ${resultado.total}`
+            : erros === 0
+              ? 'Você não errou nenhuma questão'
+              : `Você acertou ${resultado.acertos} de ${resultado.total}`}
         </p>
 
         {/* Cartões de estatística: rótulo colorido em cima, valor grande
@@ -590,14 +599,25 @@ function TelaFinal({
 
         {proxima && <CartaoProximaEtapa proxima={proxima} aoContinuar={aoContinuar} />}
 
-        {!proxima && erros > 0 && (
-          <div className="mt-8">
-            <BotaoPrincipal onClick={aoRefazerErros} cor="violeta">
+        {/* Refazer vale nota (0023), então aparece também no meio da trilha —
+            antes sumia sempre que havia uma próxima etapa. */}
+        {erros > 0 &&
+          (proxima ? (
+            <button
+              onClick={aoRefazerErros}
+              className={`${BOTAO_CHUNKY} mt-3 flex w-full items-center justify-center gap-2 border-violet-200 bg-white py-3.5 text-base text-violet-700 hover:bg-violet-50`}
+            >
               <RotateCcw className="h-5 w-5" strokeWidth={2.5} /> Refazer{' '}
               {erros === 1 ? 'o erro' : `os ${erros} erros`}
-            </BotaoPrincipal>
-          </div>
-        )}
+            </button>
+          ) : (
+            <div className="mt-8">
+              <BotaoPrincipal onClick={aoRefazerErros} cor="violeta">
+                <RotateCcw className="h-5 w-5" strokeWidth={2.5} /> Refazer{' '}
+                {erros === 1 ? 'o erro' : `os ${erros} erros`}
+              </BotaoPrincipal>
+            </div>
+          ))}
 
         {aoSair && (
           <button
@@ -783,7 +803,7 @@ function TelaQuestao({
           </p>
           {repassandoErros && numero === 1 && (
             <p className="mt-1 text-xs font-medium text-neutral-400">
-              É só treino — sua nota já foi enviada e não muda.
+              Refaça o que errou: cada acerto agora sobe a sua nota.
             </p>
           )}
 

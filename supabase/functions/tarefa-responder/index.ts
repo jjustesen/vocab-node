@@ -9,6 +9,7 @@
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { resolverAtribuicao } from '../_shared/atribuicao.ts'
 import { corrigir } from '../_shared/correcao.ts'
+import { camposDoRefazer } from '../_shared/refazer.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 
 Deno.serve(async (req) => {
@@ -22,6 +23,8 @@ Deno.serve(async (req) => {
     questao_id?: unknown
     valor?: unknown
     tempo_ms?: unknown
+    /** Refazer um erro DEPOIS de concluir: vale nota (0023). */
+    refazer?: unknown
   }
   try {
     corpo = await req.json()
@@ -38,7 +41,8 @@ Deno.serve(async (req) => {
 
   if (!atribuicao) return respostaErro('Link inválido ou expirado.', 404)
   if (atribuicao.revogada_em) return respostaErro('Este link foi desativado pelo professor.', 410)
-  if (atribuicao.concluida_em) return respostaErro('Esta atividade já foi concluída.', 409)
+  const refazer = await camposDoRefazer(db, atribuicao, questaoId, corpo.refazer)
+  if (!refazer.ok) return respostaErro(refazer.erro, 409)
 
   const { data: questao } = await db
     .from('questoes')
@@ -65,6 +69,7 @@ Deno.serve(async (req) => {
       valor,
       correta,
       tempo_ms: typeof tempoMs === 'number' ? tempoMs : null,
+      ...refazer.extras,
     },
     { onConflict: 'atribuicao_id,questao_id' },
   )

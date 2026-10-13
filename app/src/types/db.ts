@@ -365,6 +365,8 @@ export type Resposta = {
   audio_path: string | null
   tempo_ms: number | null
   respondida_em: string
+  /** Resultado de antes de o aluno refazer o erro (0023); nulo se nunca refez. */
+  correta_na_primeira: boolean | null
 }
 
 /** Campos com default no banco viram opcionais no insert. */

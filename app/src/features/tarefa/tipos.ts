@@ -86,6 +86,8 @@ export type ProximaEtapa = {
 
 export type ConcluirResposta = {
   acertos: number
+  /** Antes de refazer os erros; igual a `acertos` se nada foi refeito. */
+  acertos_na_primeira?: number
   total: number
   tempo_total_ms: number | null
   proxima_etapa: ProximaEtapa | null

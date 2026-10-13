@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Loader2, Mic, Square } from 'lucide-react'
+import { AlertTriangle, Loader2, Mic, Square, Volume2 } from 'lucide-react'
 import type { FeedbackLocal, QuestaoTarefa } from './tipos'
 import { BOTAO_CHUNKY } from './estilo'
 
@@ -152,6 +152,10 @@ export function RespostaPronuncia({
   const erroDoMotorRef = useRef<string | null>(null)
   const finalizadoRef = useRef(false)
   const pararTimeoutRef = useRef<number | undefined>(undefined)
+  /** A última leitura gravada, para o aluno se ouvir e comparar com a frase. */
+  const [minhaLeitura, setMinhaLeitura] = useState<string | null>(null)
+  const [ouvindoLeitura, setOuvindoLeitura] = useState(false)
+  const tocadorRef = useRef<HTMLAudioElement | null>(null)
 
   // Soltar microfone e reconhecedor ao desmontar: sem isto o indicador de
   // gravação do navegador fica aceso depois que o aluno passa de questão.
@@ -160,10 +164,34 @@ export function RespostaPronuncia({
       clearTimeout(pararTimeoutRef.current)
       recRef.current?.abort()
       gravadorRef.current?.stream.getTracks().forEach((t) => t.stop())
+      tocadorRef.current?.pause()
     }
   }, [])
 
+  // Cada leitura nova troca o arquivo; o anterior sai da memória.
+  useEffect(() => {
+    return () => {
+      if (minhaLeitura) URL.revokeObjectURL(minhaLeitura)
+    }
+  }, [minhaLeitura])
+
+  function ouvirMinhaLeitura() {
+    if (!minhaLeitura) return
+    if (ouvindoLeitura) {
+      tocadorRef.current?.pause()
+      return
+    }
+    const tocador = new Audio(minhaLeitura)
+    tocadorRef.current = tocador
+    tocador.onplay = () => setOuvindoLeitura(true)
+    tocador.onpause = () => setOuvindoLeitura(false)
+    tocador.onended = () => setOuvindoLeitura(false)
+    void tocador.play().catch(() => setOuvindoLeitura(false))
+  }
+
   function comecar() {
+    tocadorRef.current?.pause()
+    setMinhaLeitura(null)
     setErro(null)
     setNaoOuvi(false)
     transcricaoRef.current = ''
@@ -326,7 +354,9 @@ export function RespostaPronuncia({
 
     if (pedacosRef.current.length > 0 && formato) {
       try {
-        audioBase64 = await blobParaBase64(new Blob(pedacosRef.current, { type: formato }))
+        const gravacao = new Blob(pedacosRef.current, { type: formato })
+        setMinhaLeitura(URL.createObjectURL(gravacao))
+        audioBase64 = await blobParaBase64(gravacao)
       } catch {
         // Perder o áudio não pode custar a resposta do aluno.
         audioBase64 = null
@@ -460,6 +490,19 @@ export function RespostaPronuncia({
       {/* Ler em voz alta é treino: repetir É o exercício. O servidor já grava
           por upsert (tarefa-pronuncia), então a última leitura simplesmente
           substitui a anterior, áudio incluído. */}
+      {/* Ouvir a própria leitura: o aluno compara o que disse com a frase e
+          com o que o reconhecedor entendeu. O áudio é o que acabou de gravar,
+          ainda no aparelho — não depende do servidor. */}
+      {feedback && minhaLeitura && (
+        <button
+          onClick={ouvirMinhaLeitura}
+          className={`${BOTAO_CHUNKY} mt-4 w-full border-sky-200 bg-sky-50 py-3.5 text-base text-sky-800 hover:bg-sky-100`}
+        >
+          {ouvindoLeitura ? <Square className="h-4 w-4 fill-current" /> : <Volume2 className="h-4 w-4" />}
+          {ouvindoLeitura ? 'Parar' : 'Ouvir minha leitura'}
+        </button>
+      )}
+
       {feedback && !semSuporte && (
         <button
           onClick={tentarDeNovo}
