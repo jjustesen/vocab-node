@@ -578,13 +578,69 @@ export function useAdicionarEtapa(trilhaId: string) {
       if (erroExistentes) throw erroExistentes
 
       const proxima = (existentes[0]?.ordem ?? 0) + 1
-      const { error } = await supabase
+      const { data: etapa, error } = await supabase
         .from('trilha_etapas')
         .insert({ trilha_id: trilhaId, atividade_id: atividadeId, ordem: proxima })
+        .select('id, atividade_id')
+        .single()
       if (error) throw error
+
+      await enviarEtapaAQuemJaEstaNaTrilha(trilhaId, etapa)
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.todas }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: chavesTrilhas.todas })
+      void qc.invalidateQueries({ queryKey: ['alunos'] })
+    },
   })
+}
+
+/**
+ * A etapa nova vai também para quem JÁ recebeu a trilha. `atribuirTrilha` só
+ * cria as atribuições das etapas que existem no momento do envio; sem isto, a
+ * lição adicionada depois aparecia no painel do aluno sem atribuição — com
+ * "0 questões" e um "Fazer" que não abria nada.
+ */
+async function enviarEtapaAQuemJaEstaNaTrilha(trilhaId: string, etapa: { id: string; atividade_id: string }) {
+  const { data: vinculos, error: erroVinculos } = await supabase
+    .from('trilha_alunos')
+    .select('aluno_id')
+    .eq('trilha_id', trilhaId)
+  if (erroVinculos) throw erroVinculos
+  if (vinculos.length === 0) return
+
+  const idsAlunos = vinculos.map((v) => v.aluno_id)
+  // A mesma atividade pode já ter ido a esse aluno avulsa ou em outra trilha:
+  // a numeração da tentativa continua de onde parou (unique da tabela, RF-127).
+  const { data: anteriores, error: erroAnteriores } = await supabase
+    .from('atribuicoes')
+    .select('aluno_id, tentativa')
+    .eq('atividade_id', etapa.atividade_id)
+    .in('aluno_id', idsAlunos)
+  if (erroAnteriores) throw erroAnteriores
+
+  const ultimaTentativa = new Map<string, number>()
+  for (const a of anteriores) ultimaTentativa.set(a.aluno_id, Math.max(ultimaTentativa.get(a.aluno_id) ?? 0, a.tentativa))
+
+  const tokenPorAluno = new Map<string, string>()
+  const linhas = []
+  for (const alunoId of idsAlunos) {
+    const { token, hash } = await gerarTokenDeAcesso()
+    tokenPorAluno.set(alunoId, token)
+    linhas.push({
+      atividade_id: etapa.atividade_id,
+      aluno_id: alunoId,
+      trilha_etapa_id: etapa.id,
+      token_hash: hash,
+      tentativa: (ultimaTentativa.get(alunoId) ?? 0) + 1,
+    })
+  }
+
+  const { data: criadas, error } = await supabase.from('atribuicoes').insert(linhas).select('id, aluno_id')
+  if (error) throw error
+  for (const c of criadas ?? []) {
+    const token = tokenPorAluno.get(c.aluno_id)
+    if (token) lembrarToken(c.id, token)
+  }
 }
 
 /**

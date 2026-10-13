@@ -123,9 +123,17 @@ Deno.serve(async (req) => {
     const idsExtras = [...new Set((etapas ?? []).map((e) => e.atividade_id))].filter(
       (id) => !atividadePorId.has(id),
     )
+    // As questões delas também: sem isto, uma etapa ainda sem atribuição para
+    // o aluno aparecia com "0 questões".
     if (idsExtras.length > 0) {
-      const { data: extras } = await db.from('atividades').select('id, titulo, nivel').in('id', idsExtras)
+      const [{ data: extras }, { data: questoesExtras }] = await Promise.all([
+        db.from('atividades').select('id, titulo, nivel').in('id', idsExtras),
+        db.from('questoes').select('atividade_id').in('atividade_id', idsExtras),
+      ])
       for (const a of extras ?? []) atividadePorId.set(a.id, a)
+      for (const q of questoesExtras ?? []) {
+        totalQuestoesPorAtividade.set(q.atividade_id, (totalQuestoesPorAtividade.get(q.atividade_id) ?? 0) + 1)
+      }
     }
 
     for (const vinculo of vinculos) {
