@@ -38,8 +38,8 @@ O app já faz a parte dele: `adaptiveStream` e `dynacast` estão ligados no
 ## 2. Contratando na Hostinger
 
 - Plano: **KVM 2** (ou KVM 4).
-- Localização: **Brasil – São Paulo**. Isso é escolhido na criação do servidor,
-  não no plano.
+- Localização: **Brasil** (o painel mostra "Brazil - Campinas", a ~100 km de
+  São Paulo). Isso é escolhido na criação do servidor, não no plano.
 - Sistema: **Ubuntu 24.04 LTS**. Se o painel oferecer o template
   "Ubuntu com Docker", pegue-o e pule a instalação do Docker abaixo.
 - Anote o IP público que aparecer no painel.
@@ -68,6 +68,18 @@ Caddy (`nslookup sala.seudominio.com.br` tem que devolver o IP).
 
 Para o TURN, crie também `turn` → mesmo IP. Pode ser um só nome, mas nomes
 separados deixam o `generate` abaixo mais direto.
+
+O registro vai onde o DNS do domínio é servido, que não é necessariamente
+onde ele foi comprado. Domínio da Hostinger com site na Vercel, por exemplo:
+os registros vão na Vercel. E os nameservers no registro do domínio têm que
+ser **só** os desse provedor — misturar `ns*.vercel-dns.com` com os
+`*.dns-parking.com` da Hostinger faz metade das consultas cair numa zona sem
+o `sala`, e o Let's Encrypt falha de forma intermitente. Para conferir o que
+o registro tem de fato:
+
+```bash
+curl -s https://rdap.verisign.com/com/v1/domain/seudominio.com | grep -oE '"ldhName":"[^"]+"'
+```
 
 ## 4. Na máquina
 
@@ -106,15 +118,22 @@ mkdir -p /opt/livekit && cd /opt/livekit
 docker run --rm -it -v $PWD:/output livekit/generate
 ```
 
-Respostas:
+Respostas (as opções marcadas por padrão já são as certas, exceto os
+domínios):
 
-- **Primary domain**: `sala.seudominio.com.br`
-- **TURN**: sim → domínio `turn.seudominio.com.br`
-- **Egress / Ingress**: não (gravação fica para depois)
-- **Deploy target**: `docker-compose`
+- **What to deploy**: LiveKit Server only (gravação fica para depois)
+- **Primary domain name**: `sala.seudominio.com.br`
+- **TURN domain name**: `turn.seudominio.com.br`
+- **Which SSL issuers to use**: Let's Encrypt
+- **LiveKit version**: latest
+- **Use external Redis**: no (we'll bundle Redis)
+- **Generate a startup script**: Startup Shell Script. O `init_script.sh` é
+  para quem roda o gerador fora da VPS; aqui o Docker já está instalado,
+  então usamos o `docker-compose.yaml` direto e o script fica sem uso.
 
 Ele grava tudo em `/opt/livekit/sala.seudominio.com.br/`. Guarde a **API key**
-e o **API secret** que aparecem no final — são os que vão para o Supabase.
+e o **API secret** que aparecem no final (também ficam em `livekit.yaml`,
+na seção `keys`). São esses que vão para o Supabase.
 
 ### Subir
 
@@ -137,12 +156,21 @@ supabase secrets set \
   LIVEKIT_API_SECRET=xxxxxxxxxxxxxxxx
 ```
 
-Nada no front muda. O próximo `sala-entrar` já emite token para o servidor
-novo. Para voltar ao Cloud, é o mesmo comando com os valores antigos.
+Para o secret não passar pela tela nem pelo histórico, dá para lê-lo direto
+da VPS no mesmo comando (Git Bash, na pasta do projeto):
+
+```bash
+supabase secrets set LIVEKIT_URL=wss://sala.seudominio.com.br LIVEKIT_API_KEY=APIxxxxxxxx LIVEKIT_API_SECRET="$(ssh root@IP_DA_VPS "sed -n '/^keys:/{n;s/^[^:]*: *//;p}' /opt/livekit/sala.seudominio.com.br/livekit.yaml")"
+```
+
+Nada no front muda e não precisa redeploy: o próximo `sala-entrar` já emite
+token para o servidor novo. Para voltar ao Cloud, é o mesmo comando com os
+valores antigos.
 
 ## 6. Verificar
 
-Do seu computador, com o [`lk` CLI](https://docs.livekit.io/home/cli/):
+Do seu computador, com o [`lk` CLI](https://docs.livekit.io/home/cli/)
+(para instalar na VPS, o instalador pede `apt install jq` antes):
 
 ```bash
 lk room join --url wss://sala.seudominio.com.br --api-key APIxxx --api-secret xxx --identity teste --publish-demo
