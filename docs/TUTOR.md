@@ -2,7 +2,10 @@
 
 O tutor oral nasceu como POC em [`poc-tutor/`](../poc-tutor/README.md), numa página escondida com senha. A migration [0024](../supabase/migrations/0024_tutor.sql) o traz para dentro do produto:
 
-- **Professor liberado** (`tutor_acesso`) vê a aba **Configurações → Tutor**: alunos com tutor, preferências (voz natural, microfone automático, sessões por mês), uso e custo do mês, resultados recentes.
+- **Professor liberado** (`tutor_acesso`) vê o item **Tutor** no menu (`/tutor`), com quatro abas:
+  - **Lições**: as dele (rascunho ou publicadas) e a biblioteca, só leitura. **Nova lição com IA** transforma a foto, o PDF ou o texto de uma página de drillings numa lição em rascunho (`tutor-gerar-licao`, migration 0025).
+  - **Alunos**, **Resultados** e **Preferências**: quem tem o tutor, uso e custo do mês, voz, microfone e sessões por mês.
+- **Editor de lição** (`/tutor/licoes/:id`): tudo o que o tutor pede, aceita, dica e corrige, mais as "regras para a IA". O `validarRoteiro` impede publicar com problema; o `avisosDoRoteiro` aponta resposta vazando na folha ou na dica. O painel **Áudios** lista as falas fixas, toca as gravadas e grava as que faltam (`tutor-gravar-falas`). **Experimentar** abre a aula como aluno, numa sessão de teste que não conta para ninguém.
 - Na **ficha do aluno**, aba **Tutor**: a chave do tutor daquele aluno, as lições da biblioteca que ele pratica e o histórico das práticas.
 - O **aluno** com o tutor ligado ganha o item **Tutor** no menu do app: a lista de lições liberadas (`/painel/tutor`) e a aula em tela cheia (`/painel/tutor/:licaoId`).
 
@@ -30,6 +33,8 @@ A ordem importa: `painel-aluno-obter` novo lê `alunos.tutor_ativo`, que só exi
 2. **Funções** — `tutor-aluno` e `painel-aluno-obter` com verify-jwt ligado (o aluno está logado); `poc-tutor` continua sem:
    ```bash
    supabase functions deploy tutor-aluno
+   supabase functions deploy tutor-gerar-licao
+   supabase functions deploy tutor-gravar-falas
    supabase functions deploy painel-aluno-obter
    supabase functions deploy poc-tutor --no-verify-jwt
    ```
@@ -63,3 +68,12 @@ Uma lição é um `Roteiro` ([`poc-tutor/src/tipos.ts`](../poc-tutor/src/tipos.t
 - `nomes` — como os blocos e as habilidades aparecem para o aluno: `curto` no selo da tela, `resumo` no que o tutor diz no fim.
 
 `npm test` em `poc-tutor/` valida todas as lições da pasta (`test/roteiros.test.ts`): roteiro válido, nenhuma resposta vazando no painel ou nas pistas, nomes completos, e a aula rodando do começo ao fim, com acertos e com erros.
+
+## Lições do professor (0025)
+
+- `tutor_licoes.professor_id` nulo = biblioteca global (todos leem as publicadas, ninguém edita pelo app); preenchido = lição do professor (só ele lê, edita e apaga). Liberar para um aluno exige lição global ou dele.
+- **Gerar com IA:** o Gemini preenche um schema de listas (`_shared/tutor/licao-ia.ts`) que vira `Roteiro`. Ids, calibração, instrução da transformação pelo nome do bloco, e dicas que entregam a resposta saem no código. Limite: 20 lições geradas por dia por professor; não gasta a cota de atividades do plano.
+- **Gravar falas:** a função recalcula a chave de cada fala (`_shared/tutor/chave.ts`, espelho de `poc-tutor/src/chaveDaFala.ts`), pula as que já estão no bucket e codifica MP3 de 64 kbps com lamejs. O editor manda de 4 em 4 e espera quando o TTS bate no limite por minuto.
+- **Testes do professor:** `tutor-aluno` com `modo: 'professor'` abre as lições dele, até em rascunho; a sessão fica com `teste = true`, sem aluno, e há um teto de 30 testes em 24 h.
+- **As 8 páginas de drillings** do professor estão em `poc-tutor/roteiro/drillings/` (validadas pelo `npm test`) e foram inseridas como rascunhos da conta dele.
+
