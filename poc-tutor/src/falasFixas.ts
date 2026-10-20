@@ -29,14 +29,26 @@ export function falasFixas(roteiro: Roteiro, quantos = Infinity): Map<string, Fa
 
   // Caminho "feliz" até cada item; dali, todas as sequências de até 4 respostas
   // enquanto o item não muda.
+  //
+  // Caminhos diferentes chegam ao MESMO estado (errar em sujo_it e depois em
+  // was deixa o item onde errar duas vezes em was deixa): dali em diante as
+  // falas são as mesmas, então cada estado é explorado uma vez só, na maior
+  // profundidade em que apareceu. Sem isso uma lição de 60 itens levava minutos.
   let base = iniciar(roteiro)
   guardar(base.acoes, base.sessao)
   for (const item of itens) {
     while (base.sessao.atual?.item.id !== item.id) {
       base = receber(base.sessao, { tipo: 'adequada', reconhecido: 'ok' })
     }
+    // O registro das decisões só cresce e não muda fala nenhuma — mas cada
+    // turno copia a sessão inteira, e com ele a lição ficava mais lenta a cada item.
+    base = { ...base, sessao: { ...base.sessao, registro: [] } }
+    const explorados = new Map<string, number>()
     const explorar = (s: Sessao, profundidade: number) => {
       if (profundidade === 0 || s.atual?.item.id !== item.id) return
+      const estado = assinatura(s)
+      if ((explorados.get(estado) ?? 0) >= profundidade) return
+      explorados.set(estado, profundidade)
       for (const av of respostasPara(item)) {
         const r = receber(s, av)
         guardar(r.acoes, r.sessao)
@@ -46,6 +58,22 @@ export function falasFixas(roteiro: Roteiro, quantos = Infinity): Map<string, Fa
     explorar(base.sessao, 4)
   }
   return falas
+}
+
+/** Tudo o que decide as próximas falas: o item em andamento, a cadeia, as dificuldades e a contagem dos elogios. */
+function assinatura(s: Sessao): string {
+  const { item, ...atual } = s.atual!
+  return JSON.stringify([
+    item.id,
+    atual,
+    s.suspenso?.tentando.item.id ?? null,
+    s.fraseBase,
+    s.ultimaAceita,
+    s.calibracao,
+    s.resultados.length,
+    s.dificuldades,
+    s.fila.length,
+  ])
 }
 
 /**

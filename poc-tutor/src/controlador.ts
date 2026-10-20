@@ -80,7 +80,11 @@ export function iniciar(roteiro: Roteiro): { sessao: Sessao; acoes: Acao[] } {
 /** Um turno do aluno: aplica a avaliação e devolve a sessão nova e o que o tutor faz. */
 export function receber(anterior: Sessao, avaliacao: Avaliacao): { sessao: Sessao; acoes: Acao[] } {
   if (anterior.encerrada || !anterior.atual) throw new Error('A sessão não tem item em andamento.')
-  const s = structuredClone(anterior)
+  // O roteiro não muda durante a aula (o controlador só o lê): copiar a lição
+  // inteira a cada turno era o grosso do custo, e quem explora todos os
+  // caminhos (falasFixas) faz milhares de turnos.
+  const { roteiro, ...resto } = anterior
+  const s: Sessao = { ...structuredClone(resto), roteiro }
   const t = s.atual!
   const acoes: Acao[] = []
   registrar(s, { tipo: 'avaliacao', itemId: t.item.id, dados: avaliacao })
