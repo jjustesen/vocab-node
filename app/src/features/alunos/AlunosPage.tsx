@@ -133,6 +133,11 @@ export function AlunosPage() {
                     {aluno.nivel_cefr}
                   </span>
                 )}
+                {aluno.tutor_ativo && (
+                  <span className="hidden rounded-full bg-violet-100 px-2.5 py-1 text-xs font-bold text-violet-800 sm:inline">
+                    tutor
+                  </span>
+                )}
                 {comConta?.has(aluno.id) ? (
                   <span className="hidden rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800 sm:inline">
                     com conta

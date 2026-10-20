@@ -2,8 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Professor } from '@/types/db'
 
-/** O que o professor pode ajustar na plataforma — hoje, só as aulas ao vivo. */
-export type Configuracoes = Pick<Professor, 'sala_de_espera'>
+/** O que o professor pode ajustar na plataforma: as aulas ao vivo e o tutor (0024). */
+export type Configuracoes = Pick<
+  Professor,
+  'sala_de_espera' | 'tutor_voz_natural' | 'tutor_escuta_automatica' | 'tutor_sessoes_mes'
+>
 
 /**
  * Grava uma configuração na linha do próprio professor (RLS `prof_self`).

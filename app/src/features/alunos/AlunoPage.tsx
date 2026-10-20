@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   Archive,
   Check,
@@ -46,8 +46,10 @@ import { useRemoverAlunoDaTrilha, useTrilhasDoAluno, type TrilhaNaFicha } from '
 import { corDoAvatar, inicial } from '@/lib/avatar'
 import { ROTULO_HABILIDADE } from '@/types/questao'
 import { CartaoSala } from '@/features/sala/CartaoSala'
+import { AbaTutorAluno } from '@/features/tutor/AbaTutorAluno'
+import { useAcessoTutor } from '@/features/tutor/api'
 
-const ABAS = ['Resumo', 'Atividades', 'Aulas', 'Materiais', 'Pagamentos'] as const
+const ABAS = ['Resumo', 'Atividades', 'Aulas', 'Materiais', 'Pagamentos', 'Tutor'] as const
 type Aba = (typeof ABAS)[number]
 const DIA_ABREV = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 
@@ -67,7 +69,12 @@ export function AlunoPage() {
   const [modalEditarAberto, setModalEditarAberto] = useState(false)
   const [menuAberto, setMenuAberto] = useState(false)
   const [acaoDeConta, setAcaoDeConta] = useState<AcaoDeConta | null>(null)
-  const [aba, setAba] = useState<Aba>('Resumo')
+  // `?aba=tutor` vem da lista de Configurações → Tutor: abre a ficha já na aba.
+  const [params] = useSearchParams()
+  const [aba, setAba] = useState<Aba>(() => (params.get('aba') === 'tutor' ? 'Tutor' : 'Resumo'))
+  // A aba Tutor só existe para quem foi liberado no beta.
+  const { data: acessoTutor } = useAcessoTutor()
+  const abas = ABAS.filter((a) => a !== 'Tutor' || acessoTutor)
 
   const concluidas = historico?.filter((h) => h.concluidaEm) ?? []
   // Aulas vêm da mais recente para a mais antiga. Só conta como "última aula"
@@ -268,7 +275,7 @@ export function AlunoPage() {
       )}
 
       <div className="mt-6 flex flex-wrap gap-1 text-sm">
-        {ABAS.map((a) => (
+        {abas.map((a) => (
           <button
             key={a}
             onClick={() => setAba(a)}
@@ -422,6 +429,8 @@ export function AlunoPage() {
       {aba === 'Materiais' && <AbaMateriais alunoId={aluno.id} alunoNome={aluno.nome} />}
 
       {aba === 'Pagamentos' && <AbaPagamentos alunoId={aluno.id} valorMensal={aluno.valor_mensal} />}
+
+      {aba === 'Tutor' && acessoTutor && <AbaTutorAluno aluno={aluno} acesso={acessoTutor} temConta={Boolean(conta)} />}
     </div>
   )
 }

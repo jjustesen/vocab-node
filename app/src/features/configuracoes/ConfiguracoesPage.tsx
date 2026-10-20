@@ -1,19 +1,39 @@
-import { useId, useState } from 'react'
-import { DoorOpen, KeyRound, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { DoorOpen, KeyRound, Loader2, Mic, Settings2 } from 'lucide-react'
+import { Interruptor } from '@/components/Interruptor'
 import { FormNovaSenha } from '@/features/auth/NovaSenha'
 import { useProfessor } from '@/features/planos/api'
+import { AbaTutor } from '@/features/tutor/AbaTutor'
+import { useAcessoTutor } from '@/features/tutor/api'
 import { useSalvarConfiguracoes } from './api'
+
+type Aba = 'geral' | 'tutor'
+
+const ABAS: { id: Aba; rotulo: string; Icone: typeof Settings2 }[] = [
+  { id: 'geral', rotulo: 'Geral', Icone: Settings2 },
+  { id: 'tutor', rotulo: 'Tutor', Icone: Mic },
+]
 
 /**
  * Configurações da plataforma, do professor.
  *
  * Nasceu com um item só — a sala de espera — e é de propósito uma lista de
  * cartões com interruptor: o próximo ajuste entra como mais um cartão, sem
- * redesenhar a página.
+ * redesenhar a página. O tutor ganhou aba própria porque é mais que um ajuste:
+ * tem a lista de alunos, o uso do mês e os resultados. A aba só existe para
+ * quem foi liberado no beta.
  */
 export function ConfiguracoesPage() {
   const { data: professor, isLoading } = useProfessor()
+  const { data: acessoTutor } = useAcessoTutor()
   const salvar = useSalvarConfiguracoes()
+  // A aba vai na URL, como na turma: a ficha do aluno e o link "?aba=tutor"
+  // caem direto nela.
+  const [params, setParams] = useSearchParams()
+  const abas = ABAS.filter((a) => a.id !== 'tutor' || acessoTutor)
+  const aba: Aba = abas.some((a) => a.id === params.get('aba')) ? (params.get('aba') as Aba) : 'geral'
+  const trocarAba = (nova: Aba) => setParams(nova === 'geral' ? {} : { aba: nova }, { replace: true })
 
   if (isLoading || !professor) {
     return (
@@ -28,29 +48,54 @@ export function ConfiguracoesPage() {
       <h1 className="text-2xl font-extrabold">Configurações</h1>
       <p className="mt-0.5 text-sm text-neutral-500">Como a plataforma funciona para você e seus alunos.</p>
 
-      <h2 className="mt-8 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Aulas ao vivo</h2>
-
-      <div className="mt-3 space-y-3">
-        <Interruptor
-          Icone={DoorOpen}
-          titulo="Sala de espera"
-          descricao="O aluno só entra na chamada depois que você admitir. Enquanto espera, ele não vê nem ouve a aula — e você recebe um aviso na sala com o nome dele. Vale para todas as suas salas, individuais e de turma."
-          ligado={professor.sala_de_espera}
-          aoMudar={(ligado) => salvar.mutate({ sala_de_espera: ligado })}
-        />
-      </div>
-
-      {salvar.isError && (
-        <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-          Não consegui salvar. Verifique sua internet e tente de novo.
-        </p>
+      {abas.length > 1 && (
+        <div role="tablist" aria-label="Seções das configurações" className="mt-5 flex flex-wrap gap-1.5">
+          {abas.map(({ id, rotulo, Icone }) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={aba === id}
+              onClick={() => trocarAba(id)}
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition ${
+                aba === id ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-500 hover:text-neutral-900'
+              }`}
+            >
+              <Icone className="h-4 w-4" />
+              {rotulo}
+            </button>
+          ))}
+        </div>
       )}
 
-      <h2 className="mt-8 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Conta</h2>
+      {aba === 'tutor' && acessoTutor ? (
+        <AbaTutor professor={professor} acesso={acessoTutor} />
+      ) : (
+        <>
+          <h2 className="mt-8 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Aulas ao vivo</h2>
 
-      <div className="mt-3">
-        <TrocarSenha />
-      </div>
+          <div className="mt-3 space-y-3">
+            <Interruptor
+              Icone={DoorOpen}
+              titulo="Sala de espera"
+              descricao="O aluno só entra na chamada depois que você admitir. Enquanto espera, ele não vê nem ouve a aula — e você recebe um aviso na sala com o nome dele. Vale para todas as suas salas, individuais e de turma."
+              ligado={professor.sala_de_espera}
+              aoMudar={(ligado) => salvar.mutate({ sala_de_espera: ligado })}
+            />
+          </div>
+
+          {salvar.isError && (
+            <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+              Não consegui salvar. Verifique sua internet e tente de novo.
+            </p>
+          )}
+
+          <h2 className="mt-8 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Conta</h2>
+
+          <div className="mt-3">
+            <TrocarSenha />
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -105,53 +150,6 @@ function TrocarSenha() {
           </button>
         </div>
       )}
-    </div>
-  )
-}
-
-function Interruptor({
-  Icone,
-  titulo,
-  descricao,
-  ligado,
-  aoMudar,
-}: {
-  Icone: typeof DoorOpen
-  titulo: string
-  descricao: string
-  ligado: boolean
-  aoMudar: (ligado: boolean) => void
-}) {
-  const id = useId()
-  return (
-    <div className="flex items-start gap-4 rounded-3xl bg-white p-5">
-      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-violet-100 text-violet-700">
-        <Icone className="h-5 w-5" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <label htmlFor={id} className="font-extrabold">
-          {titulo}
-        </label>
-        <p id={`${id}-descricao`} className="mt-1 text-sm text-neutral-500">
-          {descricao}
-        </p>
-      </div>
-      <button
-        id={id}
-        role="switch"
-        aria-checked={ligado}
-        aria-describedby={`${id}-descricao`}
-        onClick={() => aoMudar(!ligado)}
-        className={`relative mt-1 h-7 w-12 shrink-0 rounded-full transition ${
-          ligado ? 'bg-neutral-900' : 'bg-neutral-300'
-        }`}
-      >
-        <span
-          className={`absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-            ligado ? 'translate-x-5' : ''
-          }`}
-        />
-      </button>
     </div>
   )
 }
