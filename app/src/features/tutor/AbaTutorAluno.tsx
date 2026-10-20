@@ -98,6 +98,10 @@ export function AbaTutorAluno({ aluno, acesso, temConta }: { aluno: Aluno; acess
                             {licao.nivel_cefr}
                           </span>
                         )}
+                        {/* A biblioteca é de todos; estas o professor fez com o material dele. */}
+                        {licao.professor_id && (
+                          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-bold text-violet-800">sua</span>
+                        )}
                       </span>
                       {licao.descricao && <span className="mt-0.5 block text-sm text-neutral-500">{licao.descricao}</span>}
                     </span>
@@ -134,8 +138,8 @@ export function AbaTutorAluno({ aluno, acesso, temConta }: { aluno: Aluno; acess
         )}
         <p className="mt-2 text-xs text-neutral-500">
           Limite de sessões, voz e microfone ficam em{' '}
-          <Link to="/configuracoes?aba=tutor" className="font-bold text-neutral-700 underline">
-            Configurações → Tutor
+          <Link to="/tutor?aba=preferencias" className="font-bold text-neutral-700 underline">
+            Tutor → Preferências
           </Link>
           .
         </p>

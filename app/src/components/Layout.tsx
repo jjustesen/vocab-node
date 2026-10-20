@@ -4,6 +4,7 @@ import {
   GraduationCap,
   Library,
   LogOut,
+  Mic,
   Pencil,
   Settings,
   Sun,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { useAcessoTutor } from "@/features/tutor/api";
 
 // Trilhas não é item de menu: vive como aba dentro de Atividades (mockup P11),
 // porque uma trilha é uma sequência de atividades que já existem.
@@ -26,11 +28,18 @@ const ITENS: { para: string; rotulo: string; Icone: LucideIcon }[] = [
   { para: "/financeiro", rotulo: "Financeiro", Icone: Wallet },
 ];
 
+/** Só para quem foi liberado no beta do tutor (tutor_acesso) — entra depois de Atividades. */
+const TUTOR = { para: "/tutor", rotulo: "Tutor", Icone: Mic };
+
 export function Layout() {
   const { session, sair } = useAuth();
   const nome =
     (session?.user.user_metadata.nome as string | undefined) ?? "Professor";
   const inicial = nome.charAt(0).toUpperCase();
+  const { data: acessoTutor } = useAcessoTutor();
+  const itens = acessoTutor
+    ? ITENS.flatMap((item) => (item.para === "/atividades" ? [item, TUTOR] : [item]))
+    : ITENS;
 
   return (
     // O cromo escuro sangra até as bordas da janela; a moldura fica por dentro,
@@ -49,7 +58,7 @@ export function Layout() {
           </div>
 
           <nav className="flex min-w-0 flex-1 items-center justify-center gap-0.5 overflow-x-auto">
-            {ITENS.map(({ para, rotulo, Icone }) => (
+            {itens.map(({ para, rotulo, Icone }) => (
               <NavLink
                 key={para}
                 to={para}

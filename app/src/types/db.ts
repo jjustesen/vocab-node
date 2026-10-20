@@ -394,9 +394,14 @@ export type ResumoTutor = {
   recuperadas: string[]
 }
 
-/** Lição da biblioteca do tutor. `roteiro` é o `Roteiro` de poc-tutor/src/tipos.ts. */
+/**
+ * Lição do tutor. `roteiro` é o `Roteiro` de poc-tutor/src/tipos.ts.
+ * `professor_id` nulo = biblioteca global (só leitura); preenchido = do professor (0025).
+ */
 export type TutorLicao = {
   id: string
+  professor_id: string | null
+  gerada_por_ia: boolean
   titulo: string
   descricao: string | null
   nivel_cefr: NivelCefr | null
@@ -415,10 +420,14 @@ export type TutorLicaoAluno = {
   criado_em: string
 }
 
-/** Uma prática do aluno. `concluida_em` nulo = saiu antes do fim. Só a função escreve. */
+/**
+ * Uma prática do aluno, ou um teste do professor (`teste`, sem aluno — 0025).
+ * `concluida_em` nulo = saiu antes do fim. Só a função escreve.
+ */
 export type TutorSessao = {
   id: string
-  aluno_id: string
+  aluno_id: string | null
+  teste: boolean
   professor_id: string
   licao_id: string
   iniciada_em: string
@@ -538,7 +547,11 @@ export type Database = {
         Partial<TrilhaAluno>
       >
       tutor_acesso: Tabela<TutorAcesso, never, never>
-      tutor_licoes: Tabela<TutorLicao, never, never>
+      tutor_licoes: Tabela<
+        TutorLicao,
+        Insert<TutorLicao, 'titulo' | 'roteiro' | 'professor_id'>,
+        Partial<Omit<TutorLicao, 'id' | 'professor_id' | 'criado_em'>>
+      >
       tutor_licoes_alunos: Tabela<TutorLicaoAluno, Insert<TutorLicaoAluno, 'aluno_id' | 'licao_id'>, never>
       tutor_sessoes: Tabela<TutorSessao, never, never>
     }

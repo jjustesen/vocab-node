@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { chavesAlunos } from '@/features/alunos/api'
-import type { Aluno, NivelCefr, TutorAcesso, TutorSessao } from '@/types/db'
+import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
+import type { Aluno, NivelCefr, TutorAcesso, TutorLicao, TutorSessao } from '@/types/db'
+import type { Fala } from '../../../../poc-tutor/src/falas.ts'
+import type { Roteiro } from '../../../../poc-tutor/src/tipos.ts'
 
 /**
  * O lado do professor do tutor oral (migration 0024).
@@ -14,6 +17,9 @@ export const chavesTutor = {
   todos: ['tutor'] as const,
   acesso: ['tutor', 'acesso'] as const,
   licoes: ['tutor', 'licoes'] as const,
+  /** Todas as lições que o professor vê na página Tutor: as dele (até rascunho) e as da biblioteca. */
+  todasAsLicoes: ['tutor', 'licoes', 'todas'] as const,
+  licao: (id: string) => ['tutor', 'licoes', 'uma', id] as const,
   /** Todas as liberações do professor, para contar lições por aluno. */
   liberacoes: ['tutor', 'liberacoes'] as const,
   sessoesDoMes: ['tutor', 'sessoes', 'mes'] as const,
@@ -43,8 +49,11 @@ export type LicaoDaBiblioteca = {
   titulo: string
   descricao: string | null
   nivel_cefr: NivelCefr | null
+  /** null = da biblioteca; o id do professor = dele. */
+  professor_id: string | null
 }
 
+/** As lições que podem ir para um aluno: publicadas, da biblioteca ou do professor. */
 export function useLicoesTutor() {
   return useQuery({
     queryKey: chavesTutor.licoes,
@@ -52,7 +61,9 @@ export function useLicoesTutor() {
     queryFn: async (): Promise<LicaoDaBiblioteca[]> => {
       const { data, error } = await supabase
         .from('tutor_licoes')
-        .select('id, titulo, descricao, nivel_cefr')
+        .select('id, titulo, descricao, nivel_cefr, professor_id')
+        .eq('publicada', true)
+        .order('professor_id', { nullsFirst: false })
         .order('ordem')
         .order('titulo')
       if (error) throw error
@@ -60,6 +71,112 @@ export function useLicoesTutor() {
     },
   })
 }
+
+export type LicaoNaLista = Pick<
+  TutorLicao,
+  'id' | 'titulo' | 'descricao' | 'nivel_cefr' | 'publicada' | 'professor_id' | 'falas_gravadas' | 'gerada_por_ia' | 'atualizado_em'
+>
+
+/** A aba Lições: as do professor (com rascunhos) e as da biblioteca. Sem o roteiro — ele é pesado. */
+export function useTodasAsLicoes() {
+  return useQuery({
+    queryKey: chavesTutor.todasAsLicoes,
+    queryFn: async (): Promise<LicaoNaLista[]> => {
+      const { data, error } = await supabase
+        .from('tutor_licoes')
+        .select('id, titulo, descricao, nivel_cefr, publicada, professor_id, falas_gravadas, gerada_por_ia, atualizado_em')
+        .order('atualizado_em', { ascending: false })
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export type LicaoCompleta = Omit<TutorLicao, 'roteiro'> & { roteiro: Roteiro }
+
+export function useLicao(id: string | undefined) {
+  return useQuery({
+    queryKey: chavesTutor.licao(id!),
+    enabled: Boolean(id),
+    // O editor guarda o rascunho em estado local: buscar de novo ao voltar à aba apagaria o que não foi salvo.
+    refetchOnWindowFocus: false,
+    queryFn: async (): Promise<LicaoCompleta> => {
+      const { data, error } = await supabase.from('tutor_licoes').select('*').eq('id', id!).single()
+      if (error) throw error
+      return data as LicaoCompleta
+    },
+  })
+}
+
+/** Grava a lição inteira: o roteiro é uma coluna jsonb só (RLS: só a lição do próprio professor). */
+export function useSalvarLicao() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (l: { id: string; roteiro: Roteiro; nivel: NivelCefr | null; publicada: boolean }) => {
+      const roteiro = { ...l.roteiro, id: l.id }
+      const { data, error } = await supabase
+        .from('tutor_licoes')
+        .update({ roteiro, titulo: roteiro.titulo, descricao: roteiro.abertura, nivel_cefr: l.nivel, publicada: l.publicada })
+        .eq('id', l.id)
+        .select('*')
+        .single()
+      if (error) throw error
+      return data as LicaoCompleta
+    },
+    onSuccess: (licao) => {
+      qc.setQueryData(chavesTutor.licao(licao.id), licao)
+      qc.invalidateQueries({ queryKey: chavesTutor.licoes })
+    },
+  })
+}
+
+export function useExcluirLicao() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('tutor_licoes').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: chavesTutor.licoes })
+      qc.invalidateQueries({ queryKey: chavesTutor.liberacoes })
+    },
+  })
+}
+
+export type MaterialDaLicao =
+  | { tipo: 'texto'; conteudo: string }
+  | { tipo: 'imagem' | 'pdf'; conteudo: string; mimeType: string }
+
+/** A IA monta a lição a partir do material e ela nasce como rascunho do professor (tutor-gerar-licao). */
+export function useGerarLicao() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (pedido: { material: MaterialDaLicao; nivel: NivelCefr; titulo?: string }): Promise<string> => {
+      const { data, error } = await supabase.functions.invoke('tutor-gerar-licao', { body: pedido })
+      if (error) throw new Error(await extrairMensagemDeErro(error))
+      return (data as { id: string }).id
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTutor.licoes }),
+  })
+}
+
+export type ResultadoDaGravacao = {
+  gravadas: string[]
+  jaExistiam: string[]
+  falharam: { chave: string; erro: string }[]
+  limiteDoTts: boolean
+}
+
+/** Uma leva de falas fixas virando MP3 no bucket (tutor-gravar-falas, no máximo 6 por vez). */
+export async function gravarFalas(licaoId: string, falas: Fala[]): Promise<ResultadoDaGravacao> {
+  const { data, error } = await supabase.functions.invoke('tutor-gravar-falas', { body: { licaoId, falas } })
+  if (error) throw new Error(await extrairMensagemDeErro(error))
+  return data as ResultadoDaGravacao
+}
+
+/** Onde as falas gravadas moram — o mesmo endereço que `tutor-aluno` dá à página do aluno. */
+export const URL_DAS_FALAS = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/tutor-falas/`
 
 /** aluno_id → ids das lições liberadas para ele. */
 export function useLiberacoesTutor() {
@@ -154,12 +271,12 @@ function mensagemDoTrigger(error: { message: string; details?: string | null }):
 
 export type SessaoTutor = Pick<
   TutorSessao,
-  'id' | 'aluno_id' | 'licao_id' | 'iniciada_em' | 'concluida_em' | 'resumo' | 'custo_usd'
+  'id' | 'aluno_id' | 'teste' | 'licao_id' | 'iniciada_em' | 'concluida_em' | 'resumo' | 'custo_usd'
 >
 
-const COLUNAS_SESSAO = 'id, aluno_id, licao_id, iniciada_em, concluida_em, resumo, custo_usd'
+const COLUNAS_SESSAO = 'id, aluno_id, teste, licao_id, iniciada_em, concluida_em, resumo, custo_usd'
 
-/** As sessões de todos os alunos neste mês (mês do Brasil, como na função). */
+/** As sessões deste mês (mês do Brasil, como na função): dos alunos e os testes do professor (`teste`). */
 export function useSessoesDoMes() {
   return useQuery({
     queryKey: chavesTutor.sessoesDoMes,

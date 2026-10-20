@@ -45,11 +45,18 @@ import { TrilhaDoAlunoPage } from '@/features/trilhas/TrilhaDoAlunoPage'
 import { FinanceiroPage } from '@/features/financeiro/FinanceiroPage'
 import { PlanoPage } from '@/features/planos/PlanoPage'
 import { ConfiguracoesPage } from '@/features/configuracoes/ConfiguracoesPage'
+import { TutorPage } from '@/features/tutor/TutorPage'
 
 // A aula do tutor carrega à parte: traz o controlador, a voz e os áudios da
 // POC, que só quem abre uma lição precisa.
 const PraticaTutorPage = lazy(() =>
   import('@/features/tutor-aluno/PraticaTutorPage').then((m) => ({ default: m.PraticaTutorPage })),
+)
+// O editor também puxa o controlador (as falas fixas do painel Áudios) e a aula de teste.
+const EditorLicaoPage = lazy(() => import('@/features/tutor/EditorLicaoPage').then((m) => ({ default: m.EditorLicaoPage })))
+const NovaLicaoPage = lazy(() => import('@/features/tutor/NovaLicaoPage').then((m) => ({ default: m.NovaLicaoPage })))
+const ExperimentarLicaoPage = lazy(() =>
+  import('@/features/tutor/ExperimentarLicaoPage').then((m) => ({ default: m.ExperimentarLicaoPage })),
 )
 
 export default function App() {
@@ -112,6 +119,15 @@ export default function App() {
               `/sala/:alunoId` e o "turma" viraria um id de aluno. */}
           <Route path="/sala/turma/:turmaId" element={<SalaProfessorTurmaPage />} />
           <Route path="/sala/:alunoId" element={<SalaProfessorPage />} />
+          {/* Experimentar a lição como aluno: tela cheia, como a sala. */}
+          <Route
+            path="/tutor/licoes/:id/experimentar"
+            element={
+              <Suspense fallback={<TelaCarregando />}>
+                <ExperimentarLicaoPage />
+              </Suspense>
+            }
+          />
           <Route element={<Layout />}>
             <Route path="/hoje" element={<HojePage />} />
             <Route path="/alunos" element={<AlunosPage />} />
@@ -136,6 +152,23 @@ export default function App() {
             <Route path="/financeiro" element={<FinanceiroPage />} />
             <Route path="/plano" element={<PlanoPage />} />
             <Route path="/configuracoes" element={<ConfiguracoesPage />} />
+            <Route path="/tutor" element={<TutorPage />} />
+            <Route
+              path="/tutor/licoes/nova"
+              element={
+                <Suspense fallback={<TelaCarregando />}>
+                  <NovaLicaoPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/tutor/licoes/:id"
+              element={
+                <Suspense fallback={<TelaCarregando />}>
+                  <EditorLicaoPage />
+                </Suspense>
+              }
+            />
           </Route>
         </Route>
 
