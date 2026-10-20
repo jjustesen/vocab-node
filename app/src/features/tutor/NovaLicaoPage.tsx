@@ -143,6 +143,9 @@ export function NovaLicaoPage() {
                 </option>
               ))}
             </select>
+            <span className="mt-1 block max-w-[14rem] text-[11px] font-normal text-neutral-400">
+              A IA ajusta a esse nível as frases que ela cria (conversa, revisão, dicas).
+            </span>
           </label>
           <label className="text-xs font-bold text-neutral-600">
             Título (opcional)
@@ -152,6 +155,7 @@ export function NovaLicaoPage() {
               placeholder="Lesson 10 · Viagens"
               className="mt-1 block w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-normal"
             />
+            <span className="mt-1 block text-[11px] font-normal text-neutral-400">Sem título, a IA dá um pelo tema da página. Dá para mudar depois.</span>
           </label>
         </div>
       </div>

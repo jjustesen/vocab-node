@@ -218,6 +218,12 @@ export function EditorLicaoPage() {
         </span>
       </div>
 
+      {!somenteLeitura && (
+        <p className="mt-2 text-[11px] text-neutral-400">
+          Nível: só organiza a lição na sua lista, não muda como a IA corrige. Publicada: só lição publicada pode ser liberada
+          para um aluno; em rascunho você ainda pode experimentar.
+        </p>
+      )}
       {somenteLeitura && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-neutral-100 px-4 py-3 text-sm text-neutral-600">
           <span className="min-w-0 flex-1">
@@ -267,10 +273,13 @@ export function EditorLicaoPage() {
       <SomenteLeitura.Provider value={somenteLeitura}>
       <div className="mt-6 space-y-3">
         <Secao titulo="Abertura e regras para a IA" resumo="O que o tutor diz ao começar e o que o avaliador respeita" abertaDeInicio>
-          <Area rotulo="Abertura" ajuda="A primeira fala do tutor: o que vamos praticar hoje." valor={r.abertura} linhas={2} aoMudar={(v) => mudar((n) => void (n.abertura = v))} />
+          <Area
+            rotulo="Abertura"
+            ajuda="A primeira fala do tutor, em voz, ao começar a aula. Uma frase dizendo o que vamos praticar. Não muda a correção."
+            valor={r.abertura} linhas={2} aoMudar={(v) => mudar((n) => void (n.abertura = v))} />
           <Area
             rotulo="Regras para a IA"
-            ajuda="O que é certo, o que é erro e o que vale como equivalente nesta lição. A IA que corrige o aluno segue isto."
+            ajuda={'É o campo que mais muda a correção: a IA lê isto a cada resposta do aluno. Escreva o que é certo, o que é erro e o que vale igual nesta lição — ex.: "I\'m 30 e I\'m 30 years old valem; I have 30 years é erro". Sem isto ela usa o próprio bom senso e pode aceitar ou recusar o que você não esperava.'}
             valor={r.notasParaAvaliador}
             linhas={4}
             aoMudar={(v) => mudar((n) => void (n.notasParaAvaliador = v || undefined))}
@@ -278,7 +287,11 @@ export function EditorLicaoPage() {
         </Secao>
 
         <Secao titulo="Folha de apoio do aluno" resumo="Estruturas, vocabulário, exemplos e alertas — nunca as respostas dos exercícios">
-          <Linhas rotulo="Estruturas" valor={r.painel.estruturas} aoMudar={(v) => mudar((n) => void (n.painel.estruturas = v))} ingles />
+          <p className="text-xs text-neutral-500">
+            O aluno abre esta folha pelo botão de livro durante a aula. A IA não a usa para corrigir. Mostre o padrão (I + verbo),
+            nunca a frase pronta de um exercício: o aluno leria em vez de produzir — o editor avisa quando isso acontece.
+          </p>
+          <Linhas rotulo="Estruturas" ajuda="Uma por linha: os padrões da lição (I don't + verbo, Did you + verbo…?)." valor={r.painel.estruturas} aoMudar={(v) => mudar((n) => void (n.painel.estruturas = v))} ingles />
           <Linhas
             rotulo="Vocabulário"
             ajuda="Uma palavra por linha, no formato: inglês = português"
@@ -293,8 +306,8 @@ export function EditorLicaoPage() {
               )
             }
           />
-          <Linhas rotulo="Exemplos" valor={r.painel.exemplos} aoMudar={(v) => mudar((n) => void (n.painel.exemplos = v))} ingles />
-          <Linhas rotulo="Alertas" valor={r.painel.alertas} aoMudar={(v) => mudar((n) => void (n.painel.alertas = v))} />
+          <Linhas rotulo="Exemplos" ajuda="Uma por linha: frases de exemplo que NÃO sejam respostas dos exercícios (outro sujeito, outra palavra)." valor={r.painel.exemplos} aoMudar={(v) => mudar((n) => void (n.painel.exemplos = v))} ingles />
+          <Linhas rotulo="Alertas" ajuda='Uma por linha: as armadilhas da lição ("I have 30 years" está errado: idade usa to be).' valor={r.painel.alertas} aoMudar={(v) => mudar((n) => void (n.painel.alertas = v))} />
         </Secao>
 
         <h2 className="pt-4 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Exercícios</h2>
@@ -315,7 +328,12 @@ export function EditorLicaoPage() {
                   })
                 }
               />
-              <Campo rotulo="Objetivo" valor={bloco.objetivo} aoMudar={(v) => mudar((n) => void (n.blocos[bi].objetivo = v))} />
+              <Campo
+                rotulo="Objetivo"
+                ajuda="Só para você se orientar: o aluno não vê e a IA não usa."
+                valor={bloco.objetivo}
+                aoMudar={(v) => mudar((n) => void (n.blocos[bi].objetivo = v))}
+              />
             </div>
             <ul className="space-y-2">
               {bloco.itens.map((item, ii) => (
@@ -404,6 +422,11 @@ export function EditorLicaoPage() {
           titulo="Revisão"
           resumo="Quando o aluno precisou de ajuda numa habilidade, o tutor volta a ela depois, numa frase nova"
         >
+          <p className="text-xs text-neutral-500">
+            Um exercício por habilidade. Se o aluno precisou de ajuda numa habilidade, o tutor faz o exercício de revisão dela
+            depois de outro bloco (ou no fim da aula). Acertando sozinho, conta como recuperada no resultado; sem revisão, a
+            habilidade fica só como "para revisar". Use uma frase nova, não a mesma do exercício.
+          </p>
           <ul className="space-y-3">
             {Object.entries(r.recuperacao).map(([habilidade, item], ii) => (
               <li key={habilidade}>
@@ -435,6 +458,11 @@ export function EditorLicaoPage() {
         </Secao>
 
         <Secao titulo="Passo a passo" resumo="Escadas para quando falta a base: o tutor monta a frase por partes e volta ao exercício">
+          <p className="text-xs text-neutral-500">
+            Uma sequência curta de exercícios que constrói a base que faltou (ex.: o did na pergunta). Só entra quando a IA
+            percebe que o aluno não tem a base — não num erro pontual — e quando o exercício está ligado a ela, no campo "Passo a
+            passo quando faltar a base". Ao terminar, o tutor volta ao exercício de onde saiu.
+          </p>
           {Object.entries(r.apoios).map(([apoioId, apoio]) => (
             <div key={apoioId} className="space-y-2 rounded-2xl bg-neutral-50 p-3">
               <div className="flex items-end gap-2">
@@ -500,6 +528,11 @@ export function EditorLicaoPage() {
         </Secao>
 
         <Secao titulo="Nomes das habilidades" resumo="Como cada habilidade aparece para o aluno e como o tutor fala dela no fim da aula">
+          <p className="text-xs text-neutral-500">
+            As habilidades são as etiquetas que você põe em cada exercício. Aqui elas ganham nome para o aluno: o selo aparece
+            na tela quando ele precisa de ajuda nela (e fica verde quando recupera), e o tutor fala o nome no fim ("Para revisar:
+            o didn&apos;t com o verbo na forma básica"). Não muda a correção.
+          </p>
           <ul className="space-y-3">
             {habilidadesUsadas.map((h) => (
               <li key={h} className="grid gap-2 sm:grid-cols-[10rem_1fr_2fr] sm:items-end">

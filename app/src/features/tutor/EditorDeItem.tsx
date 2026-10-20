@@ -19,11 +19,16 @@ const ROTULO_DO_TIPO: Record<TipoItem, string> = {
 }
 
 const EXPLICACAO_DO_TIPO: Record<TipoItem, string> = {
-  construcao: 'O tutor pede em português e o aluno diz em inglês.',
-  substituicao: 'O tutor dá uma pista e o aluno muda a frase anterior com ela.',
-  transformacao: 'O tutor diz uma frase em inglês e o aluno a transforma (negativa, pergunta, passado…).',
-  repeticao: 'O tutor diz a frase e o aluno repete. Não conta como feita sozinho.',
-  conversa: 'Uma pergunta sobre a vida do aluno; várias respostas valem.',
+  construcao:
+    'O tutor pede em português ("Diga em inglês: …") e o aluno monta a frase. Começa uma frase nova: as substituições seguintes partem dela.',
+  substituicao:
+    'O tutor diz só a pista e o aluno repete a ÚLTIMA frase aceita trocando o que a pista indica. A IA confere se o resto da frase foi mantido.',
+  transformacao:
+    'O tutor diz uma frase em inglês e o que fazer com ela (negativa, pergunta, passado…). É o "Change into…" dos drillings. Começa uma frase nova.',
+  repeticao:
+    'O tutor diz a frase e o aluno repete. Serve de aquecimento, mas nunca conta como "feito sozinho" no resultado — por isso use pouco.',
+  conversa:
+    'Uma pergunta real sobre a vida do aluno, no fim da aula. Não há resposta certa: a IA aceita qualquer resposta pertinente, conforme o critério.',
 }
 
 /** A linha fechada: o tipo, o que o tutor pede e a resposta esperada. */
@@ -129,6 +134,7 @@ export function EditorDeItem({
           {item.tipo === 'construcao' && (
             <Campo
               rotulo="O que o tutor pede (em português)"
+              ajuda='O tutor lê em voz alta: "Diga em inglês: <isto>". Escreva como você pediria em aula, sem a resposta em inglês.'
               valor={item.solicitacao}
               aoMudar={(v) => mudar({ solicitacao: v })}
               placeholder="eu falo inglês"
@@ -136,7 +142,13 @@ export function EditorDeItem({
           )}
           {item.tipo === 'substituicao' && (
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-              <Campo rotulo="Pista" valor={item.pista} aoMudar={(v) => mudar({ pista: v })} placeholder="alemão" />
+              <Campo
+                rotulo="Pista"
+                ajuda="O tutor diz só isto. Curta: uma palavra ou um pedaço (alemão, Yesterday., não quero)."
+                valor={item.pista}
+                aoMudar={(v) => mudar({ pista: v })}
+                placeholder="alemão"
+              />
               <label className="text-xs font-bold text-neutral-600">
                 A pista é dita em
                 <select
@@ -148,12 +160,18 @@ export function EditorDeItem({
                   <option value="pt">português</option>
                   <option value="en">inglês</option>
                 </select>
+                <span className="mt-1 block text-[11px] font-normal text-neutral-400">Muda a voz: "alemão" lido pela voz em inglês sai errado.</span>
               </label>
             </div>
           )}
           {(item.tipo === 'repeticao' || item.tipo === 'transformacao') && (
             <Campo
               rotulo={item.tipo === 'repeticao' ? 'Frase para repetir' : 'Frase que o tutor diz (em inglês)'}
+              ajuda={
+                item.tipo === 'repeticao'
+                  ? 'O tutor diz esta frase e o aluno repete. Ela também vale como resposta esperada.'
+                  : 'A frase de partida, lida pela voz em inglês. O aluno não diz esta: diz a transformada.'
+              }
               valor={item.modelo}
               aoMudar={(v) => mudar({ modelo: v, ...(item.tipo === 'repeticao' ? { alvo: v } : {}) })}
               ingles
@@ -163,6 +181,7 @@ export function EditorDeItem({
           {item.tipo === 'transformacao' && (
             <Campo
               rotulo="O que o aluno faz com a frase"
+              ajuda='Dito em português antes da frase ("Passe para a negativa: …"). A IA usa isto para saber que transformação conferir.'
               valor={item.instrucao}
               aoMudar={(v) => mudar({ instrucao: v })}
               placeholder="Passe para a negativa"
@@ -170,16 +189,30 @@ export function EditorDeItem({
           )}
           {item.tipo === 'conversa' && (
             <>
-              <Campo rotulo="Pergunta (em inglês)" valor={item.pergunta} aoMudar={(v) => mudar({ pergunta: v })} ingles />
+              <Campo
+                rotulo="Pergunta (em inglês)"
+                ajuda="O tutor faz esta pergunta como numa conversa de verdade."
+                valor={item.pergunta}
+                aoMudar={(v) => mudar({ pergunta: v })}
+                ingles
+              />
               <Area
                 rotulo="O que conta como resposta"
+                ajuda='É o que a IA usa para aceitar ou não. Diga o que precisa aparecer ("diz uma comida usando I like ou I don&apos;t like"). Erros fora disso não impedem a resposta de valer.'
                 valor={item.criterio}
                 aoMudar={(v) => mudar({ criterio: v })}
                 linhas={2}
               />
-              <Linhas rotulo="Exemplos de resposta" valor={item.exemplos} aoMudar={(v) => mudar({ exemplos: v })} ingles />
+              <Linhas
+                rotulo="Exemplos de resposta"
+                ajuda="Uma por linha. A IA usa como referência do que é pertinente; o aluno não vê. Não precisam ser as únicas certas."
+                valor={item.exemplos}
+                aoMudar={(v) => mudar({ exemplos: v })}
+                ingles
+              />
               <Linhas
                 rotulo="Perguntas para continuar a conversa"
+                ajuda="Por enquanto ficam só guardadas: o tutor ainda não faz perguntas de seguimento."
                 valor={item.acompanhamentos}
                 aoMudar={(v) => mudar({ acompanhamentos: v })}
                 ingles
@@ -189,10 +222,16 @@ export function EditorDeItem({
 
           {item.tipo !== 'conversa' && item.tipo !== 'repeticao' && (
             <>
-              <Campo rotulo="Resposta esperada" valor={item.alvo} aoMudar={(v) => mudar({ alvo: v })} ingles />
+              <Campo
+                rotulo="Resposta esperada"
+                ajuda="A IA compara a resposta do aluno com esta — maiúscula, pontuação e hesitação não contam. É também a frase que o tutor diz quando o aluno não consegue, e a base da próxima substituição."
+                valor={item.alvo}
+                aoMudar={(v) => mudar({ alvo: v })}
+                ingles
+              />
               <Linhas
                 rotulo="Outras respostas aceitas"
-                ajuda="Uma por linha: contração e forma cheia, outro jeito natural de dizer."
+                ajuda="Uma por linha. A IA já aceita contração e forma cheia; liste o que ela poderia recusar sem querer: outra ordem, um sinônimo, um jeito igualmente natural."
                 valor={item.variantes}
                 aoMudar={(v) => mudar({ variantes: v.length ? v : undefined })}
                 ingles
@@ -202,7 +241,7 @@ export function EditorDeItem({
 
           <Campo
             rotulo="Habilidades"
-            ajuda="Separadas por vírgula: o que este item treina. O tutor volta às que derem trabalho."
+            ajuda='Separadas por vírgula, o que este exercício treina (ex.: negativa_dont, passado_irregular). Mudam três coisas: quando o aluno erra, a IA diz qual destas falhou; o tutor anota essa dificuldade e volta a ela depois, num exercício de Revisão da mesma habilidade; e ela aparece no fim da aula ("Para revisar: …"). Use o MESMO nome em todos os exercícios que treinam a mesma coisa.'
             valor={item.habilidades.join(', ')}
             aoMudar={(v) => mudar({ habilidades: v.split(',').map((h) => h.trim()).filter(Boolean).map(slug) })}
           />
@@ -212,7 +251,11 @@ export function EditorDeItem({
               <Area
                 key={i}
                 rotulo={`Dica ${i + 1}${i === 0 ? ' (mais geral)' : ' (mais específica)'}`}
-                ajuda="Em português, sem dizer a resposta. De preferência uma pergunta."
+                ajuda={
+                  i === 0
+                    ? 'Dita no primeiro erro, quando ele não está nos Erros comuns. Em português, de preferência uma pergunta que faça o aluno achar o erro sozinho.'
+                    : 'Dita no segundo erro. Mais perto da resposta, mas ainda sem dizê-la — no terceiro o tutor diz a frase inteira.'
+                }
                 valor={ajudas[i]}
                 linhas={2}
                 aoMudar={(v) => {
@@ -233,6 +276,10 @@ export function EditorDeItem({
 
           {apoios.length > 0 && item.tipo !== 'conversa' && (
             <label className="block text-xs font-bold text-neutral-600">
+              <span className="block text-[11px] font-normal text-neutral-400">
+                Se a IA perceber que falta a BASE (não um erro pontual), o tutor para, monta a frase por partes com este passo a
+                passo e volta aqui.
+              </span>
               Passo a passo quando faltar a base
               <select
                 value={item.apoio ?? ''}
@@ -319,7 +366,10 @@ function ErrosComuns({
   return (
     <div>
       <p className="text-xs font-bold text-neutral-600">Erros comuns</p>
-      <p className="text-[11px] text-neutral-400">O erro que o aluno costuma cometer e a dica para ele se corrigir sozinho.</p>
+      <p className="text-[11px] text-neutral-400">
+        Os erros que você já sabe que o aluno vai cometer. Quando a IA reconhece um deles, o tutor usa a SUA dica em vez da
+        Dica 1 — a correção fica do jeito que você faria. A habilidade diz o que o erro mostra.
+      </p>
       <ul className="mt-2 space-y-2">
         {erros.map((e, i) => (
           <li key={i} className="grid gap-2 rounded-xl bg-neutral-50 p-2 sm:grid-cols-[1fr_1fr_auto]">
