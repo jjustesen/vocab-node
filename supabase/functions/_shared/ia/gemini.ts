@@ -35,19 +35,33 @@ export class GeminiProvider implements ProvedorIA {
     questoesJaAceitas?: string[]
   }): Promise<{ dados: unknown; uso: UsoIA }> {
     const parts = montarParts(input.material, input.parametros, input.questoesJaAceitas)
+    return await this.gerarJson({ sistema: INSTRUCAO_SISTEMA, schema: ATIVIDADE_GERADA_SCHEMA, parts })
+  }
 
+  /**
+   * Qualquer saída em JSON com schema — a atividade, e a lição do tutor
+   * (_shared/tutor/licao-ia.ts). Mesmas tentativas e o mesmo teto de tempo.
+   * `timeoutMs` por tentativa: a lição inteira sai bem maior que uma atividade.
+   */
+  async gerarJson(input: {
+    sistema: string
+    schema: unknown
+    parts: unknown[]
+    timeoutMs?: number
+    orcamentoMs?: number
+  }): Promise<{ dados: unknown; uso: UsoIA }> {
     const comecou = Date.now()
     let ultimoErro: unknown
     for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
       try {
-        return await this.chamar(parts)
+        return await this.chamar(input.parts, input.sistema, input.schema, input.timeoutMs ?? TIMEOUT_MS)
       } catch (e) {
         ultimoErro = e
         if (!ehRetentavel(e)) break
         // 4 timeouts de 90s estouram o wall clock da Edge Function e o
         // professor levaria um 546 em vez da mensagem tratada. Para de
         // insistir a tempo de ainda tentar o fallback (provedor.ts).
-        if (Date.now() - comecou > ORCAMENTO_MS) break
+        if (Date.now() - comecou > (input.orcamentoMs ?? ORCAMENTO_MS)) break
         if (tentativa < TENTATIVAS) await esperarBackoff(tentativa)
       }
     }
@@ -61,9 +75,14 @@ export class GeminiProvider implements ProvedorIA {
         })
   }
 
-  private async chamar(parts: unknown[]): Promise<{ dados: unknown; uso: UsoIA }> {
+  private async chamar(
+    parts: unknown[],
+    sistema: string,
+    schema: unknown,
+    timeoutMs: number,
+  ): Promise<{ dados: unknown; uso: UsoIA }> {
     const controlador = new AbortController()
-    const timeoutId = setTimeout(() => controlador.abort(), TIMEOUT_MS)
+    const timeoutId = setTimeout(() => controlador.abort(), timeoutMs)
 
     try {
       let resposta: Response
@@ -75,11 +94,11 @@ export class GeminiProvider implements ProvedorIA {
             headers: { 'Content-Type': 'application/json' },
             signal: controlador.signal,
             body: JSON.stringify({
-              system_instruction: { parts: [{ text: INSTRUCAO_SISTEMA }] },
+              system_instruction: { parts: [{ text: sistema }] },
               contents: [{ role: 'user', parts }],
               generationConfig: {
                 responseMimeType: 'application/json',
-                responseSchema: ATIVIDADE_GERADA_SCHEMA,
+                responseSchema: schema,
               },
             }),
           },
@@ -88,7 +107,7 @@ export class GeminiProvider implements ProvedorIA {
         const abortou = controlador.signal.aborted
         throw new ErroIA({
           provedor: 'gemini',
-          mensagem: abortou ? `Gemini estourou o timeout de ${TIMEOUT_MS}ms.` : `Falha de rede ao chamar o Gemini: ${e}`,
+          mensagem: abortou ? `Gemini estourou o timeout de ${timeoutMs}ms.` : `Falha de rede ao chamar o Gemini: ${e}`,
           mensagemUsuario: abortou
             ? 'A IA demorou demais para responder. Tente novamente — ou com um material menor.'
             : 'Não consegui falar com a IA agora. Tente novamente em instantes.',

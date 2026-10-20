@@ -15,6 +15,13 @@
 //
 // Toda chamada confere de novo se o tutor continua ligado: o professor que
 // desliga no meio da aula corta o próximo turno, não o próximo mês.
+//
+// ── Modo professor ──────────────────────────────────────────────────────────
+//
+// Com `modo: 'professor'` (e o JWT de um professor no beta), a mesma porta
+// serve o "Experimentar como aluno" do editor: abre as lições dele, inclusive
+// em rascunho, e as globais publicadas. A sessão nasce com `teste = true`, sem
+// aluno — não conta no limite de ninguém — e há um teto de testes por dia.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
@@ -29,11 +36,15 @@ const DURACAO_MAX_MS = 2 * 60 * 60 * 1000
 const TETO_POR_SESSAO_USD = 0.5
 /** O contexto de um turno tem ~1–2 KB; muito acima disso não é o controlador. */
 const CONTEXTO_MAX = 16 * 1024
+/** Testes do professor em 24 h: experimentar a lição enquanto edita, não dar aula com ela. */
+const TESTES_POR_DIA = 30
 
 type Acao = 'licoes' | 'licao' | 'iniciar' | 'avaliar' | 'falar_stream' | 'concluir'
 
 type Pedido = {
   acao?: Acao
+  /** 'professor': o "Experimentar como aluno" do editor de lições. */
+  modo?: 'aluno' | 'professor'
   licaoId?: string
   sessaoId?: string
   // avaliar
@@ -72,28 +83,9 @@ Deno.serve(async (req) => {
 
   const db = clienteAdmin()
 
-  const { data: conta } = await db
-    .from('contas_aluno')
-    .select('aluno_id, professor_id')
-    .eq('user_id', sessao.user.id)
-    .maybeSingle()
-  if (!conta) return respostaErro('Conta não encontrada.', 404)
-
-  const [{ data: aluno }, { data: acesso }, { data: professor }] = await Promise.all([
-    db.from('alunos').select('tutor_ativo, status').eq('id', conta.aluno_id).single(),
-    db.from('tutor_acesso').select('max_sessoes_mes').eq('professor_id', conta.professor_id).maybeSingle(),
-    db
-      .from('professores')
-      .select('tutor_voz_natural, tutor_escuta_automatica, tutor_sessoes_mes')
-      .eq('id', conta.professor_id)
-      .single(),
-  ])
-  if (!aluno?.tutor_ativo || aluno.status !== 'ativo' || !acesso || !professor) {
-    return respostaErro('O tutor não está ligado para você. Fale com seu professor.', 403)
-  }
-
-  const limite = Math.min(professor.tutor_sessoes_mes, acesso.max_sessoes_mes)
-  const ctx = { db, alunoId: conta.aluno_id as string, professorId: conta.professor_id as string, limite, professor }
+  const ctx = pedido.modo === 'professor' ? await comoProfessor(db, sessao.user.id) : await comoAluno(db, sessao.user.id)
+  if (ctx instanceof Response) return ctx
+  if (ctx.teste && pedido.acao === 'licoes') return respostaErro('No modo professor, a lição abre pelo editor.')
 
   try {
     switch (pedido.acao) {
@@ -119,18 +111,55 @@ Deno.serve(async (req) => {
   }
 })
 
+const COLUNAS_PREFERENCIAS = 'tutor_voz_natural, tutor_escuta_automatica, tutor_sessoes_mes'
+
+/** O aluno logado: a conta dele, o tutor ligado e o professor no beta. */
+async function comoAluno(db: Db, userId: string): Promise<Contexto | Response> {
+  const { data: conta } = await db
+    .from('contas_aluno')
+    .select('aluno_id, professor_id')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (!conta) return respostaErro('Conta não encontrada.', 404)
+
+  const [{ data: aluno }, { data: acesso }, { data: professor }] = await Promise.all([
+    db.from('alunos').select('tutor_ativo, status').eq('id', conta.aluno_id).single(),
+    db.from('tutor_acesso').select('max_sessoes_mes').eq('professor_id', conta.professor_id).maybeSingle(),
+    db.from('professores').select(COLUNAS_PREFERENCIAS).eq('id', conta.professor_id).single(),
+  ])
+  if (!aluno?.tutor_ativo || aluno.status !== 'ativo' || !acesso || !professor) {
+    return respostaErro('O tutor não está ligado para você. Fale com seu professor.', 403)
+  }
+
+  const limite = Math.min(professor.tutor_sessoes_mes, acesso.max_sessoes_mes)
+  return { db, alunoId: conta.aluno_id as string, professorId: conta.professor_id as string, teste: false, limite, professor }
+}
+
+/** O professor experimentando a lição: precisa estar no beta. */
+async function comoProfessor(db: Db, userId: string): Promise<Contexto | Response> {
+  const [{ data: professor }, { data: acesso }] = await Promise.all([
+    db.from('professores').select(COLUNAS_PREFERENCIAS).eq('id', userId).maybeSingle(),
+    db.from('tutor_acesso').select('professor_id').eq('professor_id', userId).maybeSingle(),
+  ])
+  if (!professor || !acesso) return respostaErro('O tutor não está liberado para a sua conta.', 403)
+  return { db, alunoId: null, professorId: userId, teste: true, limite: TESTES_POR_DIA, professor }
+}
+
 type Contexto = {
   db: Db
-  alunoId: string
+  /** null no modo professor (sessão de teste). */
+  alunoId: string | null
   professorId: string
+  teste: boolean
+  /** Aluno: sessões no mês. Professor: testes em 24 h. */
   limite: number
   professor: { tutor_voz_natural: boolean; tutor_escuta_automatica: boolean }
 }
 
 // ── Lições ───────────────────────────────────────────────────────────────────
 
-async function listarLicoes({ db, alunoId, limite }: Contexto): Promise<Response> {
-  const { data: liberadas } = await db.from('tutor_licoes_alunos').select('licao_id').eq('aluno_id', alunoId)
+async function listarLicoes({ db, alunoId, professorId, limite }: Contexto): Promise<Response> {
+  const { data: liberadas } = await db.from('tutor_licoes_alunos').select('licao_id').eq('aluno_id', alunoId!)
   const ids = (liberadas ?? []).map((l) => l.licao_id as string)
 
   const [{ data: licoes }, { data: sessoes }, usadas] = await Promise.all([
@@ -140,15 +169,16 @@ async function listarLicoes({ db, alunoId, limite }: Contexto): Promise<Response
           .select('id, titulo, descricao, nivel_cefr, ordem')
           .in('id', ids)
           .eq('publicada', true)
+          .or(`professor_id.is.null,professor_id.eq.${professorId}`)
           .order('ordem')
       : Promise.resolve({ data: [] as { id: string; titulo: string; descricao: string | null; nivel_cefr: string | null }[] }),
     db
       .from('tutor_sessoes')
       .select('licao_id, iniciada_em, concluida_em, resumo')
-      .eq('aluno_id', alunoId)
+      .eq('aluno_id', alunoId!)
       .order('iniciada_em', { ascending: false })
       .limit(200),
-    sessoesDoMes(db, alunoId),
+    sessoesDoMes(db, alunoId!),
   ])
 
   // A mais recente de cada lição — a lista já vem do mais novo para o mais velho.
@@ -173,7 +203,7 @@ async function listarLicoes({ db, alunoId, limite }: Contexto): Promise<Response
 
 async function abrirLicao(ctx: Contexto, pedido: Pedido): Promise<Response> {
   const licao = await licaoLiberada(ctx, pedido.licaoId)
-  const usadas = await sessoesDoMes(ctx.db, ctx.alunoId)
+  const usadas = await sessoesUsadas(ctx)
   return respostaJson({
     licao: { id: licao.id, titulo: licao.titulo, nivel: licao.nivel_cefr },
     roteiro: licao.roteiro,
@@ -184,15 +214,32 @@ async function abrirLicao(ctx: Contexto, pedido: Pedido): Promise<Response> {
   })
 }
 
-async function licaoLiberada({ db, alunoId }: Contexto, licaoId: string | undefined) {
+const COLUNAS_LICAO = 'id, titulo, nivel_cefr, roteiro, falas_gravadas'
+
+/**
+ * Aluno: liberada para ele, publicada, e da biblioteca ou do professor dele.
+ * Professor: dele (até em rascunho) ou da biblioteca, publicada.
+ */
+async function licaoLiberada({ db, alunoId, professorId, teste }: Contexto, licaoId: string | undefined) {
   if (!licaoId) throw new ErroDePedido('Falta a lição.')
+  if (teste) {
+    const { data: licao } = await db
+      .from('tutor_licoes')
+      .select(COLUNAS_LICAO)
+      .eq('id', licaoId)
+      .or(`professor_id.eq.${professorId},and(professor_id.is.null,publicada.eq.true)`)
+      .maybeSingle()
+    if (!licao) throw new ErroDePedido('Lição não encontrada.', 404)
+    return licao
+  }
   const [{ data: vinculo }, { data: licao }] = await Promise.all([
-    db.from('tutor_licoes_alunos').select('licao_id').eq('aluno_id', alunoId).eq('licao_id', licaoId).maybeSingle(),
+    db.from('tutor_licoes_alunos').select('licao_id').eq('aluno_id', alunoId!).eq('licao_id', licaoId).maybeSingle(),
     db
       .from('tutor_licoes')
-      .select('id, titulo, nivel_cefr, roteiro, falas_gravadas')
+      .select(COLUNAS_LICAO)
       .eq('id', licaoId)
       .eq('publicada', true)
+      .or(`professor_id.is.null,professor_id.eq.${professorId}`)
       .maybeSingle(),
   ])
   if (!vinculo || !licao) throw new ErroDePedido('Esta lição não está liberada para você.', 404)
@@ -203,28 +250,32 @@ async function licaoLiberada({ db, alunoId }: Contexto, licaoId: string | undefi
 
 async function iniciar(ctx: Contexto, pedido: Pedido): Promise<Response> {
   const licao = await licaoLiberada(ctx, pedido.licaoId)
-  const usadas = await sessoesDoMes(ctx.db, ctx.alunoId)
+  const usadas = await sessoesUsadas(ctx)
   if (usadas >= ctx.limite) {
-    throw new ErroDePedido(`Você já fez as ${ctx.limite} sessões deste mês. No mês que vem tem mais!`, 429)
+    throw new ErroDePedido(
+      ctx.teste
+        ? `Você já fez ${ctx.limite} testes nas últimas 24 horas. Tente de novo amanhã.`
+        : `Você já fez as ${ctx.limite} sessões deste mês. No mês que vem tem mais!`,
+      429,
+    )
   }
   const { data, error } = await ctx.db
     .from('tutor_sessoes')
-    .insert({ aluno_id: ctx.alunoId, professor_id: ctx.professorId, licao_id: licao.id })
+    .insert({ aluno_id: ctx.alunoId, professor_id: ctx.professorId, licao_id: licao.id, teste: ctx.teste })
     .select('id')
     .single()
   if (error || !data) throw new Error('Não consegui abrir a sessão.')
   return respostaJson({ sessaoId: data.id, restantes: Math.max(0, ctx.limite - usadas - 1) })
 }
 
-/** A sessão aberta DESTE aluno, ainda dentro do tempo e do teto de custo. */
-async function sessaoAberta({ db, alunoId }: Contexto, sessaoId: string | undefined) {
+/** A sessão aberta DESTE aluno (ou o teste DESTE professor), ainda dentro do tempo e do teto de custo. */
+async function sessaoAberta(ctx: Contexto, sessaoId: string | undefined) {
   if (!sessaoId) throw new ErroDePedido('Falta a sessão.')
-  const { data: s } = await db
-    .from('tutor_sessoes')
-    .select('id, licao_id, iniciada_em, concluida_em, custo_usd')
-    .eq('id', sessaoId)
-    .eq('aluno_id', alunoId)
-    .maybeSingle()
+  const consulta = ctx.db.from('tutor_sessoes').select('id, licao_id, iniciada_em, concluida_em, custo_usd').eq('id', sessaoId)
+  const { data: s } = await (ctx.teste
+    ? consulta.eq('professor_id', ctx.professorId).eq('teste', true)
+    : consulta.eq('aluno_id', ctx.alunoId!)
+  ).maybeSingle()
   if (!s) throw new ErroDePedido('Sessão não encontrada.', 404)
   if (s.concluida_em) throw new ErroDePedido('Esta sessão já terminou.', 410)
   if (Date.now() - new Date(s.iniciada_em).getTime() > DURACAO_MAX_MS) {
@@ -273,12 +324,15 @@ async function falar(ctx: Contexto, pedido: Pedido): Promise<Response> {
 async function concluir(ctx: Contexto, pedido: Pedido): Promise<Response> {
   if (!pedido.sessaoId) throw new ErroDePedido('Falta a sessão.')
   const resumo = resumoLimpo(pedido.resumo)
-  const { data } = await ctx.db
+  const consulta = ctx.db
     .from('tutor_sessoes')
     .update({ concluida_em: new Date().toISOString(), resumo })
     .eq('id', pedido.sessaoId)
-    .eq('aluno_id', ctx.alunoId)
     .is('concluida_em', null)
+  const { data } = await (ctx.teste
+    ? consulta.eq('professor_id', ctx.professorId).eq('teste', true)
+    : consulta.eq('aluno_id', ctx.alunoId!)
+  )
     .select('id')
     .maybeSingle()
   // Concluir duas vezes (o "Refazer" no meio de um envio lento) não é erro.
@@ -332,6 +386,18 @@ async function somarGasto(db: Db, sessaoId: string, custos: Custo[]) {
     p_gasto: gastoPorServico(custos),
   })
   if (error) console.error('tutor-aluno somar gasto:', error)
+}
+
+/** O que conta no limite: sessões do aluno no mês, ou testes do professor em 24 h. */
+async function sessoesUsadas(ctx: Contexto): Promise<number> {
+  if (!ctx.teste) return sessoesDoMes(ctx.db, ctx.alunoId!)
+  const { count } = await ctx.db
+    .from('tutor_sessoes')
+    .select('id', { count: 'exact', head: true })
+    .eq('professor_id', ctx.professorId)
+    .eq('teste', true)
+    .gte('iniciada_em', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+  return count ?? 0
 }
 
 /** Sessões abertas neste mês — o mês do Brasil, não o do servidor (UTC). */
