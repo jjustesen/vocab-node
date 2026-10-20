@@ -33,10 +33,13 @@ Deno.serve(async (req) => {
 
   await db.from('contas_aluno').update({ ultimo_login: new Date().toISOString() }).eq('user_id', sessao.user.id)
 
-  const [{ data: aluno }, { data: professor }] = await Promise.all([
-    db.from('alunos').select('nome').eq('id', conta.aluno_id).single(),
+  const [{ data: aluno }, { data: professor }, { data: acessoTutor }] = await Promise.all([
+    db.from('alunos').select('nome, tutor_ativo').eq('id', conta.aluno_id).single(),
     db.from('professores').select('nome').eq('id', conta.professor_id).single(),
+    db.from('tutor_acesso').select('professor_id').eq('professor_id', conta.professor_id).maybeSingle(),
   ])
+  // O menu Tutor do aluno: a chave dele E o professor liberado no beta (0024).
+  const tutorAtivo = Boolean(aluno?.tutor_ativo && acessoTutor)
 
   const { data: atribuicoes } = await db
     .from('atribuicoes')
@@ -50,6 +53,7 @@ Deno.serve(async (req) => {
     return respostaJson({
       alunoNome: aluno?.nome ?? 'aluno',
       professorNome: professor?.nome ?? 'seu professor',
+      tutorAtivo,
       trilhas: [],
       pendentes: [],
       concluidas: [],
@@ -204,6 +208,7 @@ Deno.serve(async (req) => {
   return respostaJson({
     alunoNome: aluno?.nome ?? 'aluno',
     professorNome: professor?.nome ?? 'seu professor',
+    tutorAtivo,
     trilhas,
     pendentes,
     concluidas,
