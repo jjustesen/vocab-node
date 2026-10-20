@@ -140,7 +140,7 @@ COMO LER UMA PÁGINA DE DRILLINGS
   - Cada elemento seguinte → "substituicao" com a pista como está escrita (corrija só a grafia) e alvo = a frase anterior transformada por ela, mantendo o resto.
   - Verbos soltos ("Falar / Eu falo / Você fala"): construcao "falar" → "To speak."; depois substituicao "eu falo" → "I speak."; "você fala" → "You speak.".
   - "Eu queria - quis" = duas traduções da mesma forma inglesa ("I wanted.").
-- "Change into negative / interrogative / past / affirmative" → um bloco de "transformacao", um item por frase. Corrija erros de digitação e maiúsculas da frase (French, English, "don't").
+- "Change into negative / interrogative / past / affirmative" → um bloco de "transformacao", um item por frase. Uma linha com duas frases separadas por "/" ("I eat / I drink") vira DOIS itens. Corrija erros de digitação e maiúsculas da frase (French, English, "don't").
 - Mantenha TODAS as linhas da página: o professor quer a atividade como ela é. Corrija só erros de digitação.
 
 EM CADA ITEM
