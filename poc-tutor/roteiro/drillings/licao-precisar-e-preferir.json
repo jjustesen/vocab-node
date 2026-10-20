@@ -1,0 +1,1938 @@
+{
+  "id": "precisar-e-preferir",
+  "titulo": "Precisar, preferir e as refeições",
+  "abertura": "Hoje vamos praticar os verbos precisar e preferir e falar sobre comidas, bebidas e refeições.",
+  "notasParaAvaliador": "Prefer compara duas coisas com to (\"I prefer water to juice\"; over também vale) e \"prefer … than\" é erro; entre need, prefer, want ou like e outro verbo vem to (\"I prefer to drink\", \"I need to eat\"), a forma com -ing (\"I prefer drinking\") também vale, e \"I prefer drink\" e \"I need eat\" são erros. A negativa é don't / didn't + verbo na forma básica (\"I no need\", \"I not prefer\" e \"I didn't ate\" são erros), o passado de need e prefer é needed e preferred, as formas contraídas valem o mesmo que as completas (don't = do not, didn't = did not), e para 'precisar' e 'preferir' sozinhos valem \"to need\" / \"to prefer\" e também só \"need\" / \"prefer\". Like não leva of (\"I like of chicken\" é erro), o recheio ou o sabor vem antes do nome (\"chicken pancakes\", \"orange juice\"; \"pancakes of chicken\" é erro) e a pergunta começa com Do ou What do (\"You prefer coffee or tea?\" sem do e \"What you want…?\" são erros). Refeição leva for (\"for lunch\", \"for dinner\", \"for breakfast\"; at lunch também vale, \"in the lunch\" é erro), arroz com feijão é \"rice and beans\" (rice with beans também vale), legumes são vegetables, tomar uma bebida é drink (não take) e carne de porco é pork (não pig).",
+  "nomes": {
+    "blocos": {
+      "verbos": "Verbos",
+      "vocabulario": "Vocabulário",
+      "expressoes": "Expressões",
+      "gramatica": "Gramática"
+    },
+    "habilidades": {
+      "verbo_need": { "curto": "need", "resumo": "o verbo need, que é precisar" },
+      "verbo_prefer": { "curto": "prefer", "resumo": "o verbo prefer, que é preferir" },
+      "sujeito_obrigatorio": { "curto": "sujeito", "resumo": "o sujeito da frase, como o I e o you antes do verbo" },
+      "negativa_dont": { "curto": "don't", "resumo": "a negativa no presente com don't" },
+      "passado_regular": { "curto": "-ed", "resumo": "o passado com -ed, como em needed e preferred" },
+      "negativa_didnt": { "curto": "didn't", "resumo": "a negativa no passado com didn't" },
+      "verbo_base": { "curto": "didn't + verbo", "resumo": "o verbo na forma básica depois de didn't" },
+      "verbo_to": { "curto": "prefer to", "resumo": "o to entre dois verbos, como em prefer to drink" },
+      "prefer_to": { "curto": "prefer X to Y", "resumo": "preferir uma coisa a outra com to, sem than" },
+      "vocabulario_comida": { "curto": "comidas", "resumo": "o vocabulário de comidas e bebidas" },
+      "like_sem_of": { "curto": "like", "resumo": "o like sem of depois" },
+      "substantivo_antes": { "curto": "chicken pancakes", "resumo": "o recheio ou o sabor antes do nome, como em orange juice" },
+      "refeicao_for": { "curto": "for lunch", "resumo": "for com as refeições, como em for lunch e for dinner" },
+      "quantidade_of": { "curto": "a piece of", "resumo": "a piece of e a cup of, com o of no meio" },
+      "tomar_drink": { "curto": "drink", "resumo": "drink para tomar uma bebida, e não take" },
+      "pergunta_do": { "curto": "Do you …?", "resumo": "perguntas começando com Do" },
+      "pergunta_what": { "curto": "What do you …?", "resumo": "perguntas com What do you" },
+      "preservar_cadeia": { "curto": "manter a frase", "resumo": "manter as mudanças anteriores da frase" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "need / prefer / want / like + to + verbo: need to go · like to cook",
+      "prefer + uma coisa + to + outra coisa",
+      "don't + verbo (presente) · didn't + verbo na forma básica (passado)",
+      "passado regular: need → needed · prefer → preferred",
+      "Do you + verbo …? · What do you + verbo …?",
+      "for breakfast · for lunch · for dinner",
+      "a piece of · a cup of · a glass of",
+      "recheio ou sabor antes do nome: chocolate cake · orange juice"
+    ],
+    "vocabulario": [
+      { "en": "need", "pt": "precisar" },
+      { "en": "prefer", "pt": "preferir" },
+      { "en": "drink", "pt": "beber, tomar" },
+      { "en": "meat", "pt": "carne" },
+      { "en": "chicken", "pt": "frango" },
+      { "en": "fish", "pt": "peixe" },
+      { "en": "pork", "pt": "carne de porco" },
+      { "en": "rice and beans", "pt": "arroz e feijão" },
+      { "en": "vegetables", "pt": "legumes" },
+      { "en": "cheese", "pt": "queijo" },
+      { "en": "ham", "pt": "presunto" },
+      { "en": "pancakes", "pt": "panquecas" },
+      { "en": "juice", "pt": "suco" },
+      { "en": "milk", "pt": "leite" },
+      { "en": "soda", "pt": "refrigerante" },
+      { "en": "tea", "pt": "chá" },
+      { "en": "cake", "pt": "bolo" },
+      { "en": "pie", "pt": "torta" },
+      { "en": "piece", "pt": "pedaço" },
+      { "en": "cup", "pt": "xícara" },
+      { "en": "breakfast", "pt": "café da manhã" },
+      { "en": "lunch", "pt": "almoço" },
+      { "en": "dinner", "pt": "jantar" },
+      { "en": "yesterday", "pt": "ontem" },
+      { "en": "thank you", "pt": "obrigado" }
+    ],
+    "exemplos": [
+      "She needs to drink more water.",
+      "We prefer fish to meat.",
+      "My son doesn't eat vegetables.",
+      "What do your kids want for dinner?"
+    ],
+    "alertas": [
+      "Prefer liga as duas coisas com to, não com than: prefer tea to milk.",
+      "Entre need, prefer ou want e outro verbo vem to: need to go (nunca \"need go\").",
+      "Depois de don't e didn't o verbo fica na forma básica: didn't go (nunca \"didn't went\").",
+      "Like não leva of: like pizza (nunca \"like of pizza\"). E a pergunta começa com Do: Do they like pizza?",
+      "Tomar uma bebida é drink, não take. Refrigerante é soda, e carne de porco é pork (pig é o animal)."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "verbos",
+      "objetivo": "Os verbos need e prefer: infinitivo, I e you, negativa com don't, passado com -ed e didn't, e prefer com comidas e bebidas.",
+      "itens": [
+        {
+          "id": "verbos.precisar",
+          "tipo": "construcao",
+          "calibracao": true,
+          "solicitacao": "precisar",
+          "alvo": "To need.",
+          "habilidades": ["verbo_need"],
+          "ajudas": [
+            "É o verbo sozinho, no infinitivo. Qual é o verbo de 'precisar' em inglês?",
+            "Precisar não é precise. No infinitivo, uma palavrinha vem antes do verbo. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "To precise.",
+              "habilidade": "verbo_need",
+              "pista": "Precisar, em inglês, não é precise. Qual é o verbo?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.eu_preciso",
+          "tipo": "substituicao",
+          "pista": "Eu preciso.",
+          "idiomaDaPista": "pt",
+          "alvo": "I need.",
+          "habilidades": ["sujeito_obrigatorio", "verbo_need"],
+          "ajudas": [
+            "Agora com 'eu'. O to sai e entra o sujeito. Como fica?",
+            "Como se diz 'eu' em inglês? Ele vem antes do verbo."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Need.",
+              "habilidade": "sujeito_obrigatorio",
+              "pista": "Falta o sujeito. Quem precisa?"
+            },
+            {
+              "exemplo": "I to need.",
+              "habilidade": "verbo_need",
+              "pista": "Com o sujeito, o to continua antes do verbo?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.voce_precisa",
+          "tipo": "substituicao",
+          "pista": "Você precisa.",
+          "idiomaDaPista": "pt",
+          "alvo": "You need.",
+          "habilidades": ["verbo_need"],
+          "ajudas": [
+            "Troque eu por você. O verbo muda?",
+            "Como se diz 'você' em inglês? O verbo continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You needs.",
+              "habilidade": "verbo_need",
+              "pista": "Com you, o verbo ganha -s?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.nao_preciso",
+          "tipo": "construcao",
+          "solicitacao": "eu não preciso",
+          "alvo": "I don't need.",
+          "variantes": ["I do not need."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Em inglês, o 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "Como se diz 'eu preciso'? Agora coloque o ajudante do 'não' entre o sujeito e o verbo."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no need.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not need.",
+              "habilidade": "negativa_dont",
+              "pista": "Só not não basta. Que ajudante vem antes do verbo?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.voce_nao_precisa",
+          "tipo": "substituicao",
+          "pista": "Você não precisa.",
+          "idiomaDaPista": "pt",
+          "alvo": "You don't need.",
+          "variantes": ["You do not need."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Troque eu por você. O ajudante do 'não' muda?",
+            "Com 'você', o ajudante do 'não' é o mesmo de 'eu'. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You doesn't need.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't mesmo?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.precisei",
+          "tipo": "construcao",
+          "solicitacao": "eu precisei",
+          "alvo": "I needed.",
+          "habilidades": ["passado_regular"],
+          "ajudas": [
+            "É passado. Need é regular: que terminação ele ganha no passado?",
+            "Como se diz 'eu preciso'? Agora coloque need no passado."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I need.",
+              "habilidade": "passado_regular",
+              "pista": "Isso é presente. Como fica need no passado?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.voce_precisou",
+          "tipo": "substituicao",
+          "pista": "Você precisou.",
+          "idiomaDaPista": "pt",
+          "alvo": "You needed.",
+          "habilidades": ["passado_regular"],
+          "ajudas": [
+            "Troque eu por você. O verbo continua no passado?",
+            "No passado, o verbo é o mesmo para eu e você. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You need.",
+              "habilidade": "passado_regular",
+              "pista": "Isso é presente. A frase está no passado: como fica need?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.preferir",
+          "tipo": "construcao",
+          "solicitacao": "preferir",
+          "alvo": "To prefer.",
+          "habilidades": ["verbo_prefer"],
+          "ajudas": [
+            "É o verbo sozinho, no infinitivo. Qual é o verbo de 'preferir' em inglês?",
+            "É parecido com o português. No infinitivo, que palavrinha vem antes dele?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "To preferred.",
+              "habilidade": "verbo_prefer",
+              "pista": "Isso é passado. Como fica o verbo no infinitivo?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.eu_prefiro",
+          "tipo": "substituicao",
+          "pista": "Eu prefiro.",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer.",
+          "habilidades": ["sujeito_obrigatorio", "verbo_prefer"],
+          "ajudas": [
+            "Agora com 'eu'. O to sai e entra o sujeito. Como fica?",
+            "Como se diz 'eu' em inglês? Ele vem antes do verbo."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Prefer.",
+              "habilidade": "sujeito_obrigatorio",
+              "pista": "Falta o sujeito. Quem prefere?"
+            },
+            {
+              "exemplo": "I to prefer.",
+              "habilidade": "verbo_prefer",
+              "pista": "Com o sujeito, o to continua antes do verbo?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.voce_prefere",
+          "tipo": "substituicao",
+          "pista": "Você prefere.",
+          "idiomaDaPista": "pt",
+          "alvo": "You prefer.",
+          "habilidades": ["verbo_prefer"],
+          "ajudas": [
+            "Troque eu por você. O verbo muda?",
+            "Como se diz 'você' em inglês? O verbo continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You prefers.",
+              "habilidade": "verbo_prefer",
+              "pista": "Com you, o verbo ganha -s?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.nao_prefiro",
+          "tipo": "construcao",
+          "solicitacao": "eu não prefiro",
+          "alvo": "I don't prefer.",
+          "variantes": ["I do not prefer."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "É como 'eu não preciso', só que com o verbo preferir. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no prefer.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not prefer.",
+              "habilidade": "negativa_dont",
+              "pista": "Só not não basta. Que ajudante vem antes do verbo?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.voce_nao_prefere",
+          "tipo": "substituicao",
+          "pista": "Você não prefere.",
+          "idiomaDaPista": "pt",
+          "alvo": "You don't prefer.",
+          "variantes": ["You do not prefer."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Troque eu por você. O ajudante do 'não' muda?",
+            "Com 'você', o ajudante do 'não' é o mesmo de 'eu'. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You doesn't prefer.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't mesmo?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.preferi",
+          "tipo": "construcao",
+          "solicitacao": "eu preferi",
+          "alvo": "I preferred.",
+          "habilidades": ["passado_regular"],
+          "ajudas": [
+            "É passado. Prefer é regular: que terminação ele ganha?",
+            "Como se diz 'eu prefiro'? Agora coloque prefer no passado."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer.",
+              "habilidade": "passado_regular",
+              "pista": "Isso é presente. Como fica prefer no passado?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.voce_preferiu",
+          "tipo": "substituicao",
+          "pista": "Você preferiu.",
+          "idiomaDaPista": "pt",
+          "alvo": "You preferred.",
+          "habilidades": ["passado_regular"],
+          "ajudas": [
+            "Troque eu por você. O verbo continua no passado?",
+            "No passado, o verbo é o mesmo para eu e você. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You prefer.",
+              "habilidade": "passado_regular",
+              "pista": "Isso é presente. A frase está no passado: como fica prefer?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.nao_preferi",
+          "tipo": "construcao",
+          "solicitacao": "eu não preferi",
+          "alvo": "I didn't prefer.",
+          "variantes": ["I did not prefer."],
+          "habilidades": ["negativa_didnt", "verbo_base"],
+          "ajudas": [
+            "É passado e negativo. Qual ajudante do 'não' usamos no passado?",
+            "Depois desse ajudante, o verbo fica no passado ou na forma básica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't prefer.",
+              "habilidade": "negativa_didnt",
+              "pista": "Isso é presente. Qual ajudante do 'não' usamos no passado?"
+            },
+            {
+              "exemplo": "I didn't preferred.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, o verbo continua no passado?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.voce_nao_preferiu",
+          "tipo": "substituicao",
+          "pista": "Você não preferiu.",
+          "idiomaDaPista": "pt",
+          "alvo": "You didn't prefer.",
+          "variantes": ["You did not prefer."],
+          "habilidades": ["verbo_base", "negativa_didnt"],
+          "ajudas": [
+            "Troque eu por você. O ajudante do passado continua?",
+            "Com 'você', o ajudante do 'não' no passado é o mesmo. E o verbo depois dele?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You didn't preferred.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, o verbo continua no passado?"
+            },
+            {
+              "exemplo": "You don't prefer.",
+              "habilidade": "negativa_didnt",
+              "pista": "Isso é presente. Qual ajudante do 'não' usamos no passado?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.cafe",
+          "tipo": "construcao",
+          "solicitacao": "eu prefiro café",
+          "alvo": "I prefer coffee.",
+          "habilidades": ["verbo_prefer", "sujeito_obrigatorio"],
+          "ajudas": [
+            "Como se diz 'eu prefiro'? Depois vem a bebida.",
+            "Como se diz 'café' em inglês? Ele vem logo depois do verbo."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer the coffee.",
+              "habilidade": "verbo_prefer",
+              "pista": "Falando de café em geral, precisa de the?"
+            },
+            {
+              "exemplo": "Prefer coffee.",
+              "habilidade": "sujeito_obrigatorio",
+              "pista": "Falta o sujeito. Quem prefere café?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.suco",
+          "tipo": "substituicao",
+          "pista": "suco",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer juice.",
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque café por suco; o resto continua.",
+            "Como se diz 'suco' em inglês? Ele entra no lugar de coffee."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer the juice.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Falando de suco em geral, precisa de the?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.agua",
+          "tipo": "substituicao",
+          "pista": "água",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer water.",
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque suco por água; o resto continua.",
+            "Como se diz 'água' em inglês? Ela entra no lugar de juice."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer a water.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Água não se conta. Precisa de a?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.beber",
+          "tipo": "construcao",
+          "solicitacao": "eu prefiro beber",
+          "alvo": "I prefer to drink.",
+          "variantes": ["I prefer drinking."],
+          "habilidades": ["verbo_to"],
+          "ajudas": [
+            "Entre prefer e o outro verbo vem uma palavrinha. Qual é?",
+            "Como se diz 'beber' em inglês? Ele vem depois de 'eu prefiro' e da palavrinha."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer drink.",
+              "habilidade": "verbo_to",
+              "pista": "Entre prefer e o outro verbo falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I prefer to drinking.",
+              "habilidade": "verbo_to",
+              "pista": "Depois de to, o verbo leva -ing?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.comer",
+          "tipo": "substituicao",
+          "pista": "comer",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer to eat.",
+          "variantes": ["I prefer eating."],
+          "habilidades": ["verbo_to"],
+          "ajudas": [
+            "Troque beber por comer; o resto continua.",
+            "Como se diz 'comer' em inglês? Ele entra no lugar de drink."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer eat.",
+              "habilidade": "verbo_to",
+              "pista": "Entre prefer e eat falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.agua_suco",
+          "tipo": "construcao",
+          "solicitacao": "eu prefiro água a suco",
+          "alvo": "I prefer water to juice.",
+          "variantes": ["I prefer water over juice."],
+          "habilidades": ["prefer_to"],
+          "ajudas": [
+            "Para dizer que prefere uma coisa a outra, que palavrinha liga as duas?",
+            "Não é than. É a mesma palavrinha que vem antes de um verbo no infinitivo. Onde ela entra?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer water than juice.",
+              "habilidade": "prefer_to",
+              "pista": "Com prefer, usamos than? Qual palavrinha liga as duas bebidas?"
+            },
+            {
+              "exemplo": "I prefer water of juice.",
+              "habilidade": "prefer_to",
+              "pista": "Com prefer, a palavrinha que liga as duas coisas não é of. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "verbos.leite_cafe",
+          "tipo": "substituicao",
+          "pista": "leite - café",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer milk to coffee.",
+          "variantes": ["I prefer milk over coffee."],
+          "habilidades": ["prefer_to", "vocabulario_comida"],
+          "ajudas": [
+            "Troque água por leite e suco por café; a palavrinha do meio continua.",
+            "Como se diz 'leite' em inglês? Ele vem primeiro, e café depois da palavrinha."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer milk than coffee.",
+              "habilidade": "prefer_to",
+              "pista": "Com prefer, usamos than? Qual palavrinha liga as duas bebidas?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vocabulario",
+      "objetivo": "Carnes e comidas do dia a dia com prefer to eat, eat, don't eat, like e didn't eat, e preferir uma bebida a outra.",
+      "itens": [
+        {
+          "id": "vocab.carne",
+          "tipo": "construcao",
+          "solicitacao": "eu prefiro comer carne",
+          "alvo": "I prefer to eat meat.",
+          "variantes": ["I prefer eating meat."],
+          "habilidades": ["verbo_to", "vocabulario_comida"],
+          "ajudas": [
+            "Como se diz 'eu prefiro comer'? Lembre da palavrinha entre os dois verbos.",
+            "Como se diz 'carne', a de comer, em inglês? Ela vem no fim."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer eat meat.",
+              "habilidade": "verbo_to",
+              "pista": "Entre prefer e eat falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I prefer to eat the meat.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Falando de carne em geral, precisa de the?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.frango",
+          "tipo": "substituicao",
+          "pista": "frango",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer to eat chicken.",
+          "variantes": ["I prefer eating chicken."],
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque carne por frango; o resto continua.",
+            "Como se diz 'frango' em inglês? Ele entra no lugar de meat."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer to eat a chicken.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Frango como comida não leva a. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.peixe",
+          "tipo": "substituicao",
+          "pista": "peixe",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer to eat fish.",
+          "variantes": ["I prefer eating fish."],
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque frango por peixe; o resto continua.",
+            "Como se diz 'peixe' em inglês? Ele entra no lugar de chicken."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer to eat fishes.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Peixe como comida vai no plural?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.porco",
+          "tipo": "substituicao",
+          "pista": "porco",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer to eat pork.",
+          "variantes": ["I prefer eating pork."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque peixe por porco, falando da carne; o resto continua.",
+            "A carne de porco tem uma palavra própria em inglês, diferente do animal. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer to eat pig.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Pig é o animal. E a carne de porco, como se diz?"
+            },
+            {
+              "exemplo": "I prefer pork.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'comer', continua na frase?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.arroz",
+          "tipo": "construcao",
+          "solicitacao": "eu como arroz com feijão",
+          "alvo": "I eat rice and beans.",
+          "variantes": ["I eat rice with beans."],
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Como se diz 'eu como'? Depois vêm o arroz e o feijão.",
+            "Em inglês, arroz com feijão vira arroz 'e' feijão, e feijão vai no plural. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat rice with bean.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Feijão, em inglês, vai no singular ou no plural?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.legumes",
+          "tipo": "substituicao",
+          "pista": "carne com legumes",
+          "idiomaDaPista": "pt",
+          "alvo": "I eat meat and vegetables.",
+          "variantes": ["I eat meat with vegetables.", "I eat meat and veggies.", "I eat meat with veggies."],
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque arroz com feijão por carne com legumes; o começo continua.",
+            "Como se diz 'legumes' em inglês? Não é a mesma palavra do português."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat meat with legumes.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Legumes, em inglês, é outra palavra. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.nao_como",
+          "tipo": "construcao",
+          "solicitacao": "eu não como carne, obrigado",
+          "alvo": "I don't eat meat, thank you.",
+          "variantes": ["I don't eat meat, thanks.", "I do not eat meat, thank you."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "Como se diz 'eu não como carne'? E 'obrigado' vem no fim."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no eat meat, thank you.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not eat meat, thank you.",
+              "habilidade": "negativa_dont",
+              "pista": "Só not não basta. Que ajudante vem antes do verbo?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.gosto",
+          "tipo": "substituicao",
+          "pista": "gosto",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't like meat, thank you.",
+          "variantes": ["I don't like meat, thanks.", "I do not like meat, thank you."],
+          "habilidades": ["like_sem_of", "preservar_cadeia"],
+          "ajudas": [
+            "Troque comer por gostar e mantenha o 'não' e o obrigado.",
+            "Como se diz 'gostar' em inglês? Ele entra no lugar de eat, sem nada depois."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't like of meat, thank you.",
+              "habilidade": "like_sem_of",
+              "pista": "Em inglês, like leva of depois?"
+            },
+            {
+              "exemplo": "I like meat, thank you.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! A frase anterior era negativa. O 'não' continua?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.gosto_peixe",
+          "tipo": "substituicao",
+          "pista": "peixe",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't like fish, thank you.",
+          "variantes": ["I don't like fish, thanks.", "I do not like fish, thank you."],
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque carne por peixe; o resto continua.",
+            "Como se diz 'peixe' em inglês? Ele entra no lugar de meat."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't like fishes, thank you.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Peixe como comida vai no plural?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.gosto_frango",
+          "tipo": "substituicao",
+          "pista": "frango",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't like chicken, thank you.",
+          "variantes": ["I don't like chicken, thanks.", "I do not like chicken, thank you."],
+          "habilidades": ["preservar_cadeia"],
+          "ajudas": [
+            "Troque peixe por frango; o resto continua.",
+            "Como se diz 'frango' em inglês? Ele entra no lugar de fish."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't eat chicken, thank you.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Qual verbo estava na frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.panquecas",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de panquecas de frango",
+          "alvo": "I like chicken pancakes.",
+          "habilidades": ["substantivo_antes", "like_sem_of"],
+          "ajudas": [
+            "Em inglês, o recheio vem antes ou depois de pancakes?",
+            "Como se diz 'eu gosto'? Sem nada depois. Depois vem o recheio e, no fim, as panquecas."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like pancakes of chicken.",
+              "habilidade": "substantivo_antes",
+              "pista": "Em inglês, o recheio vem antes ou depois de pancakes?"
+            },
+            {
+              "exemplo": "I like of chicken pancakes.",
+              "habilidade": "like_sem_of",
+              "pista": "Em inglês, like leva of depois?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.queijo",
+          "tipo": "substituicao",
+          "pista": "queijo",
+          "idiomaDaPista": "pt",
+          "alvo": "I like cheese pancakes.",
+          "habilidades": ["substantivo_antes"],
+          "ajudas": [
+            "Troque frango por queijo; ele continua antes de pancakes.",
+            "Como se diz 'queijo' em inglês? Ele entra no lugar de chicken."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like pancakes of cheese.",
+              "habilidade": "substantivo_antes",
+              "pista": "O recheio continua vindo antes. Onde entra o queijo?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.presunto",
+          "tipo": "substituicao",
+          "pista": "presunto",
+          "idiomaDaPista": "pt",
+          "alvo": "I like ham pancakes.",
+          "habilidades": ["vocabulario_comida", "substantivo_antes"],
+          "ajudas": [
+            "Troque queijo por presunto; o resto continua.",
+            "Como se diz 'presunto' em inglês? Ele entra no lugar de cheese."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like jam pancakes.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Jam é geleia. E presunto, como se diz?"
+            },
+            {
+              "exemplo": "I like pancakes of ham.",
+              "habilidade": "substantivo_antes",
+              "pista": "O recheio continua vindo antes. Onde ele entra?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.nao_comi",
+          "tipo": "construcao",
+          "solicitacao": "eu não comi carne hoje",
+          "alvo": "I didn't eat meat today.",
+          "variantes": ["I did not eat meat today."],
+          "habilidades": ["negativa_didnt", "verbo_base"],
+          "ajudas": [
+            "'Comi' é passado. Qual ajudante do 'não' usamos no passado?",
+            "Depois desse ajudante, o verbo comer fica na forma básica. Como fica a frase?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't eat meat today.",
+              "habilidade": "negativa_didnt",
+              "pista": "'Comi' é passado. Qual ajudante do 'não' usamos no passado?"
+            },
+            {
+              "exemplo": "I didn't ate meat today.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, o verbo fica no passado ou volta à forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.porco_hoje",
+          "tipo": "substituicao",
+          "pista": "carne de porco hoje",
+          "idiomaDaPista": "pt",
+          "alvo": "I didn't eat pork today.",
+          "variantes": ["I did not eat pork today."],
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque carne por carne de porco; o resto continua.",
+            "Carne de porco tem uma palavra só em inglês. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I didn't eat pig today.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Pig é o animal. E a carne de porco, como se diz?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.ontem",
+          "tipo": "substituicao",
+          "pista": "ontem",
+          "idiomaDaPista": "pt",
+          "alvo": "I didn't eat pork yesterday.",
+          "variantes": ["I did not eat pork yesterday."],
+          "habilidades": ["preservar_cadeia"],
+          "ajudas": [
+            "Troque hoje por ontem; o resto continua.",
+            "Como se diz 'ontem' em inglês? Ele entra no lugar de today."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I didn't eat meat yesterday.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Que carne era na frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.agua_refri",
+          "tipo": "construcao",
+          "solicitacao": "eu prefiro água a refrigerante",
+          "alvo": "I prefer water to soda.",
+          "variantes": ["I prefer water over soda.", "I prefer water to soft drinks."],
+          "habilidades": ["prefer_to", "vocabulario_comida"],
+          "ajudas": [
+            "Que palavrinha liga as duas coisas depois de prefer?",
+            "Como se diz 'refrigerante' em inglês? Ele vem depois da palavrinha."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer water than soda.",
+              "habilidade": "prefer_to",
+              "pista": "Com prefer, usamos than? Qual palavrinha liga as duas bebidas?"
+            },
+            {
+              "exemplo": "I prefer water to refrigerant.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Refrigerant é o gás da geladeira! E refrigerante, como se diz?"
+            }
+          ]
+        },
+        {
+          "id": "vocab.cafe_cha",
+          "tipo": "substituicao",
+          "pista": "café a chá",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer coffee to tea.",
+          "variantes": ["I prefer coffee over tea."],
+          "habilidades": ["prefer_to"],
+          "ajudas": [
+            "Troque água por café e refrigerante por chá; a palavrinha do meio continua.",
+            "Como se diz 'chá' em inglês? Ele vem depois da palavrinha."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer coffee than tea.",
+              "habilidade": "prefer_to",
+              "pista": "Com prefer, usamos than? Qual palavrinha liga as duas bebidas?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expressoes",
+      "objetivo": "Refeições com for breakfast, for lunch e for dinner, a piece of e a cup of, e drink para tomar uma bebida.",
+      "itens": [
+        {
+          "id": "expr.almoco",
+          "tipo": "construcao",
+          "solicitacao": "eu como arroz e feijão no almoço",
+          "alvo": "I eat rice and beans for lunch.",
+          "variantes": ["I eat rice and beans at lunch."],
+          "habilidades": ["refeicao_for"],
+          "ajudas": [
+            "Com as refeições, qual palavrinha vem antes de lunch?",
+            "Como se diz 'eu como arroz e feijão'? No fim vêm a palavrinha e a refeição."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat rice and beans in the lunch.",
+              "habilidade": "refeicao_for",
+              "pista": "Com a refeição, usamos in the? Qual palavrinha vem antes de lunch?"
+            },
+            {
+              "exemplo": "I eat rice and beans on lunch.",
+              "habilidade": "refeicao_for",
+              "pista": "Antes de lunch não é on. Qual palavrinha usamos?"
+            }
+          ]
+        },
+        {
+          "id": "expr.jantar",
+          "tipo": "substituicao",
+          "pista": "no jantar",
+          "idiomaDaPista": "pt",
+          "alvo": "I eat rice and beans for dinner.",
+          "variantes": ["I eat rice and beans at dinner."],
+          "habilidades": ["refeicao_for"],
+          "ajudas": [
+            "Troque almoço por jantar; a palavrinha antes da refeição continua.",
+            "Como se diz 'jantar' em inglês? Ele entra no lugar de lunch."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat rice and beans for the dinner.",
+              "habilidade": "refeicao_for",
+              "pista": "Antes de dinner, precisa de the?"
+            }
+          ]
+        },
+        {
+          "id": "expr.bolo",
+          "tipo": "construcao",
+          "solicitacao": "eu quero um pedaço de bolo",
+          "alvo": "I want a piece of cake.",
+          "variantes": ["I want a slice of cake."],
+          "habilidades": ["quantidade_of"],
+          "ajudas": [
+            "Como se diz 'pedaço'? Entre ele e o bolo vem uma palavrinha. Qual?",
+            "Como se diz 'eu quero'? Depois vêm 'um pedaço de' e 'bolo'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a piece cake.",
+              "habilidade": "quantidade_of",
+              "pista": "Entre piece e cake falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I want a part of cake.",
+              "habilidade": "quantidade_of",
+              "pista": "Pedaço não é part. Como se diz?"
+            }
+          ]
+        },
+        {
+          "id": "expr.torta",
+          "tipo": "substituicao",
+          "pista": "torta",
+          "idiomaDaPista": "pt",
+          "alvo": "I want a piece of pie.",
+          "variantes": ["I want a slice of pie.", "I want a piece of tart.", "I want a slice of tart."],
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque bolo por torta; o resto continua.",
+            "Como se diz 'torta' em inglês? Ela entra no lugar de cake."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a piece of torta.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Torta, em inglês, é outra palavra. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "expr.banana",
+          "tipo": "substituicao",
+          "pista": "banana",
+          "idiomaDaPista": "pt",
+          "alvo": "I want a piece of banana.",
+          "variantes": ["I want a slice of banana."],
+          "habilidades": ["preservar_cadeia"],
+          "ajudas": [
+            "Troque torta por banana; o pedaço continua.",
+            "Banana é igual em inglês. Ela entra no lugar de pie."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a banana.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o pedaço, continua na frase?"
+            }
+          ]
+        },
+        {
+          "id": "expr.carne_almoco",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de comer carne no almoço",
+          "alvo": "I like to eat meat for lunch.",
+          "variantes": ["I like eating meat for lunch.", "I like to eat meat at lunch."],
+          "habilidades": ["like_sem_of", "verbo_to", "refeicao_for"],
+          "ajudas": [
+            "Como se diz 'eu gosto de comer'? Like não leva of, e entre os dois verbos vem uma palavrinha.",
+            "No fim, qual palavrinha vem antes de lunch?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like of eat meat for lunch.",
+              "habilidade": "like_sem_of",
+              "pista": "Em inglês, like leva of depois?"
+            },
+            {
+              "exemplo": "I like eat meat for lunch.",
+              "habilidade": "verbo_to",
+              "pista": "Entre like e eat falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I like to eat meat in the lunch.",
+              "habilidade": "refeicao_for",
+              "pista": "Com a refeição, usamos in the? Qual palavrinha vem antes de lunch?"
+            }
+          ]
+        },
+        {
+          "id": "expr.carne_jantar",
+          "tipo": "substituicao",
+          "pista": "no jantar",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to eat meat for dinner.",
+          "variantes": ["I like eating meat for dinner.", "I like to eat meat at dinner."],
+          "habilidades": ["refeicao_for"],
+          "ajudas": [
+            "Troque almoço por jantar; o resto continua.",
+            "Como se diz 'jantar' em inglês? Ele entra no lugar de lunch."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like to eat meat for the dinner.",
+              "habilidade": "refeicao_for",
+              "pista": "Antes de dinner, precisa de the?"
+            }
+          ]
+        },
+        {
+          "id": "expr.peixe_jantar",
+          "tipo": "substituicao",
+          "pista": "peixe",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to eat fish for dinner.",
+          "variantes": ["I like eating fish for dinner.", "I like to eat fish at dinner."],
+          "habilidades": ["preservar_cadeia"],
+          "ajudas": [
+            "Troque carne por peixe; o resto continua.",
+            "Como se diz 'peixe' em inglês? Ele entra no lugar de meat."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like to eat fish for lunch.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Qual refeição era na frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "expr.suco_manha",
+          "tipo": "construcao",
+          "solicitacao": "eu prefiro tomar suco de laranja no café da manhã",
+          "alvo": "I prefer to drink orange juice for breakfast.",
+          "variantes": ["I prefer drinking orange juice for breakfast.", "I prefer to have orange juice for breakfast."],
+          "habilidades": ["substantivo_antes", "tomar_drink", "refeicao_for"],
+          "ajudas": [
+            "Tomar suco é beber suco. E em inglês, a fruta vem antes ou depois de juice?",
+            "Como se diz 'café da manhã' em inglês? Que palavrinha vem antes dele?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer to drink juice of orange for breakfast.",
+              "habilidade": "substantivo_antes",
+              "pista": "Em inglês, a fruta vem antes ou depois de juice?"
+            },
+            {
+              "exemplo": "I prefer to take orange juice for breakfast.",
+              "habilidade": "tomar_drink",
+              "pista": "Tomar uma bebida, em inglês, não é take. Qual é o verbo?"
+            },
+            {
+              "exemplo": "I prefer to drink orange juice in the breakfast.",
+              "habilidade": "refeicao_for",
+              "pista": "Com a refeição, usamos in the? Qual palavrinha vem antes de breakfast?"
+            }
+          ]
+        },
+        {
+          "id": "expr.suco_almoco",
+          "tipo": "substituicao",
+          "pista": "no almoço",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer to drink orange juice for lunch.",
+          "variantes": ["I prefer drinking orange juice for lunch.", "I prefer to have orange juice for lunch."],
+          "habilidades": ["refeicao_for"],
+          "ajudas": [
+            "Troque café da manhã por almoço; o resto continua.",
+            "Como se diz 'almoço' em inglês? Ele entra no lugar de breakfast."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer to drink orange juice in the lunch.",
+              "habilidade": "refeicao_for",
+              "pista": "Com a refeição, usamos in the? Qual palavrinha vem antes de lunch?"
+            }
+          ]
+        },
+        {
+          "id": "expr.suco_jantar",
+          "tipo": "substituicao",
+          "pista": "no jantar",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer to drink orange juice for dinner.",
+          "variantes": ["I prefer drinking orange juice for dinner.", "I prefer to have orange juice for dinner."],
+          "habilidades": ["preservar_cadeia", "refeicao_for"],
+          "ajudas": [
+            "Troque almoço por jantar; o resto continua.",
+            "Como se diz 'jantar' em inglês? Ele entra no lugar de lunch."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer to drink juice for dinner.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Que suco era na frase anterior?"
+            },
+            {
+              "exemplo": "I prefer to drink orange juice for the dinner.",
+              "habilidade": "refeicao_for",
+              "pista": "Antes de dinner, precisa de the?"
+            }
+          ]
+        },
+        {
+          "id": "expr.xicara",
+          "tipo": "construcao",
+          "solicitacao": "eu quero beber uma xícara de café, por favor",
+          "alvo": "I want to drink a cup of coffee, please.",
+          "variantes": ["I want to have a cup of coffee, please."],
+          "habilidades": ["quantidade_of", "verbo_to"],
+          "ajudas": [
+            "Como se diz 'xícara'? Entre ela e o café vem uma palavrinha.",
+            "Como se diz 'eu quero beber'? Entre os dois verbos vem uma palavrinha, e 'por favor' fica no fim."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want to drink a cup coffee, please.",
+              "habilidade": "quantidade_of",
+              "pista": "Entre cup e coffee falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I want drink a cup of coffee, please.",
+              "habilidade": "verbo_to",
+              "pista": "Entre want e drink falta uma palavrinha. Qual é?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gramatica",
+      "objetivo": "Perguntas com Do you …? e What do you …?, com want, eat, like e prefer.",
+      "itens": [
+        {
+          "id": "gram.chocolate",
+          "tipo": "construcao",
+          "solicitacao": "você quer um pedaço de chocolate?",
+          "alvo": "Do you want a piece of chocolate?",
+          "habilidades": ["pergunta_do", "quantidade_of"],
+          "ajudas": [
+            "Em inglês, a pergunta começa com um ajudante. Qual é?",
+            "Como se pergunta 'você quer…?' em inglês? Depois vem 'um pedaço de chocolate'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You want a piece of chocolate?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Are you want a piece of chocolate?",
+              "habilidade": "pergunta_do",
+              "pista": "Tem um errinho no are. Com o verbo querer, qual ajudante começa a pergunta?"
+            },
+            {
+              "exemplo": "Do you want a piece chocolate?",
+              "habilidade": "quantidade_of",
+              "pista": "Entre piece e chocolate falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "gram.bolo",
+          "tipo": "substituicao",
+          "pista": "bolo",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you want a piece of cake?",
+          "variantes": ["Do you want a slice of cake?"],
+          "habilidades": ["pergunta_do", "preservar_cadeia"],
+          "ajudas": [
+            "Troque chocolate por bolo; a pergunta continua.",
+            "Como se diz 'bolo' em inglês? Ele entra no lugar de chocolate."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You want a piece of cake?",
+              "habilidade": "pergunta_do",
+              "pista": "Continua sendo pergunta. Qual ajudante vem no começo?"
+            },
+            {
+              "exemplo": "Do you want a cake?",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o pedaço, continua na pergunta?"
+            }
+          ]
+        },
+        {
+          "id": "gram.come_porco",
+          "tipo": "construcao",
+          "solicitacao": "você come carne de porco?",
+          "alvo": "Do you eat pork?",
+          "habilidades": ["pergunta_do", "vocabulario_comida"],
+          "apoio": "pergunta_do",
+          "ajudas": [
+            "Em inglês, a pergunta começa com um ajudante. Qual é?",
+            "Carne de porco tem uma palavra só em inglês. E 'você come…?' começa com o ajudante."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You eat pork?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Do you eat pig?",
+              "habilidade": "vocabulario_comida",
+              "pista": "Pig é o animal. E a carne de porco, como se diz?"
+            }
+          ]
+        },
+        {
+          "id": "gram.gosta_porco",
+          "tipo": "substituicao",
+          "pista": "gosta",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you like pork?",
+          "habilidades": ["like_sem_of", "pergunta_do"],
+          "ajudas": [
+            "Troque comer por gostar; a pergunta continua.",
+            "Como se diz 'gostar' em inglês? Ele entra no lugar de eat, sem nada depois."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Do you like of pork?",
+              "habilidade": "like_sem_of",
+              "pista": "Em inglês, like leva of depois?"
+            },
+            {
+              "exemplo": "You like pork?",
+              "habilidade": "pergunta_do",
+              "pista": "Continua sendo pergunta. Qual ajudante vem no começo?"
+            }
+          ]
+        },
+        {
+          "id": "gram.quer_porco",
+          "tipo": "substituicao",
+          "pista": "quer",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you want pork?",
+          "variantes": ["Do you want some pork?"],
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Troque gostar por querer; a pergunta continua.",
+            "Como se diz 'querer' em inglês? Ele entra no lugar de like."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You want pork?",
+              "habilidade": "pergunta_do",
+              "pista": "Continua sendo pergunta. Qual ajudante vem no começo?"
+            }
+          ]
+        },
+        {
+          "id": "gram.cafe_ou_cha",
+          "tipo": "construcao",
+          "solicitacao": "você prefere beber café ou chá?",
+          "alvo": "Do you prefer to drink coffee or tea?",
+          "variantes": ["Do you prefer drinking coffee or tea?"],
+          "habilidades": ["pergunta_do", "verbo_to"],
+          "ajudas": [
+            "A pergunta começa com um ajudante. Qual é?",
+            "Entre prefer e drink vem uma palavrinha. E 'ou', em inglês, como se diz?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You prefer to drink coffee or tea?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Do you prefer drink coffee or tea?",
+              "habilidade": "verbo_to",
+              "pista": "Entre prefer e drink falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "gram.refri_suco",
+          "tipo": "substituicao",
+          "pista": "refrigerante ou suco",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you prefer to drink soda or juice?",
+          "variantes": ["Do you prefer drinking soda or juice?", "Do you prefer to drink soft drinks or juice?"],
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Troque café ou chá por refrigerante ou suco; o começo continua.",
+            "Como se diz 'refrigerante' em inglês? E 'suco'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Do you prefer to drink refrigerant or juice?",
+              "habilidade": "vocabulario_comida",
+              "pista": "Refrigerant é o gás da geladeira! E refrigerante, como se diz?"
+            }
+          ]
+        },
+        {
+          "id": "gram.what_comer",
+          "tipo": "construcao",
+          "solicitacao": "o que você quer comer?",
+          "alvo": "What do you want to eat?",
+          "habilidades": ["pergunta_what", "verbo_to"],
+          "ajudas": [
+            "Como se diz 'o que'? Depois dele vem um ajudante. Qual é?",
+            "Como se diz 'você quer comer'? Entre want e o outro verbo vem uma palavrinha."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What you want to eat?",
+              "habilidade": "pergunta_what",
+              "pista": "Depois de what, falta um ajudante. Qual é?"
+            },
+            {
+              "exemplo": "What do you want eat?",
+              "habilidade": "verbo_to",
+              "pista": "Entre want e eat falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "gram.what_beber",
+          "tipo": "substituicao",
+          "pista": "beber",
+          "idiomaDaPista": "pt",
+          "alvo": "What do you want to drink?",
+          "habilidades": ["pergunta_what"],
+          "ajudas": [
+            "Troque comer por beber; a pergunta continua.",
+            "Como se diz 'beber' em inglês? Ele entra no lugar de eat."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What you want to drink?",
+              "habilidade": "pergunta_what",
+              "pista": "Depois de what, falta um ajudante. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "gram.what_manha",
+          "tipo": "construcao",
+          "solicitacao": "o que você prefere beber no café da manhã?",
+          "alvo": "What do you prefer to drink for breakfast?",
+          "variantes": ["What do you prefer drinking for breakfast?", "What do you prefer to drink at breakfast?"],
+          "habilidades": ["pergunta_what", "refeicao_for"],
+          "ajudas": [
+            "Depois de what, qual ajudante vem?",
+            "Como se diz 'café da manhã' em inglês? Que palavrinha vem antes dele?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What you prefer to drink for breakfast?",
+              "habilidade": "pergunta_what",
+              "pista": "Depois de what, falta um ajudante. Qual é?"
+            },
+            {
+              "exemplo": "What do you prefer to drink in the breakfast?",
+              "habilidade": "refeicao_for",
+              "pista": "Com a refeição, usamos in the? Qual palavrinha vem antes de breakfast?"
+            }
+          ]
+        },
+        {
+          "id": "gram.what_almoco",
+          "tipo": "substituicao",
+          "pista": "no almoço",
+          "idiomaDaPista": "pt",
+          "alvo": "What do you prefer to drink for lunch?",
+          "variantes": ["What do you prefer drinking for lunch?", "What do you prefer to drink at lunch?"],
+          "habilidades": ["refeicao_for"],
+          "ajudas": [
+            "Troque café da manhã por almoço; a pergunta continua.",
+            "Como se diz 'almoço' em inglês? Ele entra no lugar de breakfast."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What do you prefer to drink in the lunch?",
+              "habilidade": "refeicao_for",
+              "pista": "Com a refeição, usamos in the? Qual palavrinha vem antes de lunch?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "pergunta_do": {
+      "objetivo": "Montar a pergunta com Do a partir de uma frase simples, antes de voltar à pergunta sobre carne de porco.",
+      "degraus": [
+        {
+          "id": "pergunta_do.voce_come",
+          "tipo": "construcao",
+          "solicitacao": "você come peixe",
+          "alvo": "You eat fish.",
+          "habilidades": ["vocabulario_comida"],
+          "ajudas": [
+            "Como se diz 'você come'? Depois vem o peixe.",
+            "Como se diz 'peixe' em inglês? Ele vem depois do verbo."
+          ]
+        },
+        {
+          "id": "pergunta_do.pergunta",
+          "tipo": "substituicao",
+          "pista": "faça a pergunta",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you eat fish?",
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Para virar pergunta, qual ajudante vem no começo?",
+            "O verbo continua o mesmo; só entra um ajudante antes de you. Qual é?"
+          ]
+        },
+        {
+          "id": "pergunta_do.frango",
+          "tipo": "substituicao",
+          "pista": "frango",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you eat chicken?",
+          "habilidades": ["pergunta_do", "vocabulario_comida"],
+          "ajudas": [
+            "Troque peixe por frango; a pergunta continua.",
+            "Como se diz 'frango' em inglês? Ele entra no lugar de fish."
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.cafe_da_manha",
+      "tipo": "conversa",
+      "pergunta": "What do you eat for breakfast?",
+      "criterio": "Resposta pertinente sobre o café da manhã, com I eat … / I drink … (for breakfast) ou só as comidas; qualquer comida verdadeira vale.",
+      "exemplos": ["I eat bread and cheese for breakfast.", "I drink coffee with milk."],
+      "acompanhamentos": ["Do you prefer coffee or tea?", "What do you eat for lunch?"],
+      "habilidades": ["refeicao_for", "vocabulario_comida"],
+      "ajudas": [
+        "Conte o que você come ou bebe de manhã, começando com 'I eat…' ou 'I drink…'.",
+        "Pode ser só a comida: pão, café, fruta… Como se diz em inglês?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I eat bread in the breakfast.",
+          "habilidade": "refeicao_for",
+          "pista": "Com a refeição, usamos in the? Qual palavrinha vem antes de breakfast?"
+        }
+      ]
+    },
+    {
+      "id": "conversa.carne_ou_peixe",
+      "tipo": "conversa",
+      "pergunta": "Do you prefer meat or fish?",
+      "criterio": "Resposta pertinente com I prefer … (to …), ou dizendo que não come carne; prefer X to Y vale, than não.",
+      "exemplos": ["I prefer fish.", "I prefer meat to fish.", "I don't eat meat. I prefer fish."],
+      "acompanhamentos": ["What do you prefer to drink?", "Do you eat pork?"],
+      "habilidades": ["prefer_to", "verbo_prefer"],
+      "ajudas": [
+        "Diga a sua preferência começando com 'I prefer…'.",
+        "Se quiser comparar, que palavrinha liga as duas coisas depois de prefer?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I prefer fish than meat.",
+          "habilidade": "prefer_to",
+          "pista": "Com prefer, usamos than? Qual palavrinha liga as duas coisas?"
+        }
+      ]
+    },
+    {
+      "id": "conversa.supermercado",
+      "tipo": "conversa",
+      "pergunta": "What do you need to buy at the supermarket?",
+      "criterio": "Resposta pertinente com I need (to buy) … e qualquer item de mercado, ou só a lista de itens.",
+      "exemplos": ["I need to buy rice, beans and milk.", "I need coffee and bread."],
+      "acompanhamentos": ["Do you need to buy meat?", "What do you prefer: juice or soda?"],
+      "habilidades": ["verbo_need", "verbo_to"],
+      "ajudas": [
+        "Diga o que você precisa comprar, começando com 'I need…'.",
+        "Pode ser uma lista: leite, pão, café… Como se diz em inglês?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I need buy milk.",
+          "habilidade": "verbo_to",
+          "pista": "Entre need e buy falta uma palavrinha. Qual é?"
+        }
+      ]
+    }
+  ],
+  "recuperacao": {
+    "sujeito_obrigatorio": {
+      "id": "rec.sujeito_obrigatorio",
+      "tipo": "construcao",
+      "solicitacao": "eu preciso de ajuda",
+      "alvo": "I need help.",
+      "variantes": ["I need some help."],
+      "habilidades": ["sujeito_obrigatorio", "verbo_need"],
+      "ajudas": [
+        "Lembre do sujeito: quem precisa?",
+        "Em inglês, need não leva 'de' depois. Como fica 'eu preciso de ajuda'?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "Need help.",
+          "habilidade": "sujeito_obrigatorio",
+          "pista": "Falta o sujeito. Quem precisa de ajuda?"
+        },
+        {
+          "exemplo": "I need of help.",
+          "habilidade": "verbo_need",
+          "pista": "Need leva of depois?"
+        }
+      ]
+    },
+    "verbo_need": {
+      "id": "rec.verbo_need",
+      "tipo": "construcao",
+      "solicitacao": "nós precisamos de leite",
+      "alvo": "We need milk.",
+      "variantes": ["We need some milk."],
+      "habilidades": ["verbo_need"],
+      "ajudas": [
+        "Qual é o verbo de 'precisar' em inglês?",
+        "Need não leva 'de' depois. Como fica 'nós precisamos de leite'?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "We precise milk.",
+          "habilidade": "verbo_need",
+          "pista": "Precisar, em inglês, não é precise. Qual é o verbo?"
+        }
+      ]
+    },
+    "verbo_prefer": {
+      "id": "rec.verbo_prefer",
+      "tipo": "construcao",
+      "solicitacao": "eles preferem chá",
+      "alvo": "They prefer tea.",
+      "habilidades": ["verbo_prefer"],
+      "ajudas": [
+        "Como se diz 'eles'? E o verbo preferir?",
+        "Como se diz 'chá' em inglês? Ele vem depois do verbo."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "They prefers tea.",
+          "habilidade": "verbo_prefer",
+          "pista": "Com they, o verbo ganha -s?"
+        }
+      ]
+    },
+    "negativa_dont": {
+      "id": "rec.negativa_dont",
+      "tipo": "construcao",
+      "solicitacao": "eu não bebo refrigerante",
+      "alvo": "I don't drink soda.",
+      "variantes": ["I do not drink soda.", "I don't drink soft drinks."],
+      "habilidades": ["negativa_dont"],
+      "ajudas": [
+        "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+        "Como se diz 'refrigerante' em inglês? Ele vem no fim."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I no drink soda.",
+          "habilidade": "negativa_dont",
+          "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+        }
+      ]
+    },
+    "passado_regular": {
+      "id": "rec.passado_regular",
+      "tipo": "construcao",
+      "solicitacao": "você precisou de ajuda ontem",
+      "alvo": "You needed help yesterday.",
+      "habilidades": ["passado_regular"],
+      "ajudas": [
+        "Need é regular. Que terminação ele ganha no passado?",
+        "Need não leva 'de' depois. E 'ontem' fica no fim."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "You need help yesterday.",
+          "habilidade": "passado_regular",
+          "pista": "Ontem é passado. Como fica need no passado?"
+        }
+      ]
+    },
+    "negativa_didnt": {
+      "id": "rec.negativa_didnt",
+      "tipo": "construcao",
+      "solicitacao": "eu não bebi café hoje",
+      "alvo": "I didn't drink coffee today.",
+      "variantes": ["I did not drink coffee today."],
+      "habilidades": ["negativa_didnt", "verbo_base"],
+      "ajudas": [
+        "'Bebi' é passado. Qual ajudante do 'não' usamos no passado?",
+        "Depois desse ajudante, o verbo beber fica na forma básica."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I don't drink coffee today.",
+          "habilidade": "negativa_didnt",
+          "pista": "'Bebi' é passado. Qual ajudante do 'não' usamos no passado?"
+        }
+      ]
+    },
+    "verbo_base": {
+      "id": "rec.verbo_base",
+      "tipo": "construcao",
+      "solicitacao": "você não comeu frango ontem",
+      "alvo": "You didn't eat chicken yesterday.",
+      "variantes": ["You did not eat chicken yesterday."],
+      "habilidades": ["verbo_base", "negativa_didnt"],
+      "ajudas": [
+        "Depois de didn't, o verbo fica no passado ou na forma básica?",
+        "Como se diz 'frango' em inglês? E 'ontem' fica no fim."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "You didn't ate chicken yesterday.",
+          "habilidade": "verbo_base",
+          "pista": "Depois de didn't, o verbo fica no passado ou volta à forma básica?"
+        }
+      ]
+    },
+    "verbo_to": {
+      "id": "rec.verbo_to",
+      "tipo": "construcao",
+      "solicitacao": "eu preciso comer agora",
+      "alvo": "I need to eat now.",
+      "habilidades": ["verbo_to", "verbo_need"],
+      "ajudas": [
+        "Entre need e o outro verbo vem uma palavrinha. Qual é?",
+        "Como se diz 'agora' em inglês? Ele fica no fim."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I need eat now.",
+          "habilidade": "verbo_to",
+          "pista": "Entre need e eat falta uma palavrinha. Qual é?"
+        }
+      ]
+    },
+    "prefer_to": {
+      "id": "rec.prefer_to",
+      "tipo": "construcao",
+      "solicitacao": "eu prefiro chá a café",
+      "alvo": "I prefer tea to coffee.",
+      "variantes": ["I prefer tea over coffee."],
+      "habilidades": ["prefer_to"],
+      "ajudas": [
+        "Que palavrinha liga as duas bebidas depois de prefer?",
+        "Como se diz 'chá' em inglês? Ele vem logo depois de prefer."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I prefer tea than coffee.",
+          "habilidade": "prefer_to",
+          "pista": "Com prefer, usamos than? Qual palavrinha liga as duas bebidas?"
+        }
+      ]
+    },
+    "vocabulario_comida": {
+      "id": "rec.vocabulario_comida",
+      "tipo": "construcao",
+      "solicitacao": "eu como frango com legumes",
+      "alvo": "I eat chicken and vegetables.",
+      "variantes": ["I eat chicken with vegetables.", "I eat chicken and veggies.", "I eat chicken with veggies."],
+      "habilidades": ["vocabulario_comida"],
+      "ajudas": [
+        "Como se diz 'frango' em inglês? E 'legumes'?",
+        "Legumes, em inglês, não é a mesma palavra do português. Qual é?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I eat chicken with legumes.",
+          "habilidade": "vocabulario_comida",
+          "pista": "Legumes, em inglês, é outra palavra. Qual é?"
+        }
+      ]
+    },
+    "like_sem_of": {
+      "id": "rec.like_sem_of",
+      "tipo": "construcao",
+      "solicitacao": "eu gosto de peixe",
+      "alvo": "I like fish.",
+      "habilidades": ["like_sem_of"],
+      "ajudas": [
+        "Como se diz 'eu gosto'? Like leva of depois?",
+        "Depois de like vem direto a comida. Como se diz 'peixe'?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I like of fish.",
+          "habilidade": "like_sem_of",
+          "pista": "Em inglês, like leva of depois?"
+        }
+      ]
+    },
+    "substantivo_antes": {
+      "id": "rec.substantivo_antes",
+      "tipo": "construcao",
+      "solicitacao": "eu quero um sanduíche de queijo",
+      "alvo": "I want a cheese sandwich.",
+      "habilidades": ["substantivo_antes"],
+      "ajudas": [
+        "Em inglês, o recheio vem antes ou depois de sandwich?",
+        "Como se diz 'queijo'? Ele vem antes de sandwich."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I want a sandwich of cheese.",
+          "habilidade": "substantivo_antes",
+          "pista": "Em inglês, o recheio vem antes ou depois de sandwich?"
+        }
+      ]
+    },
+    "refeicao_for": {
+      "id": "rec.refeicao_for",
+      "tipo": "construcao",
+      "solicitacao": "eu como salada no jantar",
+      "alvo": "I eat salad for dinner.",
+      "variantes": ["I eat salad at dinner."],
+      "habilidades": ["refeicao_for"],
+      "ajudas": [
+        "Que palavrinha vem antes da refeição?",
+        "Como se diz 'jantar' em inglês? Antes dele vem a palavrinha."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I eat salad in the dinner.",
+          "habilidade": "refeicao_for",
+          "pista": "Com a refeição, usamos in the? Qual palavrinha vem antes de dinner?"
+        }
+      ]
+    },
+    "quantidade_of": {
+      "id": "rec.quantidade_of",
+      "tipo": "construcao",
+      "solicitacao": "eu quero um copo de leite",
+      "alvo": "I want a glass of milk.",
+      "habilidades": ["quantidade_of"],
+      "ajudas": [
+        "Como se diz 'copo'? Não é cup, que é xícara.",
+        "Entre o copo e o leite vem uma palavrinha. Qual é?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I want a glass milk.",
+          "habilidade": "quantidade_of",
+          "pista": "Entre glass e milk falta uma palavrinha. Qual é?"
+        }
+      ]
+    },
+    "tomar_drink": {
+      "id": "rec.tomar_drink",
+      "tipo": "construcao",
+      "solicitacao": "eu tomo chá à noite",
+      "alvo": "I drink tea at night.",
+      "variantes": ["I have tea at night."],
+      "habilidades": ["tomar_drink"],
+      "ajudas": [
+        "Tomar uma bebida, em inglês, não é take. Qual é o verbo?",
+        "Como se diz 'à noite' em inglês? Fica no fim."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "I take tea at night.",
+          "habilidade": "tomar_drink",
+          "pista": "Tomar uma bebida, em inglês, não é take. Qual é o verbo?"
+        }
+      ]
+    },
+    "pergunta_do": {
+      "id": "rec.pergunta_do",
+      "tipo": "construcao",
+      "solicitacao": "você gosta de bolo?",
+      "alvo": "Do you like cake?",
+      "habilidades": ["pergunta_do", "like_sem_of"],
+      "ajudas": [
+        "Por qual ajudante a pergunta começa?",
+        "Como se pergunta 'você gosta…?' em inglês? Like não leva of."
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "You like cake?",
+          "habilidade": "pergunta_do",
+          "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+        }
+      ]
+    },
+    "pergunta_what": {
+      "id": "rec.pergunta_what",
+      "tipo": "construcao",
+      "solicitacao": "o que você quer no almoço?",
+      "alvo": "What do you want for lunch?",
+      "habilidades": ["pergunta_what", "refeicao_for"],
+      "ajudas": [
+        "Depois de what, qual ajudante vem?",
+        "Como se diz 'você quer'? E antes de lunch, qual palavrinha?"
+      ],
+      "errosPrevistos": [
+        {
+          "exemplo": "What you want for lunch?",
+          "habilidade": "pergunta_what",
+          "pista": "Depois de what, falta um ajudante. Qual é?"
+        }
+      ]
+    }
+  }
+}

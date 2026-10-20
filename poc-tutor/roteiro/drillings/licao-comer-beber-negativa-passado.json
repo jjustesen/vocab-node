@@ -1,0 +1,600 @@
+{
+  "id": "comer-beber-negativa-passado",
+  "titulo": "Comer e beber: negativa e passado",
+  "abertura": "Hoje vamos praticar eat e drink: eu digo uma frase em inglês e você a passa primeiro para a negativa e depois para o passado.",
+  "notasParaAvaliador": "Passados irregulares desta lição: eat → ate e drink → drank, iguais com I e com you (\"eated\", \"drinked\" e \"drunk\" são erros); na frase com and, os dois verbos vão para o passado (\"I drank coffee and you drink tea\" está incompleta). Na negativa do presente, I e you levam don't + verbo na forma básica (\"I no eat\", \"I not drink\" e \"You doesn't eat\" são erros). Formas contraídas e por extenso valem igual (don't = do not), e na negativa de uma frase com and também vale or (\"You don't eat bread or cheese\").",
+  "nomes": {
+    "blocos": {
+      "negativa": "Negativa",
+      "passado": "Passado"
+    },
+    "habilidades": {
+      "negativa_dont": { "curto": "don't", "resumo": "a negativa com don't, com I e com you" },
+      "passado_irregular": { "curto": "ate / drank", "resumo": "os passados irregulares ate e drank" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "I / you + don't + verbo na forma básica",
+      "don't = do not",
+      "passado irregular: eat → ate · drink → drank",
+      "No passado, o verbo é igual com I e com you"
+    ],
+    "vocabulario": [
+      { "en": "eat", "pt": "comer" },
+      { "en": "drink", "pt": "beber" },
+      { "en": "bread", "pt": "pão" },
+      { "en": "butter", "pt": "manteiga" },
+      { "en": "cheese", "pt": "queijo" },
+      { "en": "coffee", "pt": "café" },
+      { "en": "tea", "pt": "chá" },
+      { "en": "water", "pt": "água" },
+      { "en": "juice", "pt": "suco" },
+      { "en": "cookies", "pt": "biscoitos" },
+      { "en": "pancakes", "pt": "panquecas" }
+    ],
+    "exemplos": [
+      "We don't drink soda at home.",
+      "My kids ate pizza last night.",
+      "My mother drank tea with milk."
+    ],
+    "alertas": [
+      "Na negativa, o 'não' precisa de don't antes do verbo: nunca \"I no eat\" nem \"I not drink\".",
+      "Com I e com you é don't; doesn't fica para he e she.",
+      "Eat e drink são irregulares: nada de \"eated\" nem \"drinked\".",
+      "Drunk não é o passado simples de drink."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "negativa",
+      "objetivo": "O tutor diz a frase em inglês e o aluno a passa para a negativa com don't, mantendo o resto da frase.",
+      "itens": [
+        {
+          "id": "neg.i_eat",
+          "tipo": "transformacao",
+          "calibracao": true,
+          "modelo": "I eat.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't eat.",
+          "variantes": ["I do not eat."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Na negativa do presente, que palavra entra antes do verbo?",
+            "O 'não' em inglês precisa de um ajudante antes de eat. Com I, qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no eat.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not eat.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.i_drink",
+          "tipo": "transformacao",
+          "modelo": "I drink.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't drink.",
+          "variantes": ["I do not drink."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Faça como na frase anterior: que palavra entra antes do verbo?",
+            "Com I, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I not drink.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            },
+            {
+              "exemplo": "I doesn't drink.",
+              "habilidade": "negativa_dont",
+              "pista": "Com I, usamos doesn't ou don't?"
+            }
+          ]
+        },
+        {
+          "id": "neg.you_eat",
+          "tipo": "transformacao",
+          "modelo": "You eat.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "You don't eat.",
+          "variantes": ["You do not eat."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Com you, o ajudante do 'não' é o mesmo que com I?",
+            "Que palavra entra antes de eat para fazer a negativa?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You doesn't eat.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't ou don't?"
+            },
+            {
+              "exemplo": "You no eat.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.you_drink",
+          "tipo": "transformacao",
+          "modelo": "You drink.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "You don't drink.",
+          "variantes": ["You do not drink."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Mesmo sujeito da frase anterior: que palavra entra antes do verbo?",
+            "Com you, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You not drink.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            },
+            {
+              "exemplo": "You doesn't drink.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't ou don't?"
+            }
+          ]
+        },
+        {
+          "id": "neg.bread_butter",
+          "tipo": "transformacao",
+          "modelo": "I eat bread and butter.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't eat bread and butter.",
+          "variantes": ["I do not eat bread and butter."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Que palavra entra antes de eat? O resto da frase continua igual.",
+            "Só o começo muda: o ajudante do 'não' vem entre I e eat. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no eat bread and butter.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I eat no bread and butter.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' vem antes do verbo, com um ajudante. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.coffee",
+          "tipo": "transformacao",
+          "modelo": "I drink coffee.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't drink coffee.",
+          "variantes": ["I do not drink coffee."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Que palavra entra antes de drink? Coffee continua no fim.",
+            "Com I, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no drink coffee.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not drink coffee.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.water",
+          "tipo": "transformacao",
+          "modelo": "I drink water.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't drink water.",
+          "variantes": ["I do not drink water."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Que palavra entra antes de drink? Water continua no fim.",
+            "Com I, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I not drink water.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            },
+            {
+              "exemplo": "I drink not water.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' vem antes do verbo, com um ajudante. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.tea",
+          "tipo": "transformacao",
+          "modelo": "You drink tea.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "You don't drink tea.",
+          "variantes": ["You do not drink tea."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Com you, que palavra entra antes de drink?",
+            "O ajudante do 'não' com you é o mesmo que com I. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You doesn't drink tea.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't ou don't?"
+            },
+            {
+              "exemplo": "You no drink tea.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.bread_cheese",
+          "tipo": "transformacao",
+          "modelo": "You eat bread and cheese.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "You don't eat bread and cheese.",
+          "variantes": ["You do not eat bread and cheese.", "You don't eat bread or cheese.", "You do not eat bread or cheese."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Que palavra entra antes de eat? O resto da frase continua igual.",
+            "Com you, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You doesn't eat bread and cheese.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't ou don't?"
+            },
+            {
+              "exemplo": "You not eat bread and cheese.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.cookies",
+          "tipo": "transformacao",
+          "modelo": "You eat cookies.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "You don't eat cookies.",
+          "variantes": ["You do not eat cookies."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Que palavra entra antes de eat? Cookies continua no fim.",
+            "Com you, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You no eat cookies.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "You doesn't eat cookies.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't ou don't?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "passado",
+      "objetivo": "O tutor diz a frase em inglês e o aluno a passa para o passado, com os irregulares ate e drank, mantendo o resto da frase.",
+      "itens": [
+        {
+          "id": "pas.i_eat",
+          "tipo": "transformacao",
+          "modelo": "I eat.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I ate.",
+          "habilidades": ["passado_irregular"],
+          "apoio": "passado_eat",
+          "ajudas": [
+            "Eat é irregular: no passado ele não ganha -ed. Você lembra a forma?",
+            "O passado de eat é uma palavra curta, que começa com a. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eated.",
+              "habilidade": "passado_irregular",
+              "pista": "Eat é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "I eat.",
+              "habilidade": "passado_irregular",
+              "pista": "Essa ainda é a frase no presente. Qual é o passado de eat?"
+            }
+          ]
+        },
+        {
+          "id": "pas.i_drink",
+          "tipo": "transformacao",
+          "modelo": "I drink.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I drank.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Drink também é irregular. Qual é o passado dele?",
+            "No passado de drink, só uma vogal muda. Qual entra no lugar do i?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drinked.",
+              "habilidade": "passado_irregular",
+              "pista": "Drink é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "I drunk.",
+              "habilidade": "passado_irregular",
+              "pista": "Drunk não é o passado simples. Qual é o passado de drink?"
+            }
+          ]
+        },
+        {
+          "id": "pas.you_eat",
+          "tipo": "transformacao",
+          "modelo": "You eat.",
+          "instrucao": "Passe para o passado",
+          "alvo": "You ate.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "É o mesmo passado de eat que você usou com I. Como fica com you?",
+            "No passado, o verbo é igual com I e com you. Qual é o passado de eat?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You eated.",
+              "habilidade": "passado_irregular",
+              "pista": "Eat é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "You did eat.",
+              "habilidade": "passado_irregular",
+              "pista": "Na afirmativa do passado não precisa de did. Qual é o passado de eat?"
+            }
+          ]
+        },
+        {
+          "id": "pas.you_drink",
+          "tipo": "transformacao",
+          "modelo": "You drink.",
+          "instrucao": "Passe para o passado",
+          "alvo": "You drank.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "É o mesmo passado de drink que você usou com I. Como fica com you?",
+            "No passado, o verbo é igual com I e com you. Qual é o passado de drink?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You drinked.",
+              "habilidade": "passado_irregular",
+              "pista": "Drink é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "You drunk.",
+              "habilidade": "passado_irregular",
+              "pista": "Drunk não é o passado simples. Qual é o passado de drink?"
+            }
+          ]
+        },
+        {
+          "id": "pas.pancakes",
+          "tipo": "transformacao",
+          "modelo": "You eat pancakes.",
+          "instrucao": "Passe para o passado",
+          "alvo": "You ate pancakes.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Só o verbo muda; pancakes continua no fim. Qual é o passado de eat?",
+            "Lembre: eat é irregular. Como fica com you?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You eated pancakes.",
+              "habilidade": "passado_irregular",
+              "pista": "Eat é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "You eat pancakes.",
+              "habilidade": "passado_irregular",
+              "pista": "Essa ainda é a frase no presente. Qual é o passado de eat?"
+            }
+          ]
+        },
+        {
+          "id": "pas.coffee",
+          "tipo": "transformacao",
+          "modelo": "I drink coffee.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I drank coffee.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Só o verbo muda; coffee continua no fim. Qual é o passado de drink?",
+            "Lembre: drink é irregular, e só uma vogal muda. Qual entra?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drinked coffee.",
+              "habilidade": "passado_irregular",
+              "pista": "Drink é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "I drunk coffee.",
+              "habilidade": "passado_irregular",
+              "pista": "Drunk não é o passado simples. Qual é o passado de drink?"
+            }
+          ]
+        },
+        {
+          "id": "pas.juice",
+          "tipo": "transformacao",
+          "modelo": "I drink juice.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I drank juice.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Só o verbo muda; juice continua no fim.",
+            "Qual é o passado de drink? É o mesmo da frase anterior."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drinked juice.",
+              "habilidade": "passado_irregular",
+              "pista": "Drink é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "I drink juice.",
+              "habilidade": "passado_irregular",
+              "pista": "Essa ainda é a frase no presente. Qual é o passado de drink?"
+            }
+          ]
+        },
+        {
+          "id": "pas.coffee_tea",
+          "tipo": "transformacao",
+          "modelo": "I drink coffee and you drink tea.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I drank coffee and you drank tea.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Aqui há dois verbos. Os dois vão para o passado?",
+            "Qual é o passado de drink? Ele entra nas duas partes da frase."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drank coffee and you drink tea.",
+              "habilidade": "passado_irregular",
+              "pista": "Quase! Os dois verbos vão para o passado. E o segundo?"
+            },
+            {
+              "exemplo": "I drinked coffee and you drinked tea.",
+              "habilidade": "passado_irregular",
+              "pista": "Drink é irregular: não leva -ed. Qual é o passado dele?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "passado_eat": {
+      "objetivo": "Reconstruir o passado irregular de eat antes de voltar a passar I eat para o passado.",
+      "degraus": [
+        {
+          "id": "apoio.ate_bread",
+          "tipo": "repeticao",
+          "modelo": "I ate bread.",
+          "alvo": "I ate bread.",
+          "habilidades": ["passado_irregular"]
+        },
+        {
+          "id": "apoio.ate_cake",
+          "tipo": "construcao",
+          "solicitacao": "eu comi bolo",
+          "alvo": "I ate cake.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Comi é passado. É o mesmo verbo da frase que você repetiu.",
+            "Como se diz 'bolo' em inglês? O começo é igual ao da frase que você repetiu."
+          ]
+        },
+        {
+          "id": "apoio.ate_cookies",
+          "tipo": "substituicao",
+          "pista": "biscoitos",
+          "idiomaDaPista": "pt",
+          "alvo": "I ate cookies.",
+          "variantes": ["I ate biscuits."],
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Troque bolo por biscoitos; o resto continua.",
+            "Como se diz 'biscoitos' em inglês? O verbo continua no passado."
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.cafe",
+      "tipo": "conversa",
+      "pergunta": "Do you drink coffee?",
+      "criterio": "Yes, I do / No, I don't, ou resposta completa e pertinente no presente (I drink coffee every day. / I don't drink coffee.).",
+      "exemplos": ["Yes, I do. I drink coffee every morning.", "No, I don't. I drink tea."],
+      "acompanhamentos": ["Do you drink coffee with milk?", "Do you drink tea?"],
+      "habilidades": ["negativa_dont"]
+    },
+    {
+      "id": "conversa.cafe_da_manha",
+      "tipo": "conversa",
+      "pergunta": "What did you eat for breakfast today?",
+      "criterio": "Resposta pertinente no passado com ate (ou had), com qualquer comida verdadeira; resposta curta pertinente (Bread and butter.) também vale.",
+      "exemplos": ["I ate bread and butter.", "I ate eggs and fruit."],
+      "acompanhamentos": ["What did you drink?"],
+      "habilidades": ["passado_irregular"]
+    },
+    {
+      "id": "conversa.ontem",
+      "tipo": "conversa",
+      "pergunta": "What did you drink yesterday?",
+      "criterio": "Resposta pertinente no passado com drank (ou had), com qualquer bebida verdadeira; resposta curta pertinente (Water and juice.) também vale.",
+      "exemplos": ["I drank coffee and water.", "I drank a lot of juice."],
+      "acompanhamentos": ["Do you drink juice every day?"],
+      "habilidades": ["passado_irregular"]
+    }
+  ],
+  "recuperacao": {
+    "negativa_dont": {
+      "id": "rec.negativa_dont",
+      "tipo": "transformacao",
+      "modelo": "We eat fish.",
+      "instrucao": "Passe para a negativa",
+      "alvo": "We don't eat fish.",
+      "variantes": ["We do not eat fish."],
+      "habilidades": ["negativa_dont"],
+      "ajudas": [
+        "Que palavra entra antes de eat para fazer a negativa?",
+        "Com we, o ajudante do 'não' é o mesmo de I e you. Qual é?"
+      ]
+    },
+    "passado_irregular": {
+      "id": "rec.passado_irregular",
+      "tipo": "transformacao",
+      "modelo": "They drink orange juice.",
+      "instrucao": "Passe para o passado",
+      "alvo": "They drank orange juice.",
+      "habilidades": ["passado_irregular"],
+      "ajudas": [
+        "Só o verbo muda. Drink é irregular: qual é o passado dele?",
+        "É o mesmo passado de drink da aula. Como fica com they?"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1971 @@
+{
+  "id": "09-entender-e-morar",
+  "titulo": "Lesson 9 · Entender e morar",
+  "abertura": "Hoje vamos praticar os verbos entender e morar, falar de línguas e países e fazer perguntas sobre estudo e refeições.",
+  "notasParaAvaliador": "Países levam in sem artigo (live in Italy, in Spain, in Brazil, in Germany), mas the United States leva the (in the US, in the USA e in America também valem), e abroad não leva preposição (\"live in abroad\" é erro); Spanish e German são as línguas, Spain e Germany os países. O passado de understand é understood e o de live é lived, e nas cadeias no passado \"Nós entendemos\" e \"Nós moramos\" pedem we understood e we lived; depois de don't e de did o verbo fica na forma básica (\"I no understand\", \"You live…?\" sem do, \"Did they studied…?\" e \"What you ate…?\" são erros). Let me + verbo vai sem to, like, want e prefer + outro verbo levam to (\"I like study\" e \"I want live\" são erros; like studying e prefer studying também valem), only vem antes do verbo e refeição leva for (for breakfast, for dinner; \"in the breakfast\" é erro). This e that valem igual para \"esse/essa\", speak with = speak to = talk to, have lunch = eat lunch, contrações valem igual às formas completas, no pedido de um verbo sozinho (entender, morar) \"to understand\" e só \"understand\" valem igual, e \"no interior\" é in the countryside.",
+  "nomes": {
+    "blocos": {
+      "verbos": "Verbos",
+      "vocabulario": "Vocabulário",
+      "expressoes": "Expressões",
+      "gramatica": "Gramática"
+    },
+    "habilidades": {
+      "infinitivo_to": { "curto": "to + verbo", "resumo": "o verbo no infinitivo, com to na frente" },
+      "sujeito_verbo": { "curto": "I / we / they", "resumo": "trocar o sujeito: I, you, we e they" },
+      "passado": { "curto": "understood / lived", "resumo": "o passado, como understood e lived" },
+      "negativa_dont": { "curto": "don't", "resumo": "a negativa com don't" },
+      "pergunta_do": { "curto": "Do …?", "resumo": "perguntas começando com Do" },
+      "in_pais": { "curto": "in + país", "resumo": "in antes do país, como in Italy e in the United States" },
+      "abroad": { "curto": "abroad", "resumo": "abroad, sem in na frente" },
+      "want_to": { "curto": "want to", "resumo": "want to antes de outro verbo" },
+      "like_to": { "curto": "like to / prefer to", "resumo": "like to e prefer to antes de outro verbo" },
+      "like_sem_of": { "curto": "like, sem of", "resumo": "like direto, sem 'de', como em like soda" },
+      "let_me": { "curto": "let me", "resumo": "let me mais o verbo, para dizer 'deixa eu'" },
+      "only": { "curto": "only", "resumo": "only antes do verbo, para dizer 'só'" },
+      "pergunta_did": { "curto": "Did …?", "resumo": "perguntas no passado com Did" },
+      "pergunta_wh": { "curto": "where / what", "resumo": "perguntas com Where e What" },
+      "have_refeicao": { "curto": "have lunch", "resumo": "have com as refeições, como em have lunch" },
+      "for_refeicao": { "curto": "for breakfast", "resumo": "for com as refeições, como em for breakfast" },
+      "frequencia": { "curto": "usually", "resumo": "usually antes do verbo" },
+      "paises_linguas": { "curto": "países e línguas", "resumo": "os nomes de países e de línguas" },
+      "this_that": { "curto": "this / that", "resumo": "this e that para 'esse' e 'aquele'" },
+      "vocabulario": { "curto": "palavras", "resumo": "as palavras novas da aula, como speak, teacher e countryside" },
+      "marcador_tempo": { "curto": "today / yesterday", "resumo": "today e yesterday no fim da frase" },
+      "preservar_cadeia": { "curto": "manter a frase", "resumo": "manter as mudanças anteriores da frase" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "understand → understood · live → lived (passado)",
+      "I / you / we / they + don't + verbo",
+      "Do you + verbo …?",
+      "Did + sujeito + verbo na forma básica …?",
+      "in + país: in Japan · in the United States",
+      "abroad = no exterior (sem in)",
+      "want to / like to / prefer to + verbo",
+      "Let me + verbo (sem to)",
+      "only + verbo = só",
+      "have lunch · have dinner · for breakfast"
+    ],
+    "vocabulario": [
+      { "en": "understand", "pt": "entender" },
+      { "en": "live", "pt": "morar, viver" },
+      { "en": "language", "pt": "língua" },
+      { "en": "word", "pt": "palavra" },
+      { "en": "teacher", "pt": "professor" },
+      { "en": "country", "pt": "país" },
+      { "en": "city", "pt": "cidade" },
+      { "en": "abroad", "pt": "no exterior" },
+      { "en": "countryside", "pt": "interior" },
+      { "en": "alone", "pt": "sozinho" },
+      { "en": "together", "pt": "juntos" },
+      { "en": "prefer", "pt": "preferir" },
+      { "en": "usually", "pt": "geralmente" },
+      { "en": "only", "pt": "só, somente" },
+      { "en": "college", "pt": "faculdade" },
+      { "en": "soda", "pt": "refrigerante" },
+      { "en": "Spanish", "pt": "espanhol" },
+      { "en": "German", "pt": "alemão" },
+      { "en": "Germany", "pt": "Alemanha" },
+      { "en": "the United States", "pt": "os Estados Unidos" }
+    ],
+    "exemplos": [
+      "My sister lives abroad, in Canada.",
+      "Do you understand me?",
+      "Did you live in São Paulo?",
+      "Let me help you.",
+      "We only speak Portuguese at home."
+    ],
+    "alertas": [
+      "Para o 'não', use don't antes do verbo (nunca \"I no …\").",
+      "Pergunta no presente começa com Do; no passado, com Did, e o verbo volta à forma básica.",
+      "Abroad já quer dizer 'no exterior': sem in antes.",
+      "The United States leva the; Italy, Spain, Brazil e Germany não levam.",
+      "'Entendemos' e 'moramos' servem para hoje e para o passado; em inglês o passado muda: understood, lived.",
+      "Professor de escola é teacher; refrigerante é soda (refrigerant é o gás da geladeira).",
+      "Spanish e German são as línguas; Spain e Germany são os países."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "verbos",
+      "objetivo": "Os verbos understand e live: o infinitivo, o presente com I, you, we e they, o passado e a negativa com don't.",
+      "itens": [
+        {
+          "id": "vb1.entender",
+          "tipo": "construcao",
+          "calibracao": true,
+          "solicitacao": "entender",
+          "alvo": "To understand.",
+          "habilidades": ["infinitivo_to"],
+          "ajudas": [
+            "É o verbo de 'eu não entendo'. Como se diz 'entender' em inglês?",
+            "No infinitivo, o verbo em inglês ganha uma palavrinha na frente. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Understanding.",
+              "habilidade": "infinitivo_to",
+              "pista": "Assim é 'entendendo'. Como fica o verbo na forma básica, com a palavrinha do infinitivo?"
+            }
+          ]
+        },
+        {
+          "id": "vb1.eu",
+          "tipo": "substituicao",
+          "pista": "Eu entendo inglês",
+          "idiomaDaPista": "pt",
+          "alvo": "I understand English.",
+          "habilidades": ["sujeito_verbo", "paises_linguas"],
+          "ajudas": [
+            "Agora com o sujeito 'eu' e a língua. O verbo ainda leva a palavrinha do infinitivo?",
+            "Diga 'eu entendo' e depois a língua 'inglês'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I to understand English.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com o sujeito na frente, o verbo ainda leva to?"
+            },
+            {
+              "exemplo": "I understand England.",
+              "habilidade": "paises_linguas",
+              "pista": "England é o país. Como se diz a língua, 'inglês'?"
+            }
+          ]
+        },
+        {
+          "id": "vb1.nos",
+          "tipo": "substituicao",
+          "pista": "Nós entendemos",
+          "idiomaDaPista": "pt",
+          "alvo": "We understand English.",
+          "habilidades": ["sujeito_verbo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'eu' por 'nós'. O verbo muda?",
+            "Como se diz 'nós' em inglês? A língua continua a mesma."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We understands English.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com we, o verbo ganha -s?"
+            },
+            {
+              "exemplo": "We understand.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E a língua da frase anterior, continua?"
+            }
+          ]
+        },
+        {
+          "id": "vb2.base",
+          "tipo": "construcao",
+          "solicitacao": "eu entendi a aula",
+          "alvo": "I understood the class.",
+          "variantes": ["I understood the lesson."],
+          "habilidades": ["passado", "vocabulario"],
+          "ajudas": [
+            "'Entendi' é passado. Como fica o verbo 'entender' no passado?",
+            "O passado de 'entender' é irregular, não termina em -ed. E como se diz 'a aula'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I understand the class.",
+              "habilidade": "passado",
+              "pista": "Assim é 'eu entendo'. Como se diz 'eu entendi', no passado?"
+            },
+            {
+              "exemplo": "I understanded the class.",
+              "habilidade": "passado",
+              "pista": "Esse verbo não ganha -ed no passado. Qual é a forma dele?"
+            }
+          ]
+        },
+        {
+          "id": "vb2.professor",
+          "tipo": "substituicao",
+          "pista": "o professor",
+          "idiomaDaPista": "pt",
+          "alvo": "I understood the teacher.",
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'a aula' por 'o professor'. O verbo continua no passado.",
+            "Como se diz 'professor' de escola em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I understood the professor.",
+              "habilidade": "vocabulario",
+              "pista": "Professor de escola ou de curso, em inglês, é outra palavra. Qual é?"
+            },
+            {
+              "exemplo": "I understand the teacher.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! A frase anterior estava no passado. Continua?"
+            }
+          ]
+        },
+        {
+          "id": "vb2.voce",
+          "tipo": "substituicao",
+          "pista": "Você entendeu",
+          "idiomaDaPista": "pt",
+          "alvo": "You understood the teacher.",
+          "habilidades": ["sujeito_verbo", "passado"],
+          "ajudas": [
+            "Troque 'eu' por 'você'. O verbo no passado muda?",
+            "Como se diz 'você' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You understand the teacher.",
+              "habilidade": "passado",
+              "pista": "Quase! A frase está no passado: 'você entendeu'. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb2.nos",
+          "tipo": "substituicao",
+          "pista": "Nós entendemos",
+          "idiomaDaPista": "pt",
+          "alvo": "We understood the teacher.",
+          "habilidades": ["passado", "sujeito_verbo"],
+          "ajudas": [
+            "Em português, 'entendemos' serve para hoje e para o passado. Aqui a frase continua no passado.",
+            "Como se diz 'nós' em inglês? O verbo fica como na frase anterior."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We understand the teacher.",
+              "habilidade": "passado",
+              "pista": "Quase! Aqui 'nós entendemos' é passado, como a frase anterior. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb3.base",
+          "tipo": "construcao",
+          "solicitacao": "eu não entendo espanhol",
+          "alvo": "I don't understand Spanish.",
+          "variantes": ["I do not understand Spanish."],
+          "habilidades": ["negativa_dont", "paises_linguas"],
+          "ajudas": [
+            "Em inglês, o 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "Como se diz 'eu não entendo'? E a língua 'espanhol'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no understand Spanish.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I don't understand Spain.",
+              "habilidade": "paises_linguas",
+              "pista": "Spain é o país. Como se diz a língua, 'espanhol'?"
+            }
+          ]
+        },
+        {
+          "id": "vb3.falo",
+          "tipo": "substituicao",
+          "pista": "não falo",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't speak Spanish.",
+          "variantes": ["I do not speak Spanish."],
+          "habilidades": ["vocabulario", "negativa_dont"],
+          "ajudas": [
+            "Troque 'entendo' por 'falo'. O 'não' continua.",
+            "Como se diz 'falar' uma língua em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't talk Spanish.",
+              "habilidade": "vocabulario",
+              "pista": "Para falar uma língua, usamos outro verbo. Qual é?"
+            },
+            {
+              "exemplo": "I no speak Spanish.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' continua precisando do ajudante. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "vb3.estudo",
+          "tipo": "substituicao",
+          "pista": "não estudo",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't study Spanish.",
+          "variantes": ["I do not study Spanish."],
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'falo' por 'estudo' e mantenha o 'não'.",
+            "Como se diz 'estudar' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I study Spanish.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'não' da frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "vb3.gosto",
+          "tipo": "substituicao",
+          "pista": "não gosto",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't like Spanish.",
+          "variantes": ["I do not like Spanish."],
+          "habilidades": ["like_sem_of", "negativa_dont"],
+          "ajudas": [
+            "Troque 'estudo' por 'gosto'. Em inglês, gostar não leva 'de'.",
+            "Como se diz 'gostar' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't like of Spanish.",
+              "habilidade": "like_sem_of",
+              "pista": "Em inglês, gostar não leva 'de' depois. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb4.morar",
+          "tipo": "construcao",
+          "solicitacao": "morar, viver",
+          "alvo": "To live.",
+          "habilidades": ["infinitivo_to"],
+          "ajudas": [
+            "Em inglês, morar e viver são o mesmo verbo. Qual é?",
+            "No infinitivo, o verbo ganha uma palavrinha na frente. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Living.",
+              "habilidade": "infinitivo_to",
+              "pista": "Assim é 'morando'. Como fica o verbo na forma básica, com a palavrinha do infinitivo?"
+            }
+          ]
+        },
+        {
+          "id": "vb4.eu",
+          "tipo": "substituicao",
+          "pista": "Eu moro aqui",
+          "idiomaDaPista": "pt",
+          "alvo": "I live here.",
+          "habilidades": ["sujeito_verbo", "vocabulario"],
+          "ajudas": [
+            "Agora com o sujeito 'eu'. O verbo ainda leva a palavrinha do infinitivo?",
+            "Diga 'eu moro' e depois 'aqui'. Como se diz 'aqui' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I to live here.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com o sujeito na frente, o verbo ainda leva to?"
+            }
+          ]
+        },
+        {
+          "id": "vb4.nos",
+          "tipo": "substituicao",
+          "pista": "Nós moramos",
+          "idiomaDaPista": "pt",
+          "alvo": "We live here.",
+          "habilidades": ["sujeito_verbo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'eu' por 'nós'. O verbo muda?",
+            "Como se diz 'nós' em inglês? O 'aqui' continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We lives here.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com we, o verbo ganha -s?"
+            }
+          ]
+        },
+        {
+          "id": "vb4.eles",
+          "tipo": "substituicao",
+          "pista": "Eles moram",
+          "idiomaDaPista": "pt",
+          "alvo": "They live here.",
+          "habilidades": ["sujeito_verbo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'nós' por 'eles'. O verbo muda?",
+            "Como se diz 'eles' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "He live here.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Assim é 'ele'. Como se diz 'eles', mais de uma pessoa?"
+            }
+          ]
+        },
+        {
+          "id": "vb5.base",
+          "tipo": "construcao",
+          "solicitacao": "eu morei aqui",
+          "alvo": "I lived here.",
+          "habilidades": ["passado"],
+          "ajudas": [
+            "'Morei' é passado. Como fica o verbo 'morar' no passado?",
+            "Esse verbo é regular: ganha uma terminação no fim. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I live here.",
+              "habilidade": "passado",
+              "pista": "Assim é 'eu moro'. Como se diz 'eu morei', no passado?"
+            }
+          ]
+        },
+        {
+          "id": "vb5.voce",
+          "tipo": "substituicao",
+          "pista": "Você morou",
+          "idiomaDaPista": "pt",
+          "alvo": "You lived here.",
+          "habilidades": ["sujeito_verbo", "passado"],
+          "ajudas": [
+            "Troque 'eu' por 'você'. O verbo continua no passado.",
+            "Como se diz 'você' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You live here.",
+              "habilidade": "passado",
+              "pista": "Quase! A frase está no passado: 'você morou'. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb5.nos",
+          "tipo": "substituicao",
+          "pista": "Nós moramos",
+          "idiomaDaPista": "pt",
+          "alvo": "We lived here.",
+          "habilidades": ["passado", "sujeito_verbo"],
+          "ajudas": [
+            "Em português, 'moramos' serve para hoje e para o passado. Aqui a frase continua no passado.",
+            "Como se diz 'nós' em inglês? O verbo fica como na frase anterior."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We live here.",
+              "habilidade": "passado",
+              "pista": "Quase! Aqui 'nós moramos' é passado, como a frase anterior. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb6.base",
+          "tipo": "construcao",
+          "solicitacao": "eu não moro aqui",
+          "alvo": "I don't live here.",
+          "variantes": ["I do not live here."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "Como se diz 'eu não moro' em inglês? E 'aqui'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no live here.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not live here.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta o ajudante antes do not. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "vb6.voce",
+          "tipo": "substituicao",
+          "pista": "Você não mora",
+          "idiomaDaPista": "pt",
+          "alvo": "You don't live here.",
+          "variantes": ["You do not live here."],
+          "habilidades": ["negativa_dont", "sujeito_verbo"],
+          "ajudas": [
+            "Troque 'eu' por 'você'. O ajudante do 'não' muda?",
+            "Como se diz 'você não mora' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You doesn't live here.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't ou don't?"
+            }
+          ]
+        },
+        {
+          "id": "vb6.elas",
+          "tipo": "substituicao",
+          "pista": "Elas não moram",
+          "idiomaDaPista": "pt",
+          "alvo": "They don't live here.",
+          "variantes": ["They do not live here."],
+          "habilidades": ["sujeito_verbo", "negativa_dont"],
+          "ajudas": [
+            "Troque 'você' por 'elas'. Em inglês, 'elas' e 'eles' são a mesma palavra.",
+            "Como se diz 'elas' em inglês? O ajudante do 'não' muda?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She don't live here.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Assim é 'ela'. Como se diz 'elas', mais de uma pessoa?"
+            },
+            {
+              "exemplo": "They doesn't live here.",
+              "habilidade": "negativa_dont",
+              "pista": "Com they, usamos doesn't ou don't?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vocabulario",
+      "objetivo": "Línguas e países com understand, speak e study; in + país, abroad, want to, like to e prefer to.",
+      "itens": [
+        {
+          "id": "voc1.base",
+          "tipo": "construcao",
+          "solicitacao": "eu não entendo essa língua",
+          "alvo": "I don't understand this language.",
+          "variantes": ["I do not understand this language.", "I don't understand that language."],
+          "habilidades": ["negativa_dont", "this_that"],
+          "ajudas": [
+            "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "Como se diz 'essa língua', o idioma, em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no understand this language.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I don't understand these language.",
+              "habilidade": "this_that",
+              "pista": "These é para mais de uma. Para uma língua só, qual palavra usamos?"
+            }
+          ]
+        },
+        {
+          "id": "voc1.falo",
+          "tipo": "substituicao",
+          "pista": "falo",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't speak this language.",
+          "variantes": ["I do not speak this language.", "I don't speak that language."],
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'entendo' por 'falo'. O 'não' continua.",
+            "Como se diz 'falar' uma língua em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't talk this language.",
+              "habilidade": "vocabulario",
+              "pista": "Para falar uma língua, usamos outro verbo. Qual é?"
+            },
+            {
+              "exemplo": "I speak this language.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'não' da frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "voc1.estudo",
+          "tipo": "substituicao",
+          "pista": "estudo",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't study this language.",
+          "variantes": ["I do not study this language.", "I don't study that language."],
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'falo' por 'estudo' e mantenha o 'não'.",
+            "Como se diz 'estudar' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't study.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E 'essa língua', continua na frase?"
+            }
+          ]
+        },
+        {
+          "id": "voc2.base",
+          "tipo": "construcao",
+          "solicitacao": "você fala inglês?",
+          "alvo": "Do you speak English?",
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Em inglês, a pergunta começa com um ajudante. Qual é?",
+            "Como se pergunta 'você fala…?' em inglês? Que ajudante vem antes de 'você'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You speak English?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Are you speak English?",
+              "habilidade": "pergunta_do",
+              "pista": "Tem um errinho no are. Com o verbo falar, qual ajudante começa a pergunta?"
+            }
+          ]
+        },
+        {
+          "id": "voc2.entende",
+          "tipo": "substituicao",
+          "pista": "entende?",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you understand English?",
+          "habilidades": ["vocabulario", "pergunta_do"],
+          "ajudas": [
+            "Troque 'fala' por 'entende'; a pergunta continua igual.",
+            "Como se diz 'entender' em inglês? O começo da pergunta continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You understand English?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc2.estuda",
+          "tipo": "substituicao",
+          "pista": "estuda?",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you study English?",
+          "habilidades": ["vocabulario", "pergunta_do"],
+          "ajudas": [
+            "Troque 'entende' por 'estuda'; a pergunta continua igual.",
+            "Como se diz 'estudar' em inglês? O começo da pergunta continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Do you studies English?",
+              "habilidade": "pergunta_do",
+              "pista": "Depois de do, o verbo leva -s?"
+            }
+          ]
+        },
+        {
+          "id": "voc3.base",
+          "tipo": "construcao",
+          "solicitacao": "eu entendo aquela palavra",
+          "alvo": "I understand that word.",
+          "habilidades": ["this_that", "vocabulario"],
+          "ajudas": [
+            "Para 'aquela', algo mais longe, qual palavrinha usamos em inglês?",
+            "Como se diz 'palavra' em inglês? A frase começa com 'eu entendo'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I understand this word.",
+              "habilidade": "this_that",
+              "pista": "This é 'esta', perto. Para 'aquela', qual palavra usamos?"
+            }
+          ]
+        },
+        {
+          "id": "voc3.professor",
+          "tipo": "substituicao",
+          "pista": "aquele professor",
+          "idiomaDaPista": "pt",
+          "alvo": "I understand that teacher.",
+          "habilidades": ["vocabulario", "this_that"],
+          "ajudas": [
+            "Troque 'aquela palavra' por 'aquele professor'. O começo continua.",
+            "Como se diz 'professor' de escola em inglês? 'Aquele' continua a mesma palavrinha."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I understand that professor.",
+              "habilidade": "vocabulario",
+              "pista": "Professor de escola ou de curso, em inglês, é outra palavra. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc3.lingua",
+          "tipo": "substituicao",
+          "pista": "aquela língua",
+          "idiomaDaPista": "pt",
+          "alvo": "I understand that language.",
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'aquele professor' por 'aquela língua'.",
+            "Como se diz 'língua', o idioma, em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't understand that language.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Esta frase não tem 'não'. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc4.base",
+          "tipo": "construcao",
+          "solicitacao": "eu moro na Itália",
+          "alvo": "I live in Italy.",
+          "habilidades": ["in_pais", "paises_linguas"],
+          "ajudas": [
+            "Para morar num país, qual palavrinha vem depois do verbo?",
+            "Como se diz 'Itália' em inglês? Em inglês, Itália não leva artigo."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I live on Italy.",
+              "habilidade": "in_pais",
+              "pista": "Para morar num país, usamos on mesmo? Qual palavrinha vem antes do país?"
+            },
+            {
+              "exemplo": "I live in the Italy.",
+              "habilidade": "in_pais",
+              "pista": "Em inglês, Itália não leva the. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc4.espanha",
+          "tipo": "substituicao",
+          "pista": "na Espanha",
+          "idiomaDaPista": "pt",
+          "alvo": "I live in Spain.",
+          "habilidades": ["paises_linguas", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'Itália' por 'Espanha'; o resto continua.",
+            "Como se diz 'Espanha', o país, em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I live in Spanish.",
+              "habilidade": "paises_linguas",
+              "pista": "Spanish é a língua. Como se diz o país, 'Espanha'?"
+            }
+          ]
+        },
+        {
+          "id": "voc4.brasil",
+          "tipo": "substituicao",
+          "pista": "no Brasil",
+          "idiomaDaPista": "pt",
+          "alvo": "I live in Brazil.",
+          "habilidades": ["in_pais", "paises_linguas"],
+          "ajudas": [
+            "Troque 'Espanha' por 'Brasil'. Brasil leva artigo em inglês?",
+            "Como se diz 'Brasil' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I live in the Brazil.",
+              "habilidade": "in_pais",
+              "pista": "Em inglês, Brasil não leva the. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc5.base",
+          "tipo": "construcao",
+          "solicitacao": "você mora nos Estados Unidos?",
+          "alvo": "Do you live in the United States?",
+          "variantes": [
+            "Do you live in the US?",
+            "Do you live in the USA?",
+            "Do you live in the U.S.?",
+            "Do you live in America?"
+          ],
+          "habilidades": ["pergunta_do", "in_pais"],
+          "ajudas": [
+            "Em inglês, a pergunta começa com um ajudante. Qual é?",
+            "Como se diz 'Estados Unidos' em inglês? Esse país leva uma palavrinha antes, como o 'nos' do português."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You live in the United States?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Do you live in United States?",
+              "habilidade": "in_pais",
+              "pista": "Estados Unidos leva uma palavrinha antes, como o 'nos' do português. Qual é?"
+            },
+            {
+              "exemplo": "Do you live on the United States?",
+              "habilidade": "in_pais",
+              "pista": "Para país, usamos on mesmo? Qual palavrinha vem antes?"
+            }
+          ]
+        },
+        {
+          "id": "voc5.alemanha",
+          "tipo": "substituicao",
+          "pista": "na Alemanha?",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you live in Germany?",
+          "habilidades": ["paises_linguas", "in_pais"],
+          "ajudas": [
+            "Troque 'Estados Unidos' por 'Alemanha'. Alemanha leva artigo em inglês?",
+            "Como se diz 'Alemanha', o país, em inglês? A pergunta continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Do you live in German?",
+              "habilidade": "paises_linguas",
+              "pista": "German é a língua. Como se diz o país, 'Alemanha'?"
+            },
+            {
+              "exemplo": "Do you live in the Germany?",
+              "habilidade": "in_pais",
+              "pista": "Alemanha não leva the em inglês. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.base",
+          "tipo": "construcao",
+          "solicitacao": "eu moro no exterior",
+          "alvo": "I live abroad.",
+          "variantes": ["I live overseas."],
+          "habilidades": ["abroad"],
+          "ajudas": [
+            "'No exterior', fora do país, é uma palavra só em inglês. Qual é?",
+            "Essa palavra já quer dizer 'no exterior': precisa de alguma palavrinha antes?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I live in abroad.",
+              "habilidade": "abroad",
+              "pista": "Essa palavra já quer dizer 'no exterior'. Precisa de in antes?"
+            },
+            {
+              "exemplo": "I live in the exterior.",
+              "habilidade": "abroad",
+              "pista": "Em inglês, 'no exterior' não se diz com exterior. Qual é a palavra?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.nos",
+          "tipo": "substituicao",
+          "pista": "Nós",
+          "idiomaDaPista": "pt",
+          "alvo": "We live abroad.",
+          "variantes": ["We live overseas."],
+          "habilidades": ["sujeito_verbo", "abroad"],
+          "ajudas": [
+            "Troque 'eu' por 'nós'; o resto continua.",
+            "Como se diz 'nós' em inglês? O verbo muda?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We lives abroad.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com we, o verbo ganha -s?"
+            },
+            {
+              "exemplo": "We live in abroad.",
+              "habilidade": "abroad",
+              "pista": "Essa palavra já quer dizer 'no exterior'. Precisa de in antes?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.eles",
+          "tipo": "substituicao",
+          "pista": "Eles",
+          "idiomaDaPista": "pt",
+          "alvo": "They live abroad.",
+          "variantes": ["They live overseas."],
+          "habilidades": ["sujeito_verbo", "abroad"],
+          "ajudas": [
+            "Troque 'nós' por 'eles'; o resto continua.",
+            "Como se diz 'eles' em inglês? O 'no exterior' continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "He live abroad.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Assim é 'ele'. Como se diz 'eles', mais de uma pessoa?"
+            }
+          ]
+        },
+        {
+          "id": "voc7.base",
+          "tipo": "construcao",
+          "solicitacao": "eu quero morar nesse país",
+          "alvo": "I want to live in this country.",
+          "variantes": ["I want to live in that country."],
+          "habilidades": ["want_to", "this_that"],
+          "ajudas": [
+            "Querer + outro verbo: falta uma palavrinha entre os dois verbos. Qual é?",
+            "Como se diz 'país' em inglês? E 'nesse'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want live in this country.",
+              "habilidade": "want_to",
+              "pista": "Entre want e o outro verbo falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I want to live in these country.",
+              "habilidade": "this_that",
+              "pista": "These é para mais de um. Para um país só, qual palavra usamos?"
+            }
+          ]
+        },
+        {
+          "id": "voc7.cidade",
+          "tipo": "substituicao",
+          "pista": "nessa cidade",
+          "idiomaDaPista": "pt",
+          "alvo": "I want to live in this city.",
+          "variantes": ["I want to live in that city.", "I want to live in this town.", "I want to live in that town."],
+          "habilidades": ["vocabulario", "want_to"],
+          "ajudas": [
+            "Troque 'país' por 'cidade'; o resto continua.",
+            "Como se diz 'cidade' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want live in this city.",
+              "habilidade": "want_to",
+              "pista": "Entre want e o outro verbo falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc8.base",
+          "tipo": "construcao",
+          "solicitacao": "você estuda nos Estados Unidos?",
+          "alvo": "Do you study in the United States?",
+          "variantes": [
+            "Do you study in the US?",
+            "Do you study in the USA?",
+            "Do you study in the U.S.?",
+            "Do you study in America?"
+          ],
+          "habilidades": ["pergunta_do", "in_pais"],
+          "ajudas": [
+            "A pergunta começa com um ajudante. Qual é?",
+            "Estados Unidos leva uma palavrinha antes, como o 'nos' do português. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You study in the United States?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Do you study in United States?",
+              "habilidade": "in_pais",
+              "pista": "Estados Unidos leva uma palavrinha antes. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc8.interior",
+          "tipo": "substituicao",
+          "pista": "no interior",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you study in the countryside?",
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'Estados Unidos' por 'interior', longe da cidade grande. A pergunta continua.",
+            "Interior, no sentido de fora da cidade grande, é uma palavra que começa com country. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Do you study in the interior?",
+              "habilidade": "vocabulario",
+              "pista": "Para 'o interior', fora da cidade grande, o inglês usa outra palavra. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc8.mora",
+          "tipo": "substituicao",
+          "pista": "mora?",
+          "idiomaDaPista": "pt",
+          "alvo": "Do you live in the countryside?",
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'estuda' por 'mora'; o resto continua.",
+            "Como se diz 'morar' em inglês? O começo da pergunta e o interior continuam."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Do you live in the United States?",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! O lugar mudou na frase anterior. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc9.base",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de estudar sozinho",
+          "alvo": "I like to study alone.",
+          "variantes": ["I like studying alone.", "I like to study by myself.", "I like studying by myself."],
+          "habilidades": ["like_to", "vocabulario"],
+          "ajudas": [
+            "Gostar + outro verbo: em inglês não tem 'de', mas falta uma palavrinha entre os dois verbos. Qual é?",
+            "Como se diz 'sozinho', sem companhia, em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like study alone.",
+              "habilidade": "like_to",
+              "pista": "Entre like e o outro verbo falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I like of study alone.",
+              "habilidade": "like_to",
+              "pista": "Em inglês, gostar não leva 'de'. O que vem entre like e o outro verbo?"
+            },
+            {
+              "exemplo": "I like to study lonely.",
+              "habilidade": "vocabulario",
+              "pista": "Lonely é 'solitário', triste. Como se diz 'sozinho', sem companhia?"
+            }
+          ]
+        },
+        {
+          "id": "voc9.prefiro",
+          "tipo": "substituicao",
+          "pista": "prefiro",
+          "idiomaDaPista": "pt",
+          "alvo": "I prefer to study alone.",
+          "variantes": ["I prefer studying alone.", "I prefer to study by myself."],
+          "habilidades": ["like_to", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'gosto de' por 'prefiro'. O resto continua.",
+            "Como se diz 'preferir' em inglês? Parece com o português."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer study alone.",
+              "habilidade": "like_to",
+              "pista": "Entre prefer e o outro verbo falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc9.geralmente",
+          "tipo": "substituicao",
+          "pista": "geralmente",
+          "idiomaDaPista": "pt",
+          "alvo": "I usually prefer to study alone.",
+          "variantes": [
+            "I usually prefer studying alone.",
+            "I generally prefer to study alone.",
+            "Usually I prefer to study alone.",
+            "I usually study alone."
+          ],
+          "habilidades": ["frequencia", "preservar_cadeia"],
+          "ajudas": [
+            "Como se diz 'geralmente'? Ele entra antes do verbo.",
+            "Que palavra eu te dei? Ela entra antes de 'prefiro'; o resto continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I prefer usually to study alone.",
+              "habilidade": "frequencia",
+              "pista": "Usually vem antes ou depois do verbo?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expressoes",
+      "objetivo": "Let me + verbo para 'deixa eu', palavras em outras línguas, only para 'só' e a negativa com like.",
+      "itens": [
+        {
+          "id": "exp1.base",
+          "tipo": "construcao",
+          "solicitacao": "deixa eu falar com você",
+          "alvo": "Let me speak with you.",
+          "variantes": ["Let me speak to you.", "Let me talk to you.", "Let me talk with you."],
+          "habilidades": ["let_me"],
+          "ajudas": [
+            "'Deixa eu', em inglês, se diz como 'deixa me'. Qual é o verbo 'deixar'?",
+            "Depois de 'deixa eu', o verbo vem direto, sem to. Como se diz 'falar com você'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Let I speak with you.",
+              "habilidade": "let_me",
+              "pista": "Depois de let, usamos I ou me?"
+            },
+            {
+              "exemplo": "Let me to speak with you.",
+              "habilidade": "let_me",
+              "pista": "Depois de let me, o verbo leva to?"
+            }
+          ]
+        },
+        {
+          "id": "exp1.estudar",
+          "tipo": "substituicao",
+          "pista": "estudar",
+          "idiomaDaPista": "pt",
+          "alvo": "Let me study with you.",
+          "habilidades": ["let_me", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'falar' por 'estudar'; o resto continua.",
+            "Como se diz 'estudar' em inglês? O começo e o 'com você' continuam."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Let me to study with you.",
+              "habilidade": "let_me",
+              "pista": "Depois de let me, o verbo leva to?"
+            }
+          ]
+        },
+        {
+          "id": "exp1.almocar",
+          "tipo": "substituicao",
+          "pista": "almoçar",
+          "idiomaDaPista": "pt",
+          "alvo": "Let me have lunch with you.",
+          "variantes": ["Let me eat lunch with you."],
+          "habilidades": ["have_refeicao", "preservar_cadeia"],
+          "ajudas": [
+            "Em inglês, almoçar é um verbo + 'almoço'. Qual verbo vem antes de lunch?",
+            "Como se diz 'almoçar' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Let me lunch with you.",
+              "habilidade": "have_refeicao",
+              "pista": "Falta um verbo antes de lunch. Qual é?"
+            },
+            {
+              "exemplo": "Let me have lunch.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'com você' da frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "exp1.hoje",
+          "tipo": "substituicao",
+          "pista": "hoje",
+          "idiomaDaPista": "pt",
+          "alvo": "Let me have lunch with you today.",
+          "variantes": ["Let me eat lunch with you today.", "Today let me have lunch with you."],
+          "habilidades": ["marcador_tempo", "preservar_cadeia"],
+          "ajudas": [
+            "Como se diz 'hoje' em inglês? Ele vai no fim da frase.",
+            "Que palavra eu te dei? Ela entra no fim; o resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Let me have lunch today.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'com você' continua?"
+            }
+          ]
+        },
+        {
+          "id": "exp2.base",
+          "tipo": "construcao",
+          "solicitacao": "me deixa estudar sozinho (ou: deixa eu estudar sozinho)",
+          "alvo": "Let me study alone.",
+          "variantes": ["Let me study by myself."],
+          "habilidades": ["let_me", "vocabulario"],
+          "ajudas": [
+            "'Me deixa' e 'deixa eu' são a mesma coisa em inglês. Como começa a frase?",
+            "Como se diz 'sozinho' em inglês? Depois de 'deixa eu', o verbo vem direto."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Let I study alone.",
+              "habilidade": "let_me",
+              "pista": "Depois de let, usamos I ou me?"
+            },
+            {
+              "exemplo": "Me let study alone.",
+              "habilidade": "let_me",
+              "pista": "Em inglês, o me vem depois do let. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "exp2.comer",
+          "tipo": "substituicao",
+          "pista": "comer",
+          "idiomaDaPista": "pt",
+          "alvo": "Let me eat alone.",
+          "variantes": ["Let me eat by myself."],
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'estudar' por 'comer'; o resto continua.",
+            "Como se diz 'comer' em inglês? O começo e o 'sozinho' continuam."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Let me eat.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'sozinho' continua?"
+            }
+          ]
+        },
+        {
+          "id": "exp3.base",
+          "tipo": "construcao",
+          "solicitacao": "eu não entendo palavras em espanhol",
+          "alvo": "I don't understand words in Spanish.",
+          "variantes": ["I do not understand words in Spanish.", "I don't understand Spanish words."],
+          "habilidades": ["negativa_dont", "paises_linguas"],
+          "ajudas": [
+            "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "Como se diz 'palavras' em inglês? E 'em espanhol'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no understand words in Spanish.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I don't understand words in Spain.",
+              "habilidade": "paises_linguas",
+              "pista": "Spain é o país. Como se diz a língua, 'espanhol'?"
+            }
+          ]
+        },
+        {
+          "id": "exp3.alemao",
+          "tipo": "substituicao",
+          "pista": "alemão",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't understand words in German.",
+          "variantes": ["I do not understand words in German.", "I don't understand German words."],
+          "habilidades": ["paises_linguas", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'espanhol' por 'alemão'; o resto continua.",
+            "Como se diz a língua 'alemão' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't understand words in Germany.",
+              "habilidade": "paises_linguas",
+              "pista": "Germany é o país. Como se diz a língua, 'alemão'?"
+            }
+          ]
+        },
+        {
+          "id": "exp4.base",
+          "tipo": "construcao",
+          "solicitacao": "eu só entendo palavras em português",
+          "alvo": "I only understand words in Portuguese.",
+          "variantes": [
+            "I understand only words in Portuguese.",
+            "I just understand words in Portuguese.",
+            "I only understand Portuguese words."
+          ],
+          "habilidades": ["only", "paises_linguas"],
+          "ajudas": [
+            "Como se diz 'só', no sentido de 'somente'? Ele vem antes do verbo.",
+            "Como se diz a língua 'português' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Only I understand words in Portuguese.",
+              "habilidade": "only",
+              "pista": "Assim quer dizer 'só eu entendo'. Onde entra o 'só' para falar das palavras?"
+            },
+            {
+              "exemplo": "I alone understand words in Portuguese.",
+              "habilidade": "only",
+              "pista": "Alone é 'sozinho'. Como se diz 'só', no sentido de 'somente'?"
+            }
+          ]
+        },
+        {
+          "id": "exp4.ingles",
+          "tipo": "substituicao",
+          "pista": "inglês",
+          "idiomaDaPista": "pt",
+          "alvo": "I only understand words in English.",
+          "variantes": [
+            "I understand only words in English.",
+            "I just understand words in English.",
+            "I only understand English words."
+          ],
+          "habilidades": ["paises_linguas", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'português' por 'inglês'; o resto continua.",
+            "Como se diz a língua 'inglês' em inglês? O 'só' continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I understand words in English.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'só' da frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "exp4.alemao",
+          "tipo": "substituicao",
+          "pista": "alemão",
+          "idiomaDaPista": "pt",
+          "alvo": "I only understand words in German.",
+          "variantes": [
+            "I understand only words in German.",
+            "I just understand words in German.",
+            "I only understand German words."
+          ],
+          "habilidades": ["paises_linguas", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'inglês' por 'alemão'; o resto continua.",
+            "Como se diz a língua 'alemão' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I only understand words in Germany.",
+              "habilidade": "paises_linguas",
+              "pista": "Germany é o país. Como se diz a língua, 'alemão'?"
+            }
+          ]
+        },
+        {
+          "id": "exp5.base",
+          "tipo": "construcao",
+          "solicitacao": "eu só bebo água. Eu não gosto de refrigerante.",
+          "alvo": "I only drink water. I don't like soda.",
+          "variantes": [
+            "I just drink water. I don't like soda.",
+            "I only drink water. I do not like soda.",
+            "I only drink water. I don't like soft drinks.",
+            "I drink only water. I don't like soda."
+          ],
+          "habilidades": ["only", "negativa_dont", "like_sem_of", "vocabulario"],
+          "ajudas": [
+            "São duas frases. Na primeira, onde entra o 'só'?",
+            "Como se diz 'refrigerante' em inglês? Lembre: gostar não leva 'de'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I only drink water. I no like soda.",
+              "habilidade": "negativa_dont",
+              "pista": "Na segunda frase, o 'não' precisa de um ajudante. Qual é?"
+            },
+            {
+              "exemplo": "I only drink water. I don't like of soda.",
+              "habilidade": "like_sem_of",
+              "pista": "Em inglês, gostar não leva 'de'. Como fica?"
+            },
+            {
+              "exemplo": "I only drink water. I don't like refrigerant.",
+              "habilidade": "vocabulario",
+              "pista": "Refrigerant é o gás da geladeira! Como se diz 'refrigerante' em inglês?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gramatica",
+      "objetivo": "Perguntas no passado com Did, perguntas com Where e What, have com as refeições e for breakfast.",
+      "itens": [
+        {
+          "id": "gram1.base",
+          "tipo": "construcao",
+          "solicitacao": "eles estudaram juntos na escola?",
+          "alvo": "Did they study together at school?",
+          "variantes": ["Did they study together in school?"],
+          "habilidades": ["pergunta_did", "vocabulario"],
+          "apoio": "did",
+          "ajudas": [
+            "Pergunta no passado começa com um ajudante. Qual é?",
+            "Depois desse ajudante, o verbo volta para a forma básica. Como se diz 'juntos' e 'na escola'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "They studied together at school?",
+              "habilidade": "pergunta_did",
+              "pista": "Falta o ajudante do passado no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Did they studied together at school?",
+              "habilidade": "pergunta_did",
+              "pista": "Depois de did, o verbo ainda fica no passado?"
+            },
+            {
+              "exemplo": "Do they study together at school?",
+              "habilidade": "pergunta_did",
+              "pista": "Assim é presente. Qual ajudante usamos para perguntar no passado?"
+            }
+          ]
+        },
+        {
+          "id": "gram1.faculdade",
+          "tipo": "substituicao",
+          "pista": "faculdade",
+          "idiomaDaPista": "pt",
+          "alvo": "Did they study together in college?",
+          "variantes": [
+            "Did they study together at college?",
+            "Did they study together at university?",
+            "Did they study together in university?",
+            "Did they study together at the university?"
+          ],
+          "habilidades": ["vocabulario", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'escola' por 'faculdade'; a pergunta continua.",
+            "Como se diz 'faculdade' em inglês? Não é faculty."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Did they study together at faculty?",
+              "habilidade": "vocabulario",
+              "pista": "Faculty, em inglês, é o corpo de professores. Como se diz 'faculdade'?"
+            },
+            {
+              "exemplo": "They studied together in college?",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! A pergunta continua começando com o ajudante do passado. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "gram2.base",
+          "tipo": "construcao",
+          "solicitacao": "onde você geralmente almoça?",
+          "alvo": "Where do you usually have lunch?",
+          "variantes": [
+            "Where do you usually eat lunch?",
+            "Where do you generally have lunch?",
+            "Where do you normally have lunch?"
+          ],
+          "habilidades": ["pergunta_wh", "have_refeicao", "frequencia"],
+          "ajudas": [
+            "Depois de 'onde', qual ajudante vem?",
+            "Como se diz 'almoçar' em inglês? E onde entra o 'geralmente'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where you usually have lunch?",
+              "habilidade": "pergunta_wh",
+              "pista": "Depois de where, falta um ajudante. Qual é?"
+            },
+            {
+              "exemplo": "Where do you usually lunch?",
+              "habilidade": "have_refeicao",
+              "pista": "Falta um verbo antes de lunch. Como se diz 'almoçar'?"
+            },
+            {
+              "exemplo": "Where do you have usually lunch?",
+              "habilidade": "frequencia",
+              "pista": "Usually vem antes ou depois do verbo?"
+            }
+          ]
+        },
+        {
+          "id": "gram2.gosta",
+          "tipo": "substituicao",
+          "pista": "gosta de almoçar",
+          "idiomaDaPista": "pt",
+          "alvo": "Where do you like to have lunch?",
+          "variantes": [
+            "Where do you like having lunch?",
+            "Where do you like to eat lunch?",
+            "Where do you usually like to have lunch?"
+          ],
+          "habilidades": ["like_to", "have_refeicao"],
+          "ajudas": [
+            "Troque 'geralmente almoça' por 'gosta de almoçar'. A pergunta continua com 'onde'.",
+            "Gostar + outro verbo: falta uma palavrinha entre os dois. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where do you like have lunch?",
+              "habilidade": "like_to",
+              "pista": "Entre like e o outro verbo falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "gram3.base",
+          "tipo": "construcao",
+          "solicitacao": "o que você comeu no café da manhã hoje?",
+          "alvo": "What did you eat for breakfast today?",
+          "variantes": ["What did you have for breakfast today?", "What did you eat for breakfast this morning?"],
+          "habilidades": ["pergunta_did", "for_refeicao"],
+          "ajudas": [
+            "Pergunta no passado: depois de 'o que', qual ajudante vem?",
+            "Como se diz 'no café da manhã'? Qual palavrinha vem antes de breakfast?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What you ate for breakfast today?",
+              "habilidade": "pergunta_did",
+              "pista": "Depois de what, falta o ajudante do passado. Qual é?"
+            },
+            {
+              "exemplo": "What did you ate for breakfast today?",
+              "habilidade": "pergunta_did",
+              "pista": "Depois de did, o verbo ainda fica no passado?"
+            },
+            {
+              "exemplo": "What did you eat in the breakfast today?",
+              "habilidade": "for_refeicao",
+              "pista": "Para 'no café da manhã', usamos in the? Qual palavrinha vem antes de breakfast?"
+            }
+          ]
+        },
+        {
+          "id": "gram3.jantar",
+          "tipo": "substituicao",
+          "pista": "jantar, ontem",
+          "idiomaDaPista": "pt",
+          "alvo": "What did you eat for dinner yesterday?",
+          "variantes": ["What did you have for dinner yesterday?", "What did you eat for supper yesterday?"],
+          "habilidades": ["for_refeicao", "marcador_tempo"],
+          "ajudas": [
+            "São duas trocas: 'café da manhã' vira 'jantar' e 'hoje' vira 'ontem'.",
+            "Como se diz 'jantar' e 'ontem' em inglês? O começo da pergunta continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What did you eat in the dinner yesterday?",
+              "habilidade": "for_refeicao",
+              "pista": "Para 'no jantar', usamos in the? Qual palavrinha vem antes de dinner?"
+            },
+            {
+              "exemplo": "What did you eat for dinner today?",
+              "habilidade": "marcador_tempo",
+              "pista": "Quase! E o 'ontem'? Como se diz?"
+            }
+          ]
+        },
+        {
+          "id": "gram4.base",
+          "tipo": "construcao",
+          "solicitacao": "onde você prefere comer hoje?",
+          "alvo": "Where do you prefer to eat today?",
+          "variantes": ["Where would you prefer to eat today?", "Where do you prefer eating today?"],
+          "habilidades": ["pergunta_wh", "like_to"],
+          "ajudas": [
+            "Depois de 'onde', qual ajudante vem?",
+            "Preferir + outro verbo: falta uma palavrinha entre os dois. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where you prefer to eat today?",
+              "habilidade": "pergunta_wh",
+              "pista": "Depois de where, falta um ajudante. Qual é?"
+            },
+            {
+              "exemplo": "Where do you prefer eat today?",
+              "habilidade": "like_to",
+              "pista": "Entre prefer e o outro verbo falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "gram4.almocar",
+          "tipo": "substituicao",
+          "pista": "almoçar",
+          "idiomaDaPista": "pt",
+          "alvo": "Where do you prefer to have lunch today?",
+          "variantes": [
+            "Where would you prefer to have lunch today?",
+            "Where do you prefer to eat lunch today?",
+            "Where do you prefer having lunch today?"
+          ],
+          "habilidades": ["have_refeicao", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'comer' por 'almoçar'. O resto continua.",
+            "Como se diz 'almoçar' em inglês? Que verbo vem antes de lunch?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where do you prefer to lunch today?",
+              "habilidade": "have_refeicao",
+              "pista": "Falta um verbo antes de lunch. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "gram4.jantar",
+          "tipo": "substituicao",
+          "pista": "jantar",
+          "idiomaDaPista": "pt",
+          "alvo": "Where do you prefer to have dinner today?",
+          "variantes": [
+            "Where would you prefer to have dinner today?",
+            "Where do you prefer to eat dinner today?",
+            "Where do you prefer to have dinner tonight?",
+            "Where would you prefer to have dinner tonight?"
+          ],
+          "habilidades": ["have_refeicao", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'almoçar' por 'jantar'; o resto continua.",
+            "Como se diz 'jantar' em inglês? O verbo antes continua o mesmo."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where do you prefer to dinner today?",
+              "habilidade": "have_refeicao",
+              "pista": "Falta um verbo antes de dinner. Qual é?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "did": {
+      "objetivo": "Reconstruir a pergunta no passado com Did, com o verbo na forma básica, antes de voltar à pergunta sobre a escola.",
+      "degraus": [
+        {
+          "id": "did.modelo",
+          "tipo": "repeticao",
+          "modelo": "Did you study yesterday?",
+          "alvo": "Did you study yesterday?",
+          "habilidades": ["pergunta_did"]
+        },
+        {
+          "id": "did.trabalhou",
+          "tipo": "construcao",
+          "solicitacao": "você trabalhou ontem?",
+          "alvo": "Did you work yesterday?",
+          "habilidades": ["pergunta_did"],
+          "ajudas": [
+            "A pergunta começa com o mesmo ajudante da frase que você repetiu. Qual é?",
+            "Depois desse ajudante, o verbo fica na forma básica. Como se diz 'trabalhar'?"
+          ]
+        },
+        {
+          "id": "did.eles",
+          "tipo": "substituicao",
+          "pista": "Eles",
+          "idiomaDaPista": "pt",
+          "alvo": "Did they work yesterday?",
+          "habilidades": ["pergunta_did", "sujeito_verbo"],
+          "ajudas": [
+            "Troque 'você' por 'eles'; o ajudante continua.",
+            "Como se diz 'eles' em inglês?"
+          ]
+        },
+        {
+          "id": "did.juntos",
+          "tipo": "substituicao",
+          "pista": "juntos",
+          "idiomaDaPista": "pt",
+          "alvo": "Did they work together yesterday?",
+          "habilidades": ["vocabulario", "pergunta_did"],
+          "ajudas": [
+            "Como se diz 'juntos' em inglês? Entra depois do verbo.",
+            "Que palavra eu te dei? Ela vem antes de 'ontem'."
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.morar",
+      "tipo": "conversa",
+      "pergunta": "Where do you live?",
+      "criterio": "Resposta pertinente com I live in + cidade, bairro ou país (qualquer lugar verdadeiro).",
+      "exemplos": ["I live in Curitiba.", "I live in Brazil, in São Paulo."],
+      "acompanhamentos": ["Did you live in another city before?", "Do you like to live there?"],
+      "habilidades": ["in_pais"]
+    },
+    {
+      "id": "conversa.exterior",
+      "tipo": "conversa",
+      "pergunta": "Do you want to live abroad?",
+      "criterio": "Yes / No pertinente, de preferência com want to + verbo (I want to live in… / I don't want to live abroad).",
+      "exemplos": ["Yes, I do. I want to live in Portugal.", "No, I don't. I like my city."],
+      "acompanhamentos": ["Why?", "What languages do you speak?"],
+      "habilidades": ["want_to"]
+    },
+    {
+      "id": "conversa.linguas",
+      "tipo": "conversa",
+      "pergunta": "What languages do you understand?",
+      "criterio": "Resposta pertinente sobre as línguas que a pessoa entende, com I understand… ou I only understand… e nomes de línguas (Portuguese, English, Spanish…).",
+      "exemplos": ["I only understand Portuguese.", "I understand Portuguese and a little English."],
+      "acompanhamentos": ["Do you like to study alone?", "Did you study English at school?"],
+      "habilidades": ["paises_linguas", "only"]
+    }
+  ],
+  "recuperacao": {
+    "infinitivo_to": {
+      "id": "rec.infinitivo_to",
+      "tipo": "construcao",
+      "solicitacao": "estudar",
+      "alvo": "To study.",
+      "habilidades": ["infinitivo_to"],
+      "ajudas": [
+        "No infinitivo, o verbo ganha uma palavrinha na frente. Qual é?",
+        "Como se diz 'estudar' em inglês?"
+      ]
+    },
+    "sujeito_verbo": {
+      "id": "rec.sujeito_verbo",
+      "tipo": "construcao",
+      "solicitacao": "eles entendem português",
+      "alvo": "They understand Portuguese.",
+      "habilidades": ["sujeito_verbo", "paises_linguas"],
+      "ajudas": [
+        "Como se diz 'eles' em inglês? Com eles, o verbo ganha -s?",
+        "Como se diz 'entender' e a língua 'português' em inglês?"
+      ]
+    },
+    "passado": {
+      "id": "rec.passado",
+      "tipo": "construcao",
+      "solicitacao": "ela morou no Japão",
+      "alvo": "She lived in Japan.",
+      "habilidades": ["passado", "in_pais"],
+      "ajudas": [
+        "'Morou' é passado. Como fica o verbo 'morar' no passado?",
+        "Como se diz 'Japão' em inglês? Qual palavrinha vem antes do país?"
+      ]
+    },
+    "negativa_dont": {
+      "id": "rec.negativa_dont",
+      "tipo": "construcao",
+      "solicitacao": "nós não falamos alemão",
+      "alvo": "We don't speak German.",
+      "variantes": ["We do not speak German."],
+      "habilidades": ["negativa_dont", "paises_linguas"],
+      "ajudas": [
+        "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+        "Como se diz 'nós não falamos' em inglês? E a língua 'alemão'?"
+      ]
+    },
+    "pergunta_do": {
+      "id": "rec.pergunta_do",
+      "tipo": "construcao",
+      "solicitacao": "eles moram aqui?",
+      "alvo": "Do they live here?",
+      "habilidades": ["pergunta_do"],
+      "ajudas": [
+        "Por qual ajudante a pergunta começa?",
+        "Como se pergunta 'eles moram…?' em inglês?"
+      ]
+    },
+    "in_pais": {
+      "id": "rec.in_pais",
+      "tipo": "construcao",
+      "solicitacao": "meu irmão mora no Canadá",
+      "alvo": "My brother lives in Canada.",
+      "habilidades": ["in_pais"],
+      "ajudas": [
+        "Para morar num país, qual palavrinha vem depois do verbo? Canadá leva artigo em inglês?",
+        "Como se diz 'meu irmão mora' em inglês? Com 'meu irmão', o verbo ganha -s."
+      ]
+    },
+    "abroad": {
+      "id": "rec.abroad",
+      "tipo": "construcao",
+      "solicitacao": "meus pais moram no exterior",
+      "alvo": "My parents live abroad.",
+      "variantes": ["My parents live overseas."],
+      "habilidades": ["abroad"],
+      "ajudas": [
+        "'No exterior' é uma palavra só em inglês, sem nada antes. Qual é?",
+        "Como se diz 'meus pais moram' em inglês?"
+      ]
+    },
+    "want_to": {
+      "id": "rec.want_to",
+      "tipo": "construcao",
+      "solicitacao": "eu quero estudar inglês",
+      "alvo": "I want to study English.",
+      "habilidades": ["want_to"],
+      "ajudas": [
+        "Entre querer e o outro verbo falta uma palavrinha. Qual é?",
+        "Como se diz 'estudar' em inglês? A frase começa com 'eu quero'."
+      ]
+    },
+    "like_to": {
+      "id": "rec.like_to",
+      "tipo": "construcao",
+      "solicitacao": "eu gosto de falar inglês",
+      "alvo": "I like to speak English.",
+      "variantes": ["I like speaking English."],
+      "habilidades": ["like_to"],
+      "ajudas": [
+        "Gostar + outro verbo: falta uma palavrinha entre os dois verbos. Qual é?",
+        "Como se diz 'falar' uma língua em inglês?"
+      ]
+    },
+    "like_sem_of": {
+      "id": "rec.like_sem_of",
+      "tipo": "construcao",
+      "solicitacao": "eu não gosto de chá",
+      "alvo": "I don't like tea.",
+      "variantes": ["I do not like tea."],
+      "habilidades": ["like_sem_of", "negativa_dont"],
+      "ajudas": [
+        "Em inglês, gostar não leva 'de'. E o 'não' precisa de um ajudante.",
+        "Como se diz 'chá' em inglês?"
+      ]
+    },
+    "let_me": {
+      "id": "rec.let_me",
+      "tipo": "construcao",
+      "solicitacao": "deixa eu ver",
+      "alvo": "Let me see.",
+      "variantes": ["Let me have a look."],
+      "habilidades": ["let_me"],
+      "ajudas": [
+        "'Deixa eu', em inglês, se diz como 'deixa me'. Como começa?",
+        "Como se diz 'ver' em inglês? Ele vem direto, sem to."
+      ]
+    },
+    "only": {
+      "id": "rec.only",
+      "tipo": "construcao",
+      "solicitacao": "ela só fala inglês",
+      "alvo": "She only speaks English.",
+      "variantes": ["She just speaks English.", "She speaks only English."],
+      "habilidades": ["only"],
+      "ajudas": [
+        "Como se diz 'só', no sentido de 'somente'? Ele vem antes do verbo.",
+        "Com 'ela', o verbo ganha -s. Como se diz 'ela fala'?"
+      ]
+    },
+    "pergunta_did": {
+      "id": "rec.pergunta_did",
+      "tipo": "construcao",
+      "solicitacao": "você estudou inglês na escola?",
+      "alvo": "Did you study English at school?",
+      "variantes": ["Did you study English in school?"],
+      "habilidades": ["pergunta_did"],
+      "ajudas": [
+        "Pergunta no passado começa com um ajudante. Qual é?",
+        "Depois desse ajudante, o verbo volta para a forma básica. Como se diz 'estudar'?"
+      ]
+    },
+    "pergunta_wh": {
+      "id": "rec.pergunta_wh",
+      "tipo": "construcao",
+      "solicitacao": "onde você estuda inglês?",
+      "alvo": "Where do you study English?",
+      "habilidades": ["pergunta_wh"],
+      "ajudas": [
+        "Depois de 'onde', qual ajudante vem?",
+        "Como se pergunta 'onde você estuda' em inglês?"
+      ]
+    },
+    "have_refeicao": {
+      "id": "rec.have_refeicao",
+      "tipo": "construcao",
+      "solicitacao": "eu janto em casa",
+      "alvo": "I have dinner at home.",
+      "variantes": ["I eat dinner at home."],
+      "habilidades": ["have_refeicao"],
+      "ajudas": [
+        "Como se diz 'jantar' em inglês? Precisa de um verbo antes?",
+        "Como se diz 'em casa' em inglês?"
+      ]
+    },
+    "for_refeicao": {
+      "id": "rec.for_refeicao",
+      "tipo": "construcao",
+      "solicitacao": "o que você comeu no almoço?",
+      "alvo": "What did you eat for lunch?",
+      "variantes": ["What did you have for lunch?"],
+      "habilidades": ["for_refeicao", "pergunta_did"],
+      "ajudas": [
+        "Para 'no almoço', qual palavrinha vem antes de lunch?",
+        "Pergunta no passado: depois de 'o que', qual ajudante vem?"
+      ]
+    },
+    "frequencia": {
+      "id": "rec.frequencia",
+      "tipo": "construcao",
+      "solicitacao": "eu geralmente estudo de manhã",
+      "alvo": "I usually study in the morning.",
+      "variantes": ["Usually I study in the morning.", "I generally study in the morning."],
+      "habilidades": ["frequencia"],
+      "ajudas": [
+        "Como se diz 'geralmente'? Ele vem antes ou depois do verbo?",
+        "Como se diz 'de manhã' em inglês?"
+      ]
+    },
+    "paises_linguas": {
+      "id": "rec.paises_linguas",
+      "tipo": "construcao",
+      "solicitacao": "eu falo português e espanhol",
+      "alvo": "I speak Portuguese and Spanish.",
+      "habilidades": ["paises_linguas"],
+      "ajudas": [
+        "Como se diz 'falar' uma língua em inglês?",
+        "Como se dizem as línguas 'português' e 'espanhol' em inglês?"
+      ]
+    },
+    "this_that": {
+      "id": "rec.this_that",
+      "tipo": "construcao",
+      "solicitacao": "eu não entendo aquela frase",
+      "alvo": "I don't understand that sentence.",
+      "variantes": ["I do not understand that sentence.", "I don't understand that phrase."],
+      "habilidades": ["this_that", "negativa_dont"],
+      "ajudas": [
+        "Para 'aquela', algo mais longe, qual palavrinha usamos?",
+        "Como se diz 'frase' em inglês? E o 'não' precisa de um ajudante."
+      ]
+    },
+    "vocabulario": {
+      "id": "rec.vocabulario",
+      "tipo": "construcao",
+      "solicitacao": "nós estudamos juntos",
+      "alvo": "We study together.",
+      "variantes": ["We studied together."],
+      "habilidades": ["vocabulario"],
+      "ajudas": [
+        "Como se diz 'estudar' em inglês?",
+        "Como se diz 'juntos' em inglês? Entra depois do verbo."
+      ]
+    },
+    "marcador_tempo": {
+      "id": "rec.marcador_tempo",
+      "tipo": "construcao",
+      "solicitacao": "eu almocei com ela ontem",
+      "alvo": "I had lunch with her yesterday.",
+      "variantes": ["I ate lunch with her yesterday.", "Yesterday I had lunch with her."],
+      "habilidades": ["marcador_tempo", "have_refeicao"],
+      "ajudas": [
+        "Como se diz 'ontem' em inglês? Ele vai no fim da frase.",
+        "Almocei é passado. Qual é o passado de have?"
+      ]
+    }
+  }
+}

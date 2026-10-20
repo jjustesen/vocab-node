@@ -1,0 +1,1651 @@
+{
+  "id": "querer-gostar-cafe-da-manha",
+  "titulo": "Querer, gostar e o café da manhã",
+  "abertura": "Hoje vamos praticar querer e gostar, no presente e no passado, e falar sobre comida e o café da manhã.",
+  "notasParaAvaliador": "Like e want vão direto no substantivo, sem of (I like ham, I want coffee; \"I like of ham\" é erro), e antes de outro verbo levam to (I like to eat = I like eating; \"I like eat\" e \"I want eat\" são erros); gostar de comida em geral usa o plural (I like apples, oranges, grapes, bananas, cookies), e a, some ou nada antes de comida valem igual (I want coffee = I want a coffee = I want some coffee). No café da manhã é for breakfast (at breakfast também vale; \"in the breakfast\" é erro), copo é glass e xícara é cup (para café, a cup of coffee e a glass of coffee valem), e o sabor vem antes do nome (chocolate cake, orange juice, grape juice; \"juice of orange\" é erro). O passado de eat e drink é ate e drank (\"eated\", \"drinked\" e \"I drunk\" são erros), wanted e liked levam -ed, só o primeiro verbo vai para o passado (I wanted to eat), e have / had valem no lugar de eat / ate e drink / drank com comida. Biscoito salgado é crackers, biscoito doce é cookies (biscuits e cookies também valem para biscoito); no pedido de um verbo sozinho (querer, gostar) \"to want\" e só \"want\" valem igual, e \"Eu quero\" / \"Eu gosto\" sozinhos aceitam I want / I like e I want it / I like it.",
+  "nomes": {
+    "blocos": {
+      "verbos": "Verbos",
+      "vocabulario": "Vocabulário",
+      "expressoes": "Café da manhã"
+    },
+    "habilidades": {
+      "infinitivo_to": { "curto": "to + verbo", "resumo": "o verbo no infinitivo, com to na frente" },
+      "sujeito_verbo": { "curto": "I / you", "resumo": "trocar o sujeito, como I e you, sem -s no verbo" },
+      "passado_ed": { "curto": "wanted / liked", "resumo": "o passado com -ed, como wanted e liked" },
+      "passado_irregular": { "curto": "ate / drank", "resumo": "os passados irregulares ate e drank" },
+      "want_like": { "curto": "want / like", "resumo": "want e like direto com a comida, sem 'de'" },
+      "like_to": { "curto": "like to", "resumo": "like to antes de outro verbo, como em like to eat" },
+      "want_to": { "curto": "want to", "resumo": "want to antes de outro verbo, como em want to eat" },
+      "vocabulario_comida": { "curto": "comida", "resumo": "os nomes das comidas e bebidas" },
+      "plural": { "curto": "plural", "resumo": "o plural para falar de comida em geral, como apples" },
+      "sabor_antes": { "curto": "orange juice", "resumo": "o sabor antes do nome, como chocolate cake e orange juice" },
+      "for_breakfast": { "curto": "for breakfast", "resumo": "for breakfast, para dizer 'no café da manhã'" },
+      "medida_of": { "curto": "a glass of", "resumo": "a slice of e a glass of, para fatia e copo" },
+      "marcador_tempo": { "curto": "yesterday", "resumo": "yesterday no fim da frase" },
+      "preservar_cadeia": { "curto": "manter a frase", "resumo": "manter as mudanças anteriores da frase" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "want + comida ou bebida (sem 'de'): want milk",
+      "like + comida (sem 'de'): like cheese",
+      "want to / like to + verbo: want to cook · like to read",
+      "Passado com -ed: want → wanted · like → liked",
+      "Passado irregular: eat → ate · drink → drank",
+      "for breakfast · for lunch · for dinner",
+      "a slice of · a glass of · a cup of",
+      "sabor + nome: lemon cake · apple juice"
+    ],
+    "vocabulario": [
+      { "en": "bread", "pt": "pão" },
+      { "en": "butter", "pt": "manteiga" },
+      { "en": "cheese", "pt": "queijo" },
+      { "en": "ham", "pt": "presunto" },
+      { "en": "cookies", "pt": "biscoitos doces" },
+      { "en": "crackers", "pt": "biscoitos salgados" },
+      { "en": "jam", "pt": "geleia" },
+      { "en": "honey", "pt": "mel" },
+      { "en": "pancakes", "pt": "panquecas" },
+      { "en": "cake", "pt": "bolo" },
+      { "en": "pie", "pt": "torta" },
+      { "en": "eggs", "pt": "ovos" },
+      { "en": "fruit", "pt": "fruta, frutas" },
+      { "en": "apples", "pt": "maçãs" },
+      { "en": "oranges", "pt": "laranjas" },
+      { "en": "grapes", "pt": "uvas" },
+      { "en": "juice", "pt": "suco" },
+      { "en": "milk", "pt": "leite" },
+      { "en": "tea", "pt": "chá" },
+      { "en": "breakfast", "pt": "café da manhã" },
+      { "en": "slice", "pt": "fatia" },
+      { "en": "glass", "pt": "copo" },
+      { "en": "cup", "pt": "xícara" }
+    ],
+    "exemplos": [
+      "She likes bananas, but she doesn't like apples.",
+      "My kids want to have pancakes.",
+      "We had eggs and toast for breakfast.",
+      "He drank a cup of tea."
+    ],
+    "alertas": [
+      "Gostar de + coisa: like direto, sem of (nunca \"like of\").",
+      "Gostar de / querer + verbo: não esqueça o to (like to read, want to cook).",
+      "No café da manhã = for breakfast (nunca \"in the breakfast\").",
+      "O sabor vem antes do nome: lemon cake, apple juice (nunca \"juice of apple\").",
+      "Eat e drink não ganham -ed: o passado é ate e drank.",
+      "Copo é glass; xícara é cup.",
+      "Para comida em geral, use o plural: apples, eggs, cookies."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "verbos",
+      "objetivo": "Want e like: o infinitivo, o presente com I e you, o passado (wanted, liked, ate, drank) e want / like com comida.",
+      "itens": [
+        {
+          "id": "vb1.querer",
+          "tipo": "construcao",
+          "calibracao": true,
+          "solicitacao": "querer",
+          "alvo": "To want.",
+          "habilidades": ["infinitivo_to"],
+          "ajudas": [
+            "É o verbo de 'eu quero'. Como se diz 'querer' em inglês?",
+            "No infinitivo, o verbo em inglês ganha uma palavrinha na frente. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Wanting.",
+              "habilidade": "infinitivo_to",
+              "pista": "Assim é 'querendo'. Como fica o verbo na forma básica, com a palavrinha do infinitivo?"
+            }
+          ]
+        },
+        {
+          "id": "vb1.eu",
+          "tipo": "substituicao",
+          "pista": "Eu quero",
+          "idiomaDaPista": "pt",
+          "alvo": "I want.",
+          "variantes": ["I want it."],
+          "habilidades": ["sujeito_verbo"],
+          "ajudas": [
+            "Agora com o sujeito 'eu'. O verbo ainda leva a palavrinha do infinitivo?",
+            "Diga o sujeito 'eu' e depois o verbo, sem to."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I to want.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com o sujeito na frente, o verbo ainda leva to?"
+            }
+          ]
+        },
+        {
+          "id": "vb1.voce",
+          "tipo": "substituicao",
+          "pista": "Você quer",
+          "idiomaDaPista": "pt",
+          "alvo": "You want.",
+          "variantes": ["You want it."],
+          "habilidades": ["sujeito_verbo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'eu' por 'você'. O verbo muda?",
+            "Como se diz 'você' em inglês? O verbo continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You wants.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com you, o verbo ganha -s?"
+            }
+          ]
+        },
+        {
+          "id": "vb2.gostar",
+          "tipo": "construcao",
+          "solicitacao": "gostar",
+          "alvo": "To like.",
+          "habilidades": ["infinitivo_to"],
+          "ajudas": [
+            "É o verbo de 'eu gosto'. Como se diz 'gostar' em inglês?",
+            "No infinitivo, o verbo ganha uma palavrinha na frente. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Liking.",
+              "habilidade": "infinitivo_to",
+              "pista": "Assim é 'gostando'. Como fica o verbo na forma básica, com a palavrinha do infinitivo?"
+            }
+          ]
+        },
+        {
+          "id": "vb2.eu",
+          "tipo": "substituicao",
+          "pista": "Eu gosto",
+          "idiomaDaPista": "pt",
+          "alvo": "I like.",
+          "variantes": ["I like it."],
+          "habilidades": ["sujeito_verbo"],
+          "ajudas": [
+            "Agora com o sujeito 'eu'. O verbo ainda leva a palavrinha do infinitivo?",
+            "Diga o sujeito 'eu' e depois o verbo 'gostar', sem to."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I to like.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com o sujeito na frente, o verbo ainda leva to?"
+            }
+          ]
+        },
+        {
+          "id": "vb2.voce",
+          "tipo": "substituicao",
+          "pista": "Você gosta",
+          "idiomaDaPista": "pt",
+          "alvo": "You like.",
+          "variantes": ["You like it."],
+          "habilidades": ["sujeito_verbo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'eu' por 'você'. O verbo muda?",
+            "Como se diz 'você' em inglês? O verbo continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You likes.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com you, o verbo ganha -s?"
+            }
+          ]
+        },
+        {
+          "id": "vb3.base",
+          "tipo": "construcao",
+          "solicitacao": "eu queria (ou: eu quis)",
+          "alvo": "I wanted.",
+          "habilidades": ["passado_ed"],
+          "ajudas": [
+            "'Queria' e 'quis' são passado. Como fica o verbo 'querer' no passado?",
+            "Esse verbo é regular: ganha uma terminação no fim. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want.",
+              "habilidade": "passado_ed",
+              "pista": "Assim é 'eu quero'. Como se diz no passado, 'eu queria'?"
+            }
+          ]
+        },
+        {
+          "id": "vb3.voce",
+          "tipo": "substituicao",
+          "pista": "Você queria ou quis",
+          "idiomaDaPista": "pt",
+          "alvo": "You wanted.",
+          "habilidades": ["sujeito_verbo", "passado_ed"],
+          "ajudas": [
+            "Troque 'eu' por 'você'. O verbo continua no passado.",
+            "Como se diz 'você' em inglês? O verbo fica como na frase anterior."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You want.",
+              "habilidade": "passado_ed",
+              "pista": "Quase! A frase está no passado: 'você queria'. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb4.base",
+          "tipo": "construcao",
+          "solicitacao": "eu gostei (ou: eu gostava)",
+          "alvo": "I liked.",
+          "habilidades": ["passado_ed"],
+          "ajudas": [
+            "'Gostei' e 'gostava' são passado. Como fica o verbo 'gostar' no passado?",
+            "Esse verbo é regular: ganha uma terminação no fim. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like.",
+              "habilidade": "passado_ed",
+              "pista": "Assim é 'eu gosto'. Como se diz no passado, 'eu gostei'?"
+            }
+          ]
+        },
+        {
+          "id": "vb4.voce",
+          "tipo": "substituicao",
+          "pista": "Você gostou",
+          "idiomaDaPista": "pt",
+          "alvo": "You liked.",
+          "habilidades": ["sujeito_verbo", "passado_ed"],
+          "ajudas": [
+            "Troque 'eu' por 'você'. O verbo continua no passado.",
+            "Como se diz 'você' em inglês? O verbo fica como na frase anterior."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You like.",
+              "habilidade": "passado_ed",
+              "pista": "Quase! A frase está no passado: 'você gostou'. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb5.base",
+          "tipo": "construcao",
+          "solicitacao": "eu quero café",
+          "alvo": "I want coffee.",
+          "variantes": ["I want a coffee.", "I want some coffee."],
+          "habilidades": ["want_like", "vocabulario_comida"],
+          "ajudas": [
+            "Em inglês, querer vem direto antes da coisa. Como se diz 'eu quero'?",
+            "Como se diz 'café', a bebida, em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want of coffee.",
+              "habilidade": "want_like",
+              "pista": "Depois de want, precisa de alguma palavrinha? Diga direto."
+            },
+            {
+              "exemplo": "I wanted coffee.",
+              "habilidade": "want_like",
+              "pista": "Quase! 'Eu quero' é presente. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb5.cha",
+          "tipo": "substituicao",
+          "pista": "chá",
+          "idiomaDaPista": "pt",
+          "alvo": "I want tea.",
+          "variantes": ["I want a tea.", "I want some tea."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'café' por 'chá'; o resto continua.",
+            "Como se diz 'chá' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like tea.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! O verbo da frase era 'quero'. Continua?"
+            }
+          ]
+        },
+        {
+          "id": "vb5.suco",
+          "tipo": "substituicao",
+          "pista": "suco",
+          "idiomaDaPista": "pt",
+          "alvo": "I want juice.",
+          "variantes": ["I want a juice.", "I want some juice."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'chá' por 'suco'; o resto continua.",
+            "Como se diz 'suco' em inglês?"
+          ]
+        },
+        {
+          "id": "vb6.base",
+          "tipo": "construcao",
+          "solicitacao": "eu quero pão com manteiga",
+          "alvo": "I want bread with butter.",
+          "variantes": ["I want bread and butter.", "I want some bread with butter.", "I want some bread and butter."],
+          "habilidades": ["vocabulario_comida", "want_like"],
+          "ajudas": [
+            "Como se diz 'pão' e 'manteiga' em inglês?",
+            "Como se diz 'com' em inglês? A frase começa com 'eu quero'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a bread with butter.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Pão, em inglês, não leva 'um' na frente. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb6.queijo",
+          "tipo": "substituicao",
+          "pista": "queijo",
+          "idiomaDaPista": "pt",
+          "alvo": "I want bread with cheese.",
+          "variantes": ["I want bread and cheese.", "I want some bread with cheese."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'manteiga' por 'queijo'; o pão continua.",
+            "Como se diz 'queijo' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want cheese.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o pão da frase anterior, continua?"
+            }
+          ]
+        },
+        {
+          "id": "vb6.presunto",
+          "tipo": "substituicao",
+          "pista": "presunto",
+          "idiomaDaPista": "pt",
+          "alvo": "I want bread with ham.",
+          "variantes": ["I want bread and ham.", "I want some bread with ham."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'queijo' por 'presunto'; o resto continua.",
+            "Como se diz 'presunto' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want bread with jam.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Jam é geleia. Como se diz 'presunto'?"
+            }
+          ]
+        },
+        {
+          "id": "vb7.base",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de presunto",
+          "alvo": "I like ham.",
+          "habilidades": ["want_like", "vocabulario_comida"],
+          "ajudas": [
+            "Em inglês, gostar não leva 'de'. Como fica 'eu gosto de…'?",
+            "Como se diz 'presunto' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like of ham.",
+              "habilidade": "want_like",
+              "pista": "Em inglês, gostar não leva 'de'. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb7.biscoitos",
+          "tipo": "substituicao",
+          "pista": "biscoitos doces",
+          "idiomaDaPista": "pt",
+          "alvo": "I like cookies.",
+          "variantes": ["I like sweet cookies.", "I like sweet biscuits.", "I like biscuits."],
+          "habilidades": ["vocabulario_comida", "plural"],
+          "ajudas": [
+            "Troque 'presunto' por 'biscoitos doces'; o resto continua.",
+            "Biscoito doce, em inglês, é uma palavra só. Qual é? Lembre do plural."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like cookies sweets.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Em inglês, biscoito doce é uma palavra só, sem 'doces' depois. Qual é?"
+            },
+            {
+              "exemplo": "I like cookie.",
+              "habilidade": "plural",
+              "pista": "Para falar dos biscoitos em geral, usamos o plural. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb8.base",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de comer bolo de chocolate",
+          "alvo": "I like to eat chocolate cake.",
+          "variantes": ["I like eating chocolate cake."],
+          "habilidades": ["like_to", "sabor_antes"],
+          "apoio": "gostar_de_verbo",
+          "ajudas": [
+            "Gostar + outro verbo: falta uma palavrinha entre os dois verbos. Qual é?",
+            "Em inglês, o sabor vem antes do bolo. Como se diz 'bolo de chocolate'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like eat chocolate cake.",
+              "habilidade": "like_to",
+              "pista": "Entre like e o outro verbo falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I like of eat chocolate cake.",
+              "habilidade": "like_to",
+              "pista": "Em inglês, gostar não leva 'de'. O que vem entre like e o outro verbo?"
+            },
+            {
+              "exemplo": "I like to eat cake of chocolate.",
+              "habilidade": "sabor_antes",
+              "pista": "Em inglês, o sabor vem antes do bolo, sem of. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "vb8.laranja",
+          "tipo": "substituicao",
+          "pista": "bolo de laranja",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to eat orange cake.",
+          "variantes": ["I like eating orange cake."],
+          "habilidades": ["sabor_antes", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'chocolate' por 'laranja'; o sabor continua antes do bolo.",
+            "Como se diz 'laranja' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like to eat cake orange.",
+              "habilidade": "sabor_antes",
+              "pista": "O sabor vem antes ou depois do bolo em inglês?"
+            }
+          ]
+        },
+        {
+          "id": "vb9.base",
+          "tipo": "construcao",
+          "solicitacao": "eu como",
+          "alvo": "I eat.",
+          "habilidades": ["sujeito_verbo"],
+          "ajudas": [
+            "Como se diz 'comer' em inglês? Diga com o sujeito 'eu'.",
+            "Comece pelo sujeito 'eu'. Depois vem o verbo, sem to."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Eat.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Falta o sujeito. Quem come?"
+            },
+            {
+              "exemplo": "I to eat.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com o sujeito na frente, o verbo ainda leva to?"
+            }
+          ]
+        },
+        {
+          "id": "vb9.bebo",
+          "tipo": "substituicao",
+          "pista": "Eu bebo",
+          "idiomaDaPista": "pt",
+          "alvo": "I drink.",
+          "habilidades": ["sujeito_verbo"],
+          "ajudas": [
+            "Troque 'como' por 'bebo'. O sujeito continua.",
+            "Como se diz 'beber' em inglês?"
+          ]
+        },
+        {
+          "id": "vb9.gosto",
+          "tipo": "substituicao",
+          "pista": "Eu gosto",
+          "idiomaDaPista": "pt",
+          "alvo": "I like.",
+          "variantes": ["I like it."],
+          "habilidades": ["sujeito_verbo"],
+          "ajudas": [
+            "Troque 'bebo' por 'gosto'. O sujeito continua.",
+            "Como se diz 'gostar' em inglês?"
+          ]
+        },
+        {
+          "id": "vb9.quero",
+          "tipo": "substituicao",
+          "pista": "Eu quero",
+          "idiomaDaPista": "pt",
+          "alvo": "I want.",
+          "variantes": ["I want it."],
+          "habilidades": ["sujeito_verbo"],
+          "ajudas": [
+            "Troque 'gosto' por 'quero'. O sujeito continua.",
+            "Como se diz 'querer' em inglês?"
+          ]
+        },
+        {
+          "id": "vb10.base",
+          "tipo": "construcao",
+          "solicitacao": "eu comi",
+          "alvo": "I ate.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "'Comi' é passado. O passado de 'comer' não termina em -ed. Qual é?",
+            "É uma palavra curta, bem diferente de eat. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eated.",
+              "habilidade": "passado_irregular",
+              "pista": "Esse verbo não ganha -ed no passado. Qual é a forma dele?"
+            },
+            {
+              "exemplo": "I eat.",
+              "habilidade": "passado_irregular",
+              "pista": "Assim é 'eu como'. Como se diz 'eu comi', no passado?"
+            }
+          ]
+        },
+        {
+          "id": "vb10.bebi",
+          "tipo": "substituicao",
+          "pista": "Eu bebi",
+          "idiomaDaPista": "pt",
+          "alvo": "I drank.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "'Bebi' é passado. O passado de 'beber' também não termina em -ed.",
+            "Pense em drink: no passado, só uma vogal muda. Qual é a forma?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drinked.",
+              "habilidade": "passado_irregular",
+              "pista": "Esse verbo não ganha -ed no passado. Qual é a forma dele?"
+            },
+            {
+              "exemplo": "I drunk.",
+              "habilidade": "passado_irregular",
+              "pista": "Quase! Essa forma é usada com have. Para 'eu bebi', qual é?"
+            }
+          ]
+        },
+        {
+          "id": "vb10.gostei",
+          "tipo": "substituicao",
+          "pista": "Eu gostei",
+          "idiomaDaPista": "pt",
+          "alvo": "I liked.",
+          "habilidades": ["passado_ed"],
+          "ajudas": [
+            "'Gostei' é passado, e esse verbo é regular.",
+            "Qual terminação o passado regular ganha?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like.",
+              "habilidade": "passado_ed",
+              "pista": "Assim é 'eu gosto'. Como se diz 'eu gostei'?"
+            }
+          ]
+        },
+        {
+          "id": "vb10.queria",
+          "tipo": "substituicao",
+          "pista": "Eu queria",
+          "idiomaDaPista": "pt",
+          "alvo": "I wanted.",
+          "habilidades": ["passado_ed"],
+          "ajudas": [
+            "'Queria' é passado, e esse verbo é regular.",
+            "Qual terminação o passado regular ganha?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want.",
+              "habilidade": "passado_ed",
+              "pista": "Assim é 'eu quero'. Como se diz 'eu queria'?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vocabulario",
+      "objetivo": "Frutas no plural com like, like to + verbo, comer e beber com os nomes de comida e want to + verbo, também no passado.",
+      "itens": [
+        {
+          "id": "voc1.base",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de maçãs",
+          "alvo": "I like apples.",
+          "habilidades": ["want_like", "plural"],
+          "ajudas": [
+            "Em inglês, gostar não leva 'de'. Como fica 'eu gosto de…'?",
+            "Como se diz 'maçãs' em inglês? Lembre do plural."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like of apples.",
+              "habilidade": "want_like",
+              "pista": "Em inglês, gostar não leva 'de'. Como fica?"
+            },
+            {
+              "exemplo": "I like apple.",
+              "habilidade": "plural",
+              "pista": "Para falar das maçãs em geral, usamos o plural. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc1.laranja",
+          "tipo": "substituicao",
+          "pista": "laranja",
+          "idiomaDaPista": "pt",
+          "alvo": "I like oranges.",
+          "habilidades": ["plural", "vocabulario_comida"],
+          "ajudas": [
+            "Troque 'maçãs' por 'laranja'. Para fruta em geral, usamos o plural.",
+            "Como se diz 'laranja' em inglês? Como fica no plural?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like orange.",
+              "habilidade": "plural",
+              "pista": "Para falar das laranjas em geral, usamos o plural. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc1.uva",
+          "tipo": "substituicao",
+          "pista": "uva",
+          "idiomaDaPista": "pt",
+          "alvo": "I like grapes.",
+          "habilidades": ["plural", "vocabulario_comida"],
+          "ajudas": [
+            "Troque 'laranja' por 'uva', também no plural.",
+            "Como se diz 'uva' em inglês? Como fica no plural?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like grape.",
+              "habilidade": "plural",
+              "pista": "Para falar das uvas em geral, usamos o plural. Como fica?"
+            },
+            {
+              "exemplo": "I like grapefruit.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Grapefruit é toranja. Como se diz 'uva'?"
+            }
+          ]
+        },
+        {
+          "id": "voc1.banana",
+          "tipo": "substituicao",
+          "pista": "banana",
+          "idiomaDaPista": "pt",
+          "alvo": "I like bananas.",
+          "habilidades": ["plural", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'uva' por 'banana', no plural.",
+            "Banana, em inglês, é quase igual. Como fica no plural?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like banana.",
+              "habilidade": "plural",
+              "pista": "Para falar das bananas em geral, usamos o plural. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc2.base",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de comer",
+          "alvo": "I like to eat.",
+          "variantes": ["I like eating."],
+          "habilidades": ["like_to"],
+          "ajudas": [
+            "Gostar + outro verbo: falta uma palavrinha entre os dois verbos. Qual é?",
+            "Como se diz 'comer' em inglês? Gostar não leva 'de'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like eat.",
+              "habilidade": "like_to",
+              "pista": "Entre like e o outro verbo falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I like of eat.",
+              "habilidade": "like_to",
+              "pista": "Em inglês, gostar não leva 'de'. O que vem entre like e o outro verbo?"
+            }
+          ]
+        },
+        {
+          "id": "voc2.beber",
+          "tipo": "substituicao",
+          "pista": "beber",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to drink.",
+          "variantes": ["I like drinking."],
+          "habilidades": ["like_to", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'comer' por 'beber'; o resto continua.",
+            "Como se diz 'beber' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like drink.",
+              "habilidade": "like_to",
+              "pista": "Entre like e o outro verbo continua faltando uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc2.suco",
+          "tipo": "substituicao",
+          "pista": "suco",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to drink juice.",
+          "variantes": ["I like drinking juice."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Acrescente 'suco' no fim; o resto continua.",
+            "Como se diz 'suco' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like juice.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'beber' da frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "voc3.base",
+          "tipo": "construcao",
+          "solicitacao": "eu como biscoito com manteiga",
+          "alvo": "I eat crackers with butter.",
+          "variantes": ["I eat cookies with butter.", "I eat biscuits with butter.", "I eat crackers and butter."],
+          "habilidades": ["vocabulario_comida", "plural"],
+          "ajudas": [
+            "Como se diz 'biscoito', o salgado, e 'manteiga' em inglês?",
+            "Comece por 'eu como'. Biscoito, em geral, vai para o plural."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat cracker with butter.",
+              "habilidade": "plural",
+              "pista": "Biscoito, em geral, vai para o plural. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc3.geleia",
+          "tipo": "substituicao",
+          "pista": "geleia",
+          "idiomaDaPista": "pt",
+          "alvo": "I eat crackers with jam.",
+          "variantes": ["I eat crackers with jelly.", "I eat cookies with jam.", "I eat biscuits with jam."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'manteiga' por 'geleia'; o resto continua.",
+            "Como se diz 'geleia' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat crackers with ham.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Ham é presunto. Como se diz 'geleia'?"
+            }
+          ]
+        },
+        {
+          "id": "voc3.mel",
+          "tipo": "substituicao",
+          "pista": "mel",
+          "idiomaDaPista": "pt",
+          "alvo": "I eat crackers with honey.",
+          "variantes": ["I eat cookies with honey.", "I eat biscuits with honey."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'geleia' por 'mel'; o resto continua.",
+            "Como se diz 'mel' em inglês?"
+          ]
+        },
+        {
+          "id": "voc4.base",
+          "tipo": "construcao",
+          "solicitacao": "você come panquecas",
+          "alvo": "You eat pancakes.",
+          "habilidades": ["sujeito_verbo", "vocabulario_comida"],
+          "ajudas": [
+            "Comece por 'você' em inglês. O verbo muda?",
+            "Como se diz 'panquecas' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You eats pancakes.",
+              "habilidade": "sujeito_verbo",
+              "pista": "Com you, o verbo ganha -s?"
+            }
+          ]
+        },
+        {
+          "id": "voc4.biscoitos",
+          "tipo": "substituicao",
+          "pista": "biscoitos doces",
+          "idiomaDaPista": "pt",
+          "alvo": "You eat cookies.",
+          "variantes": ["You eat sweet cookies.", "You eat sweet biscuits.", "You eat biscuits."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'panquecas' por 'biscoitos doces'; o resto continua.",
+            "Biscoito doce é uma palavra só em inglês. Qual é? Lembre do plural."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat cookies.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Quem come: eu ou você?"
+            }
+          ]
+        },
+        {
+          "id": "voc4.bolo",
+          "tipo": "substituicao",
+          "pista": "bolo",
+          "idiomaDaPista": "pt",
+          "alvo": "You eat cake.",
+          "variantes": ["You eat cakes."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'biscoitos doces' por 'bolo'; o resto continua.",
+            "Como se diz 'bolo' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You eat a cake.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Assim parece 'um bolo inteiro'. Para comer bolo em geral, precisa do 'a'?"
+            }
+          ]
+        },
+        {
+          "id": "voc5.base",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de beber suco",
+          "alvo": "I like to drink juice.",
+          "variantes": ["I like drinking juice."],
+          "habilidades": ["like_to", "vocabulario_comida"],
+          "ajudas": [
+            "Gostar + outro verbo: falta uma palavrinha entre os dois. Qual é?",
+            "Como se diz 'beber' e 'suco' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like drink juice.",
+              "habilidade": "like_to",
+              "pista": "Entre like e o outro verbo falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc5.laranja",
+          "tipo": "substituicao",
+          "pista": "suco de laranja",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to drink orange juice.",
+          "variantes": ["I like drinking orange juice."],
+          "habilidades": ["sabor_antes", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'suco' por 'suco de laranja'. Em inglês, o sabor vem antes.",
+            "Como se diz 'laranja' em inglês? Ela vem antes de 'suco'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like to drink juice of orange.",
+              "habilidade": "sabor_antes",
+              "pista": "Em inglês, o sabor vem antes do suco, sem of. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc5.uva",
+          "tipo": "substituicao",
+          "pista": "suco de uva",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to drink grape juice.",
+          "variantes": ["I like drinking grape juice."],
+          "habilidades": ["sabor_antes", "vocabulario_comida"],
+          "ajudas": [
+            "Troque 'laranja' por 'uva'; o sabor continua antes do suco.",
+            "Como se diz 'uva' em inglês? No suco, ela fica no singular."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like to drink grapes juice.",
+              "habilidade": "sabor_antes",
+              "pista": "Antes do suco, o sabor fica no singular. Como fica?"
+            },
+            {
+              "exemplo": "I like to drink juice of grape.",
+              "habilidade": "sabor_antes",
+              "pista": "Em inglês, o sabor vem antes do suco, sem of. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.base",
+          "tipo": "construcao",
+          "solicitacao": "eu quero comer",
+          "alvo": "I want to eat.",
+          "habilidades": ["want_to"],
+          "ajudas": [
+            "Querer + outro verbo: falta uma palavrinha entre os dois verbos. Qual é?",
+            "Como se diz 'comer' em inglês? A frase começa com 'eu quero'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want eat.",
+              "habilidade": "want_to",
+              "pista": "Entre want e o outro verbo falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.ovos",
+          "tipo": "substituicao",
+          "pista": "ovos",
+          "idiomaDaPista": "pt",
+          "alvo": "I want to eat eggs.",
+          "variantes": ["I want to eat some eggs."],
+          "habilidades": ["vocabulario_comida", "plural"],
+          "ajudas": [
+            "Acrescente 'ovos' no fim; o resto continua.",
+            "Como se diz 'ovos' em inglês? Lembre do plural."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want to eat egg.",
+              "habilidade": "plural",
+              "pista": "São ovos, mais de um. Como fica o plural?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.torta",
+          "tipo": "substituicao",
+          "pista": "torta",
+          "idiomaDaPista": "pt",
+          "alvo": "I want to eat pie.",
+          "variantes": ["I want to eat a pie.", "I want to eat some pie."],
+          "habilidades": ["vocabulario_comida", "want_to"],
+          "ajudas": [
+            "Troque 'ovos' por 'torta'; o resto continua.",
+            "Como se diz 'torta' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want eat pie.",
+              "habilidade": "want_to",
+              "pista": "Entre want e o outro verbo continua faltando uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.frutas",
+          "tipo": "substituicao",
+          "pista": "frutas",
+          "idiomaDaPista": "pt",
+          "alvo": "I want to eat fruit.",
+          "variantes": ["I want to eat fruits.", "I want to eat some fruit."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'torta' por 'frutas'; o resto continua.",
+            "Como se diz 'fruta' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want fruit.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'comer' da frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.queria",
+          "tipo": "substituicao",
+          "pista": "queria comer",
+          "idiomaDaPista": "pt",
+          "alvo": "I wanted to eat fruit.",
+          "variantes": ["I wanted to eat fruits.", "I wanted to eat some fruit."],
+          "habilidades": ["passado_ed", "want_to"],
+          "ajudas": [
+            "Troque 'quero' por 'queria': o verbo querer vai para o passado. As frutas continuam.",
+            "Querer é regular no passado. Qual terminação ele ganha? O comer continua depois do to."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want to ate fruit.",
+              "habilidade": "passado_ed",
+              "pista": "O passado vai no querer, não no comer. Como fica?"
+            },
+            {
+              "exemplo": "I wanted eat fruit.",
+              "habilidade": "want_to",
+              "pista": "Entre wanted e o outro verbo continua faltando uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "voc6.ontem",
+          "tipo": "substituicao",
+          "pista": "ontem",
+          "idiomaDaPista": "pt",
+          "alvo": "I wanted to eat fruit yesterday.",
+          "variantes": [
+            "Yesterday I wanted to eat fruit.",
+            "I wanted to eat fruits yesterday.",
+            "I wanted to eat some fruit yesterday."
+          ],
+          "habilidades": ["marcador_tempo", "preservar_cadeia"],
+          "ajudas": [
+            "Como se diz 'ontem' em inglês? Ele vai no fim da frase.",
+            "Que palavra eu te dei? Ela entra no fim; o resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want to eat fruit yesterday.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Com ontem, o querer fica no passado, como na frase anterior. Como fica?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "expressoes",
+      "objetivo": "O café da manhã: for breakfast, a slice of, a glass of, o sabor antes do suco e o passado ate e drank.",
+      "itens": [
+        {
+          "id": "exp1.base",
+          "tipo": "construcao",
+          "solicitacao": "eu bebo suco no café da manhã",
+          "alvo": "I drink juice for breakfast.",
+          "variantes": ["I drink juice at breakfast.", "I have juice for breakfast."],
+          "habilidades": ["for_breakfast", "vocabulario_comida"],
+          "ajudas": [
+            "Como se diz 'café da manhã', a refeição, em inglês? Qual palavrinha vem antes?",
+            "Para dizer 'no café da manhã', não usamos in the. Qual palavrinha usamos?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drink juice in the breakfast.",
+              "habilidade": "for_breakfast",
+              "pista": "Para 'no café da manhã', usamos in the? Qual palavrinha vem antes de breakfast?"
+            },
+            {
+              "exemplo": "I drink juice in the coffee of the morning.",
+              "habilidade": "for_breakfast",
+              "pista": "Café da manhã, a refeição, é uma palavra só em inglês. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "exp1.leite",
+          "tipo": "substituicao",
+          "pista": "leite",
+          "idiomaDaPista": "pt",
+          "alvo": "I drink milk for breakfast.",
+          "variantes": ["I drink milk at breakfast.", "I have milk for breakfast."],
+          "habilidades": ["vocabulario_comida", "for_breakfast"],
+          "ajudas": [
+            "Troque 'suco' por 'leite'; o resto continua.",
+            "Como se diz 'leite' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drink milk in the breakfast.",
+              "habilidade": "for_breakfast",
+              "pista": "Para 'no café da manhã', usamos in the? Qual palavrinha vem antes de breakfast?"
+            }
+          ]
+        },
+        {
+          "id": "exp1.cafe",
+          "tipo": "substituicao",
+          "pista": "café",
+          "idiomaDaPista": "pt",
+          "alvo": "I drink coffee for breakfast.",
+          "variantes": ["I drink coffee at breakfast.", "I have coffee for breakfast."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'leite' por 'café', a bebida; o resto continua.",
+            "Como se diz 'café', a bebida, em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drink coffee.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o 'no café da manhã', continua?"
+            }
+          ]
+        },
+        {
+          "id": "exp2.base",
+          "tipo": "construcao",
+          "solicitacao": "eu quero uma fatia de torta",
+          "alvo": "I want a slice of pie.",
+          "variantes": ["I want a piece of pie."],
+          "habilidades": ["medida_of", "vocabulario_comida"],
+          "ajudas": [
+            "Como se diz 'fatia' em inglês? Entre fatia e torta vem uma palavrinha.",
+            "Como se diz 'torta' em inglês? A frase começa com 'eu quero uma…'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a slice pie.",
+              "habilidade": "medida_of",
+              "pista": "Entre slice e pie falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "exp2.queijo",
+          "tipo": "substituicao",
+          "pista": "queijo",
+          "idiomaDaPista": "pt",
+          "alvo": "I want a slice of cheese.",
+          "variantes": ["I want a piece of cheese."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'torta' por 'queijo'; a fatia continua.",
+            "Como se diz 'queijo' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want cheese.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E a fatia da frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "exp2.presunto",
+          "tipo": "substituicao",
+          "pista": "presunto",
+          "idiomaDaPista": "pt",
+          "alvo": "I want a slice of ham.",
+          "variantes": ["I want a piece of ham."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'queijo' por 'presunto'; o resto continua.",
+            "Como se diz 'presunto' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a slice of jam.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Jam é geleia. Como se diz 'presunto'?"
+            }
+          ]
+        },
+        {
+          "id": "exp3.base",
+          "tipo": "construcao",
+          "solicitacao": "eu comi pão com queijo no café da manhã",
+          "alvo": "I ate bread with cheese for breakfast.",
+          "variantes": [
+            "I ate bread and cheese for breakfast.",
+            "I had bread with cheese for breakfast.",
+            "I had bread and cheese for breakfast.",
+            "I ate bread with cheese at breakfast."
+          ],
+          "habilidades": ["passado_irregular", "for_breakfast"],
+          "ajudas": [
+            "'Comi' é passado e não termina em -ed. Como se diz 'eu comi'?",
+            "E 'no café da manhã'? Qual palavrinha vem antes de breakfast?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat bread with cheese for breakfast.",
+              "habilidade": "passado_irregular",
+              "pista": "Assim é 'eu como'. Como se diz 'eu comi', no passado?"
+            },
+            {
+              "exemplo": "I eated bread with cheese for breakfast.",
+              "habilidade": "passado_irregular",
+              "pista": "Esse verbo não ganha -ed no passado. Qual é a forma dele?"
+            },
+            {
+              "exemplo": "I ate bread with cheese in the breakfast.",
+              "habilidade": "for_breakfast",
+              "pista": "Para 'no café da manhã', usamos in the? Qual palavrinha vem antes?"
+            }
+          ]
+        },
+        {
+          "id": "exp3.ovos",
+          "tipo": "substituicao",
+          "pista": "ovos",
+          "idiomaDaPista": "pt",
+          "alvo": "I ate eggs for breakfast.",
+          "variantes": ["I had eggs for breakfast.", "I ate eggs at breakfast.", "I ate bread with eggs for breakfast."],
+          "habilidades": ["vocabulario_comida", "passado_irregular"],
+          "ajudas": [
+            "Troque 'pão com queijo' por 'ovos'; o resto continua no passado.",
+            "Como se diz 'ovos' em inglês? Lembre do plural."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat eggs for breakfast.",
+              "habilidade": "passado_irregular",
+              "pista": "Quase! A frase está no passado: 'eu comi'. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "exp3.frutas",
+          "tipo": "substituicao",
+          "pista": "frutas",
+          "idiomaDaPista": "pt",
+          "alvo": "I ate fruit for breakfast.",
+          "variantes": ["I ate fruits for breakfast.", "I had fruit for breakfast.", "I ate fruit at breakfast."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'ovos' por 'frutas'; o resto continua no passado.",
+            "Como se diz 'fruta' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat fruit for breakfast.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! A frase continua no passado. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "exp4.base",
+          "tipo": "construcao",
+          "solicitacao": "eu quero um copo de suco",
+          "alvo": "I want a glass of juice.",
+          "habilidades": ["medida_of", "vocabulario_comida"],
+          "ajudas": [
+            "Como se diz 'copo' em inglês? Não é cup: cup é xícara.",
+            "Entre copo e suco vem uma palavrinha. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a glass juice.",
+              "habilidade": "medida_of",
+              "pista": "Entre glass e juice falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I want a cup of juice.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Cup é xícara. Como se diz 'copo'?"
+            }
+          ]
+        },
+        {
+          "id": "exp4.agua",
+          "tipo": "substituicao",
+          "pista": "água",
+          "idiomaDaPista": "pt",
+          "alvo": "I want a glass of water.",
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'suco' por 'água'; o copo continua.",
+            "Como se diz 'água' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want water.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! E o copo da frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "exp5.base",
+          "tipo": "construcao",
+          "solicitacao": "eu quero um copo de suco",
+          "alvo": "I want a glass of juice.",
+          "habilidades": ["medida_of", "vocabulario_comida"],
+          "ajudas": [
+            "A mesma frase de antes, para começar outra troca. Como se diz 'copo'?",
+            "Entre copo e suco vem uma palavrinha. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a glass juice.",
+              "habilidade": "medida_of",
+              "pista": "Entre glass e juice falta uma palavrinha. Qual é?"
+            },
+            {
+              "exemplo": "I want a cup of juice.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Cup é xícara. Como se diz 'copo'?"
+            }
+          ]
+        },
+        {
+          "id": "exp5.uva",
+          "tipo": "substituicao",
+          "pista": "suco de uva",
+          "idiomaDaPista": "pt",
+          "alvo": "I want a glass of grape juice.",
+          "habilidades": ["sabor_antes", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'suco' por 'suco de uva'. O sabor vem antes do suco.",
+            "Como se diz 'uva' em inglês? No suco, ela fica no singular."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a glass of juice of grape.",
+              "habilidade": "sabor_antes",
+              "pista": "Em inglês, o sabor vem antes do suco, sem of. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "exp5.laranja",
+          "tipo": "substituicao",
+          "pista": "suco de laranja",
+          "idiomaDaPista": "pt",
+          "alvo": "I want a glass of orange juice.",
+          "habilidades": ["sabor_antes", "preservar_cadeia"],
+          "ajudas": [
+            "Troque 'uva' por 'laranja'; o resto continua.",
+            "Como se diz 'laranja' em inglês? Ela vem antes de 'suco'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want a glass of juice orange.",
+              "habilidade": "sabor_antes",
+              "pista": "O sabor vem antes ou depois do suco?"
+            }
+          ]
+        },
+        {
+          "id": "exp6.base",
+          "tipo": "construcao",
+          "solicitacao": "eu bebi um copo de café no café da manhã",
+          "alvo": "I drank a cup of coffee for breakfast.",
+          "variantes": [
+            "I had a cup of coffee for breakfast.",
+            "I drank a glass of coffee for breakfast.",
+            "I drank a cup of coffee at breakfast.",
+            "I had a cup of coffee at breakfast."
+          ],
+          "habilidades": ["passado_irregular", "for_breakfast", "medida_of"],
+          "ajudas": [
+            "'Bebi' é passado e não termina em -ed. Como se diz 'eu bebi'?",
+            "Café costuma vir numa xícara. E 'no café da manhã': qual palavrinha vem antes de breakfast?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drinked a cup of coffee for breakfast.",
+              "habilidade": "passado_irregular",
+              "pista": "Esse verbo não ganha -ed no passado. Qual é a forma dele?"
+            },
+            {
+              "exemplo": "I drink a cup of coffee for breakfast.",
+              "habilidade": "passado_irregular",
+              "pista": "Assim é 'eu bebo'. Como se diz 'eu bebi'?"
+            },
+            {
+              "exemplo": "I drank a cup of coffee in the breakfast.",
+              "habilidade": "for_breakfast",
+              "pista": "Para 'no café da manhã', usamos in the? Qual palavrinha vem antes?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "gostar_de_verbo": {
+      "objetivo": "Reconstruir like to + verbo antes de voltar ao bolo de chocolate.",
+      "degraus": [
+        {
+          "id": "gostar.modelo",
+          "tipo": "repeticao",
+          "modelo": "I like to cook.",
+          "alvo": "I like to cook.",
+          "habilidades": ["like_to"]
+        },
+        {
+          "id": "gostar.ler",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de ler",
+          "alvo": "I like to read.",
+          "variantes": ["I like reading."],
+          "habilidades": ["like_to"],
+          "ajudas": [
+            "Use o mesmo começo da frase que você repetiu. Como se diz 'ler'?",
+            "Entre like e o outro verbo vem uma palavrinha. Qual é?"
+          ]
+        },
+        {
+          "id": "gostar.bolo",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de comer bolo",
+          "alvo": "I like to eat cake.",
+          "variantes": ["I like eating cake."],
+          "habilidades": ["like_to", "vocabulario_comida"],
+          "ajudas": [
+            "Como se diz 'comer' e 'bolo' em inglês?",
+            "Entre like e o outro verbo vem uma palavrinha. Qual é?"
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.cafe",
+      "tipo": "conversa",
+      "pergunta": "What do you usually have for breakfast?",
+      "criterio": "Resposta pertinente sobre o café da manhã, com I eat / I drink / I have … (for breakfast), qualquer comida verdadeira.",
+      "exemplos": ["I usually have coffee and bread with butter.", "I eat fruit and I drink milk."],
+      "acompanhamentos": ["Do you like juice?", "Do you eat eggs?"],
+      "habilidades": ["for_breakfast"]
+    },
+    {
+      "id": "conversa.hoje",
+      "tipo": "conversa",
+      "pergunta": "What did you eat for breakfast today?",
+      "criterio": "Resposta pertinente no passado: I ate / I had / I drank … ou I didn't eat breakfast (ate e drank, nunca eated ou drinked).",
+      "exemplos": ["I ate bread with cheese and I drank coffee.", "I didn't eat breakfast today."],
+      "acompanhamentos": ["Did you like it?", "What do you want to eat now?"],
+      "habilidades": ["passado_irregular"]
+    },
+    {
+      "id": "conversa.gostar",
+      "tipo": "conversa",
+      "pergunta": "What do you like to eat?",
+      "criterio": "Resposta pertinente com I like … ou I like to eat …, com a comida no plural quando é em geral (I like apples).",
+      "exemplos": ["I like to eat pizza.", "I like fruit. I love bananas."],
+      "acompanhamentos": ["Do you like chocolate cake?", "What do you like to drink?"],
+      "habilidades": ["like_to"]
+    }
+  ],
+  "recuperacao": {
+    "infinitivo_to": {
+      "id": "rec.infinitivo_to",
+      "tipo": "construcao",
+      "solicitacao": "comer",
+      "alvo": "To eat.",
+      "habilidades": ["infinitivo_to"],
+      "ajudas": [
+        "No infinitivo, o verbo ganha uma palavrinha na frente. Qual é?",
+        "Como se diz 'comer' em inglês?"
+      ]
+    },
+    "sujeito_verbo": {
+      "id": "rec.sujeito_verbo",
+      "tipo": "construcao",
+      "solicitacao": "você bebe chá",
+      "alvo": "You drink tea.",
+      "habilidades": ["sujeito_verbo"],
+      "ajudas": [
+        "Comece pelo sujeito 'você'. O verbo ganha -s?",
+        "Como se diz 'beber' e 'chá' em inglês?"
+      ]
+    },
+    "passado_ed": {
+      "id": "rec.passado_ed",
+      "tipo": "construcao",
+      "solicitacao": "ela gostou do bolo",
+      "alvo": "She liked the cake.",
+      "habilidades": ["passado_ed"],
+      "ajudas": [
+        "'Gostou' é passado. Qual terminação o verbo regular ganha?",
+        "Em inglês, gostar não leva 'de'. Como se diz 'o bolo'?"
+      ]
+    },
+    "passado_irregular": {
+      "id": "rec.passado_irregular",
+      "tipo": "construcao",
+      "solicitacao": "nós bebemos leite ontem",
+      "alvo": "We drank milk yesterday.",
+      "variantes": ["Yesterday we drank milk.", "We had milk yesterday."],
+      "habilidades": ["passado_irregular", "marcador_tempo"],
+      "ajudas": [
+        "Com 'ontem', 'bebemos' é passado. O passado de beber não termina em -ed.",
+        "Como se diz 'leite' e 'ontem' em inglês?"
+      ]
+    },
+    "want_like": {
+      "id": "rec.want_like",
+      "tipo": "construcao",
+      "solicitacao": "eu gosto de mel",
+      "alvo": "I like honey.",
+      "habilidades": ["want_like"],
+      "ajudas": [
+        "Em inglês, gostar não leva 'de'. Como fica?",
+        "Como se diz 'mel' em inglês?"
+      ]
+    },
+    "like_to": {
+      "id": "rec.like_to",
+      "tipo": "construcao",
+      "solicitacao": "eu gosto de beber chá",
+      "alvo": "I like to drink tea.",
+      "variantes": ["I like drinking tea."],
+      "habilidades": ["like_to"],
+      "ajudas": [
+        "Gostar + outro verbo: falta uma palavrinha entre os dois. Qual é?",
+        "Como se diz 'beber' e 'chá' em inglês?"
+      ]
+    },
+    "want_to": {
+      "id": "rec.want_to",
+      "tipo": "construcao",
+      "solicitacao": "eu quero beber água",
+      "alvo": "I want to drink water.",
+      "variantes": ["I want to drink some water."],
+      "habilidades": ["want_to"],
+      "ajudas": [
+        "Querer + outro verbo: falta uma palavrinha entre os dois. Qual é?",
+        "Como se diz 'beber' e 'água' em inglês?"
+      ]
+    },
+    "vocabulario_comida": {
+      "id": "rec.vocabulario_comida",
+      "tipo": "construcao",
+      "solicitacao": "eu quero pão com mel",
+      "alvo": "I want bread with honey.",
+      "variantes": ["I want bread and honey.", "I want some bread with honey."],
+      "habilidades": ["vocabulario_comida"],
+      "ajudas": [
+        "Como se diz 'pão' em inglês? Ele não leva 'um' na frente.",
+        "Como se diz 'mel' em inglês?"
+      ]
+    },
+    "plural": {
+      "id": "rec.plural",
+      "tipo": "construcao",
+      "solicitacao": "eu gosto de ovos",
+      "alvo": "I like eggs.",
+      "habilidades": ["plural", "want_like"],
+      "ajudas": [
+        "Para comida em geral, usamos o plural. Como se diz 'ovos'?",
+        "Em inglês, gostar não leva 'de'. Como fica?"
+      ]
+    },
+    "sabor_antes": {
+      "id": "rec.sabor_antes",
+      "tipo": "construcao",
+      "solicitacao": "eu quero um bolo de banana",
+      "alvo": "I want a banana cake.",
+      "variantes": ["I want banana cake.", "I want some banana cake."],
+      "habilidades": ["sabor_antes"],
+      "ajudas": [
+        "Em inglês, o sabor vem antes do bolo. Qual vem primeiro?",
+        "Como se diz 'bolo' em inglês? E 'banana' é quase igual."
+      ]
+    },
+    "for_breakfast": {
+      "id": "rec.for_breakfast",
+      "tipo": "construcao",
+      "solicitacao": "eu como frutas no café da manhã",
+      "alvo": "I eat fruit for breakfast.",
+      "variantes": ["I eat fruits for breakfast.", "I have fruit for breakfast.", "I eat fruit at breakfast."],
+      "habilidades": ["for_breakfast"],
+      "ajudas": [
+        "Para 'no café da manhã', qual palavrinha vem antes de breakfast?",
+        "Como se diz 'fruta' em inglês?"
+      ]
+    },
+    "medida_of": {
+      "id": "rec.medida_of",
+      "tipo": "construcao",
+      "solicitacao": "eu quero uma fatia de bolo",
+      "alvo": "I want a slice of cake.",
+      "variantes": ["I want a piece of cake."],
+      "habilidades": ["medida_of"],
+      "ajudas": [
+        "Como se diz 'fatia' em inglês? Entre fatia e bolo vem uma palavrinha.",
+        "Como se diz 'bolo' em inglês?"
+      ]
+    },
+    "marcador_tempo": {
+      "id": "rec.marcador_tempo",
+      "tipo": "construcao",
+      "solicitacao": "eu comi bolo ontem",
+      "alvo": "I ate cake yesterday.",
+      "variantes": ["Yesterday I ate cake.", "I had cake yesterday."],
+      "habilidades": ["marcador_tempo", "passado_irregular"],
+      "ajudas": [
+        "Como se diz 'ontem' em inglês? Ele vai no fim da frase.",
+        "'Comi' é passado e não termina em -ed. Qual é a forma?"
+      ]
+    }
+  }
+}

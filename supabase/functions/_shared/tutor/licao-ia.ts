@@ -116,7 +116,7 @@ TIPOS DE ITEM (preencha só os campos do tipo; os outros ficam "" ou [])
 COMO LER UMA PÁGINA DE DRILLINGS
 - Cada seção ("Verbs practice", "Vocabulary", "Useful expressions", "Grammar", "Practice", "Change into …") vira um bloco, na ordem da página. "nome" = 1–2 palavras em português ("Verbos", "Vocabulário", "Expressões", "Gramática", "Negativa", "Passado").
 - Cada linha numerada "A / B / C" é uma cadeia dentro do bloco:
-  - A em NEGRITO e em inglês → "repeticao" com modelo = A. Se B for só a tradução de A, pule B.
+  - A em NEGRITO e em inglês, seguida da tradução em português (B) → "construcao" com solicitacao = B e alvo = A: o aluno produz a frase, e a cadeia segue dos próximos elementos. Sem tradução ao lado, "repeticao" com modelo = A (repetir não conta como feito sozinho).
   - A em português → "construcao" com solicitacao = A.
   - Cada elemento seguinte → "substituicao" com a pista como está escrita (corrija só a grafia) e alvo = a frase anterior transformada por ela, mantendo o resto.
   - Verbos soltos ("Falar / Eu falo / Você fala"): construcao "falar" → "To speak."; depois substituicao "eu falo" → "I speak."; "você fala" → "You speak.".
@@ -142,7 +142,7 @@ O RESTO DA LIÇÃO
 
 EXEMPLO DE UMA CADEIA E UMA TRANSFORMAÇÃO (formato)
 Página: "1. **I speak English.** / Eu falo inglês / alemão" e "Change into negative: 1. I eat bread."
-Itens: {"tipo":"repeticao","modelo":"I speak English.","alvo":"I speak English.","habilidades":["verbo_speak"],"ajudas":["Escute de novo e repita a frase inteira.","Comece com o sujeito: eu."], …}
+Itens: {"tipo":"construcao","solicitacao":"eu falo inglês","alvo":"I speak English.","habilidades":["verbo_speak"],"ajudas":["Qual verbo usamos para falar uma língua?","Comece com o sujeito: eu."], …}
 {"tipo":"substituicao","pista":"alemão","idiomaDaPista":"pt","alvo":"I speak German.","variantes":[],"habilidades":["idioma"],"ajudas":["Como se diz 'alemão' em inglês?","É o nome da língua da Alemanha, começa com G."], …}
 {"tipo":"transformacao","modelo":"I eat bread.","instrucao":"Passe para a negativa","alvo":"I don't eat bread.","variantes":["I do not eat bread."],"habilidades":["negativa_dont"],"ajudas":["Na negativa do presente, que palavra entra antes do verbo?","Com I, usamos don't. Onde ele entra?"],"errosPrevistos":[{"exemplo":"I no eat bread.","habilidade":"negativa_dont","pista":"Em inglês não usamos 'no' antes do verbo. Qual palavra usamos?"}], …}
 

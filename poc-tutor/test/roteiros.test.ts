@@ -13,9 +13,11 @@ import type { Acao, Avaliacao, Item, Roteiro, Sessao } from '../src/tipos.ts'
  */
 
 const PASTA = new URL('../roteiro/', import.meta.url)
-const ARQUIVOS = readdirSync(PASTA)
-  .filter((f) => f.endsWith('.json'))
-  .sort()
+// A biblioteca (roteiro/*.json) e as lições do professor feitas dos drillings dele (roteiro/drillings/).
+const ARQUIVOS = [
+  ...readdirSync(PASTA).filter((f) => f.endsWith('.json')),
+  ...readdirSync(new URL('drillings/', PASTA)).filter((f) => f.endsWith('.json')).map((f) => `drillings/${f}`),
+].sort()
 
 const carregar = (arquivo: string) => JSON.parse(readFileSync(new URL(arquivo, PASTA), 'utf8')) as Roteiro
 

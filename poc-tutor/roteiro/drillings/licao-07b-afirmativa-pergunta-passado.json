@@ -1,0 +1,599 @@
+{
+  "id": "07b-afirmativa-pergunta-passado",
+  "titulo": "Lesson 7 · Afirmativa, pergunta e passado",
+  "abertura": "Hoje eu digo uma frase em inglês e você a transforma: passa para a afirmativa, para a pergunta e para o passado.",
+  "notasParaAvaliador": "Passar para a afirmativa é tirar o don't (o verbo fica igual: I don't study → I study) ou o didn't (o verbo vai para o passado: didn't study → studied, didn't speak → spoke); \"speaked\" e manter o verbo no presente depois de tirar o didn't são erros. A pergunta no presente começa com Do + sujeito + verbo na forma básica (só a entonação, como \"You prefer…?\", e \"Does I…?\" não realizam o pedido); trocar I por you na pergunta (\"Do you speak Italian with your friend?\") também vale, porque é a pergunta natural. No passado, want e like viram wanted e liked e, na negativa, didn't + verbo na forma básica (\"I didn't wanted\", \"I don't wanted\", \"I was want\" e \"You didn't drank\" são erros), e só o primeiro verbo vai para o passado (\"I wanted to ate\" é erro). Contrações e formas cheias valem igual (didn't / did not), nomes de idiomas com maiúscula não contam na fala, e trocar today por yesterday ao passar para o passado também vale.",
+  "nomes": {
+    "blocos": {
+      "afirmativa": "Afirmativa",
+      "pergunta": "Pergunta",
+      "passado": "Passado"
+    },
+    "habilidades": {
+      "afirmativa_presente": { "curto": "sem don't", "resumo": "a afirmativa no presente, tirando o don't" },
+      "afirmativa_passado": { "curto": "sem didn't", "resumo": "a afirmativa no passado, tirando o didn't e pondo o verbo no passado" },
+      "passado_irregular": { "curto": "speak → spoke", "resumo": "o passado irregular, como spoke" },
+      "passado_regular": { "curto": "-ed", "resumo": "o -ed do passado, como em wanted" },
+      "pergunta_do": { "curto": "Do …?", "resumo": "perguntas começando com Do" },
+      "verbo_mais_to": { "curto": "want to + verbo", "resumo": "o to entre dois verbos, com o segundo na forma básica" },
+      "negativa_didnt": { "curto": "didn't + verbo", "resumo": "a negativa no passado com didn't e o verbo na forma básica" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "Presente: They cook. · They don't cook. · Do they cook?",
+      "Passado: They cooked. · They didn't cook. · Did they cook?",
+      "Afirmativa: tire o don't (presente) ou o didn't (e ponha o verbo no passado)",
+      "Pergunta: Do + sujeito + verbo + o resto da frase?",
+      "didn't + verbo na forma básica: didn't go · didn't eat",
+      "want / prefer + to + verbo na forma básica: want to go"
+    ],
+    "vocabulario": [
+      { "en": "want · wanted", "pt": "querer · quis" },
+      { "en": "like · liked", "pt": "gostar · gostou" },
+      { "en": "study · studied", "pt": "estudar · estudou" },
+      { "en": "speak · spoke", "pt": "falar · falou" },
+      { "en": "prefer", "pt": "preferir" },
+      { "en": "beef", "pt": "carne de vaca" },
+      { "en": "sausages", "pt": "linguiças, salsichas" },
+      { "en": "a glass of water", "pt": "um copo de água" },
+      { "en": "a cup of tea", "pt": "uma xícara de chá" },
+      { "en": "soda", "pt": "refrigerante" },
+      { "en": "wine", "pt": "vinho" },
+      { "en": "orange cake", "pt": "bolo de laranja" },
+      { "en": "spaghetti with bacon", "pt": "espaguete com bacon" },
+      { "en": "in the afternoon", "pt": "de tarde" },
+      { "en": "yesterday", "pt": "ontem" },
+      { "en": "there", "pt": "lá" }
+    ],
+    "exemplos": [
+      "They don't cook at home. → They cook at home.",
+      "They live in Recife. → Do they live in Recife?",
+      "We watch a movie. → We watched a movie.",
+      "We don't watch TV. → We didn't watch TV."
+    ],
+    "alertas": [
+      "Só a entonação não faz a pergunta: Do they cook? (nunca só \"They cook?\").",
+      "Depois de didn't, o verbo fica na forma básica: I didn't go (nunca \"I didn't went\").",
+      "O passado de want é wanted, sem was: nunca \"I was want\".",
+      "Depois do to, o verbo nunca vai para o passado: wanted to go (nunca \"wanted to went\").",
+      "Speak é irregular: o passado é spoke (nunca \"speaked\")."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "afirmativa",
+      "objetivo": "Passar frases negativas para a afirmativa: tirar o don't no presente e o didn't no passado, pondo o verbo no passado.",
+      "itens": [
+        {
+          "id": "afirm.frances",
+          "tipo": "transformacao",
+          "calibracao": true,
+          "modelo": "I don't study French in the afternoon.",
+          "instrucao": "Passe para a afirmativa",
+          "alvo": "I study French in the afternoon.",
+          "habilidades": ["afirmativa_presente"],
+          "ajudas": [
+            "Na afirmativa, uma palavra sai da frase. Qual?",
+            "Tire o don't e mantenha o resto da frase igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't study French in the afternoon.",
+              "habilidade": "afirmativa_presente",
+              "pista": "Essa ainda é a negativa. Qual palavra precisa sair?"
+            },
+            {
+              "exemplo": "I studies French in the afternoon.",
+              "habilidade": "afirmativa_presente",
+              "pista": "Com I, o verbo ganha -s?"
+            }
+          ]
+        },
+        {
+          "id": "afirm.professor",
+          "tipo": "transformacao",
+          "modelo": "You didn't speak with your teacher.",
+          "instrucao": "Passe para a afirmativa",
+          "alvo": "You spoke with your teacher.",
+          "variantes": ["You spoke to your teacher."],
+          "habilidades": ["afirmativa_passado", "passado_irregular"],
+          "ajudas": [
+            "Tire o didn't. A frase continua no passado: como fica speak no passado?",
+            "Speak é irregular: o passado não termina em -ed. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You speak with your teacher.",
+              "habilidade": "afirmativa_passado",
+              "pista": "Sem o didn't, a frase continua no passado. Como fica o verbo?"
+            },
+            {
+              "exemplo": "You speaked with your teacher.",
+              "habilidade": "passado_irregular",
+              "pista": "Speak é irregular: no passado não leva -ed. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "afirm.carne",
+          "tipo": "transformacao",
+          "modelo": "We don't eat beef for lunch.",
+          "instrucao": "Passe para a afirmativa",
+          "alvo": "We eat beef for lunch.",
+          "habilidades": ["afirmativa_presente"],
+          "ajudas": [
+            "Na afirmativa, qual palavra sai da frase?",
+            "Tire o don't; o verbo e o resto ficam iguais."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We ate beef for lunch.",
+              "habilidade": "afirmativa_presente",
+              "pista": "A frase era no presente. Precisa mudar o verbo?"
+            }
+          ]
+        },
+        {
+          "id": "afirm.salsichas",
+          "tipo": "transformacao",
+          "modelo": "I don't want to eat sausages.",
+          "instrucao": "Passe para a afirmativa",
+          "alvo": "I want to eat sausages.",
+          "habilidades": ["afirmativa_presente", "verbo_mais_to"],
+          "ajudas": [
+            "Tire a palavra do 'não' e mantenha o resto.",
+            "O to entre os dois verbos continua na frase."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want eat sausages.",
+              "habilidade": "verbo_mais_to",
+              "pista": "Entre want e eat falta uma palavrinha. Qual?"
+            }
+          ]
+        },
+        {
+          "id": "afirm.eles",
+          "tipo": "transformacao",
+          "modelo": "They don't study French.",
+          "instrucao": "Passe para a afirmativa",
+          "alvo": "They study French.",
+          "habilidades": ["afirmativa_presente"],
+          "ajudas": [
+            "Na afirmativa, qual palavra sai?",
+            "Tire o don't. Com they, o verbo ganha -s?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "They studies French.",
+              "habilidade": "afirmativa_presente",
+              "pista": "Com they, o verbo ganha -s?"
+            }
+          ]
+        },
+        {
+          "id": "afirm.ontem",
+          "tipo": "transformacao",
+          "modelo": "I didn't study English yesterday.",
+          "instrucao": "Passe para a afirmativa",
+          "alvo": "I studied English yesterday.",
+          "habilidades": ["afirmativa_passado", "passado_regular"],
+          "ajudas": [
+            "Tire o didn't. A frase continua no passado: como fica study?",
+            "Study é regular: no passado ganha o -ed. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I study English yesterday.",
+              "habilidade": "afirmativa_passado",
+              "pista": "Yesterday é passado. Sem o didn't, como fica o verbo?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pergunta",
+      "objetivo": "Passar frases afirmativas para a pergunta com Do + sujeito + verbo, mantendo o resto da frase.",
+      "itens": [
+        {
+          "id": "perg.italiano",
+          "tipo": "transformacao",
+          "modelo": "I speak Italian with my friend.",
+          "instrucao": "Passe para a pergunta",
+          "alvo": "Do I speak Italian with my friend?",
+          "variantes": ["Do you speak Italian with your friend?"],
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Em inglês, só a entonação não faz a pergunta. Que ajudante vem no começo?",
+            "Ponha o ajudante antes do sujeito; o resto da frase fica igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I speak Italian with my friend?",
+              "habilidade": "pergunta_do",
+              "pista": "Só a entonação não faz a pergunta em inglês. Que ajudante vem no começo?"
+            },
+            {
+              "exemplo": "Does I speak Italian with my friend?",
+              "habilidade": "pergunta_do",
+              "pista": "Com I, usamos does ou do?"
+            }
+          ]
+        },
+        {
+          "id": "perg.prefere",
+          "tipo": "transformacao",
+          "modelo": "You prefer to study English.",
+          "instrucao": "Passe para a pergunta",
+          "alvo": "Do you prefer to study English?",
+          "variantes": ["Do you prefer studying English?"],
+          "habilidades": ["pergunta_do", "verbo_mais_to"],
+          "ajudas": [
+            "Que ajudante começa a pergunta?",
+            "Ponha o ajudante antes de you; o to e o resto continuam."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You prefer to study English?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Do you prefer study English?",
+              "habilidade": "verbo_mais_to",
+              "pista": "Entre prefer e study falta uma palavrinha. Qual?"
+            }
+          ]
+        },
+        {
+          "id": "perg.agua",
+          "tipo": "transformacao",
+          "modelo": "I want to drink a glass of water.",
+          "instrucao": "Passe para a pergunta",
+          "alvo": "Do I want to drink a glass of water?",
+          "variantes": ["Do you want to drink a glass of water?"],
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Que ajudante vem no começo da pergunta?",
+            "Ponha o ajudante antes do sujeito e mantenha o resto da frase."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Are you want to drink a glass of water?",
+              "habilidade": "pergunta_do",
+              "pista": "Tem um errinho no are. Com o verbo want, qual ajudante começa a pergunta?"
+            }
+          ]
+        },
+        {
+          "id": "perg.la",
+          "tipo": "transformacao",
+          "modelo": "I want to study there.",
+          "instrucao": "Passe para a pergunta",
+          "alvo": "Do I want to study there?",
+          "variantes": ["Do you want to study there?"],
+          "habilidades": ["pergunta_do", "verbo_mais_to"],
+          "ajudas": [
+            "Que ajudante começa a pergunta?",
+            "Ponha o ajudante antes do sujeito; o to e o there continuam."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want to study there?",
+              "habilidade": "pergunta_do",
+              "pista": "Só a entonação não faz a pergunta em inglês. Que ajudante vem no começo?"
+            },
+            {
+              "exemplo": "Do you want study there?",
+              "habilidade": "verbo_mais_to",
+              "pista": "Entre want e study falta uma palavrinha. Qual?"
+            }
+          ]
+        },
+        {
+          "id": "perg.nos",
+          "tipo": "transformacao",
+          "modelo": "We want to eat beef.",
+          "instrucao": "Passe para a pergunta",
+          "alvo": "Do we want to eat beef?",
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Que ajudante começa a pergunta?",
+            "Ponha o ajudante antes de we; o resto continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We want to eat beef?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Does we want to eat beef?",
+              "habilidade": "pergunta_do",
+              "pista": "Com we, usamos does ou do?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "passado",
+      "objetivo": "Passar frases do presente para o passado: o -ed de want e like e a negativa com didn't + verbo na forma básica.",
+      "itens": [
+        {
+          "id": "pass.cha",
+          "tipo": "transformacao",
+          "modelo": "I want a cup of tea.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I wanted a cup of tea.",
+          "habilidades": ["passado_regular"],
+          "ajudas": [
+            "No passado, o verbo want muda. Que terminação ele ganha?",
+            "Want é regular: no passado ganha -ed. O resto da frase fica igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I was want a cup of tea.",
+              "habilidade": "passado_regular",
+              "pista": "Para o passado de want, precisa de was? O que muda no próprio verbo?"
+            },
+            {
+              "exemplo": "I want a cup of tea yesterday.",
+              "habilidade": "passado_regular",
+              "pista": "Só a palavra de tempo não põe a frase no passado. O que muda no verbo?"
+            }
+          ]
+        },
+        {
+          "id": "pass.espaguete",
+          "tipo": "transformacao",
+          "modelo": "I want to eat spaghetti with bacon today.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I wanted to eat spaghetti with bacon today.",
+          "variantes": ["I wanted to eat spaghetti with bacon yesterday."],
+          "habilidades": ["passado_regular", "verbo_mais_to"],
+          "ajudas": [
+            "Qual dos dois verbos vai para o passado: want ou eat?",
+            "Só o want ganha -ed; depois do to, o eat fica na forma básica."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want to ate spaghetti with bacon today.",
+              "habilidade": "passado_regular",
+              "pista": "O verbo que vai para o passado é o primeiro. Como fica want?"
+            },
+            {
+              "exemplo": "I wanted to ate spaghetti with bacon today.",
+              "habilidade": "verbo_mais_to",
+              "pista": "Só o primeiro verbo vai para o passado. Depois do to, como fica eat?"
+            }
+          ]
+        },
+        {
+          "id": "pass.refrigerante",
+          "tipo": "transformacao",
+          "modelo": "I don't want to drink soda.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I didn't want to drink soda.",
+          "variantes": ["I did not want to drink soda."],
+          "habilidades": ["negativa_didnt"],
+          "apoio": "didnt",
+          "ajudas": [
+            "No passado, o don't também muda. Como fica?",
+            "Troque o don't pela forma do passado; o want fica na forma básica."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I didn't wanted to drink soda.",
+              "habilidade": "negativa_didnt",
+              "pista": "Depois de didn't, o verbo vai para o passado ou fica na forma básica?"
+            },
+            {
+              "exemplo": "I don't wanted to drink soda.",
+              "habilidade": "negativa_didnt",
+              "pista": "No passado, quem muda é o don't, não o want. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "pass.bolo",
+          "tipo": "transformacao",
+          "modelo": "I don't like orange cake.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I didn't like orange cake.",
+          "variantes": ["I did not like orange cake."],
+          "habilidades": ["negativa_didnt"],
+          "ajudas": [
+            "No passado, qual é a forma do don't?",
+            "Use a forma do passado do don't e deixe like na forma básica."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I didn't liked orange cake.",
+              "habilidade": "negativa_didnt",
+              "pista": "Depois de didn't, o verbo fica no passado ou na forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "pass.vinho",
+          "tipo": "transformacao",
+          "modelo": "You don't drink wine for lunch.",
+          "instrucao": "Passe para o passado",
+          "alvo": "You didn't drink wine for lunch.",
+          "variantes": ["You did not drink wine for lunch."],
+          "habilidades": ["negativa_didnt"],
+          "ajudas": [
+            "No passado, o don't muda. Como fica?",
+            "Depois da forma do passado do don't, o drink fica igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You didn't drank wine for lunch.",
+              "habilidade": "negativa_didnt",
+              "pista": "Depois de didn't, o verbo vai para o passado ou fica na forma básica?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "didnt": {
+      "objetivo": "Montar a negativa no passado com didn't + verbo na forma básica antes de voltar à frase do refrigerante.",
+      "degraus": [
+        {
+          "id": "didnt.modelo",
+          "tipo": "repeticao",
+          "modelo": "I didn't drink coffee.",
+          "alvo": "I didn't drink coffee.",
+          "habilidades": ["negativa_didnt"]
+        },
+        {
+          "id": "didnt.pizza",
+          "tipo": "construcao",
+          "solicitacao": "eu não comi pizza",
+          "alvo": "I didn't eat pizza.",
+          "variantes": ["I did not eat pizza."],
+          "habilidades": ["negativa_didnt"],
+          "ajudas": [
+            "Comece com I e o ajudante do passado, como na frase que você acabou de repetir.",
+            "Depois de didn't, o verbo fica na forma básica. Como se diz 'comer'?"
+          ]
+        },
+        {
+          "id": "didnt.quis",
+          "tipo": "substituicao",
+          "pista": "não quis",
+          "idiomaDaPista": "pt",
+          "alvo": "I didn't want pizza.",
+          "variantes": ["I did not want pizza."],
+          "habilidades": ["negativa_didnt"],
+          "ajudas": [
+            "Troque comer por querer; o didn't continua.",
+            "Depois de didn't, querer fica na forma básica. Como se diz?"
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.estudou",
+      "tipo": "conversa",
+      "pergunta": "Did you study English yesterday?",
+      "criterio": "Yes, I did / No, I didn't, ou resposta completa e pertinente no passado (I studied… / I didn't study…).",
+      "exemplos": ["Yes, I did. I studied at night.", "No, I didn't. I worked a lot."],
+      "acompanhamentos": ["Do you want to study tomorrow?", "Do you prefer to study in the morning or at night?"],
+      "habilidades": ["negativa_didnt", "afirmativa_passado"]
+    },
+    {
+      "id": "conversa.almoco",
+      "tipo": "conversa",
+      "pergunta": "What did you eat for lunch yesterday?",
+      "criterio": "Resposta pertinente no passado sobre o almoço de ontem (I ate…, I had…), com qualquer comida verdadeira; I didn't eat lunch também vale.",
+      "exemplos": ["I ate rice, beans and chicken.", "I had a salad."],
+      "acompanhamentos": ["Did you like it?", "Did you drink soda?"],
+      "habilidades": ["passado_irregular"]
+    },
+    {
+      "id": "conversa.preferir",
+      "tipo": "conversa",
+      "pergunta": "Do you prefer tea or coffee?",
+      "criterio": "Resposta pertinente com I prefer … (tea, coffee ou outra bebida), ou I like … / I don't like ….",
+      "exemplos": ["I prefer coffee.", "I prefer tea. I don't like coffee."],
+      "acompanhamentos": ["Do you want a cup of tea now?", "Did you drink coffee this morning?"],
+      "habilidades": ["afirmativa_presente"]
+    }
+  ],
+  "recuperacao": {
+    "afirmativa_presente": {
+      "id": "rec.afirmativa_presente",
+      "tipo": "transformacao",
+      "modelo": "They don't work on Saturdays.",
+      "instrucao": "Passe para a afirmativa",
+      "alvo": "They work on Saturdays.",
+      "habilidades": ["afirmativa_presente"],
+      "ajudas": [
+        "Na afirmativa, qual palavra sai da frase?",
+        "Tire o don't; o verbo e o resto ficam iguais."
+      ]
+    },
+    "afirmativa_passado": {
+      "id": "rec.afirmativa_passado",
+      "tipo": "transformacao",
+      "modelo": "She didn't call her mother.",
+      "instrucao": "Passe para a afirmativa",
+      "alvo": "She called her mother.",
+      "habilidades": ["afirmativa_passado", "passado_regular"],
+      "ajudas": [
+        "Tire o didn't. A frase continua no passado: como fica call?",
+        "Call é regular: no passado ganha -ed."
+      ]
+    },
+    "passado_irregular": {
+      "id": "rec.passado_irregular",
+      "tipo": "transformacao",
+      "modelo": "We didn't speak Spanish at the party.",
+      "instrucao": "Passe para a afirmativa",
+      "alvo": "We spoke Spanish at the party.",
+      "habilidades": ["passado_irregular", "afirmativa_passado"],
+      "ajudas": [
+        "Tire o didn't e ponha o verbo no passado.",
+        "Speak é irregular: o passado não termina em -ed. Qual é?"
+      ]
+    },
+    "pergunta_do": {
+      "id": "rec.pergunta_do",
+      "tipo": "transformacao",
+      "modelo": "They live near the school.",
+      "instrucao": "Passe para a pergunta",
+      "alvo": "Do they live near the school?",
+      "habilidades": ["pergunta_do"],
+      "ajudas": [
+        "Que ajudante vem no começo da pergunta?",
+        "Ponha o ajudante antes de they; o resto continua."
+      ]
+    },
+    "verbo_mais_to": {
+      "id": "rec.verbo_mais_to",
+      "tipo": "transformacao",
+      "modelo": "I want to watch a movie.",
+      "instrucao": "Passe para o passado",
+      "alvo": "I wanted to watch a movie.",
+      "variantes": ["I wanted to watch a film."],
+      "habilidades": ["verbo_mais_to", "passado_regular"],
+      "ajudas": [
+        "Qual dos dois verbos vai para o passado?",
+        "Só o want ganha -ed; depois do to, o outro verbo fica na forma básica."
+      ]
+    },
+    "passado_regular": {
+      "id": "rec.passado_regular",
+      "tipo": "transformacao",
+      "modelo": "We need a new car.",
+      "instrucao": "Passe para o passado",
+      "alvo": "We needed a new car.",
+      "habilidades": ["passado_regular"],
+      "ajudas": [
+        "No passado, need ganha uma terminação. Qual?",
+        "Need é regular: no passado ganha -ed. O resto fica igual."
+      ]
+    },
+    "negativa_didnt": {
+      "id": "rec.negativa_didnt",
+      "tipo": "transformacao",
+      "modelo": "I don't eat meat.",
+      "instrucao": "Passe para o passado",
+      "alvo": "I didn't eat meat.",
+      "variantes": ["I did not eat meat."],
+      "habilidades": ["negativa_didnt"],
+      "ajudas": [
+        "No passado, o don't muda. Como fica?",
+        "Depois da forma do passado do don't, o eat fica na forma básica."
+      ]
+    }
+  }
+}

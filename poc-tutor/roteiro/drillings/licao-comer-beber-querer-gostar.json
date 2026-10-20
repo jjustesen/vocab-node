@@ -1,0 +1,997 @@
+{
+  "id": "comer-beber-querer-gostar",
+  "titulo": "Comer, beber, querer e gostar",
+  "abertura": "Hoje vamos praticar eat, drink, want e like em frases sobre comida, na afirmativa, na negativa e no passado.",
+  "notasParaAvaliador": "Passados desta lição: eat → ate e drink → drank são irregulares (\"eated\", \"drinked\" e \"drunk\" são erros), want → wanted e like → liked são regulares, e depois de didn't o verbo volta à forma básica (\"I didn't ate\", \"I didn't liked\" e \"I don't liked\" são erros). Gostar de é like sem of (\"like of\" é erro): like + comida (like cheese) ou like + verbo, em que like to eat e like eating são equivalentes; querer + verbo é want to (\"I want drink\" é erro). Na cadeia \"Eu como / bebo / quero / gosto\" a frase é só sujeito + verbo (I want., I like.), e \"I want it.\" / \"I like it.\" também valem. Contraídas e por extenso são iguais (don't = do not, didn't = did not), \"for breakfast\" é a forma certa (não \"in the breakfast\"), e fruit / fruits, bread and butter / bread with butter e, na negativa, crackers and jam / crackers or jam são equivalentes.",
+  "nomes": {
+    "blocos": {
+      "pratica": "Prática",
+      "negativa": "Negativa",
+      "passado": "Passado"
+    },
+    "habilidades": {
+      "verbos_basicos": { "curto": "eat / drink / want / like", "resumo": "os verbos eat, drink, want e like" },
+      "passado_irregular": { "curto": "ate / drank", "resumo": "os passados irregulares ate e drank" },
+      "passado_regular": { "curto": "-ed", "resumo": "o passado com -ed, como em wanted e liked" },
+      "gostar_de": { "curto": "like to / -ing", "resumo": "gostar de sem of, como em like to eat ou like eating" },
+      "want_to": { "curto": "want to", "resumo": "o to depois de want, como em want to drink" },
+      "vocabulario_comida": { "curto": "comidas", "resumo": "os nomes de comidas e bebidas" },
+      "negativa_dont": { "curto": "don't", "resumo": "a negativa no presente com don't" },
+      "passado_negativo_didnt": { "curto": "didn't", "resumo": "a negativa no passado com didn't" },
+      "verbo_base": { "curto": "didn't + eat", "resumo": "o verbo na forma básica depois de didn't" },
+      "preservar_cadeia": { "curto": "manter a frase", "resumo": "manter as mudanças anteriores da frase" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "I / you / we + verbo: eat · drink · want · like",
+      "like + comida: like cheese · like + verbo: like to eat ou like eating",
+      "want + to + verbo: want to drink",
+      "presente: don't + verbo · passado: didn't + verbo na forma básica",
+      "passado: eat → ate · drink → drank · want → wanted · like → liked",
+      "don't = do not · didn't = did not"
+    ],
+    "vocabulario": [
+      { "en": "ham", "pt": "presunto" },
+      { "en": "eggs", "pt": "ovos" },
+      { "en": "cheese", "pt": "queijo" },
+      { "en": "milk", "pt": "leite" },
+      { "en": "coffee", "pt": "café" },
+      { "en": "tea", "pt": "chá" },
+      { "en": "cake", "pt": "bolo" },
+      { "en": "bread", "pt": "pão" },
+      { "en": "butter", "pt": "manteiga" },
+      { "en": "crackers", "pt": "biscoitos salgados" },
+      { "en": "jam", "pt": "geleia" },
+      { "en": "a slice of pie", "pt": "um pedaço de torta" },
+      { "en": "honey", "pt": "mel" },
+      { "en": "beef", "pt": "carne de boi" },
+      { "en": "fruit", "pt": "fruta" },
+      { "en": "water", "pt": "água" },
+      { "en": "breakfast", "pt": "café da manhã" }
+    ],
+    "exemplos": [
+      "We want to eat pasta tonight.",
+      "They like rice and beans.",
+      "We don't eat meat on Fridays.",
+      "They didn't drink soda at the party."
+    ],
+    "alertas": [
+      "Gostar de não leva of: nunca \"like of\".",
+      "Querer + verbo pede to: nunca \"want drink\".",
+      "Depois de didn't, o verbo volta à forma básica: nunca \"didn't ate\" nem \"didn't liked\".",
+      "Eat e drink são irregulares: nunca \"eated\" nem \"drinked\".",
+      "No café da manhã = for breakfast (nunca \"in the breakfast\")."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "pratica",
+      "objetivo": "Cadeias com pista em português: eat, drink, want e like no presente e no passado, like to eat, want to drink e don't like, trocando a comida e mantendo o resto.",
+      "itens": [
+        {
+          "id": "pra.como",
+          "tipo": "construcao",
+          "calibracao": true,
+          "solicitacao": "eu como",
+          "alvo": "I eat.",
+          "habilidades": ["verbos_basicos"],
+          "ajudas": [
+            "Como se diz 'comer' em inglês? Comece pelo sujeito.",
+            "Em inglês, 'eu como' é só o sujeito e o verbo, sem am. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I am eat.",
+              "habilidade": "verbos_basicos",
+              "pista": "Não precisa de am aqui. Como se diz só 'eu como'?"
+            },
+            {
+              "exemplo": "I drink.",
+              "habilidade": "verbos_basicos",
+              "pista": "Quase! Drink é beber. E comer, como se diz?"
+            }
+          ]
+        },
+        {
+          "id": "pra.bebo",
+          "tipo": "substituicao",
+          "pista": "bebo",
+          "idiomaDaPista": "pt",
+          "alvo": "I drink.",
+          "habilidades": ["verbos_basicos"],
+          "ajudas": [
+            "Troque o verbo: bebo vem de beber. Como se diz 'beber' em inglês?",
+            "O sujeito continua o mesmo; só o verbo muda."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eat.",
+              "habilidade": "verbos_basicos",
+              "pista": "Quase! Eat é comer. E beber, como se diz?"
+            },
+            {
+              "exemplo": "I am drink.",
+              "habilidade": "verbos_basicos",
+              "pista": "Não precisa de am aqui. Como se diz só 'eu bebo'?"
+            }
+          ]
+        },
+        {
+          "id": "pra.quero",
+          "tipo": "substituicao",
+          "pista": "quero",
+          "idiomaDaPista": "pt",
+          "alvo": "I want.",
+          "variantes": ["I want it."],
+          "habilidades": ["verbos_basicos"],
+          "ajudas": [
+            "Agora o verbo é querer. Como se diz 'querer' em inglês?",
+            "O sujeito continua o mesmo; só o verbo muda."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I wants.",
+              "habilidade": "verbos_basicos",
+              "pista": "Com I, o verbo leva -s?"
+            }
+          ]
+        },
+        {
+          "id": "pra.gosto",
+          "tipo": "substituicao",
+          "pista": "gosto",
+          "idiomaDaPista": "pt",
+          "alvo": "I like.",
+          "variantes": ["I like it."],
+          "habilidades": ["verbos_basicos"],
+          "ajudas": [
+            "Agora o verbo é gostar. Como se diz 'gostar' em inglês?",
+            "O sujeito continua o mesmo; só o verbo muda."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I love.",
+              "habilidade": "verbos_basicos",
+              "pista": "Love é amar. Como se diz 'gostar'?"
+            },
+            {
+              "exemplo": "I likes.",
+              "habilidade": "verbos_basicos",
+              "pista": "Com I, o verbo leva -s?"
+            }
+          ]
+        },
+        {
+          "id": "pra.comi",
+          "tipo": "construcao",
+          "solicitacao": "eu comi",
+          "alvo": "I ate.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Comi é passado, e eat é irregular. Você lembra a forma?",
+            "O passado de eat não leva -ed: é uma palavra curta, que começa com a."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eated.",
+              "habilidade": "passado_irregular",
+              "pista": "Eat é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "I eat.",
+              "habilidade": "passado_irregular",
+              "pista": "Comi é passado. Qual é o passado de eat?"
+            }
+          ]
+        },
+        {
+          "id": "pra.bebi",
+          "tipo": "substituicao",
+          "pista": "bebi",
+          "idiomaDaPista": "pt",
+          "alvo": "I drank.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Bebi é passado, e drink também é irregular. Qual é o passado dele?",
+            "No passado de drink, só uma vogal muda. Qual entra no lugar do i?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I drinked.",
+              "habilidade": "passado_irregular",
+              "pista": "Drink é irregular: não leva -ed. Qual é o passado dele?"
+            },
+            {
+              "exemplo": "I drunk.",
+              "habilidade": "passado_irregular",
+              "pista": "Drunk não é o passado simples. Qual é o passado de drink?"
+            }
+          ]
+        },
+        {
+          "id": "pra.queria",
+          "tipo": "substituicao",
+          "pista": "queria",
+          "idiomaDaPista": "pt",
+          "alvo": "I wanted.",
+          "variantes": ["I wanted it."],
+          "habilidades": ["passado_regular"],
+          "ajudas": [
+            "Queria é passado. Want é regular: que terminação ele ganha?",
+            "No passado, want ganha -ed. Como fica a frase?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want.",
+              "habilidade": "passado_regular",
+              "pista": "Queria é passado. O que acontece com want no passado?"
+            }
+          ]
+        },
+        {
+          "id": "pra.gostei",
+          "tipo": "substituicao",
+          "pista": "gostei",
+          "idiomaDaPista": "pt",
+          "alvo": "I liked.",
+          "variantes": ["I liked it."],
+          "habilidades": ["passado_regular"],
+          "ajudas": [
+            "Gostei é passado. Like também é regular: que terminação ele ganha?",
+            "No passado, like ganha só um -d. Como fica a frase?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like.",
+              "habilidade": "passado_regular",
+              "pista": "Gostei é passado. O que acontece com like no passado?"
+            }
+          ]
+        },
+        {
+          "id": "pra.presunto",
+          "tipo": "construcao",
+          "solicitacao": "eu gosto de comer presunto",
+          "alvo": "I like to eat ham.",
+          "variantes": ["I like eating ham."],
+          "habilidades": ["gostar_de", "vocabulario_comida"],
+          "ajudas": [
+            "Em inglês, gostar não leva 'de'. Como fica 'eu gosto de comer'?",
+            "Depois de like, o verbo comer entra com to. E como se diz 'presunto'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like of eat ham.",
+              "habilidade": "gostar_de",
+              "pista": "Em inglês, gostar não leva of. Como fica 'gosto de comer'?"
+            },
+            {
+              "exemplo": "I like eat ham.",
+              "habilidade": "gostar_de",
+              "pista": "Depois de like, falta uma palavrinha antes de eat. Qual é?"
+            },
+            {
+              "exemplo": "I like to eat jam.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Jam é geleia. Como se diz 'presunto'?"
+            }
+          ]
+        },
+        {
+          "id": "pra.ovos",
+          "tipo": "substituicao",
+          "pista": "ovos",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to eat eggs.",
+          "variantes": ["I like eating eggs."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque presunto por ovos; o resto continua.",
+            "Como se diz 'ovos' em inglês? Lembre que são vários."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like to eat egg.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Ovos são mais de um. Como fica o plural?"
+            },
+            {
+              "exemplo": "I eat eggs.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Na frase anterior você dizia que gosta de comer. Isso continua?"
+            }
+          ]
+        },
+        {
+          "id": "pra.queijo",
+          "tipo": "substituicao",
+          "pista": "queijo",
+          "idiomaDaPista": "pt",
+          "alvo": "I like to eat cheese.",
+          "variantes": ["I like eating cheese."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque ovos por queijo; o resto continua.",
+            "Como se diz 'queijo' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like to eat cheeses.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Aqui queijo é no singular. Precisa do -s?"
+            },
+            {
+              "exemplo": "I like cheese.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Na frase anterior tinha o verbo comer. Ele continua?"
+            }
+          ]
+        },
+        {
+          "id": "pra.leite",
+          "tipo": "construcao",
+          "solicitacao": "eu quero beber leite",
+          "alvo": "I want to drink milk.",
+          "habilidades": ["want_to", "vocabulario_comida"],
+          "ajudas": [
+            "Depois de want, que palavrinha vem antes do outro verbo?",
+            "Como se diz 'beber' e 'leite' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want drink milk.",
+              "habilidade": "want_to",
+              "pista": "Depois de want, falta uma palavrinha antes de drink. Qual é?"
+            },
+            {
+              "exemplo": "I want to drinking milk.",
+              "habilidade": "want_to",
+              "pista": "Depois de want to, o verbo leva -ing?"
+            }
+          ]
+        },
+        {
+          "id": "pra.cafe",
+          "tipo": "substituicao",
+          "pista": "café",
+          "idiomaDaPista": "pt",
+          "alvo": "I want to drink coffee.",
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque leite por café; o resto continua.",
+            "Como se diz 'café' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want to drink café.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Em inglês, café é parecido, mas é outra palavra. Como se diz?"
+            },
+            {
+              "exemplo": "I want coffee.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Na frase anterior você queria beber. Isso continua?"
+            }
+          ]
+        },
+        {
+          "id": "pra.cha",
+          "tipo": "substituicao",
+          "pista": "chá",
+          "idiomaDaPista": "pt",
+          "alvo": "I want to drink tea.",
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque café por chá; o resto continua.",
+            "Como se diz 'chá' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I want to drink coffee.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Quase! Coffee é café. E chá, como se diz?"
+            }
+          ]
+        },
+        {
+          "id": "pra.bolo",
+          "tipo": "construcao",
+          "solicitacao": "eu não gosto de bolo",
+          "alvo": "I don't like cake.",
+          "variantes": ["I do not like cake."],
+          "habilidades": ["negativa_dont", "gostar_de", "vocabulario_comida"],
+          "ajudas": [
+            "Em inglês, o 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "Como se diz 'bolo' em inglês? E lembre: gostar não leva 'de'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no like cake.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I don't like of cake.",
+              "habilidade": "gostar_de",
+              "pista": "Em inglês, gostar não leva of. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "pra.cha_nao",
+          "tipo": "substituicao",
+          "pista": "chá",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't like tea.",
+          "variantes": ["I do not like tea."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque bolo por chá; o resto continua.",
+            "Como se diz 'chá' em inglês? O 'não' continua na frase."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I like tea.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Na frase anterior você não gostava. Isso continua?"
+            }
+          ]
+        },
+        {
+          "id": "pra.cafe_nao",
+          "tipo": "substituicao",
+          "pista": "café",
+          "idiomaDaPista": "pt",
+          "alvo": "I don't like coffee.",
+          "variantes": ["I do not like coffee."],
+          "habilidades": ["vocabulario_comida", "preservar_cadeia"],
+          "ajudas": [
+            "Troque chá por café; o resto continua.",
+            "Como se diz 'café' em inglês? O 'não' continua na frase."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't like tea.",
+              "habilidade": "vocabulario_comida",
+              "pista": "Quase! Tea é chá. E café, como se diz?"
+            },
+            {
+              "exemplo": "I like coffee.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Na frase anterior você não gostava. Isso continua?"
+            }
+          ]
+        },
+        {
+          "id": "pra.pao",
+          "tipo": "construcao",
+          "solicitacao": "eu não gosto de comer pão com manteiga",
+          "alvo": "I don't like to eat bread and butter.",
+          "variantes": [
+            "I don't like eating bread and butter.",
+            "I don't like to eat bread with butter.",
+            "I don't like eating bread with butter.",
+            "I do not like to eat bread and butter.",
+            "I do not like eating bread and butter."
+          ],
+          "habilidades": ["gostar_de", "negativa_dont", "vocabulario_comida"],
+          "ajudas": [
+            "Comece com o 'não' antes de gostar. Depois de like, como entra o verbo comer?",
+            "Como se diz 'pão' e 'manteiga' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't like eat bread and butter.",
+              "habilidade": "gostar_de",
+              "pista": "Depois de like, falta uma palavrinha antes de eat. Qual é?"
+            },
+            {
+              "exemplo": "I not like to eat bread and butter.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negativa",
+      "objetivo": "O tutor diz a frase em inglês e o aluno a passa para a negativa com don't, mantendo o resto da frase.",
+      "itens": [
+        {
+          "id": "neg.queijo",
+          "tipo": "transformacao",
+          "modelo": "I like cheese.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't like cheese.",
+          "variantes": ["I do not like cheese."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Na negativa do presente, que palavra entra antes do verbo?",
+            "O 'não' em inglês precisa de um ajudante antes de like. Com I, qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no like cheese.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not like cheese.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.chocolate",
+          "tipo": "transformacao",
+          "modelo": "I like chocolate.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't like chocolate.",
+          "variantes": ["I do not like chocolate."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Faça como na frase anterior: que palavra entra antes de like?",
+            "Com I, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I doesn't like chocolate.",
+              "habilidade": "negativa_dont",
+              "pista": "Com I, usamos doesn't ou don't?"
+            },
+            {
+              "exemplo": "I no like chocolate.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.crackers",
+          "tipo": "transformacao",
+          "modelo": "I want crackers and jam.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't want crackers and jam.",
+          "variantes": ["I do not want crackers and jam.", "I don't want crackers or jam.", "I do not want crackers or jam."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Que palavra entra antes de want? O resto da frase continua igual.",
+            "Com I, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no want crackers and jam.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not want crackers and jam.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.cafe_leite",
+          "tipo": "transformacao",
+          "modelo": "You drink coffee with milk.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "You don't drink coffee with milk.",
+          "variantes": ["You do not drink coffee with milk."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Com you, que palavra entra antes de drink?",
+            "O resto da frase continua igual. Com you, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You doesn't drink coffee with milk.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't ou don't?"
+            },
+            {
+              "exemplo": "You not drink coffee with milk.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.ovos",
+          "tipo": "transformacao",
+          "modelo": "I eat eggs for breakfast.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't eat eggs for breakfast.",
+          "variantes": ["I do not eat eggs for breakfast."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Que palavra entra antes de eat? For breakfast continua no fim.",
+            "Com I, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no eat eggs for breakfast.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I not eat eggs for breakfast.",
+              "habilidade": "negativa_dont",
+              "pista": "Falta um ajudante antes do not. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.chocolate_you",
+          "tipo": "transformacao",
+          "modelo": "You like to eat chocolate.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "You don't like to eat chocolate.",
+          "variantes": ["You do not like to eat chocolate.", "You don't like eating chocolate."],
+          "habilidades": ["negativa_dont", "gostar_de"],
+          "ajudas": [
+            "Que palavra entra antes de like? O resto continua igual.",
+            "Com you, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You doesn't like to eat chocolate.",
+              "habilidade": "negativa_dont",
+              "pista": "Com you, usamos doesn't ou don't?"
+            },
+            {
+              "exemplo": "You don't like eat chocolate.",
+              "habilidade": "gostar_de",
+              "pista": "Depois de like, falta uma palavrinha antes de eat. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "neg.torta",
+          "tipo": "transformacao",
+          "modelo": "I want to eat a slice of pie.",
+          "instrucao": "Passe para a negativa",
+          "alvo": "I don't want to eat a slice of pie.",
+          "variantes": ["I do not want to eat a slice of pie."],
+          "habilidades": ["negativa_dont", "want_to"],
+          "ajudas": [
+            "Que palavra entra antes de want? O resto continua igual.",
+            "Com I, qual ajudante usamos para o 'não'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no want to eat a slice of pie.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' em inglês precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I don't want eat a slice of pie.",
+              "habilidade": "want_to",
+              "pista": "Depois de want, falta uma palavrinha antes de eat. Qual é?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "passado",
+      "objetivo": "O tutor diz uma negativa no presente e o aluno a passa para o passado com didn't + verbo na forma básica.",
+      "itens": [
+        {
+          "id": "pas.pao",
+          "tipo": "transformacao",
+          "modelo": "I don't eat bread for breakfast.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I didn't eat bread for breakfast.",
+          "variantes": ["I did not eat bread for breakfast."],
+          "habilidades": ["passado_negativo_didnt", "verbo_base"],
+          "apoio": "didnt_base",
+          "ajudas": [
+            "No passado, o ajudante do 'não' muda. Qual é?",
+            "Só o ajudante vai para o passado. Depois dele, eat muda ou fica igual?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't ate bread for breakfast.",
+              "habilidade": "passado_negativo_didnt",
+              "pista": "Quem mostra o passado é o ajudante, não o verbo. Qual é o ajudante do passado?"
+            },
+            {
+              "exemplo": "I didn't ate bread for breakfast.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, o verbo fica no passado ou volta à forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "pas.frutas",
+          "tipo": "transformacao",
+          "modelo": "You don't like to eat fruits.",
+          "instrucao": "Passe para o passado",
+          "alvo": "You didn't like to eat fruits.",
+          "variantes": [
+            "You did not like to eat fruits.",
+            "You didn't like to eat fruit.",
+            "You didn't like eating fruits.",
+            "You didn't like eating fruit."
+          ],
+          "habilidades": ["passado_negativo_didnt", "verbo_base"],
+          "ajudas": [
+            "Troque o ajudante do presente pelo do passado. Qual é?",
+            "Depois do ajudante do passado, like ganha -d ou fica igual?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You don't liked to eat fruits.",
+              "habilidade": "passado_negativo_didnt",
+              "pista": "O passado vai no ajudante, não no verbo. Qual é o ajudante do passado?"
+            },
+            {
+              "exemplo": "You didn't liked to eat fruits.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, like leva -d?"
+            },
+            {
+              "exemplo": "You didn't like to ate fruits.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de to, o verbo fica na forma básica. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "pas.agua",
+          "tipo": "transformacao",
+          "modelo": "I don't want to drink water.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I didn't want to drink water.",
+          "variantes": ["I did not want to drink water."],
+          "habilidades": ["passado_negativo_didnt", "verbo_base"],
+          "ajudas": [
+            "No passado, o ajudante do 'não' muda. Qual é?",
+            "Depois do ajudante do passado, want ganha -ed ou fica igual?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't wanted to drink water.",
+              "habilidade": "passado_negativo_didnt",
+              "pista": "O passado vai no ajudante, não no verbo. Qual é o ajudante do passado?"
+            },
+            {
+              "exemplo": "I didn't wanted to drink water.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, want leva -ed?"
+            }
+          ]
+        },
+        {
+          "id": "pas.mel",
+          "tipo": "transformacao",
+          "modelo": "I don't like honey.",
+          "instrucao": "Passe para o passado",
+          "alvo": "I didn't like honey.",
+          "variantes": ["I did not like honey."],
+          "habilidades": ["passado_negativo_didnt", "verbo_base"],
+          "ajudas": [
+            "Troque o ajudante do presente pelo do passado. Qual é?",
+            "Depois do ajudante do passado, like muda ou fica igual?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I not liked honey.",
+              "habilidade": "passado_negativo_didnt",
+              "pista": "Falta o ajudante do passado antes do not. Qual é?"
+            },
+            {
+              "exemplo": "I didn't liked honey.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, like leva -d?"
+            }
+          ]
+        },
+        {
+          "id": "pas.carne",
+          "tipo": "transformacao",
+          "modelo": "We don't want to eat beef.",
+          "instrucao": "Passe para o passado",
+          "alvo": "We didn't want to eat beef.",
+          "variantes": ["We did not want to eat beef."],
+          "habilidades": ["passado_negativo_didnt", "verbo_base"],
+          "ajudas": [
+            "Com we, o ajudante do passado é o mesmo. Qual é?",
+            "Depois do ajudante do passado, want muda ou fica igual?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We don't wanted to eat beef.",
+              "habilidade": "passado_negativo_didnt",
+              "pista": "O passado vai no ajudante, não no verbo. Qual é o ajudante do passado?"
+            },
+            {
+              "exemplo": "We didn't wanted to eat beef.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, want leva -ed?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "didnt_base": {
+      "objetivo": "Montar a negativa no passado com didn't + verbo na forma básica antes de voltar à frase do pão no café da manhã.",
+      "degraus": [
+        {
+          "id": "apoio.didnt_eat",
+          "tipo": "repeticao",
+          "modelo": "I didn't eat.",
+          "alvo": "I didn't eat.",
+          "habilidades": ["passado_negativo_didnt"]
+        },
+        {
+          "id": "apoio.didnt_drink",
+          "tipo": "construcao",
+          "solicitacao": "eu não bebi",
+          "alvo": "I didn't drink.",
+          "variantes": ["I did not drink."],
+          "habilidades": ["passado_negativo_didnt", "verbo_base"],
+          "ajudas": [
+            "É o mesmo ajudante da frase que você repetiu. Depois dele, o verbo muda?",
+            "Como se diz 'beber' em inglês? Ele entra na forma básica, depois do ajudante."
+          ]
+        },
+        {
+          "id": "apoio.didnt_bread",
+          "tipo": "construcao",
+          "solicitacao": "eu não comi pão",
+          "alvo": "I didn't eat bread.",
+          "variantes": ["I did not eat bread."],
+          "habilidades": ["passado_negativo_didnt", "verbo_base"],
+          "ajudas": [
+            "Comece como na frase que você repetiu e acrescente o pão.",
+            "Como se diz 'pão' em inglês? Ele vem no fim da frase."
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.cafe_da_manha",
+      "tipo": "conversa",
+      "pergunta": "What do you like to eat for breakfast?",
+      "criterio": "Resposta pertinente com I like (to eat) … ou I eat / have …, com qualquer comida verdadeira; resposta curta pertinente (Bread and butter.) também vale.",
+      "exemplos": ["I like to eat eggs and bread.", "I like bread and butter and coffee with milk."],
+      "acompanhamentos": ["Do you drink coffee or tea in the morning?"],
+      "habilidades": ["gostar_de"]
+    },
+    {
+      "id": "conversa.nao_gosto",
+      "tipo": "conversa",
+      "pergunta": "What food don't you like?",
+      "criterio": "Resposta pertinente com I don't like … (qualquer comida ou bebida verdadeira), ou resposta curta pertinente (Fish.).",
+      "exemplos": ["I don't like fish.", "I don't like liver, and I don't like beer."],
+      "acompanhamentos": ["Do you like chocolate?"],
+      "habilidades": ["negativa_dont"]
+    },
+    {
+      "id": "conversa.ontem",
+      "tipo": "conversa",
+      "pergunta": "What did you eat and drink yesterday?",
+      "criterio": "Resposta pertinente no passado com ate / drank (ou had), com qualquer comida e bebida verdadeiras.",
+      "exemplos": ["I ate rice and beans, and I drank juice.", "I had pizza and I drank soda."],
+      "acompanhamentos": ["Did you like it?"],
+      "habilidades": ["passado_irregular"]
+    }
+  ],
+  "recuperacao": {
+    "verbos_basicos": {
+      "id": "rec.verbos_basicos",
+      "tipo": "construcao",
+      "solicitacao": "eles comem muito",
+      "alvo": "They eat a lot.",
+      "habilidades": ["verbos_basicos"],
+      "ajudas": [
+        "Quem come? Comece pelo sujeito.",
+        "Como se diz 'comer' em inglês? E 'muito', no fim da frase?"
+      ]
+    },
+    "passado_irregular": {
+      "id": "rec.passado_irregular",
+      "tipo": "construcao",
+      "solicitacao": "nós bebemos suco ontem",
+      "alvo": "We drank juice yesterday.",
+      "variantes": ["Yesterday we drank juice."],
+      "habilidades": ["passado_irregular"],
+      "ajudas": [
+        "Bebemos aqui é passado, por causa do ontem. Qual é o passado de drink?",
+        "Como se diz 'suco' e 'ontem' em inglês?"
+      ]
+    },
+    "passado_regular": {
+      "id": "rec.passado_regular",
+      "tipo": "construcao",
+      "solicitacao": "ela gostou do bolo",
+      "alvo": "She liked the cake.",
+      "habilidades": ["passado_regular", "gostar_de"],
+      "ajudas": [
+        "Gostou é passado. Que terminação like ganha?",
+        "Como se diz 'bolo' em inglês? Lembre: gostar não leva 'de'."
+      ]
+    },
+    "gostar_de": {
+      "id": "rec.gostar_de",
+      "tipo": "construcao",
+      "solicitacao": "nós gostamos de beber suco",
+      "alvo": "We like to drink juice.",
+      "variantes": ["We like drinking juice."],
+      "habilidades": ["gostar_de"],
+      "ajudas": [
+        "Gostar não leva 'de' em inglês. Como entra o verbo beber depois de like?",
+        "Como se diz 'beber' e 'suco' em inglês?"
+      ]
+    },
+    "want_to": {
+      "id": "rec.want_to",
+      "tipo": "construcao",
+      "solicitacao": "eles querem comer frango",
+      "alvo": "They want to eat chicken.",
+      "habilidades": ["want_to"],
+      "ajudas": [
+        "Depois de want, que palavrinha vem antes do outro verbo?",
+        "Como se diz 'frango' em inglês?"
+      ]
+    },
+    "vocabulario_comida": {
+      "id": "rec.vocabulario_comida",
+      "tipo": "construcao",
+      "solicitacao": "eu gosto de ovos com presunto",
+      "alvo": "I like eggs and ham.",
+      "variantes": ["I like ham and eggs.", "I like eggs with ham."],
+      "habilidades": ["vocabulario_comida", "gostar_de"],
+      "ajudas": [
+        "Como se diz 'ovos' e 'presunto' em inglês?",
+        "Gostar não leva 'de' em inglês. E o 'com' aqui pode ser and."
+      ]
+    },
+    "negativa_dont": {
+      "id": "rec.negativa_dont",
+      "tipo": "construcao",
+      "solicitacao": "nós não bebemos leite",
+      "alvo": "We don't drink milk.",
+      "variantes": ["We do not drink milk."],
+      "habilidades": ["negativa_dont"],
+      "ajudas": [
+        "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+        "Como se diz 'beber' e 'leite' em inglês?"
+      ]
+    },
+    "passado_negativo_didnt": {
+      "id": "rec.passado_negativo_didnt",
+      "tipo": "transformacao",
+      "modelo": "We don't eat chocolate.",
+      "instrucao": "Passe para o passado",
+      "alvo": "We didn't eat chocolate.",
+      "variantes": ["We did not eat chocolate."],
+      "habilidades": ["passado_negativo_didnt", "verbo_base"],
+      "ajudas": [
+        "No passado, o ajudante do 'não' muda. Qual é?",
+        "Depois do ajudante do passado, eat muda ou fica igual?"
+      ]
+    },
+    "verbo_base": {
+      "id": "rec.verbo_base",
+      "tipo": "construcao",
+      "solicitacao": "eu não bebi café hoje",
+      "alvo": "I didn't drink coffee today.",
+      "variantes": ["I did not drink coffee today."],
+      "habilidades": ["verbo_base", "passado_negativo_didnt"],
+      "ajudas": [
+        "Depois do ajudante do passado, o verbo fica no passado ou na forma básica?",
+        "Como se diz 'eu não bebi' em inglês? E 'hoje', no fim?"
+      ]
+    }
+  }
+}
