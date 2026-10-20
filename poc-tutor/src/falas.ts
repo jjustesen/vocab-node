@@ -1,4 +1,4 @@
-import type { Acao, Contexto, Item, Sessao } from './tipos.ts'
+import type { Acao, Contexto, Item, Roteiro, Sessao } from './tipos.ts'
 
 /**
  * O que o tutor DIZ para cada `Acao` — por template, sem IA.
@@ -96,7 +96,7 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
       return [pt('Ótimo treino! Agora vamos conversar um pouco. Responda em inglês, com a sua realidade.')]
 
     case 'encerrar':
-      return encerramento(a.resumo)
+      return encerramento(a.resumo, s.roteiro)
   }
 }
 
@@ -158,9 +158,13 @@ export const ROTULO_HABILIDADE: Record<string, string> = {
   presente_passado: 'a diferença entre was e is',
 }
 
-const rotulo = (h: string) => ROTULO_HABILIDADE[h] ?? h.replaceAll('_', ' ')
+/** Como o tutor diz a habilidade em voz alta: o nome da lição, o do clima, ou o id. */
+export function nomeNoResumo(roteiro: Roteiro, h: string): string {
+  return roteiro.nomes?.habilidades?.[h]?.resumo ?? ROTULO_HABILIDADE[h] ?? h.replaceAll('_', ' ')
+}
 
-function encerramento(r: Extract<Acao, { tipo: 'encerrar' }>['resumo']): Fala {
+function encerramento(r: Extract<Acao, { tipo: 'encerrar' }>['resumo'], roteiro: Roteiro): Fala {
+  const rotulo = (h: string) => nomeNoResumo(roteiro, h)
   const partes: Fala = [pt('Terminamos!')]
   const n = r.autonomos.length
   if (n > 0) partes.push(pt(n === 1 ? 'Você disse uma frase sozinho.' : `Você disse ${n} frases sozinho.`))

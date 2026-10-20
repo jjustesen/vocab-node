@@ -54,7 +54,7 @@ const NOME_DO_BLOCO: Record<string, string> = {
 
 /** As etapas da aula: os blocos do roteiro, a conversa e o fim. */
 export function Trilha({ roteiro, sessao }: { roteiro: Roteiro; sessao: Sessao | null }) {
-  const etapas = [...roteiro.blocos.map((b) => NOME_DO_BLOCO[b.id] ?? b.id), 'Conversa', 'Fim']
+  const etapas = [...roteiro.blocos.map((b) => roteiro.nomes?.blocos?.[b.id] ?? NOME_DO_BLOCO[b.id] ?? b.id), 'Conversa', 'Fim']
   const t = sessao?.atual
   let atual = -1
   let fracao = 0
@@ -127,7 +127,7 @@ export function Habilidades({ sessao }: { sessao: Sessao | null }) {
           title={dominada ? 'Acertou sozinho depois de ter precisado de ajuda' : 'Precisou de ajuda; vai voltar'}
         >
           <Icone nome={dominada ? 'check' : 'revisao'} className="h-3 w-3" grosso />
-          {NOME_DA_HABILIDADE[h] ?? h.replaceAll('_', ' ')}
+          {sessao.roteiro.nomes?.habilidades?.[h]?.curto ?? NOME_DA_HABILIDADE[h] ?? h.replaceAll('_', ' ')}
         </span>
       ))}
     </div>

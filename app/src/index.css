@@ -1,4 +1,9 @@
 @import 'tailwindcss';
+/* A aula do tutor (/painel/tutor/:id) é a tela da POC: as cores e os
+   movimentos dela, e as classes que moram fora de app/. */
+@import '../../poc-tutor/web/aula.css';
+@source '../../poc-tutor/web';
+@source '../../poc-tutor/src';
 
 /* ==========================================================================
    Tokens do Vocab Node — extraídos dos mockups aprovados (mockups.html).

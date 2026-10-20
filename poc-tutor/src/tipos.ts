@@ -82,6 +82,20 @@ export type Roteiro = {
   conversa: Item[]
   /** R11: por habilidade, um item em contexto novo para testar de novo. */
   recuperacao: Record<string, Item>
+  /**
+   * Fatos de gramática do material que o avaliador tem de respeitar ("I
+   * weren't" é errado…). Entram no prompt do Gemini como a linha "Material:".
+   */
+  notasParaAvaliador?: string
+  /**
+   * Como os blocos e as habilidades desta lição aparecem para o aluno: `curto`
+   * no selo da tela, `resumo` no que o tutor diz no fim. Sem isto valem os
+   * nomes da lição do clima (ui.tsx, falas.ts) e, por último, o próprio id.
+   */
+  nomes?: {
+    blocos?: Record<string, string>
+    habilidades?: Record<string, { curto: string; resumo: string }>
+  }
 }
 
 // ── Avaliação (entrada do controlador) ───────────────────────────────────────

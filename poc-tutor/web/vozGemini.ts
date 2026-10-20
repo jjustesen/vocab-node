@@ -1,6 +1,6 @@
 import { chaveDaFala } from '../src/chaveDaFala.ts'
 import type { Fala } from '../src/falas.ts'
-import { codigoDeAcesso } from './api.ts'
+import { chamar } from './conexao.ts'
 import type { Custo } from './custo.ts'
 
 /**
@@ -19,13 +19,20 @@ import type { Custo } from './custo.ts'
  * turno juntas); `tocar` toca quando chegar a vez.
  */
 
-const URL_FUNCAO = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/poc-tutor`
-
 const GRAVADAS: Record<string, string> = Object.fromEntries(
   Object.entries(
     import.meta.glob<string>('./audios/*.{mp3,wav}', { query: '?url', import: 'default', eager: true }),
   ).map(([caminho, url]) => [caminho.replace(/^.*\/|\.\w+$/g, ''), url]),
 )
+
+/**
+ * As lições do banco (app) não estão no bundle: as falas delas moram no bucket
+ * `tutor-falas`, com o mesmo nome (chaveDaFala). A função `tutor-aluno` diz
+ * quais existem, e a página as junta às do bundle antes de começar.
+ */
+export function registrarGravadas(chaves: string[], urlBase: string) {
+  for (const chave of chaves) GRAVADAS[chave] ??= `${urlBase}${chave}.mp3`
+}
 
 /** Falas que já tocaram em stream, guardadas inteiras: o "Devagar" não pede de novo. */
 const jaOuvidas = new Map<string, string>()
@@ -90,11 +97,7 @@ function emStream(fala: Fala, chave: string): VozPreparada {
 
   void (async () => {
     try {
-      const resposta = await fetch(URL_FUNCAO, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo: codigoDeAcesso(), acao: 'falar_stream', fala }),
-      })
+      const resposta = await chamar({ acao: 'falar_stream', fala })
       if (!resposta.ok || !resposta.body) throw new Error(`TTS respondeu ${resposta.status}`)
       const leitor = resposta.body.pipeThrough(new TextDecoderStream()).getReader()
       let buffer = ''

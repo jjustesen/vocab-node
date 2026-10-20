@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { Layout } from '@/components/Layout'
@@ -28,6 +28,7 @@ import { PainelAlunoPage } from '@/features/painel/PainelAlunoPage'
 import { TrilhaAlunoPage } from '@/features/painel/TrilhaAlunoPage'
 import { MateriaisAlunoPage } from '@/features/painel/MateriaisAlunoPage'
 import { AulasAoVivoPage } from '@/features/painel/AulasAoVivoPage'
+import { TutorAlunoPage } from '@/features/tutor-aluno/TutorAlunoPage'
 import {
   SalaAlunoPage,
   SalaAlunoTurmaPage,
@@ -44,6 +45,12 @@ import { TrilhaDoAlunoPage } from '@/features/trilhas/TrilhaDoAlunoPage'
 import { FinanceiroPage } from '@/features/financeiro/FinanceiroPage'
 import { PlanoPage } from '@/features/planos/PlanoPage'
 import { ConfiguracoesPage } from '@/features/configuracoes/ConfiguracoesPage'
+
+// A aula do tutor carrega à parte: traz o controlador, a voz e os áudios da
+// POC, que só quem abre uma lição precisa.
+const PraticaTutorPage = lazy(() =>
+  import('@/features/tutor-aluno/PraticaTutorPage').then((m) => ({ default: m.PraticaTutorPage })),
+)
 
 export default function App() {
   return (
@@ -85,6 +92,15 @@ export default function App() {
             <Route path="/painel/sala/turma/:turmaId" element={<SalaAlunoTurmaPage />} />
             <Route path="/painel/trilha/:id" element={<TrilhaAlunoPage />} />
             <Route path="/painel/tarefa/:atribuicaoId" element={<TarefaPage />} />
+            <Route path="/painel/tutor" element={<TutorAlunoPage />} />
+            <Route
+              path="/painel/tutor/:licaoId"
+              element={
+                <Suspense fallback={<TelaCarregando />}>
+                  <PraticaTutorPage />
+                </Suspense>
+              }
+            />
           </Route>
         </Route>
 
@@ -158,6 +174,14 @@ function ExigeSessao() {
 
   // O <Layout /> vem da rota filha; aqui só liberamos a passagem.
   return <Outlet />
+}
+
+function TelaCarregando() {
+  return (
+    <div className="grid min-h-dvh place-items-center bg-areia">
+      <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+    </div>
+  )
 }
 
 function ProvedorSessaoAluno() {

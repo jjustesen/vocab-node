@@ -1,12 +1,16 @@
 import { NavLink } from 'react-router-dom'
-import { FolderOpen, House, Video } from 'lucide-react'
+import { FolderOpen, House, Mic, Video } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { usePainelAluno } from './api'
 
 const ITENS: { para: string; rotulo: string; Icone: LucideIcon }[] = [
   { para: '/painel', rotulo: 'Tarefas', Icone: House },
   { para: '/painel/materiais', rotulo: 'Materiais', Icone: FolderOpen },
   { para: '/painel/sala', rotulo: 'Aula ao vivo', Icone: Video },
 ]
+
+/** Só para quem o professor ligou o tutor (0024) — o painel diz em `tutorAtivo`. */
+const TUTOR = { para: '/painel/tutor', rotulo: 'Tutor', Icone: Mic }
 
 /**
  * Navegação da área do aluno. Fica fixa no rodapé porque o painel é usado no
@@ -17,10 +21,13 @@ const ITENS: { para: string; rotulo: string; Icone: LucideIcon }[] = [
  * último cartão da lista fica escondido atrás da barra.
  */
 export function NavAluno() {
+  // O painel é a tela de entrada: na maioria das vezes isto já está em cache.
+  const { data: painel } = usePainelAluno()
+  const itens = painel?.tutorAtivo ? [...ITENS, TUTOR] : ITENS
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200/70 bg-areia/95 backdrop-blur">
       <div className="mx-auto flex max-w-sm">
-        {ITENS.map(({ para, rotulo, Icone }) => (
+        {itens.map(({ para, rotulo, Icone }) => (
           <NavLink
             key={para}
             to={para}

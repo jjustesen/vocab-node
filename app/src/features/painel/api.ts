@@ -45,6 +45,8 @@ export type TrilhaDoAluno = {
 export type PainelAluno = {
   alunoNome: string
   professorNome: string
+  /** O professor ligou o tutor para este aluno e está no beta (0024): mostra o item Tutor. */
+  tutorAtivo: boolean
   /** As etapas destas trilhas NÃO se repetem em `pendentes`/`concluidas`. */
   trilhas: TrilhaDoAluno[]
   pendentes: TarefaPendente[]

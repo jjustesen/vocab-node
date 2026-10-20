@@ -1,5 +1,5 @@
 import type { Resumo, Roteiro, Sessao } from '../src/tipos.ts'
-import { ROTULO_HABILIDADE } from '../src/falas.ts'
+import { nomeNoResumo } from '../src/falas.ts'
 import { ehGemini, formatarDolares, nomeDoServico, precoDe, precoDoGemini, precoTotal, SERVICOS_FIXOS, type Gasto } from './custo.ts'
 import { Icone } from './ui.tsx'
 
@@ -206,8 +206,8 @@ export function FolhaDeApoio({ roteiro, aberta, aoFechar }: { roteiro: Roteiro; 
 }
 
 /** O fim da aula, em cartão. */
-export function CartaoResumo({ resumo, aoRefazer }: { resumo: Resumo; aoRefazer: () => void }) {
-  const rotular = (h: string) => ROTULO_HABILIDADE[h] ?? h
+export function CartaoResumo({ resumo, roteiro, aoRefazer }: { resumo: Resumo; roteiro: Roteiro; aoRefazer: () => void }) {
+  const rotular = (h: string) => nomeNoResumo(roteiro, h)
   const linhas: [string, string, string][] = [
     ['Frases sozinho', String(resumo.autonomos.length), ''],
     ['Com ajuda', String(resumo.comAjuda.length), ''],

@@ -1,43 +1,34 @@
 import type { RespostaDoAvaliador } from '../src/turno.ts'
+import { chamar, conexao, lembrarSenha, URL_DO_LABORATORIO } from './conexao.ts'
 
-const URL_FUNCAO = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/poc-tutor`
-const CHAVE_CODIGO = 'poc-tutor:codigo'
+export { codigoDeAcesso, esquecerSenha } from './conexao.ts'
 
 /**
- * A senha da POC — a secret POC_TUTOR_CODIGO da função, que NUNCA está no
- * código: a pessoa digita na tela de entrada, a função confere, e a página só
- * a lembra neste navegador para não pedir de novo a cada recarga.
+ * A função respondeu com erro. `recusa` = ela disse NÃO (tutor desligado,
+ * sessão expirada, limite do mês): a mensagem dela é o que o aluno precisa
+ * ler. O resto (rede, 5xx) é falha passageira.
  */
-export function codigoDeAcesso(): string | undefined {
-  try {
-    return localStorage.getItem(CHAVE_CODIGO) ?? undefined
-  } catch {
-    return undefined
+export class ErroDoTutor extends Error {
+  readonly status: number
+  constructor(mensagem: string, status: number) {
+    super(mensagem)
+    this.status = status
+  }
+  get recusa(): boolean {
+    return this.status === 403 || this.status === 410 || this.status === 429
   }
 }
 
-export function esquecerSenha() {
-  try {
-    localStorage.removeItem(CHAVE_CODIGO)
-  } catch {
-    /* nada a esquecer */
-  }
-}
-
-/** Confere a senha na função; só guarda se estiver certa. */
+/** Confere a senha na função do laboratório; só guarda se estiver certa. */
 export async function entrarComSenha(senha: string): Promise<boolean> {
-  const resposta = await fetch(URL_FUNCAO, {
+  const resposta = await fetch(URL_DO_LABORATORIO, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ acao: 'verificar', codigo: senha }),
   })
   if (resposta.status === 403) return false
   if (!resposta.ok) throw new Error(`O servidor respondeu ${resposta.status}.`)
-  try {
-    localStorage.setItem(CHAVE_CODIGO, senha)
-  } catch {
-    /* sem armazenamento: vale até recarregar */
-  }
+  lembrarSenha(senha)
   return true
 }
 
@@ -45,23 +36,17 @@ export async function avaliarNoServidor(corpo: {
   audio?: { base64: string; mimeType: string }
   texto?: string
   contexto: unknown
+  /** O item do roteiro em andamento: o app confere que ele existe na lição. */
+  itemId?: string
 }): Promise<RespostaDoAvaliador> {
-  const resposta = await fetch(URL_FUNCAO, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...corpo, acao: 'avaliar', codigo: codigoDeAcesso() }),
-  })
+  const resposta = await chamar({ ...corpo, acao: 'avaliar' })
   const json = await resposta.json().catch(() => ({}))
   if (!resposta.ok) {
     const erro = (json as { erro?: string }).erro
-    if (resposta.status === 401) throw new Error('A função foi publicada sem --no-verify-jwt (veja o README).')
-    if (resposta.status === 404) throw new Error('A função poc-tutor ainda não foi publicada no Supabase.')
-    if (resposta.status === 403) {
-      // A senha mudou desde a última vez: volta para a tela de senha.
-      esquecerSenha()
-      location.reload()
-    }
-    throw new Error(erro ?? `O servidor respondeu ${resposta.status}.`)
+    conexao().aoRecusar?.(resposta.status)
+    if (resposta.status === 401) throw new ErroDoTutor(erro ?? 'A função foi publicada sem --no-verify-jwt (veja o README).', 401)
+    if (resposta.status === 404 && !erro) throw new ErroDoTutor('A função do tutor ainda não foi publicada no Supabase.', 404)
+    throw new ErroDoTutor(erro ?? `O servidor respondeu ${resposta.status}.`, resposta.status)
   }
   return json as RespostaDoAvaliador
 }
