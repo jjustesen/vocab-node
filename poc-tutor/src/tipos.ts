@@ -21,8 +21,10 @@
  * - `construcao`: dizer em inglês uma frase pedida em português.
  * - `substituicao`: transformar a última frase aceita a partir de uma pista.
  * - `conversa`: responder ao CONTEÚDO de uma pergunta; várias respostas valem.
+ * - `transformacao`: o tutor diz uma frase em inglês e o aluno a transforma
+ *   (negativa, interrogativa, passado…) — o "Change into …" dos drillings.
  */
-export type TipoItem = 'repeticao' | 'construcao' | 'substituicao' | 'conversa'
+export type TipoItem = 'repeticao' | 'construcao' | 'substituicao' | 'conversa' | 'transformacao'
 
 export type ErroPrevisto = {
   exemplo: string
@@ -38,10 +40,14 @@ export type Item = {
   calibracao?: boolean
   /** `construcao`: o que pedir em português. */
   solicitacao?: string
-  /** `substituicao`: a pista curta, em inglês. */
+  /** `substituicao`: a pista curta — em inglês ("Yesterday.") ou em português ("alemão"). */
   pista?: string
-  /** `repeticao`: o que o tutor diz para o aluno repetir. */
+  /** `substituicao`: em que voz a pista é dita. Sem isto, inglês. */
+  idiomaDaPista?: 'pt' | 'en'
+  /** `repeticao`: o que o tutor diz para o aluno repetir. `transformacao`: a frase que o aluno transforma. */
   modelo?: string
+  /** `transformacao`: o que fazer com a frase, em português ("Passe para a negativa"). */
+  instrucao?: string
   /** `conversa`: a pergunta real. */
   pergunta?: string
   /** `conversa`: o que conta como resposta pertinente. */

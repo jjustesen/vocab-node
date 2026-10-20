@@ -2,7 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { iniciar, receber } from '../src/controlador.ts'
-import { validarRoteiro } from '../src/validacao.ts'
+import { avisosDoRoteiro, validarRoteiro } from '../src/validacao.ts'
 import type { Acao, Avaliacao, Item, Roteiro, Sessao } from '../src/tipos.ts'
 
 /**
@@ -21,23 +21,6 @@ const carregar = (arquivo: string) => JSON.parse(readFileSync(new URL(arquivo, P
 
 /** Os itens que a aula percorre quando nada dá errado: blocos e conversa. */
 const itensDaAula = (r: Roteiro): Item[] => [...r.blocos.flatMap((b) => b.itens), ...r.conversa]
-
-function todosOsItens(r: Roteiro): Item[] {
-  return [
-    ...itensDaAula(r),
-    ...Object.values(r.apoios).flatMap((a) => a.degraus),
-    ...Object.values(r.recuperacao),
-  ]
-}
-
-/** Para comparar frases sem depender de maiúscula nem de pontuação. */
-const normal = (t: string) =>
-  t
-    .toLowerCase()
-    .replace(/’/g, "'")
-    .replace(/[.,!?…"]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
 
 const adequada = (s: Sessao): Avaliacao => ({ tipo: 'adequada', reconhecido: s.atual!.item.alvo ?? 'ok' })
 
@@ -73,54 +56,8 @@ for (const arquivo of ARQUIVOS) {
       assert.deepEqual(validarRoteiro(r), [])
     })
 
-    it('o painel não mostra as respostas das cadeias', () => {
-      const { painel } = r
-      const textos = [...painel.estruturas, ...painel.exemplos, ...painel.alertas, ...painel.vocabulario.flatMap((v) => [v.en, v.pt])]
-      const visivel = normal(textos.join(' | '))
-      for (const item of r.blocos.flatMap((b) => b.itens)) {
-        for (const resposta of [item.alvo, ...(item.variantes ?? [])]) {
-          if (resposta) assert.ok(!visivel.includes(normal(resposta)), `o painel mostra a resposta de ${item.id}: "${resposta}"`)
-        }
-      }
-      // A tela usa estes textos como chave de lista.
-      for (const [nome, lista] of Object.entries({
-        estruturas: painel.estruturas,
-        exemplos: painel.exemplos,
-        alertas: painel.alertas,
-        vocabulario: painel.vocabulario.map((v) => v.en),
-      })) {
-        assert.equal(new Set(lista).size, lista.length, `painel.${nome} tem entradas repetidas`)
-      }
-    })
-
-    it('as pistas de ajuda não entregam a frase-alvo', () => {
-      for (const item of todosOsItens(r)) {
-        const respostas = [item.alvo, ...(item.variantes ?? [])].filter((x): x is string => Boolean(x)).map(normal)
-        const pistas = [...(item.ajudas ?? []), ...(item.errosPrevistos ?? []).map((e) => e.pista)]
-        for (const pista of pistas) {
-          for (const resposta of respostas) {
-            assert.ok(!normal(pista).includes(resposta), `${item.id}: a pista "${pista}" já diz a resposta`)
-          }
-        }
-      }
-    })
-
-    it('dá nome a cada bloco e a cada habilidade', (t) => {
-      if (!r.nomes && arquivo === 'licao-clima.json') {
-        t.skip('a lição do clima ainda usa os nomes fixos de ui.tsx e falas.ts')
-        return
-      }
-      for (const bloco of r.blocos) {
-        assert.ok(r.nomes?.blocos?.[bloco.id]?.trim(), `bloco ${bloco.id} sem nome em nomes.blocos`)
-      }
-      const usadas = new Set([
-        ...todosOsItens(r).flatMap((i) => [...i.habilidades, ...(i.errosPrevistos ?? []).map((e) => e.habilidade)]),
-        ...Object.keys(r.recuperacao),
-      ])
-      for (const h of usadas) {
-        const nome = r.nomes?.habilidades?.[h]
-        assert.ok(nome?.curto?.trim() && nome?.resumo?.trim(), `habilidade ${h} sem "curto" e "resumo" em nomes.habilidades`)
-      }
+    it('não tem avisos: folha sem respostas, dicas sem a frase, nomes completos', () => {
+      assert.deepEqual(avisosDoRoteiro(r), [])
     })
 
     it('respondendo tudo certo, a aula vai do começo ao fim sem desvio', () => {

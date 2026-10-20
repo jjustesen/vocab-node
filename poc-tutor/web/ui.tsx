@@ -152,6 +152,7 @@ function rotuloDoPedido(item: Item, contexto: string): string {
   if (contexto === 'retorno') return 'De volta à frase'
   if (contexto === 'recuperacao') return 'Revisão'
   if (item.tipo === 'substituicao') return 'Substituição'
+  if (item.tipo === 'transformacao') return 'Transformação'
   if (item.tipo === 'repeticao') return 'Repita'
   return contexto === 'calibracao' ? 'Primeira frase' : 'Nova frase'
 }
@@ -171,7 +172,12 @@ export function Palco({
   const t = sessao.atual
   // A frase que está sendo transformada: a última aceita (na substituição), ou
   // o modelo a repetir. Numa frase nova, ainda não há nada — só o pedido.
-  const frase = t?.item.tipo === 'repeticao' ? t.item.modelo ?? null : t?.item.tipo === 'substituicao' ? sessao.ultimaAceita : null
+  const frase =
+    t?.item.tipo === 'repeticao' || t?.item.tipo === 'transformacao'
+      ? (t.item.modelo ?? null)
+      : t?.item.tipo === 'substituicao'
+        ? sessao.ultimaAceita
+        : null
 
   // Palavras que entraram desde a frase anterior: são elas que animam e ficam
   // roxas. Calculadas só quando a FRASE muda — não a cada redesenho da tela.
@@ -205,6 +211,11 @@ export function Palco({
             <p key={t.item.id} className="animar-surge max-w-[22em] text-[17px] text-neutral-500">
               Diga em inglês: <strong className="text-neutral-900">{t.item.solicitacao}</strong>
             </p>
+          )}
+          {t.item.tipo === 'transformacao' && (
+            <span key={t.item.id} className="animar-surge rounded-2xl bg-violet-100 px-5 py-2 text-lg font-extrabold text-violet-700">
+              {t.item.instrucao}
+            </span>
           )}
           {t.item.tipo === 'substituicao' && (
             <span key={t.item.id} className="animar-surge rounded-2xl bg-violet-100 px-5 py-2 text-2xl font-extrabold text-violet-700">

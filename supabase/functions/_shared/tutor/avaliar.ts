@@ -154,6 +154,15 @@ function erroPrevisto(contexto: Record<string, unknown>, habilidade: string): bo
   return previstos.some((e) => e.habilidade === habilidade)
 }
 
+const AULA_PARA_O_JEV =
+  'Aula oral de inglês para brasileiro. Na substituição, a pista transforma a ÚLTIMA FRASE ACEITA e o resto dela deve ser preservado.'
+const TRANSFORMACAO_PARA_O_JEV =
+  ' Na transformação, o aluno diz pedido.frase_para_transformar transformada conforme pedido.instrucao (negativa, interrogativa, passado…); repetir a frase sem transformar é erro.'
+
+function tipoDoPedido(contexto: Record<string, unknown>): unknown {
+  return (contexto.pedido as { tipo?: unknown } | undefined)?.tipo
+}
+
 type ResultadoJev = {
   classe: 'adequada' | 'erro' | 'outro' | 'parte'
   confianca: number
@@ -193,7 +202,7 @@ async function classificarComJev(chave: string, contexto: Record<string, unknown
       body: JSON.stringify({
         model: 'jev-latest',
         state: {
-          aula: 'Aula oral de inglês para brasileiro. Na substituição, a pista transforma a ÚLTIMA FRASE ACEITA e o resto dela deve ser preservado.',
+          aula: AULA_PARA_O_JEV + (tipoDoPedido(contexto) === 'transformacao' ? TRANSFORMACAO_PARA_O_JEV : ''),
           exercicio: contexto,
           resposta_do_aluno: resposta,
         },
@@ -304,7 +313,7 @@ const INSTRUCAO_AVALIACAO = `Você avalia UMA resposta de um aluno brasileiro nu
 
 Você NÃO conduz a aula. Um controlador decide o próximo passo a partir da sua classificação. Não invente a próxima pergunta, não decida se avança: só classifique.
 
-O contexto traz: o modo ("treino_controlado" ou "conversa"), o tipo de pedido (repeticao, construcao, substituicao, conversa), o que foi pedido, a resposta de referência (alvo), variantes aceitas, a última frase aceita da cadeia e as habilidades em jogo.
+O contexto traz: o modo ("treino_controlado" ou "conversa"), o tipo de pedido (repeticao, construcao, substituicao, transformacao, conversa), o que foi pedido, a resposta de referência (alvo), variantes aceitas, a última frase aceita da cadeia e as habilidades em jogo.
 
 TIPOS
 
@@ -313,6 +322,8 @@ TIPOS
 - Aceite contrações e formas cheias (weren't / were not), variantes naturais equivalentes (listadas ou não), diferenças de maiúscula e pontuação, hesitações ("uh", "hmm"). Se o aluno se autocorrigiu, avalie a última versão completa.
 - Mudança de sujeito exige a concordância junto (he was → they were).
 - Repetição: adequada se repetiu o modelo de forma compreensível.
+- Substituição com pista em português ("idioma_da_pista": "pt", como "alemão"): o aluno põe o equivalente EM INGLÊS na última frase aceita ("I speak German."). Dizer a palavra em português na frase não realiza o pedido.
+- Transformação: o tutor disse "frase_para_transformar" e pediu a "instrucao" (passar para a negativa, a interrogativa, o passado, a afirmativa…). Adequada se o aluno disse ESSA frase transformada, preservando o resto dela. Repetir a frase sem transformar não realiza o pedido.
 - Conversa: qualquer resposta pertinente e plausível à pergunta, mesmo diferente dos exemplos (se o exemplo diz sunny e o aluno diz rainy, vale). Exija só a estrutura-alvo compreensível; erros secundários não impedem.
 - Na conversa, preencha "reacao": uma frase curta e natural, EM INGLÊS, reagindo ao conteúdo ("Rainy and cold! I hope you stayed warm."). Sem fazer nova pergunta.
 

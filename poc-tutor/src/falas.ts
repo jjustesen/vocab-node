@@ -117,16 +117,30 @@ function pedido(item: Item, contexto: Contexto, s: Sessao): Fala {
     case 'substituicao':
       // A regra do jogo é dita uma vez, antes da primeira pista da aula.
       if (!jaHouveSubstituicao(s)) antes.push(pt('Agora eu digo uma palavra, e você diz a frase inteira com ela.'))
-      return [...antes, en(item.pista ?? '')]
+      return [...antes, pistaFalada(item)]
+    case 'transformacao':
+      return [...antes, ...transformacao(item)]
     case 'conversa':
       return [...antes, en(item.pergunta ?? '')]
   }
 }
 
+/** A pista na voz do idioma dela: "alemão" lido em inglês seria outra palavra. */
+function pistaFalada(item: Item): Parte {
+  return item.idiomaDaPista === 'pt' ? pt(item.pista ?? '') : en(item.pista ?? '')
+}
+
+/** "Passe para a negativa:" em português, a frase em inglês. */
+function transformacao(item: Item): Fala {
+  const instrucao = (item.instrucao ?? 'Transforme a frase').trim().replace(/[.:!]+$/, '')
+  return [pt(`${instrucao}:`), en(item.modelo ?? '')]
+}
+
 /** Depois de uma dúvida: relembra onde paramos, sem dar a resposta. */
 function retomada(item: Item, s: Sessao): Fala {
-  if (item.tipo === 'substituicao' && s.ultimaAceita) return [pt('A frase era:'), en(s.ultimaAceita), en(item.pista ?? '')]
-  if (item.tipo === 'substituicao') return [en(item.pista ?? '')]
+  if (item.tipo === 'substituicao' && s.ultimaAceita) return [pt('A frase era:'), en(s.ultimaAceita), pistaFalada(item)]
+  if (item.tipo === 'substituicao') return [pistaFalada(item)]
+  if (item.tipo === 'transformacao') return transformacao(item)
   if (item.tipo === 'construcao') return [pt(`Diga em inglês: ${comPonto(item.solicitacao ?? '')}`)]
   if (item.tipo === 'repeticao') return [pt('Repita comigo:'), en(item.modelo ?? '')]
   return [en(item.pergunta ?? '')]

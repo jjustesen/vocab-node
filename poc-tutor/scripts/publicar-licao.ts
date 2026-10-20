@@ -21,7 +21,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { textoDaFala, type Fala } from '../src/falas.ts'
 import { carregarRoteiro } from '../src/roteiro.ts'
-import { falasFixas } from './falas-fixas.ts'
+import { falasFixas } from '../src/falasFixas.ts'
 
 const NIVEIS = ['A1', 'A2', 'B1', 'B2', 'C1']
 const BUCKET = 'tutor-falas'

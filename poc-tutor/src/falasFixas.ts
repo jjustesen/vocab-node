@@ -1,15 +1,16 @@
-import { iniciar, receber } from '../src/controlador.ts'
-import { chaveDaFala } from '../src/chaveDaFala.ts'
-import { falaDaAcao, type Fala } from '../src/falas.ts'
-import type { Acao, Avaliacao, Item, Roteiro, Sessao } from '../src/tipos.ts'
+import { iniciar, receber } from './controlador.ts'
+import { chaveDaFala } from './chaveDaFala.ts'
+import { falaDaAcao, type Fala } from './falas.ts'
+import type { Acao, Avaliacao, Item, Roteiro, Sessao } from './tipos.ts'
 
 /**
  * As falas do tutor que já se sabe de antemão — as que saem só do roteiro e
  * dos templates, sem nada do que o aluno disse —, por chave (chaveDaFala).
  * São as que valem a pena gravar: tocam na hora e não custam nada na aula.
  *
- * Usado por gravar-falas.ts (a lição do laboratório, no bundle) e por
- * publicar-licao.ts (as lições do banco, no bucket `tutor-falas`).
+ * Usado por scripts/gravar-falas.ts (a lição do laboratório, no bundle), por
+ * scripts/publicar-licao.ts e pelo painel Áudios do editor de lições no app
+ * (as lições do banco, no bucket `tutor-falas`).
  *
  * `quantos`: só os primeiros N itens dos blocos (o padrão é todos).
  */

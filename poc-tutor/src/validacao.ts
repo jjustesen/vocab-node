@@ -1,3 +1,4 @@
+import { ROTULO_HABILIDADE } from './falas.ts'
 import type { Item, Roteiro } from './tipos.ts'
 
 /**
@@ -29,6 +30,11 @@ export function validarRoteiro(r: Roteiro): string[] {
       case 'conversa':
         if (!item.pergunta) problemas.push(`${item.id}: conversa sem "pergunta"`)
         if (!item.criterio) problemas.push(`${item.id}: conversa sem "criterio"`)
+        break
+      case 'transformacao':
+        if (!item.modelo) problemas.push(`${item.id}: transformação sem "modelo" (a frase em inglês)`)
+        if (!item.instrucao) problemas.push(`${item.id}: transformação sem "instrucao"`)
+        if (!item.alvo) problemas.push(`${item.id}: transformação sem "alvo"`)
         break
       default:
         problemas.push(`${item.id}: tipo desconhecido "${(item as Item).tipo}"`)
@@ -65,4 +71,75 @@ export function validarRoteiro(r: Roteiro): string[] {
   }
 
   return problemas
+}
+
+/** Para comparar frases sem depender de maiúscula nem de pontuação. */
+const normal = (t: string) =>
+  t
+    .toLowerCase()
+    .replace(/’/g, "'")
+    .replace(/[.,!?…"]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+/** Todos os itens do roteiro: blocos, conversa, escadas de apoio e recuperação. */
+export function todosOsItens(r: Roteiro): Item[] {
+  return [
+    ...r.blocos.flatMap((b) => b.itens),
+    ...r.conversa,
+    ...Object.values(r.apoios).flatMap((a) => a.degraus),
+    ...Object.values(r.recuperacao),
+  ]
+}
+
+/**
+ * O que não quebra a aula, mas a deixa pior — e que uma lição escrita (ou
+ * gerada pela IA) costuma deixar passar: o painel mostrando a resposta, a dica
+ * que já diz a frase, uma habilidade sem nome para o aluno. O editor mostra
+ * isto como aviso; os testes de roteiro/ exigem a lista vazia.
+ */
+export function avisosDoRoteiro(r: Roteiro): string[] {
+  const avisos: string[] = []
+  const { painel } = r
+
+  const visivel = normal(
+    [...painel.estruturas, ...painel.exemplos, ...painel.alertas, ...painel.vocabulario.flatMap((v) => [v.en, v.pt])].join(' | '),
+  )
+  for (const item of r.blocos.flatMap((b) => b.itens)) {
+    for (const resposta of [item.alvo, ...(item.variantes ?? [])]) {
+      if (resposta && visivel.includes(normal(resposta))) avisos.push(`${item.id}: a folha de apoio mostra a resposta "${resposta}"`)
+    }
+  }
+  // A tela usa estes textos como chave de lista: repetido some da folha.
+  for (const [nome, lista] of Object.entries({
+    estruturas: painel.estruturas,
+    exemplos: painel.exemplos,
+    alertas: painel.alertas,
+    vocabulario: painel.vocabulario.map((v) => v.en),
+  })) {
+    if (new Set(lista).size !== lista.length) avisos.push(`folha de apoio: há ${nome} repetidos`)
+  }
+
+  for (const item of todosOsItens(r)) {
+    const respostas = [item.alvo, ...(item.variantes ?? [])].filter((x): x is string => Boolean(x)).map(normal)
+    const pistas = [...(item.ajudas ?? []), ...(item.errosPrevistos ?? []).map((e) => e.pista)]
+    for (const pista of pistas) {
+      if (respostas.some((resposta) => normal(pista).includes(resposta))) avisos.push(`${item.id}: a dica "${pista}" já diz a resposta`)
+    }
+  }
+
+  for (const bloco of r.blocos) {
+    if (r.nomes && !r.nomes.blocos?.[bloco.id]?.trim()) avisos.push(`bloco ${bloco.id} sem nome para o aluno`)
+  }
+  const usadas = new Set([
+    ...todosOsItens(r).flatMap((i) => [...i.habilidades, ...(i.errosPrevistos ?? []).map((e) => e.habilidade)]),
+    ...Object.keys(r.recuperacao),
+  ])
+  for (const h of usadas) {
+    const nome = r.nomes?.habilidades?.[h]
+    const temNome = nome ? Boolean(nome.curto?.trim() && nome.resumo?.trim()) : Boolean(ROTULO_HABILIDADE[h])
+    if (!temNome) avisos.push(`habilidade ${h} sem nome para o aluno`)
+  }
+
+  return avisos
 }

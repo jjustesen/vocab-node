@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { textoDaFala, type Fala } from '../src/falas.ts'
 import { carregarRoteiro } from '../src/roteiro.ts'
-import { falasFixas } from './falas-fixas.ts'
+import { falasFixas } from '../src/falasFixas.ts'
 
 const codigo = process.argv[2]
 const quantos = Number(process.argv[3] ?? 5)

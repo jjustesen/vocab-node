@@ -146,7 +146,11 @@ export function memoria(s: Sessao) {
     bloco: t?.blocoId ?? null,
     frase_base: s.fraseBase,
     ultima_frase_aceita: s.ultimaAceita,
-    solicitacao_pendente: t ? (t.item.pista ?? t.item.solicitacao ?? t.item.modelo ?? t.item.pergunta ?? null) : null,
+    solicitacao_pendente: t
+      ? t.item.tipo === 'transformacao'
+        ? `${t.item.instrucao ?? 'Transforme'}: ${t.item.modelo ?? ''}`
+        : (t.item.pista ?? t.item.solicitacao ?? t.item.modelo ?? t.item.pergunta ?? null)
+      : null,
     alvo_pendente: t?.item.alvo ?? null,
     variantes_aceitas: t?.item.variantes ?? [],
     criterio: t?.item.criterio ?? null,
