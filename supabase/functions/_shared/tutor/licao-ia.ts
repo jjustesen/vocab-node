@@ -42,7 +42,26 @@ const ITEM = {
     },
     apoio: STR,
   },
-  required: ['tipo', 'alvo', 'habilidades', 'ajudas'],
+  // TODOS obrigatórios ("" ou [] quando não se aplicam): opcional, o Gemini
+  // simplesmente pulava a instrução da transformação e o critério da conversa.
+  required: [
+    'tipo',
+    'solicitacao',
+    'pista',
+    'idiomaDaPista',
+    'modelo',
+    'instrucao',
+    'pergunta',
+    'criterio',
+    'exemplos',
+    'acompanhamentos',
+    'alvo',
+    'variantes',
+    'habilidades',
+    'ajudas',
+    'errosPrevistos',
+    'apoio',
+  ],
 }
 
 export const LICAO_GERADA_SCHEMA = {
@@ -186,11 +205,53 @@ type LicaoIA = {
   habilidades?: { id?: string; curto?: string; resumo?: string }[]
 }
 
+/** O `Item` de poc-tutor/src/tipos.ts, do jeito que sai daqui (campos vazios não entram). */
+type ItemDoRoteiro = {
+  id: string
+  tipo: string
+  calibracao?: boolean
+  solicitacao?: string
+  pista?: string
+  idiomaDaPista?: string
+  modelo?: string
+  instrucao?: string
+  pergunta?: string
+  criterio?: string
+  exemplos?: string[]
+  acompanhamentos?: string[]
+  alvo?: string
+  variantes?: string[]
+  habilidades: string[]
+  ajudas?: string[]
+  errosPrevistos?: { exemplo: string; habilidade: string; pista: string }[]
+  apoio?: string
+}
+
 const TIPOS = new Set(['repeticao', 'construcao', 'substituicao', 'transformacao', 'conversa'])
 const MAX_BLOCOS = 12
 const MAX_ITENS = 40
 
 const texto = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+/** Para comparar frases sem maiúscula nem pontuação — o mesmo critério de avisosDoRoteiro. */
+const normal = (t: string) =>
+  t
+    .toLowerCase()
+    .replace(/’/g, "'")
+    .replace(/[.,!?…"]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+/** A transformação sem instrução: o nome do bloco ("Negativa", "Passado") diz qual é. */
+function instrucaoDoBloco(nome: string): string {
+  const n = normal(nome)
+  if (/negativ/.test(n)) return 'Passe para a negativa'
+  if (/pergunt|interrogativ/.test(n)) return 'Passe para a pergunta'
+  if (/passad/.test(n)) return 'Passe para o passado'
+  if (/afirmativ/.test(n)) return 'Passe para a afirmativa'
+  return 'Transforme a frase'
+}
+
+const CRITERIO_PADRAO = 'Qualquer resposta pertinente à pergunta, em inglês, com a estrutura da lição compreensível.'
 const lista = (v: unknown) => (Array.isArray(v) ? v.map(texto).filter(Boolean) : [])
 /** Sem duplicatas: a folha de apoio usa os textos como chave de lista. */
 const unicos = (v: string[]) => [...new Set(v)]
@@ -208,12 +269,15 @@ export function paraRoteiro(bruto: unknown, id: string) {
   const apoiosIA = (l.apoios ?? []).filter((a) => texto(a.id) && (a.degraus ?? []).length)
   const idsDeApoio = new Set(apoiosIA.map((a) => slug(texto(a.id))))
 
-  const item = (i: ItemIA, itemId: string) => {
+  const item = (i: ItemIA, itemId: string, nomeDoBloco = ''): ItemDoRoteiro => {
     const tipo = TIPOS.has(texto(i.tipo)) ? texto(i.tipo) : 'construcao'
+    const respostas = [texto(i.alvo), ...lista(i.variantes)].filter(Boolean).map(normal)
+    // Dica que já diz a frase não é dica: o editor avisaria, então nem entra.
+    const semResposta = (dica: string) => !respostas.some((r) => normal(dica).includes(r))
     const habilidades = unicos(lista(i.habilidades).map(slug))
     const errosPrevistos = (i.errosPrevistos ?? [])
       .map((e) => ({ exemplo: texto(e.exemplo), habilidade: slug(texto(e.habilidade)), pista: texto(e.pista) }))
-      .filter((e) => e.exemplo && e.pista && e.habilidade)
+      .filter((e) => e.exemplo && e.pista && e.habilidade && semResposta(e.pista))
     // O validador exige o erro previsto dentro das habilidades do item.
     for (const e of errosPrevistos) if (!habilidades.includes(e.habilidade)) habilidades.push(e.habilidade)
     if (!habilidades.length) habilidades.push('estrutura')
@@ -228,11 +292,11 @@ export function paraRoteiro(bruto: unknown, id: string) {
       ...(tipo === 'substituicao' ? so('pista', texto(i.pista)) : {}),
       ...(tipo === 'substituicao' && texto(i.idiomaDaPista) === 'pt' ? { idiomaDaPista: 'pt' } : {}),
       ...(tipo === 'repeticao' || tipo === 'transformacao' ? so('modelo', texto(i.modelo)) : {}),
-      ...(tipo === 'transformacao' ? so('instrucao', texto(i.instrucao)) : {}),
+      ...(tipo === 'transformacao' ? { instrucao: texto(i.instrucao) || instrucaoDoBloco(nomeDoBloco) } : {}),
       ...(tipo === 'conversa'
         ? {
             ...so('pergunta', texto(i.pergunta)),
-            ...so('criterio', texto(i.criterio)),
+            criterio: texto(i.criterio) || CRITERIO_PADRAO,
             ...soLista('exemplos', lista(i.exemplos)),
             ...soLista('acompanhamentos', lista(i.acompanhamentos)),
           }
@@ -240,7 +304,7 @@ export function paraRoteiro(bruto: unknown, id: string) {
       ...(tipo !== 'conversa' ? so('alvo', texto(i.alvo) || (tipo === 'repeticao' ? texto(i.modelo) : '')) : {}),
       ...soLista('variantes', unicos(lista(i.variantes))),
       habilidades,
-      ...soLista('ajudas', lista(i.ajudas).slice(0, 2)),
+      ...soLista('ajudas', lista(i.ajudas).filter(semResposta).slice(0, 2)),
       ...(errosPrevistos.length ? { errosPrevistos } : {}),
       ...(apoio && idsDeApoio.has(apoio) ? { apoio } : {}),
     }
@@ -257,13 +321,13 @@ export function paraRoteiro(bruto: unknown, id: string) {
       return {
         id: blocoId,
         objetivo: texto(b.objetivo) || texto(b.nome),
-        itens: (b.itens ?? []).slice(0, MAX_ITENS).map((i, n) => item(i, `${blocoId}.${n + 1}`)),
+        itens: (b.itens ?? []).slice(0, MAX_ITENS).map((i, n) => item(i, `${blocoId}.${n + 1}`, texto(b.nome))),
       }
     })
-  const primeiro = blocos[0]?.itens[0] as Record<string, unknown> | undefined
+  const primeiro = blocos[0]?.itens[0]
   if (primeiro) primeiro.calibracao = true
 
-  const apoios: Record<string, { objetivo: string; degraus: ReturnType<typeof item>[] }> = {}
+  const apoios: Record<string, { objetivo: string; degraus: ItemDoRoteiro[] }> = {}
   for (const a of apoiosIA) {
     const apoioId = slug(texto(a.id))
     apoios[apoioId] = {
@@ -272,7 +336,7 @@ export function paraRoteiro(bruto: unknown, id: string) {
     }
   }
 
-  const recuperacao: Record<string, ReturnType<typeof item>> = {}
+  const recuperacao: Record<string, ItemDoRoteiro> = {}
   for (const r of l.recuperacao ?? []) {
     const habilidade = slug(texto(r.habilidade))
     if (!habilidade || !r.item || recuperacao[habilidade]) continue
@@ -288,6 +352,11 @@ export function paraRoteiro(bruto: unknown, id: string) {
     if (hid && texto(h.curto)) habilidades[hid] = { curto: texto(h.curto), resumo: texto(h.resumo) || texto(h.curto) }
   }
 
+  // A folha de apoio não pode mostrar a resposta de um exercício (avisosDoRoteiro).
+  const respostasDosBlocos = blocos.flatMap((b) =>
+    b.itens.flatMap((i) => [i.alvo, ...(i.variantes ?? [])]).filter((x): x is string => Boolean(x)).map(normal),
+  )
+  const naoEntrega = (t: string) => !respostasDosBlocos.some((r) => normal(t).includes(r))
   const painel = l.painel ?? {}
   return {
     id,
@@ -295,12 +364,13 @@ export function paraRoteiro(bruto: unknown, id: string) {
     abertura: texto(l.abertura) || 'Vamos praticar.',
     notasParaAvaliador: texto(l.notasParaAvaliador),
     painel: {
-      estruturas: unicos(lista(painel.estruturas)),
+      estruturas: unicos(lista(painel.estruturas)).filter(naoEntrega),
       vocabulario: (painel.vocabulario ?? [])
         .map((v) => ({ en: texto(v.en), pt: texto(v.pt) }))
-        .filter((v, i, todos) => v.en && v.pt && todos.findIndex((o) => o.en === v.en) === i),
-      exemplos: unicos(lista(painel.exemplos)),
-      alertas: unicos(lista(painel.alertas)),
+        .filter((v, i, todos) => v.en && v.pt && todos.findIndex((o) => o.en === v.en) === i)
+        .filter((v) => naoEntrega(`${v.en} | ${v.pt}`)),
+      exemplos: unicos(lista(painel.exemplos)).filter(naoEntrega),
+      alertas: unicos(lista(painel.alertas)).filter(naoEntrega),
     },
     blocos,
     apoios,
