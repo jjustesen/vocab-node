@@ -15,15 +15,31 @@ import type { Acao, Avaliacao, Item, Roteiro, Sessao } from './tipos.ts'
  * `quantos`: só os primeiros N itens dos blocos (o padrão é todos).
  */
 export function falasFixas(roteiro: Roteiro, quantos = Infinity): Map<string, Fala> {
+  return new Map([...falasFixasComItens(roteiro, quantos)].map(([chave, { fala }]) => [chave, fala]))
+}
+
+/**
+ * As mesmas falas, cada uma com os itens em que o tutor a diz. Uma fala de um
+ * item só ("Diga em inglês: eu falo inglês.", a dica dele) é DAQUELE exercício;
+ * a que aparece em vários ("Muito bem.") é geral. O editor mostra as primeiras
+ * dentro de cada exercício, com o play de cada uma.
+ */
+export function falasFixasComItens(
+  roteiro: Roteiro,
+  quantos = Infinity,
+): Map<string, { fala: Fala; itens: Set<string> }> {
   const itens = roteiro.blocos.flatMap((b) => b.itens).slice(0, quantos)
   const ids = new Set(itens.map((i) => i.id))
-  const falas = new Map<string, Fala>()
+  const falas = new Map<string, { fala: Fala; itens: Set<string> }>()
 
   function guardar(acoes: Acao[], s: Sessao) {
     for (const a of acoes) {
       if ('item' in a && !ids.has(a.item.id)) continue
       const fala = falaDaAcao(a, s)
-      falas.set(chaveDaFala(fala), fala)
+      const chave = chaveDaFala(fala)
+      const registro = falas.get(chave) ?? { fala, itens: new Set<string>() }
+      if ('item' in a) registro.itens.add(a.item.id)
+      falas.set(chave, registro)
     }
   }
 

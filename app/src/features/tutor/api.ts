@@ -130,6 +130,37 @@ export function useSalvarLicao() {
   })
 }
 
+/**
+ * Uma lição da biblioteca não se edita (é de todos os professores): para
+ * adaptar, o professor faz uma cópia dele. Os áudios vêm junto — o nome do
+ * arquivo é o texto da fala, então a cópia toca os mesmos até alguém mudar a frase.
+ */
+export function useCopiarLicao() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (licao: LicaoCompleta): Promise<string> => {
+      const { data: sessao } = await supabase.auth.getUser()
+      if (!sessao.user) throw new Error('Sessão expirada. Entre novamente.')
+      const id = crypto.randomUUID()
+      const titulo = `${licao.titulo} (cópia)`
+      const { error } = await supabase.from('tutor_licoes').insert({
+        id,
+        professor_id: sessao.user.id,
+        titulo,
+        descricao: licao.descricao,
+        nivel_cefr: licao.nivel_cefr,
+        roteiro: { ...licao.roteiro, id, titulo },
+        falas_gravadas: licao.falas_gravadas,
+        ordem: licao.ordem,
+        publicada: false,
+      })
+      if (error) throw error
+      return id
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTutor.licoes }),
+  })
+}
+
 export function useExcluirLicao() {
   const qc = useQueryClient()
   return useMutation({

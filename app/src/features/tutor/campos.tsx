@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { useSomenteLeitura } from './edicao'
 
 /** Os campos do editor de lições: rótulo em cima, ajuda curta embaixo, tudo em português simples. */
 
@@ -20,6 +21,7 @@ export function Campo({
   ingles?: boolean
 }) {
   const id = useId()
+  const somenteLeitura = useSomenteLeitura()
   return (
     <div>
       <label htmlFor={id} className="text-xs font-bold text-neutral-600">
@@ -27,11 +29,12 @@ export function Campo({
       </label>
       <input
         id={id}
+        readOnly={somenteLeitura}
         value={valor ?? ''}
         onChange={(e) => aoMudar(e.target.value)}
         placeholder={placeholder}
         lang={ingles ? 'en' : 'pt-BR'}
-        className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 disabled:bg-neutral-50"
+        className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 read-only:bg-neutral-50"
       />
       {ajuda && <p className="mt-1 text-[11px] text-neutral-400">{ajuda}</p>}
     </div>
@@ -52,6 +55,7 @@ export function Area({
   linhas?: number
 }) {
   const id = useId()
+  const somenteLeitura = useSomenteLeitura()
   return (
     <div>
       <label htmlFor={id} className="text-xs font-bold text-neutral-600">
@@ -59,10 +63,11 @@ export function Area({
       </label>
       <textarea
         id={id}
+        readOnly={somenteLeitura}
         value={valor ?? ''}
         rows={linhas}
         onChange={(e) => aoMudar(e.target.value)}
-        className="mt-1 w-full resize-y rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 disabled:bg-neutral-50"
+        className="mt-1 w-full resize-y rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 read-only:bg-neutral-50"
       />
       {ajuda && <p className="mt-1 text-[11px] text-neutral-400">{ajuda}</p>}
     </div>
@@ -88,6 +93,7 @@ export function Linhas({
   ingles?: boolean
 }) {
   const id = useId()
+  const somenteLeitura = useSomenteLeitura()
   const [texto, setTexto] = useState(() => (valor ?? []).join('\n'))
   const externo = (valor ?? []).join('\n')
   const limpo = (t: string) =>
@@ -104,6 +110,7 @@ export function Linhas({
       </label>
       <textarea
         id={id}
+        readOnly={somenteLeitura}
         value={mostrado}
         rows={Math.max(2, Math.min(8, mostrado.split('\n').length + 1))}
         lang={ingles ? 'en' : 'pt-BR'}
@@ -111,7 +118,7 @@ export function Linhas({
           setTexto(e.target.value)
           aoMudar(limpo(e.target.value))
         }}
-        className="mt-1 w-full resize-y rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 disabled:bg-neutral-50"
+        className="mt-1 w-full resize-y rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 read-only:bg-neutral-50"
       />
       <p className="mt-1 text-[11px] text-neutral-400">{ajuda ?? 'Uma por linha.'}</p>
     </div>

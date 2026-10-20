@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, Loader2, Play, Plus, Save, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, Copy, Loader2, Play, Plus, Save, Trash2 } from 'lucide-react'
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { Chave } from '@/components/Interruptor'
 import type { NivelCefr } from '@/types/db'
 import { avisosDoRoteiro, todosOsItens, validarRoteiro } from '../../../../poc-tutor/src/validacao.ts'
 import type { Item, Roteiro, TipoItem } from '../../../../poc-tutor/src/tipos.ts'
-import { useExcluirLicao, useLicao, useSalvarLicao } from './api'
+import { useCopiarLicao, useExcluirLicao, useLicao, useSalvarLicao } from './api'
+import { type FalaFixa, useFalasDaLicao, useTocador } from './audiosDaLicao'
 import { Area, Campo, Linhas, Secao } from './campos'
+import { SomenteLeitura } from './edicao'
 import { slug } from './slug'
-import { BotaoIcone, EditorDeItem } from './EditorDeItem'
+import { type AudiosDoItem, BotaoIcone, EditorDeItem } from './EditorDeItem'
 import { PainelAudios } from './PainelAudios'
 
 const NIVEIS: NivelCefr[] = ['A1', 'A2', 'B1', 'B2', 'C1']
@@ -61,6 +63,8 @@ export function EditorLicaoPage() {
   const { data: licao, isLoading, error } = useLicao(id)
   const salvar = useSalvarLicao()
   const excluir = useExcluirLicao()
+  const copiar = useCopiarLicao()
+  const tocador = useTocador()
   const [rascunho, setRascunho] = useState<Roteiro | null>(null)
   const [nivel, setNivel] = useState<NivelCefr | null>(null)
   const [publicada, setPublicada] = useState(false)
@@ -77,6 +81,19 @@ export function EditorLicaoPage() {
   const salvoJson = useMemo(() => (licao ? JSON.stringify(normalizar(licao.roteiro)) : ''), [licao])
   // O painel Áudios recalcula as falas quando o roteiro salvo MUDA, não a cada nova busca da linha.
   const roteiroSalvo = useMemo(() => (salvoJson ? (JSON.parse(salvoJson) as Roteiro) : null), [salvoJson])
+  const falas = useFalasDaLicao(roteiroSalvo)
+  const gravadas = useMemo(() => new Set(licao?.falas_gravadas ?? []), [licao?.falas_gravadas])
+  // Cada exercício mostra as falas que são SÓ dele; as que o tutor diz em vários ("Muito bem.") ficam no painel Áudios.
+  const falasPorItem = useMemo(() => {
+    const mapa = new Map<string, FalaFixa[]>()
+    for (const f of falas ?? []) {
+      if (f.itens.length !== 1) continue
+      const lista = mapa.get(f.itens[0]) ?? []
+      lista.push(f)
+      mapa.set(f.itens[0], lista)
+    }
+    return mapa
+  }, [falas])
   const problemas = useMemo(() => (normalizado ? validarRoteiro(normalizado) : []), [normalizado])
   const avisos = useMemo(() => (normalizado ? avisosDoRoteiro(normalizado) : []), [normalizado])
 
@@ -99,6 +116,8 @@ export function EditorLicaoPage() {
   }
 
   const somenteLeitura = !licao.professor_id
+  const audiosDe = (itemId: string): AudiosDoItem | undefined =>
+    falas ? { falas: falasPorItem.get(itemId) ?? [], gravadas, tocador } : undefined
   const sujo = JSON.stringify(normalizado) !== salvoJson || nivel !== licao.nivel_cefr || publicada !== licao.publicada
   const r = rascunho
   const mudar = (f: (n: Roteiro) => void) =>
@@ -125,14 +144,13 @@ export function EditorLicaoPage() {
         <ArrowLeft className="h-4 w-4" /> Lições
       </Link>
 
-      <fieldset disabled={somenteLeitura} className="contents">
-        <input
-          value={r.titulo}
-          onChange={(e) => mudar((n) => void (n.titulo = e.target.value))}
-          aria-label="Título da lição"
-          className="mt-2 w-full bg-transparent text-2xl font-extrabold outline-none"
-        />
-      </fieldset>
+      <input
+        value={r.titulo}
+        readOnly={somenteLeitura}
+        onChange={(e) => mudar((n) => void (n.titulo = e.target.value))}
+        aria-label="Título da lição"
+        className="mt-2 w-full bg-transparent text-2xl font-extrabold outline-none"
+      />
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-sm font-bold text-neutral-600">
@@ -201,8 +219,25 @@ export function EditorLicaoPage() {
       </div>
 
       {somenteLeitura && (
-        <p className="mt-4 rounded-2xl bg-neutral-100 px-4 py-3 text-sm text-neutral-600">
-          Lição da biblioteca do Vocab Node: dá para ler, ouvir e experimentar, mas não editar.
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-neutral-100 px-4 py-3 text-sm text-neutral-600">
+          <span className="min-w-0 flex-1">
+            Lição da biblioteca do Vocab Node: dá para ler, ouvir e experimentar. Para mudar alguma coisa, faça uma cópia
+            sua — os áudios vêm junto.
+          </span>
+          <button
+            type="button"
+            onClick={() => copiar.mutate(licao, { onSuccess: (novo) => navegar(`/tutor/licoes/${novo}`) })}
+            disabled={copiar.isPending}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+          >
+            {copiar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Copy className="h-4 w-4" />}
+            Copiar para minhas lições
+          </button>
+        </div>
+      )}
+      {copiar.isError && (
+        <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          Não consegui copiar a lição. Tente de novo.
         </p>
       )}
       {salvar.isError && (
@@ -229,7 +264,8 @@ export function EditorLicaoPage() {
         </div>
       )}
 
-      <fieldset disabled={somenteLeitura} className="mt-6 space-y-3">
+      <SomenteLeitura.Provider value={somenteLeitura}>
+      <div className="mt-6 space-y-3">
         <Secao titulo="Abertura e regras para a IA" resumo="O que o tutor diz ao começar e o que o avaliador respeita" abertaDeInicio>
           <Area rotulo="Abertura" ajuda="A primeira fala do tutor: o que vamos praticar hoje." valor={r.abertura} linhas={2} aoMudar={(v) => mudar((n) => void (n.abertura = v))} />
           <Area
@@ -289,7 +325,7 @@ export function EditorLicaoPage() {
                   item={item}
                   tipos={TIPOS_DO_BLOCO}
                   apoios={apoios}
-                  somenteLeitura={somenteLeitura}
+                  audios={audiosDe(item.id)}
                   aoMudar={(novo) => mudar((n) => void (n.blocos[bi].itens[ii] = novo))}
                   aoRemover={() => mudar((n) => void n.blocos[bi].itens.splice(ii, 1))}
                   aoSubir={ii > 0 ? () => mudar((n) => void (n.blocos[bi].itens = mover(n.blocos[bi].itens, ii, -1))) : undefined}
@@ -345,7 +381,7 @@ export function EditorLicaoPage() {
                 item={item}
                 tipos={['conversa']}
                 apoios={[]}
-                somenteLeitura={somenteLeitura}
+                audios={audiosDe(item.id)}
                 aoMudar={(novo) => mudar((n) => void (n.conversa[ii] = novo))}
                 aoRemover={() => mudar((n) => void n.conversa.splice(ii, 1))}
                 aoSubir={ii > 0 ? () => mudar((n) => void (n.conversa = mover(n.conversa, ii, -1))) : undefined}
@@ -378,7 +414,7 @@ export function EditorLicaoPage() {
                     item={item}
                     tipos={TIPOS_DA_REVISAO}
                     apoios={[]}
-                    somenteLeitura={somenteLeitura}
+                    audios={audiosDe(item.id)}
                     aoMudar={(novo) => mudar((n) => void (n.recuperacao[habilidade] = novo))}
                     aoRemover={() => mudar((n) => void delete n.recuperacao[habilidade])}
                   />
@@ -426,7 +462,7 @@ export function EditorLicaoPage() {
                     item={item}
                     tipos={TIPOS_DO_BLOCO}
                     apoios={[]}
-                    somenteLeitura={somenteLeitura}
+                    audios={audiosDe(item.id)}
                     aoMudar={(novo) => mudar((n) => void (n.apoios[apoioId].degraus[ii] = novo))}
                     aoRemover={() => mudar((n) => void n.apoios[apoioId].degraus.splice(ii, 1))}
                     aoSubir={ii > 0 ? () => mudar((n) => void (n.apoios[apoioId].degraus = mover(n.apoios[apoioId].degraus, ii, -1))) : undefined}
@@ -494,19 +530,19 @@ export function EditorLicaoPage() {
             ))}
           </ul>
         </Secao>
-      </fieldset>
 
-      <div className="mt-3">
-        <Secao titulo="Áudios" resumo={`${licao.falas_gravadas.length} falas gravadas — ouça e gere as que faltam`}>
+        <Secao titulo="Áudios" resumo={`${licao.falas_gravadas.length} falas gravadas — ouça todas e gere as que faltam`}>
           <PainelAudios
             licaoId={licao.id}
-            roteiroSalvo={roteiroSalvo}
-            gravadas={licao.falas_gravadas}
+            falas={falas}
+            gravadas={gravadas}
+            tocador={tocador}
             podeGravar={!somenteLeitura}
             temMudancas={sujo}
           />
         </Secao>
       </div>
+      </SomenteLeitura.Provider>
     </div>
   )
 }

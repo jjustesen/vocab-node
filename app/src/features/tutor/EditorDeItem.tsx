@@ -1,8 +1,14 @@
 import { useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronDown, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, Pause, Play, Plus, Trash2, X } from 'lucide-react'
+import { textoDaFala } from '../../../../poc-tutor/src/falas.ts'
 import type { ErroPrevisto, Item, TipoItem } from '../../../../poc-tutor/src/tipos.ts'
+import type { FalaFixa, Tocador } from './audiosDaLicao'
 import { Area, Campo, Linhas } from './campos'
+import { useSomenteLeitura } from './edicao'
 import { slug } from './slug'
+
+/** As falas fixas DESTE exercício, o que já está gravado e o player da página. */
+export type AudiosDoItem = { falas: FalaFixa[]; gravadas: Set<string>; tocador: Tocador }
 
 const ROTULO_DO_TIPO: Record<TipoItem, string> = {
   construcao: 'Construção',
@@ -49,7 +55,7 @@ export function EditorDeItem({
   tipos,
   apoios,
   numero,
-  somenteLeitura,
+  audios,
 }: {
   item: Item
   aoMudar: (item: Item) => void
@@ -60,9 +66,12 @@ export function EditorDeItem({
   /** As escadas de "passo a passo" da lição, para ligar a este item. */
   apoios: { id: string; objetivo: string }[]
   numero: number
-  somenteLeitura?: boolean
+  audios?: AudiosDoItem
 }) {
   const [aberto, setAberto] = useState(false)
+  const somenteLeitura = useSomenteLeitura()
+  // A primeira fala do exercício é o pedido ("Diga em inglês: …") — o play da linha fechada.
+  const pedidoGravado = audios?.falas.find((f) => audios.gravadas.has(f.chave))
   const mudar = (campos: Partial<Item>) => aoMudar({ ...item, ...campos })
   const ajudas = item.ajudas ?? []
 
@@ -82,6 +91,9 @@ export function EditorDeItem({
           <span className="truncate text-sm">{resumoDoItem(item) || <em className="text-neutral-400">vazio</em>}</span>
           <ChevronDown className={`ml-auto h-4 w-4 shrink-0 text-neutral-400 transition ${aberto ? 'rotate-180' : ''}`} />
         </button>
+        {pedidoGravado && audios && (
+          <BotaoOuvir chave={pedidoGravado.chave} tocador={audios.tocador} rotulo={textoDaFala(pedidoGravado.fala)} />
+        )}
         {!somenteLeitura && (
           <span className="flex shrink-0 gap-0.5">
             <BotaoIcone rotulo="Subir" aoClicar={aoSubir} Icone={ArrowUp} />
@@ -99,6 +111,7 @@ export function EditorDeItem({
                 Tipo
                 <select
                   value={item.tipo}
+                  disabled={somenteLeitura}
                   onChange={(e) => mudar({ tipo: e.target.value as TipoItem })}
                   className="mt-1 block w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-normal"
                 >
@@ -128,6 +141,7 @@ export function EditorDeItem({
                 A pista é dita em
                 <select
                   value={item.idiomaDaPista ?? 'en'}
+                  disabled={somenteLeitura}
                   onChange={(e) => mudar({ idiomaDaPista: e.target.value === 'pt' ? 'pt' : undefined })}
                   className="mt-1 block rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-normal"
                 >
@@ -222,6 +236,7 @@ export function EditorDeItem({
               Passo a passo quando faltar a base
               <select
                 value={item.apoio ?? ''}
+                disabled={somenteLeitura}
                 onChange={(e) => mudar({ apoio: e.target.value || undefined })}
                 className="mt-1 block w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-normal"
               >
@@ -234,9 +249,58 @@ export function EditorDeItem({
               </select>
             </label>
           )}
+
+          {audios && audios.falas.length > 0 && <AudiosDoExercicio audios={audios} />}
         </div>
       )}
     </li>
+  )
+}
+
+/** O que o tutor diz NESTE exercício (pedido, modelo, dicas…), cada fala com o play se já estiver gravada. */
+function AudiosDoExercicio({ audios }: { audios: AudiosDoItem }) {
+  const gravadas = audios.falas.filter((f) => audios.gravadas.has(f.chave)).length
+  return (
+    <div>
+      <p className="text-xs font-bold text-neutral-600">
+        O que o tutor diz neste exercício{' '}
+        <span className="font-semibold text-neutral-400">
+          · {gravadas} de {audios.falas.length} gravadas
+        </span>
+      </p>
+      <ul className="mt-1.5 divide-y divide-neutral-100 rounded-xl border border-neutral-200">
+        {audios.falas.map((f) => (
+          <li key={f.chave} className="flex items-center gap-2 px-2.5 py-1.5 text-xs">
+            {audios.gravadas.has(f.chave) ? (
+              <BotaoOuvir chave={f.chave} tocador={audios.tocador} rotulo={textoDaFala(f.fala)} />
+            ) : (
+              <span className="grid h-7 w-7 shrink-0 place-items-center text-neutral-300" title="Ainda não gravada">
+                —
+              </span>
+            )}
+            <span className="min-w-0 flex-1 text-neutral-700">{textoDaFala(f.fala)}</span>
+          </li>
+        ))}
+      </ul>
+      {gravadas < audios.falas.length && (
+        <p className="mt-1 text-[11px] text-neutral-400">As que faltam se geram no painel Áudios, no fim da página.</p>
+      )}
+    </div>
+  )
+}
+
+function BotaoOuvir({ chave, tocador, rotulo }: { chave: string; tocador: Tocador; rotulo: string }) {
+  const tocando = tocador.tocando === chave
+  return (
+    <button
+      type="button"
+      onClick={() => tocador.tocar(chave)}
+      aria-label={tocando ? 'Parar' : `Ouvir: ${rotulo}`}
+      title={tocando ? 'Parar' : 'Ouvir'}
+      className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-violet-100 text-violet-700 transition hover:bg-violet-200"
+    >
+      {tocando ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+    </button>
   )
 }
 
@@ -266,6 +330,7 @@ function ErrosComuns({
                 Habilidade
                 <select
                   value={e.habilidade}
+                  disabled={somenteLeitura}
                   onChange={(ev) => mudar(i, { habilidade: ev.target.value })}
                   className="mt-1 block rounded-xl border border-neutral-200 bg-white px-2 py-2 text-sm font-normal"
                 >
