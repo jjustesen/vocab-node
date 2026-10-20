@@ -1,0 +1,728 @@
+{
+  "id": "fim-de-semana-passado",
+  "titulo": "Simple past e o fim de semana",
+  "abertura": "Hoje vamos praticar o simple past e contar o que você fez no fim de semana passado.",
+  "notasParaAvaliador": "Depois de did e didn't o verbo volta à forma básica: \"I didn't went\" e \"Did you saw…?\" são erros. Passados irregulares desta lição: go → went, have → had, see → saw, eat → ate (\"goed\", \"haved\", \"eated\" são erros); os regulares levam -ed (stayed, watched, visited). Yesterday, last night e last weekend não levam preposição (\"in the last weekend\", \"on yesterday\" e \"yesterday night\" são erros), e dia da semana leva on (\"on Saturday\"). \"Fazer\" em perguntas sobre atividades é do (\"What did you do…?\"), não make; \"see the game\" e \"watch the game\" são equivalentes, assim como \"stayed home\" e \"stayed at home\".",
+  "nomes": {
+    "blocos": {
+      "sabado": "Sábado",
+      "domingo": "Domingo",
+      "negativa": "Negativas",
+      "pergunta_did": "Did …?",
+      "pergunta_wh": "Perguntas"
+    },
+    "habilidades": {
+      "passado_regular": { "curto": "-ed", "resumo": "o passado com -ed, como em stayed e watched" },
+      "passado_irregular": { "curto": "went / had / saw", "resumo": "os passados irregulares, como went, had, saw e ate" },
+      "sujeito_obrigatorio": { "curto": "sujeito", "resumo": "o sujeito da frase, como o I de I stayed home" },
+      "marcador_tempo": { "curto": "tempo", "resumo": "expressões de tempo, como yesterday e last weekend" },
+      "negativa_didnt": { "curto": "didn't", "resumo": "a negativa no passado com didn't" },
+      "verbo_base": { "curto": "did + go", "resumo": "o verbo na forma básica depois de did e didn't" },
+      "pergunta_did": { "curto": "Did …?", "resumo": "perguntas no passado começando com Did" },
+      "pergunta_wh_did": { "curto": "where + did", "resumo": "perguntas com Where e What time no passado" },
+      "preservar_cadeia": { "curto": "manter a frase", "resumo": "manter as mudanças anteriores da frase" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "regular + -ed: stay → stayed · watch → watched · visit → visited",
+      "irregulares: go → went · have → had · see → saw · eat → ate",
+      "sujeito + didn't + verbo na forma básica",
+      "Did + sujeito + verbo na forma básica …?",
+      "Where / What time + did + sujeito + verbo …?",
+      "on Saturday · yesterday · last night · last weekend"
+    ],
+    "vocabulario": [
+      { "en": "stay home", "pt": "ficar em casa" },
+      { "en": "watch a movie", "pt": "assistir a um filme" },
+      { "en": "visit", "pt": "visitar" },
+      { "en": "clean the house", "pt": "limpar a casa" },
+      { "en": "go out", "pt": "sair" },
+      { "en": "go to the beach", "pt": "ir à praia" },
+      { "en": "have a barbecue", "pt": "fazer churrasco" },
+      { "en": "see", "pt": "ver" },
+      { "en": "eat too much", "pt": "comer demais" },
+      { "en": "the game", "pt": "o jogo" },
+      { "en": "the mall", "pt": "o shopping" },
+      { "en": "meeting", "pt": "reunião" },
+      { "en": "travel", "pt": "viajar" }
+    ],
+    "exemplos": [
+      "I cooked lunch for my family.",
+      "We went to a restaurant on Friday night.",
+      "Did you sleep well? Yes, I did.",
+      "She didn't come to work yesterday. She was sick."
+    ],
+    "alertas": [
+      "Depois de didn't e did, o verbo volta à forma básica: I didn't sleep · Did you sleep? (nunca \"didn't slept\").",
+      "Sem preposição: yesterday, last night, last weekend (nunca \"in the last weekend\"). Com dia da semana: on Saturday.",
+      "Ontem à noite = last night, não \"yesterday night\".",
+      "Fazer = do (atividade em geral) ou make (preparar, fabricar: make a cake)."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "sabado",
+      "objetivo": "Passado regular com -ed, com troca de atividade e de marcador de tempo.",
+      "itens": [
+        {
+          "id": "sab.base",
+          "tipo": "construcao",
+          "calibracao": true,
+          "solicitacao": "eu fiquei em casa no sábado",
+          "alvo": "I stayed home on Saturday.",
+          "variantes": ["I stayed at home on Saturday.", "On Saturday I stayed home.", "On Saturday, I stayed at home."],
+          "habilidades": ["passado_regular", "sujeito_obrigatorio", "marcador_tempo"],
+          "ajudas": [
+            "Fiquei é passado. Como fica o verbo 'ficar' no passado em inglês?",
+            "Como se diz 'eu fiquei em casa'? E qual palavrinha vem antes de sábado?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I stay home on Saturday.",
+              "habilidade": "passado_regular",
+              "pista": "Fiquei é passado. O que acontece com stay no passado?"
+            },
+            {
+              "exemplo": "Stayed home on Saturday.",
+              "habilidade": "sujeito_obrigatorio",
+              "pista": "Falta o sujeito. Quem ficou em casa?"
+            },
+            {
+              "exemplo": "I stayed home in Saturday.",
+              "habilidade": "marcador_tempo",
+              "pista": "Com dia da semana, usamos in mesmo? Qual palavrinha vem antes?"
+            }
+          ]
+        },
+        {
+          "id": "sab.movie",
+          "tipo": "substituicao",
+          "pista": "Watch a movie.",
+          "alvo": "I watched a movie on Saturday.",
+          "variantes": ["On Saturday I watched a movie."],
+          "habilidades": ["passado_regular"],
+          "ajudas": [
+            "Troque stayed home por watch a movie, no passado.",
+            "Que expressão eu te dei? Ela entra no lugar de stayed home. Como fica watch no passado?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I watch a movie on Saturday.",
+              "habilidade": "passado_regular",
+              "pista": "A frase é no passado. O que acontece com watch?"
+            }
+          ]
+        },
+        {
+          "id": "sab.weekend",
+          "tipo": "substituicao",
+          "pista": "Last weekend.",
+          "alvo": "I watched a movie last weekend.",
+          "variantes": ["Last weekend I watched a movie."],
+          "habilidades": ["marcador_tempo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque on Saturday por last weekend; o resto continua.",
+            "Antes de last weekend, precisa de alguma palavrinha?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I watched a movie in the last weekend.",
+              "habilidade": "marcador_tempo",
+              "pista": "Antes de last weekend, precisa de in the?"
+            },
+            {
+              "exemplo": "I stayed home last weekend.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Qual expressão mudou na frase anterior?"
+            }
+          ]
+        },
+        {
+          "id": "sab.visit",
+          "tipo": "substituicao",
+          "pista": "Visit my parents.",
+          "alvo": "I visited my parents last weekend.",
+          "variantes": ["Last weekend I visited my parents."],
+          "habilidades": ["passado_regular", "preservar_cadeia"],
+          "ajudas": [
+            "Troque watched a movie por visit my parents, no passado; last weekend continua.",
+            "Como fica visit no passado? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I visit my parents last weekend.",
+              "habilidade": "passado_regular",
+              "pista": "A frase é no passado. O que acontece com visit?"
+            },
+            {
+              "exemplo": "I visited my parents on Saturday.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Qual era a expressão de tempo na frase anterior?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "domingo",
+      "objetivo": "Passados irregulares (went, had, saw, ate) com on + dia e yesterday.",
+      "itens": [
+        {
+          "id": "dom.base",
+          "tipo": "construcao",
+          "solicitacao": "eu fui à praia no domingo",
+          "alvo": "I went to the beach on Sunday.",
+          "variantes": ["On Sunday I went to the beach."],
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Fui é passado, e esse verbo é irregular. Como se diz 'eu fui'?",
+            "Como se diz 'eu fui' em inglês? E 'à praia'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I go to the beach on Sunday.",
+              "habilidade": "passado_irregular",
+              "pista": "Fui é passado. Qual é o passado de go?"
+            },
+            {
+              "exemplo": "I goed to the beach on Sunday.",
+              "habilidade": "passado_irregular",
+              "pista": "Go é irregular: não leva -ed. Qual é o passado dele?"
+            }
+          ]
+        },
+        {
+          "id": "dom.barbecue",
+          "tipo": "substituicao",
+          "pista": "Have a barbecue.",
+          "alvo": "I had a barbecue on Sunday.",
+          "variantes": ["On Sunday I had a barbecue."],
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Troque went to the beach por have a barbecue, no passado. Have também é irregular.",
+            "Qual é o passado de have? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I have a barbecue on Sunday.",
+              "habilidade": "passado_irregular",
+              "pista": "A frase é no passado. Qual é o passado de have?"
+            },
+            {
+              "exemplo": "I haved a barbecue on Sunday.",
+              "habilidade": "passado_irregular",
+              "pista": "Have é irregular. Qual é o passado dele?"
+            }
+          ]
+        },
+        {
+          "id": "dom.friends",
+          "tipo": "substituicao",
+          "pista": "See my friends.",
+          "alvo": "I saw my friends on Sunday.",
+          "variantes": ["On Sunday I saw my friends."],
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Troque had a barbecue por see my friends, no passado.",
+            "Qual é o passado de see? Ele também é irregular."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I see my friends on Sunday.",
+              "habilidade": "passado_irregular",
+              "pista": "A frase é no passado. Qual é o passado de see?"
+            },
+            {
+              "exemplo": "I seed my friends on Sunday.",
+              "habilidade": "passado_irregular",
+              "pista": "See é irregular. Qual é o passado dele?"
+            }
+          ]
+        },
+        {
+          "id": "dom.ate",
+          "tipo": "substituicao",
+          "pista": "Eat too much.",
+          "alvo": "I ate too much on Sunday.",
+          "variantes": ["On Sunday I ate too much."],
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Troque saw my friends por eat too much, no passado.",
+            "Qual é o passado de eat? Ele também é irregular."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I eated too much on Sunday.",
+              "habilidade": "passado_irregular",
+              "pista": "Eat é irregular. Qual é o passado dele?"
+            }
+          ]
+        },
+        {
+          "id": "dom.yesterday",
+          "tipo": "substituicao",
+          "pista": "Yesterday.",
+          "alvo": "I ate too much yesterday.",
+          "variantes": ["Yesterday I ate too much."],
+          "habilidades": ["marcador_tempo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque on Sunday por yesterday; o resto continua.",
+            "Antes de yesterday, precisa de alguma palavrinha?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I ate too much on yesterday.",
+              "habilidade": "marcador_tempo",
+              "pista": "Antes de yesterday, precisa de on?"
+            },
+            {
+              "exemplo": "I saw my friends yesterday.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Qual expressão mudou na frase anterior?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negativa",
+      "objetivo": "Negativa com didn't + verbo na forma básica, com mudança de sujeito, de atividade e de tempo.",
+      "itens": [
+        {
+          "id": "neg.base",
+          "tipo": "construcao",
+          "solicitacao": "eu não saí no sábado à noite",
+          "alvo": "I didn't go out on Saturday night.",
+          "variantes": ["I did not go out on Saturday night."],
+          "habilidades": ["negativa_didnt", "verbo_base"],
+          "ajudas": [
+            "Para negar no passado, que ajudante vem antes do verbo?",
+            "Como se diz 'sair' em inglês? Depois do ajudante, o verbo fica no passado ou na forma básica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't go out on Saturday night.",
+              "habilidade": "negativa_didnt",
+              "pista": "Não saí é passado. Qual ajudante usamos para negar no passado?"
+            },
+            {
+              "exemplo": "I didn't went out on Saturday night.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, o verbo fica no passado ou volta à forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "neg.she",
+          "tipo": "substituicao",
+          "pista": "She.",
+          "alvo": "She didn't go out on Saturday night.",
+          "variantes": ["She did not go out on Saturday night."],
+          "habilidades": ["negativa_didnt", "verbo_base"],
+          "ajudas": [
+            "Troque I por she. No passado, o ajudante muda?",
+            "Como se diz 'ela não saiu' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She doesn't go out on Saturday night.",
+              "habilidade": "negativa_didnt",
+              "pista": "Ainda é passado. Com she, o ajudante do passado muda?"
+            },
+            {
+              "exemplo": "She didn't goes out on Saturday night.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, o verbo leva -s?"
+            }
+          ]
+        },
+        {
+          "id": "neg.tv",
+          "tipo": "substituicao",
+          "pista": "Watch TV.",
+          "alvo": "She didn't watch TV on Saturday night.",
+          "variantes": ["She did not watch TV on Saturday night."],
+          "habilidades": ["verbo_base"],
+          "ajudas": [
+            "Troque go out por watch TV; o resto continua.",
+            "Que expressão eu te dei? Ela entra no lugar de go out. Depois de didn't, ela muda?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She didn't watched TV on Saturday night.",
+              "habilidade": "verbo_base",
+              "pista": "Depois de didn't, watch leva -ed?"
+            }
+          ]
+        },
+        {
+          "id": "neg.last_night",
+          "tipo": "substituicao",
+          "pista": "Last night.",
+          "alvo": "She didn't watch TV last night.",
+          "variantes": ["She did not watch TV last night."],
+          "habilidades": ["marcador_tempo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque on Saturday night por last night; o resto continua.",
+            "Antes de last night, precisa de alguma palavrinha?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She didn't watch TV in the last night.",
+              "habilidade": "marcador_tempo",
+              "pista": "Antes de last night, precisa de in the?"
+            },
+            {
+              "exemplo": "She didn't go out last night.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Qual expressão mudou na frase anterior?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pergunta_did",
+      "objetivo": "Perguntas sim/não com Did + sujeito + verbo na forma básica.",
+      "itens": [
+        {
+          "id": "did.base",
+          "tipo": "construcao",
+          "solicitacao": "você viu o jogo ontem?",
+          "alvo": "Did you see the game yesterday?",
+          "variantes": ["Did you watch the game yesterday?"],
+          "habilidades": ["pergunta_did", "verbo_base"],
+          "ajudas": [
+            "No passado, a pergunta começa com um ajudante. Qual é?",
+            "Como se pergunta 'você viu…?' em inglês? Depois do ajudante, o verbo fica no passado ou na forma básica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You saw the game yesterday?",
+              "habilidade": "pergunta_did",
+              "pista": "Falta o ajudante do passado no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Did you saw the game yesterday?",
+              "habilidade": "verbo_base",
+              "pista": "Depois de did, o verbo fica no passado ou volta à forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "did.brother",
+          "tipo": "substituicao",
+          "pista": "Your brother.",
+          "alvo": "Did your brother see the game yesterday?",
+          "variantes": ["Did your brother watch the game yesterday?"],
+          "habilidades": ["pergunta_did"],
+          "ajudas": [
+            "Troque you por your brother. O ajudante muda?",
+            "Como se pergunta 'o seu irmão viu…?' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Does your brother see the game yesterday?",
+              "habilidade": "pergunta_did",
+              "pista": "Ainda é passado. Qual ajudante começa a pergunta?"
+            }
+          ]
+        },
+        {
+          "id": "did.work",
+          "tipo": "substituicao",
+          "pista": "Go to work.",
+          "alvo": "Did your brother go to work yesterday?",
+          "habilidades": ["verbo_base"],
+          "ajudas": [
+            "Troque see the game por go to work; o resto continua.",
+            "Depois de did, o verbo fica no passado ou na forma básica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Did your brother went to work yesterday?",
+              "habilidade": "verbo_base",
+              "pista": "Depois de did, o verbo fica no passado ou volta à forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "did.weekend",
+          "tipo": "substituicao",
+          "pista": "Last weekend.",
+          "alvo": "Did your brother go to work last weekend?",
+          "habilidades": ["marcador_tempo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque yesterday por last weekend; o resto continua.",
+            "Antes de last weekend, precisa de alguma palavrinha?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Did your brother go to work in the last weekend?",
+              "habilidade": "marcador_tempo",
+              "pista": "Antes de last weekend, precisa de in the?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pergunta_wh",
+      "objetivo": "Perguntas com Where e What time + did, com troca de sujeito e de verbo.",
+      "itens": [
+        {
+          "id": "wh.base",
+          "tipo": "construcao",
+          "solicitacao": "aonde você foi no domingo? (faça a pergunta)",
+          "alvo": "Where did you go on Sunday?",
+          "habilidades": ["pergunta_wh_did", "verbo_base"],
+          "apoio": "perguntas_passado",
+          "ajudas": [
+            "Depois de 'onde', que ajudante vem? E o verbo fica no passado?",
+            "Como se pergunta 'aonde você foi' em inglês? Depois do ajudante, o verbo volta à forma básica."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where you went on Sunday?",
+              "habilidade": "pergunta_wh_did",
+              "pista": "Depois de where, falta um ajudante. Qual é?"
+            },
+            {
+              "exemplo": "Where did you went on Sunday?",
+              "habilidade": "verbo_base",
+              "pista": "Depois de did, o verbo fica no passado ou volta à forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "wh.parents",
+          "tipo": "substituicao",
+          "pista": "Your parents.",
+          "alvo": "Where did your parents go on Sunday?",
+          "habilidades": ["pergunta_wh_did"],
+          "ajudas": [
+            "Troque you por your parents. O ajudante muda?",
+            "Como se pergunta 'aonde os seus pais foram' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where do your parents go on Sunday?",
+              "habilidade": "pergunta_wh_did",
+              "pista": "Ainda é passado. Qual ajudante vem depois de where?"
+            }
+          ]
+        },
+        {
+          "id": "wh.lunch",
+          "tipo": "substituicao",
+          "pista": "Have lunch.",
+          "alvo": "Where did your parents have lunch on Sunday?",
+          "habilidades": ["verbo_base"],
+          "ajudas": [
+            "Troque go por have lunch; o resto continua.",
+            "Depois de did, o verbo fica no passado ou na forma básica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where did your parents had lunch on Sunday?",
+              "habilidade": "verbo_base",
+              "pista": "Depois de did, o verbo fica no passado ou volta à forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "wh.time",
+          "tipo": "substituicao",
+          "pista": "What time.",
+          "alvo": "What time did your parents have lunch on Sunday?",
+          "habilidades": ["pergunta_wh_did", "preservar_cadeia"],
+          "ajudas": [
+            "Troque where por what time; o resto continua.",
+            "Que expressão eu te dei? Ela entra no lugar de where, no começo da pergunta."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What time your parents had lunch on Sunday?",
+              "habilidade": "pergunta_wh_did",
+              "pista": "Depois de what time, falta um ajudante. Qual é?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "perguntas_passado": {
+      "objetivo": "Reconstruir o passado de go e a pergunta com Did antes de voltar à pergunta com Where.",
+      "degraus": [
+        {
+          "id": "passado.went",
+          "tipo": "repeticao",
+          "modelo": "I went to the mall.",
+          "alvo": "I went to the mall.",
+          "habilidades": ["passado_irregular"]
+        },
+        {
+          "id": "passado.you",
+          "tipo": "construcao",
+          "solicitacao": "você foi ao shopping",
+          "alvo": "You went to the mall.",
+          "habilidades": ["passado_irregular"],
+          "ajudas": [
+            "Foi é passado. É o mesmo verbo da frase que você repetiu. Como fica com 'você'?",
+            "Como se diz 'você foi' em inglês?"
+          ]
+        },
+        {
+          "id": "passado.pergunta",
+          "tipo": "substituicao",
+          "pista": "Make it a question.",
+          "alvo": "Did you go to the mall?",
+          "habilidades": ["pergunta_did", "verbo_base"],
+          "ajudas": [
+            "Para virar pergunta no passado, que ajudante vem no começo?",
+            "Depois desse ajudante, o verbo fica no passado ou volta à forma básica?"
+          ]
+        },
+        {
+          "id": "passado.sunday",
+          "tipo": "substituicao",
+          "pista": "On Sunday.",
+          "alvo": "Did you go to the mall on Sunday?",
+          "habilidades": ["marcador_tempo"],
+          "ajudas": [
+            "Acrescente o dia no fim da pergunta.",
+            "Como se diz 'no domingo' em inglês? Em que parte da pergunta ele entra?"
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.fds",
+      "tipo": "conversa",
+      "pergunta": "What did you do last weekend?",
+      "criterio": "Resposta pertinente no passado (I + verbo no passado …), com qualquer atividade verdadeira, regular ou irregular.",
+      "exemplos": ["I stayed home and watched a movie.", "I went to the beach with my family."],
+      "acompanhamentos": ["Did you go out on Saturday night?", "Was it fun?"],
+      "habilidades": ["passado_regular", "passado_irregular"]
+    },
+    {
+      "id": "conversa.almoco",
+      "tipo": "conversa",
+      "pergunta": "Where did you have lunch on Sunday?",
+      "criterio": "Resposta pertinente com I had lunch … (qualquer lugar), ou resposta curta pertinente (At home., At my mother's house.).",
+      "exemplos": ["I had lunch at home.", "I had lunch at my mother's house."],
+      "acompanhamentos": ["What did you eat?", "Did you cook?"],
+      "habilidades": ["passado_irregular"]
+    },
+    {
+      "id": "conversa.ontem",
+      "tipo": "conversa",
+      "pergunta": "Did you work yesterday?",
+      "criterio": "Yes, I did / No, I didn't, ou resposta completa e pertinente no passado (I worked… / I didn't work…).",
+      "exemplos": ["Yes, I did.", "No, I didn't. I stayed home."],
+      "acompanhamentos": ["What time did you get home?"],
+      "habilidades": ["negativa_didnt", "verbo_base"]
+    }
+  ],
+  "recuperacao": {
+    "passado_regular": {
+      "id": "rec.passado_regular",
+      "tipo": "construcao",
+      "solicitacao": "nós limpamos a casa ontem",
+      "alvo": "We cleaned the house yesterday.",
+      "variantes": ["Yesterday we cleaned the house."],
+      "habilidades": ["passado_regular"],
+      "ajudas": [
+        "Limpamos é passado. Como fica o verbo 'limpar' no passado em inglês?",
+        "Como se diz 'limpar a casa' em inglês? No passado, o verbo ganha uma terminação."
+      ]
+    },
+    "passado_irregular": {
+      "id": "rec.passado_irregular",
+      "tipo": "construcao",
+      "solicitacao": "nós tivemos uma reunião ontem",
+      "alvo": "We had a meeting yesterday.",
+      "variantes": ["Yesterday we had a meeting."],
+      "habilidades": ["passado_irregular"],
+      "ajudas": [
+        "Tivemos é passado, e esse verbo é irregular. Como fica 'ter' no passado?",
+        "Como se diz 'reunião' em inglês? E o passado de 'ter'?"
+      ]
+    },
+    "sujeito_obrigatorio": {
+      "id": "rec.sujeito_obrigatorio",
+      "tipo": "construcao",
+      "solicitacao": "eu trabalhei até tarde ontem",
+      "alvo": "I worked late yesterday.",
+      "variantes": ["Yesterday I worked late."],
+      "habilidades": ["sujeito_obrigatorio", "passado_regular"],
+      "ajudas": [
+        "Lembre do sujeito: quem trabalhou?",
+        "Como se diz 'eu trabalhei' em inglês? E 'até tarde'?"
+      ]
+    },
+    "marcador_tempo": {
+      "id": "rec.marcador_tempo",
+      "tipo": "construcao",
+      "solicitacao": "eles viajaram no mês passado",
+      "alvo": "They traveled last month.",
+      "variantes": ["They travelled last month.", "Last month they traveled."],
+      "habilidades": ["marcador_tempo", "passado_regular"],
+      "ajudas": [
+        "Como se diz 'mês passado'? Precisa de alguma palavrinha antes?",
+        "Como se diz 'viajar' no passado? E 'mês passado'?"
+      ]
+    },
+    "negativa_didnt": {
+      "id": "rec.negativa_didnt",
+      "tipo": "construcao",
+      "solicitacao": "ele não me ligou ontem",
+      "alvo": "He didn't call me yesterday.",
+      "variantes": ["He did not call me yesterday."],
+      "habilidades": ["negativa_didnt", "verbo_base"],
+      "ajudas": [
+        "Para negar no passado, que ajudante vem antes do verbo?",
+        "Como se diz 'ligar para alguém' em inglês? Depois do ajudante, o verbo fica na forma básica."
+      ]
+    },
+    "verbo_base": {
+      "id": "rec.verbo_base",
+      "tipo": "construcao",
+      "solicitacao": "eu não vi a sua mensagem",
+      "alvo": "I didn't see your message.",
+      "variantes": ["I did not see your message."],
+      "habilidades": ["verbo_base", "negativa_didnt"],
+      "ajudas": [
+        "Depois do ajudante do passado, o verbo fica no passado ou na forma básica?",
+        "Como se diz 'eu não vi' em inglês?"
+      ]
+    },
+    "pergunta_did": {
+      "id": "rec.pergunta_did",
+      "tipo": "construcao",
+      "solicitacao": "vocês gostaram do filme?",
+      "alvo": "Did you like the movie?",
+      "variantes": ["Did you guys like the movie?", "Did you enjoy the movie?", "Did you like the film?"],
+      "habilidades": ["pergunta_did", "verbo_base"],
+      "ajudas": [
+        "No passado, a pergunta começa com um ajudante. Qual é?",
+        "Como se pergunta 'vocês gostaram…?' em inglês? Depois do ajudante, o verbo volta à forma básica."
+      ]
+    },
+    "pergunta_wh_did": {
+      "id": "rec.pergunta_wh_did",
+      "tipo": "construcao",
+      "solicitacao": "o que você fez ontem à noite? (faça a pergunta)",
+      "alvo": "What did you do last night?",
+      "habilidades": ["pergunta_wh_did", "verbo_base"],
+      "ajudas": [
+        "Depois de 'o que', que ajudante vem? E esse 'fazer' é o de atividade ou o de fabricar?",
+        "Como se pergunta 'o que você fez' em inglês? E 'ontem à noite' tem um jeito próprio de dizer."
+      ]
+    }
+  }
+}

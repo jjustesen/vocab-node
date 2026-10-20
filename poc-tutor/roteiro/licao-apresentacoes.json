@@ -1,0 +1,763 @@
+{
+  "id": "apresentacoes-to-be",
+  "titulo": "Verbo to be e apresentações",
+  "abertura": "Hoje vamos praticar o verbo to be no presente para você se apresentar e falar das pessoas.",
+  "notasParaAvaliador": "Idade usa to be: \"I'm 30\" e \"I'm 30 years old\" valem, número em algarismo ou por extenso é igual (30 = thirty), e \"I have 30 years\" é erro. Profissão leva artigo: \"I'm a teacher\", \"I'm an engineer\" (an antes de som de vogal); \"I'm teacher\" é erro, mas na conversa \"I'm retired\" e \"I'm unemployed\" valem sem artigo. Contrações e formas cheias valem igual (I'm / I am, she's / she is, isn't / 's not, aren't / 're not). No treino controlado a pergunta inverte o verbo (\"Are you…?\", \"Where are you from?\"): \"Where you are from?\" e \"You are married?\" não realizam o pedido.",
+  "nomes": {
+    "blocos": {
+      "origem": "Origem",
+      "profissao": "Profissão",
+      "idade": "Idade",
+      "perguntas": "Perguntas",
+      "onde": "De onde"
+    },
+    "habilidades": {
+      "verbo_be": { "curto": "am / is / are", "resumo": "o verbo to be na frase, como em I'm from Brazil" },
+      "from_origem": { "curto": "from", "resumo": "o from para dizer de onde a pessoa é" },
+      "concordancia_is": { "curto": "is", "resumo": "is com he, she e uma pessoa só" },
+      "concordancia_are": { "curto": "are", "resumo": "are com you, we, they e o plural" },
+      "negativa_be": { "curto": "isn't / aren't", "resumo": "as negativas I'm not, isn't e aren't" },
+      "artigo_profissao": { "curto": "a / an", "resumo": "o a e o an antes da profissão" },
+      "idade_com_be": { "curto": "idade", "resumo": "a idade com o verbo to be, como em I'm thirty" },
+      "how_old": { "curto": "how old", "resumo": "a pergunta How old" },
+      "pergunta_be": { "curto": "perguntas", "resumo": "perguntas começando com Are ou Is" },
+      "pergunta_where": { "curto": "where … from", "resumo": "a pergunta Where … from" },
+      "ser_estar": { "curto": "ser e estar", "resumo": "o be para ser e para estar" },
+      "substantivo": { "curto": "substantivo", "resumo": "trocar o substantivo mantendo a pergunta" },
+      "preservar_cadeia": { "curto": "manter a frase", "resumo": "manter as mudanças anteriores da frase" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "I am → I'm",
+      "he / she / it is → he's / she's / it's",
+      "you / we / they are → you're / we're / they're",
+      "I'm not · he isn't · they aren't",
+      "Is / Are + sujeito …?",
+      "Where … from? · How old …?",
+      "a + som de consoante · an + som de vogal"
+    ],
+    "vocabulario": [
+      { "en": "from", "pt": "de (origem)" },
+      { "en": "married", "pt": "casado(a)" },
+      { "en": "single", "pt": "solteiro(a)" },
+      { "en": "tired", "pt": "cansado(a)" },
+      { "en": "at work", "pt": "no trabalho" },
+      { "en": "teacher", "pt": "professor(a)" },
+      { "en": "engineer", "pt": "engenheiro(a)" },
+      { "en": "lawyer", "pt": "advogado(a)" },
+      { "en": "nurse", "pt": "enfermeiro(a)" },
+      { "en": "son / daughter", "pt": "filho / filha" },
+      { "en": "kids", "pt": "filhos, crianças" },
+      { "en": "parents", "pt": "pais" },
+      { "en": "best friend", "pt": "melhor amigo(a)" },
+      { "en": "years old", "pt": "anos (de idade)" }
+    ],
+    "exemplos": [
+      "Hi, I'm Paula. Nice to meet you.",
+      "My husband is a doctor. He's from Manaus.",
+      "Are the kids at school? No, they aren't. They're at home.",
+      "How old is your dog? He's five."
+    ],
+    "alertas": [
+      "Idade usa o verbo to be: I'm 30 (years old). Nunca \"I have 30 years\".",
+      "Profissão leva a / an: She's a nurse. · He's an architect.",
+      "Be serve para ser e para estar: I'm Brazilian. · I'm at home.",
+      "Na pergunta, o verbo vem antes do sujeito: Is he …? · Are they …?"
+    ]
+  },
+  "blocos": [
+    {
+      "id": "origem",
+      "objetivo": "Verbo to be com from para dizer a origem, com mudança de sujeito e negativa.",
+      "itens": [
+        {
+          "id": "origem.base",
+          "tipo": "construcao",
+          "calibracao": true,
+          "solicitacao": "eu sou de Curitiba",
+          "alvo": "I'm from Curitiba.",
+          "variantes": ["I am from Curitiba."],
+          "habilidades": ["verbo_be", "from_origem"],
+          "ajudas": [
+            "Em inglês a frase precisa do verbo. Como se diz 'eu sou'?",
+            "Como se diz 'eu sou de…' quando falamos da cidade de origem?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I from Curitiba.",
+              "habilidade": "verbo_be",
+              "pista": "Falta o verbo. Como se diz 'eu sou' em inglês?"
+            },
+            {
+              "exemplo": "I'm of Curitiba.",
+              "habilidade": "from_origem",
+              "pista": "Para dizer de onde a pessoa é, usamos of mesmo? Como se diz esse 'de'?"
+            }
+          ]
+        },
+        {
+          "id": "origem.she",
+          "tipo": "substituicao",
+          "pista": "She.",
+          "alvo": "She's from Curitiba.",
+          "variantes": ["She is from Curitiba."],
+          "habilidades": ["concordancia_is"],
+          "ajudas": [
+            "Troque I por she. O verbo muda?",
+            "Como se diz 'ela é' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She are from Curitiba.",
+              "habilidade": "concordancia_is",
+              "pista": "Com she, usamos is ou are?"
+            }
+          ]
+        },
+        {
+          "id": "origem.recife",
+          "tipo": "substituicao",
+          "pista": "Recife.",
+          "alvo": "She's from Recife.",
+          "variantes": ["She is from Recife."],
+          "habilidades": ["preservar_cadeia"],
+          "ajudas": [
+            "Troque só a cidade: em vez de Curitiba, Recife.",
+            "Que cidade eu te dei? Ela entra no lugar de Curitiba; o resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I'm from Recife.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Quem é de Recife agora: eu ou ela?"
+            }
+          ]
+        },
+        {
+          "id": "origem.they",
+          "tipo": "substituicao",
+          "pista": "They.",
+          "alvo": "They're from Recife.",
+          "variantes": ["They are from Recife."],
+          "habilidades": ["concordancia_are"],
+          "ajudas": [
+            "Com they, usamos is ou are?",
+            "Como se diz 'eles são' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "They is from Recife.",
+              "habilidade": "concordancia_are",
+              "pista": "Com they, usamos is ou are?"
+            }
+          ]
+        },
+        {
+          "id": "origem.not",
+          "tipo": "substituicao",
+          "pista": "Not.",
+          "alvo": "They aren't from Recife.",
+          "variantes": ["They're not from Recife.", "They are not from Recife."],
+          "habilidades": ["negativa_be"],
+          "ajudas": [
+            "Como se diz 'não são'? O 'não' entra antes ou depois do verbo?",
+            "Como se diz 'eles não são' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "They don't from Recife.",
+              "habilidade": "negativa_be",
+              "pista": "Tem um errinho no don't. Como se diz 'eles não são'?"
+            },
+            {
+              "exemplo": "They no are from Recife.",
+              "habilidade": "negativa_be",
+              "pista": "O 'não' vem antes ou depois do verbo?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "profissao",
+      "objetivo": "Profissão com a / an, mudança de sujeito e negativa com isn't.",
+      "itens": [
+        {
+          "id": "prof.base",
+          "tipo": "construcao",
+          "solicitacao": "eu sou professora",
+          "alvo": "I'm a teacher.",
+          "variantes": ["I am a teacher."],
+          "habilidades": ["artigo_profissao"],
+          "ajudas": [
+            "Em inglês, antes da profissão vem uma palavrinha. Qual é?",
+            "Como se diz 'eu sou uma professora' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I'm teacher.",
+              "habilidade": "artigo_profissao",
+              "pista": "Antes da profissão falta uma palavrinha. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "prof.engineer",
+          "tipo": "substituicao",
+          "pista": "Engineer.",
+          "alvo": "I'm an engineer.",
+          "variantes": ["I am an engineer."],
+          "habilidades": ["artigo_profissao"],
+          "ajudas": [
+            "Engineer começa com som de vogal. A palavrinha antes muda?",
+            "Que palavra eu te dei? Ela entra no lugar de teacher. E antes de som de vogal, como fica a palavrinha?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I'm a engineer.",
+              "habilidade": "artigo_profissao",
+              "pista": "Engineer começa com som de vogal. A palavrinha antes continua a mesma?"
+            }
+          ]
+        },
+        {
+          "id": "prof.he",
+          "tipo": "substituicao",
+          "pista": "He.",
+          "alvo": "He's an engineer.",
+          "variantes": ["He is an engineer."],
+          "habilidades": ["concordancia_is", "artigo_profissao"],
+          "ajudas": [
+            "Troque I por he. O verbo muda?",
+            "Como se diz 'ele é' em inglês? O resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "He are an engineer.",
+              "habilidade": "concordancia_is",
+              "pista": "Com he, usamos is ou are?"
+            },
+            {
+              "exemplo": "He's engineer.",
+              "habilidade": "artigo_profissao",
+              "pista": "Antes de engineer, falta uma palavrinha?"
+            }
+          ]
+        },
+        {
+          "id": "prof.not",
+          "tipo": "substituicao",
+          "pista": "Not.",
+          "alvo": "He isn't an engineer.",
+          "variantes": ["He's not an engineer.", "He is not an engineer."],
+          "habilidades": ["negativa_be"],
+          "ajudas": [
+            "Como se diz 'ele não é'? O 'não' entra antes ou depois do verbo?",
+            "Como se diz 'ele não é' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "He no is an engineer.",
+              "habilidade": "negativa_be",
+              "pista": "O 'não' vem antes ou depois do verbo?"
+            },
+            {
+              "exemplo": "He doesn't an engineer.",
+              "habilidade": "negativa_be",
+              "pista": "Tem um errinho no doesn't. Como se diz 'ele não é'?"
+            }
+          ]
+        },
+        {
+          "id": "prof.lawyer",
+          "tipo": "substituicao",
+          "pista": "Lawyer.",
+          "alvo": "He isn't a lawyer.",
+          "variantes": ["He's not a lawyer.", "He is not a lawyer."],
+          "habilidades": ["artigo_profissao", "preservar_cadeia"],
+          "ajudas": [
+            "Troque engineer por lawyer e mantenha o 'não'. A palavrinha antes muda?",
+            "Lawyer começa com som de vogal ou de consoante? Qual palavrinha vem antes?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "He isn't an lawyer.",
+              "habilidade": "artigo_profissao",
+              "pista": "Lawyer começa com som de vogal ou de consoante? A palavrinha antes muda?"
+            },
+            {
+              "exemplo": "He's a lawyer.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! A frase anterior era negativa. O 'não' continua?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "idade",
+      "objetivo": "Idade com o verbo to be e a pergunta How old, com concordância is / are.",
+      "itens": [
+        {
+          "id": "idade.base",
+          "tipo": "construcao",
+          "solicitacao": "meu filho tem dez anos",
+          "alvo": "My son is ten years old.",
+          "variantes": ["My son is ten.", "My son is 10.", "My son is 10 years old.", "My son's ten."],
+          "habilidades": ["idade_com_be"],
+          "ajudas": [
+            "Em inglês, a idade usa o verbo de 'ser'. Como fica 'meu filho é…'?",
+            "Como se diz 'meu filho é' em inglês? Depois vem a idade."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "My son has ten years.",
+              "habilidade": "idade_com_be",
+              "pista": "Em inglês, a idade não usa has. Que verbo usamos no lugar?"
+            }
+          ]
+        },
+        {
+          "id": "idade.pergunta",
+          "tipo": "construcao",
+          "solicitacao": "quantos anos o seu filho tem? (faça a pergunta)",
+          "alvo": "How old is your son?",
+          "habilidades": ["how_old", "pergunta_be"],
+          "apoio": "idade",
+          "ajudas": [
+            "Em inglês, a idade se pergunta com 'quão velho'. Como se diz isso?",
+            "Como se diz 'quão velho'? E o verbo vem antes ou depois de 'seu filho'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "How many years does your son have?",
+              "habilidade": "how_old",
+              "pista": "Em inglês, a idade não se pergunta com 'quantos anos tem'. Como se diz 'quão velho'?"
+            },
+            {
+              "exemplo": "How old your son is?",
+              "habilidade": "pergunta_be",
+              "pista": "Na pergunta, is vem antes ou depois de your son?"
+            }
+          ]
+        },
+        {
+          "id": "idade.daughter",
+          "tipo": "substituicao",
+          "pista": "Daughter.",
+          "alvo": "How old is your daughter?",
+          "habilidades": ["substantivo"],
+          "ajudas": [
+            "Mantenha a pergunta; troque son por daughter.",
+            "Que palavra eu te dei? Ela entra no lugar de son; o resto da pergunta continua igual."
+          ]
+        },
+        {
+          "id": "idade.kids",
+          "tipo": "substituicao",
+          "pista": "Kids.",
+          "alvo": "How old are your kids?",
+          "variantes": ["How old are your children?"],
+          "habilidades": ["concordancia_are"],
+          "ajudas": [
+            "Kids são mais de um. O verbo muda?",
+            "Como se pergunta 'quantos anos os seus filhos têm'? Lembre que são vários."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "How old is your kids?",
+              "habilidade": "concordancia_are",
+              "pista": "Kids são mais de um. Is ou are?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perguntas",
+      "objetivo": "Perguntas sim/não com Are / Is + sujeito, usando be para ser e para estar.",
+      "itens": [
+        {
+          "id": "perg.base",
+          "tipo": "construcao",
+          "solicitacao": "você é casado?",
+          "alvo": "Are you married?",
+          "habilidades": ["pergunta_be"],
+          "ajudas": [
+            "Na pergunta, o verbo vem antes ou depois de 'você'?",
+            "Como se pergunta 'você é…?' em inglês? Por qual palavra a pergunta começa?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You are married?",
+              "habilidade": "pergunta_be",
+              "pista": "Na pergunta, are vem antes ou depois de you?"
+            }
+          ]
+        },
+        {
+          "id": "perg.tired",
+          "tipo": "substituicao",
+          "pista": "Tired.",
+          "alvo": "Are you tired?",
+          "habilidades": ["ser_estar"],
+          "ajudas": [
+            "Troque married por tired. O verbo muda?",
+            "Que palavra eu te dei? Ela entra no lugar de married; o resto continua igual."
+          ]
+        },
+        {
+          "id": "perg.she",
+          "tipo": "substituicao",
+          "pista": "She.",
+          "alvo": "Is she tired?",
+          "habilidades": ["concordancia_is", "pergunta_be"],
+          "ajudas": [
+            "Com she, a pergunta começa com is ou are?",
+            "Como se pergunta 'ela está cansada?' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Are she tired?",
+              "habilidade": "concordancia_is",
+              "pista": "Com she, a pergunta começa com is ou are?"
+            },
+            {
+              "exemplo": "She is tired?",
+              "habilidade": "pergunta_be",
+              "pista": "Na pergunta, is vem antes ou depois de she?"
+            }
+          ]
+        },
+        {
+          "id": "perg.work",
+          "tipo": "substituicao",
+          "pista": "At work.",
+          "alvo": "Is she at work?",
+          "habilidades": ["ser_estar", "preservar_cadeia"],
+          "ajudas": [
+            "Troque tired por at work. O começo da pergunta continua igual?",
+            "Como se pergunta 'ela está no trabalho?' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Are you at work?",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! De quem estamos falando: de você ou dela?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "onde",
+      "objetivo": "Pergunta Where … from? com inversão e concordância, e o contraste entre ser de e estar em.",
+      "itens": [
+        {
+          "id": "onde.base",
+          "tipo": "construcao",
+          "solicitacao": "de onde você é? (faça a pergunta)",
+          "alvo": "Where are you from?",
+          "habilidades": ["pergunta_where"],
+          "ajudas": [
+            "Por qual palavra a pergunta começa? E o 'de' vai para onde?",
+            "Como se pergunta 'de onde você é' em inglês? O 'de' fica no fim da pergunta."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where you are from?",
+              "habilidade": "pergunta_where",
+              "pista": "Na pergunta, are vem antes ou depois de you?"
+            },
+            {
+              "exemplo": "From where are you?",
+              "habilidade": "pergunta_where",
+              "pista": "Em inglês, a pergunta começa com 'onde', e o 'de' vai para o fim. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "onde.he",
+          "tipo": "substituicao",
+          "pista": "He.",
+          "alvo": "Where is he from?",
+          "variantes": ["Where's he from?"],
+          "habilidades": ["concordancia_is"],
+          "ajudas": [
+            "Troque you por he. O verbo muda?",
+            "Como se pergunta 'de onde ele é' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where are he from?",
+              "habilidade": "concordancia_is",
+              "pista": "Com he, usamos are ou is?"
+            }
+          ]
+        },
+        {
+          "id": "onde.parents",
+          "tipo": "substituicao",
+          "pista": "Your parents.",
+          "alvo": "Where are your parents from?",
+          "habilidades": ["concordancia_are"],
+          "ajudas": [
+            "Your parents são mais de um. O verbo muda?",
+            "Como se pergunta 'de onde são os seus pais' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where is your parents from?",
+              "habilidade": "concordancia_are",
+              "pista": "Parents são mais de um. Is ou are?"
+            }
+          ]
+        },
+        {
+          "id": "onde.now",
+          "tipo": "substituicao",
+          "pista": "Now.",
+          "alvo": "Where are your parents now?",
+          "habilidades": ["ser_estar", "preservar_cadeia"],
+          "ajudas": [
+            "Agora a pergunta é onde eles estão, não de onde são. Que palavra sai da pergunta?",
+            "Como se pergunta 'onde os seus pais estão agora' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where are your parents from now?",
+              "habilidade": "ser_estar",
+              "pista": "Agora é onde eles estão, não de onde são. O from continua?"
+            },
+            {
+              "exemplo": "Where are you now?",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! De quem estamos falando: de você ou dos seus pais?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "idade": {
+      "objetivo": "Reconstruir a idade com to be e a pergunta How old antes de voltar à pergunta sobre o filho.",
+      "degraus": [
+        {
+          "id": "anos.modelo",
+          "tipo": "repeticao",
+          "modelo": "How old are you?",
+          "alvo": "How old are you?",
+          "habilidades": ["how_old"]
+        },
+        {
+          "id": "anos.eu",
+          "tipo": "construcao",
+          "solicitacao": "eu tenho quarenta anos",
+          "alvo": "I'm forty years old.",
+          "variantes": ["I'm forty.", "I am forty years old.", "I'm 40.", "I'm 40 years old."],
+          "habilidades": ["idade_com_be"],
+          "ajudas": [
+            "Em inglês, a idade usa o mesmo verbo de 'eu sou'. Como começa a frase?",
+            "Como se diz 'eu sou' em inglês? Depois vem o número."
+          ]
+        },
+        {
+          "id": "anos.ele",
+          "tipo": "construcao",
+          "solicitacao": "ele tem dez anos",
+          "alvo": "He's ten years old.",
+          "variantes": ["He's ten.", "He is ten years old.", "He's 10.", "He's 10 years old."],
+          "habilidades": ["idade_com_be", "concordancia_is"],
+          "ajudas": [
+            "Com he, qual forma do verbo usamos?",
+            "Como se diz 'ele é' em inglês? Depois vem o número."
+          ]
+        },
+        {
+          "id": "anos.pergunta",
+          "tipo": "construcao",
+          "solicitacao": "quantos anos ele tem? (faça a pergunta)",
+          "alvo": "How old is he?",
+          "habilidades": ["how_old", "concordancia_is"],
+          "ajudas": [
+            "É a mesma pergunta que você repetiu, agora sobre ele. O verbo muda?",
+            "Com he, a pergunta usa is ou are?"
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.origem",
+      "tipo": "conversa",
+      "pergunta": "Where are you from?",
+      "criterio": "Resposta pertinente com I'm from … (qualquer cidade, estado ou país).",
+      "exemplos": ["I'm from Belo Horizonte.", "I'm from Brazil. I'm from Porto Alegre."],
+      "acompanhamentos": ["Is it a big city?", "Are your parents from there too?"],
+      "habilidades": ["from_origem", "verbo_be"]
+    },
+    {
+      "id": "conversa.trabalho",
+      "tipo": "conversa",
+      "pergunta": "What's your job?",
+      "criterio": "Resposta pertinente com I'm a / an … (qualquer profissão). I'm retired, I'm unemployed e I'm a student também valem.",
+      "exemplos": ["I'm a nurse.", "I'm an accountant."],
+      "acompanhamentos": ["Is it a good job?", "Are your co-workers nice?"],
+      "habilidades": ["artigo_profissao"]
+    },
+    {
+      "id": "conversa.amigo",
+      "tipo": "conversa",
+      "pergunta": "How old is your best friend?",
+      "criterio": "Resposta pertinente com He's / She's + idade (years old é opcional). Qualquer idade vale, inclusive aproximada (about forty).",
+      "exemplos": ["She's thirty-five.", "He's about forty years old."],
+      "acompanhamentos": ["Is he married?", "Where is she from?"],
+      "habilidades": ["idade_com_be", "concordancia_is"]
+    },
+    {
+      "id": "conversa.agora",
+      "tipo": "conversa",
+      "pergunta": "Are you at home now?",
+      "criterio": "Yes, I am / No, I'm not, ou resposta completa e pertinente (I'm at work., I'm at home.).",
+      "exemplos": ["Yes, I am.", "No, I'm not. I'm at work."],
+      "acompanhamentos": ["Are you tired today?"],
+      "habilidades": ["negativa_be", "ser_estar"]
+    }
+  ],
+  "recuperacao": {
+    "verbo_be": {
+      "id": "rec.verbo_be",
+      "tipo": "construcao",
+      "solicitacao": "eu estou cansado hoje",
+      "alvo": "I'm tired today.",
+      "variantes": ["I am tired today.", "Today I'm tired."],
+      "habilidades": ["verbo_be"],
+      "ajudas": [
+        "Lembre do verbo: como se diz 'eu estou' em inglês?",
+        "Como se diz 'eu estou cansado' em inglês?"
+      ]
+    },
+    "from_origem": {
+      "id": "rec.from_origem",
+      "tipo": "construcao",
+      "solicitacao": "ela é de Portugal",
+      "alvo": "She's from Portugal.",
+      "variantes": ["She is from Portugal."],
+      "habilidades": ["from_origem", "concordancia_is"],
+      "ajudas": [
+        "Como se diz 'de' quando falamos de onde a pessoa é?",
+        "Como se diz 'ela é de…' em inglês?"
+      ]
+    },
+    "concordancia_is": {
+      "id": "rec.concordancia_is",
+      "tipo": "construcao",
+      "solicitacao": "meu chefe é muito simpático",
+      "alvo": "My boss is very nice.",
+      "variantes": ["My boss is very friendly."],
+      "habilidades": ["concordancia_is"],
+      "ajudas": [
+        "My boss é 'ele'. Usamos is ou are?",
+        "Como se diz 'meu chefe é' em inglês?"
+      ]
+    },
+    "concordancia_are": {
+      "id": "rec.concordancia_are",
+      "tipo": "construcao",
+      "solicitacao": "meus filhos estão na escola",
+      "alvo": "My kids are at school.",
+      "variantes": ["My children are at school.", "My kids are at the school."],
+      "habilidades": ["concordancia_are"],
+      "ajudas": [
+        "Filhos são mais de um. Is ou are?",
+        "Como se diz 'meus filhos estão' em inglês?"
+      ]
+    },
+    "negativa_be": {
+      "id": "rec.negativa_be",
+      "tipo": "construcao",
+      "solicitacao": "eu não sou casado",
+      "alvo": "I'm not married.",
+      "variantes": ["I am not married."],
+      "habilidades": ["negativa_be"],
+      "ajudas": [
+        "Onde entra o 'não': antes ou depois do verbo?",
+        "Como se diz 'eu não sou' em inglês?"
+      ]
+    },
+    "artigo_profissao": {
+      "id": "rec.artigo_profissao",
+      "tipo": "construcao",
+      "solicitacao": "minha mãe é enfermeira",
+      "alvo": "My mother is a nurse.",
+      "variantes": ["My mom is a nurse.", "My mother's a nurse."],
+      "habilidades": ["artigo_profissao", "concordancia_is"],
+      "ajudas": [
+        "Antes da profissão, falta uma palavrinha?",
+        "Como se diz 'minha mãe é uma enfermeira' em inglês?"
+      ]
+    },
+    "idade_com_be": {
+      "id": "rec.idade_com_be",
+      "tipo": "construcao",
+      "solicitacao": "meu pai tem sessenta anos",
+      "alvo": "My father is sixty years old.",
+      "variantes": ["My father is sixty.", "My father is 60.", "My father is 60 years old.", "My dad is sixty."],
+      "habilidades": ["idade_com_be"],
+      "ajudas": [
+        "Em inglês, a idade não usa o verbo ter. Qual verbo usamos?",
+        "Como se diz 'meu pai é…' em inglês? A idade vem depois."
+      ]
+    },
+    "how_old": {
+      "id": "rec.how_old",
+      "tipo": "construcao",
+      "solicitacao": "quantos anos a sua irmã tem? (faça a pergunta)",
+      "alvo": "How old is your sister?",
+      "habilidades": ["how_old", "concordancia_is"],
+      "ajudas": [
+        "Como se diz 'quão velha' em inglês?",
+        "Como se pergunta 'quantos anos ela tem' em inglês? Comece com 'quão velha'."
+      ]
+    },
+    "pergunta_be": {
+      "id": "rec.pergunta_be",
+      "tipo": "construcao",
+      "solicitacao": "o seu chefe está no escritório?",
+      "alvo": "Is your boss in the office?",
+      "variantes": ["Is your boss at the office?"],
+      "habilidades": ["pergunta_be", "concordancia_is"],
+      "ajudas": [
+        "Na pergunta, o verbo vem antes ou depois do sujeito?",
+        "Como se pergunta 'o seu chefe está…?' em inglês? Por qual palavra começa?"
+      ]
+    },
+    "pergunta_where": {
+      "id": "rec.pergunta_where",
+      "tipo": "construcao",
+      "solicitacao": "de onde a sua professora é? (faça a pergunta)",
+      "alvo": "Where is your teacher from?",
+      "variantes": ["Where's your teacher from?"],
+      "habilidades": ["pergunta_where"],
+      "ajudas": [
+        "Por qual palavra a pergunta começa? E onde fica o 'de'?",
+        "Como se pergunta 'de onde ela é' em inglês?"
+      ]
+    },
+    "ser_estar": {
+      "id": "rec.ser_estar",
+      "tipo": "construcao",
+      "solicitacao": "onde estão as crianças? (faça a pergunta)",
+      "alvo": "Where are the kids?",
+      "variantes": ["Where are the children?"],
+      "habilidades": ["ser_estar"],
+      "ajudas": [
+        "Em inglês, ser e estar são o mesmo verbo. Como se pergunta 'onde estão'?",
+        "Como se pergunta 'onde as crianças estão' em inglês?"
+      ]
+    }
+  }
+}

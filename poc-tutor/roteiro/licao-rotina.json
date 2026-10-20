@@ -1,0 +1,820 @@
+{
+  "id": "rotina-present-simple",
+  "titulo": "Present simple e a rotina",
+  "abertura": "Hoje vamos praticar o present simple e falar sobre a sua rotina do dia a dia.",
+  "notasParaAvaliador": "Com he, she, it ou um substantivo no singular (my son, your sister) o verbo leva -s (wakes up, works, watches, goes, has); \"she work\", \"he have\" e \"she haves\" são erros. Depois de don't, doesn't e does o verbo fica na forma básica (\"He doesn't works\", \"Does she has…?\" e \"He don't…\" são erros), e never não leva don't / doesn't junto. O advérbio de frequência vem antes do verbo principal (\"I usually go…\"), mas \"Usually I go…\" no começo também vale. Horas em algarismo ou por extenso são iguais (at 7 = at seven = at seven o'clock), o'clock só com hora cheia; almoçar e jantar são have lunch e have dinner, e \"work from home\" equivale a \"work at home\".",
+  "nomes": {
+    "blocos": {
+      "manha": "Manhã",
+      "negativa": "Negativas",
+      "perguntas": "Perguntas",
+      "horarios": "Horários",
+      "frequencia": "Frequência"
+    },
+    "habilidades": {
+      "sujeito_obrigatorio": { "curto": "sujeito", "resumo": "o sujeito da frase, como o I de I wake up" },
+      "preposicao_tempo": { "curto": "at / on", "resumo": "at com as horas e on com os dias da semana" },
+      "terceira_pessoa_s": { "curto": "he/she + s", "resumo": "o -s da terceira pessoa, como em she works" },
+      "have_refeicao": { "curto": "have lunch", "resumo": "have com as refeições, como em have lunch" },
+      "frequencia": { "curto": "always / never", "resumo": "always, usually e never antes do verbo" },
+      "negativa_dont": { "curto": "don't", "resumo": "a negativa com don't" },
+      "negativa_doesnt": { "curto": "doesn't", "resumo": "doesn't com he, she e it" },
+      "verbo_sem_s": { "curto": "verbo sem -s", "resumo": "o verbo sem -s depois de doesn't e does" },
+      "pergunta_do": { "curto": "Do …?", "resumo": "perguntas começando com Do" },
+      "pergunta_does": { "curto": "Does …?", "resumo": "perguntas começando com Does" },
+      "pergunta_wh": { "curto": "where / what time", "resumo": "perguntas com Where e What time" },
+      "dupla_negativa": { "curto": "never", "resumo": "o never sem don't nem doesn't junto" },
+      "preservar_cadeia": { "curto": "manter a frase", "resumo": "manter as mudanças anteriores da frase" }
+    }
+  },
+  "painel": {
+    "estruturas": [
+      "I / you / we / they + verbo: I work",
+      "he / she / it + verbo com -s: works · watches · goes · has",
+      "don't / doesn't + verbo sem -s",
+      "Do / Does + sujeito + verbo …?",
+      "Where / What time + do / does …?",
+      "at + hora · on + dia da semana",
+      "always · usually · sometimes · never + verbo"
+    ],
+    "vocabulario": [
+      { "en": "wake up", "pt": "acordar" },
+      { "en": "get up", "pt": "levantar" },
+      { "en": "take a shower", "pt": "tomar banho" },
+      { "en": "have breakfast", "pt": "tomar café da manhã" },
+      { "en": "have lunch", "pt": "almoçar" },
+      { "en": "have dinner", "pt": "jantar" },
+      { "en": "work from home", "pt": "trabalhar em casa" },
+      { "en": "get home", "pt": "chegar em casa" },
+      { "en": "cook", "pt": "cozinhar" },
+      { "en": "go to bed", "pt": "ir dormir" },
+      { "en": "start", "pt": "começar" },
+      { "en": "early", "pt": "cedo" },
+      { "en": "late", "pt": "tarde" },
+      { "en": "noon", "pt": "meio-dia" }
+    ],
+    "exemplos": [
+      "I get up at six and take a shower.",
+      "My husband works at a bank.",
+      "Does your son play soccer? Yes, he does.",
+      "We never eat out on weekdays."
+    ],
+    "alertas": [
+      "Com he, she, it o verbo ganha -s: she works · he watches · she has (nunca \"she haves\").",
+      "Depois de doesn't e does, o verbo fica sem -s: he doesn't play · Does she play?",
+      "Never já é negativo: I never smoke (sem don't).",
+      "A frase precisa de sujeito, mesmo quando o português não usa: I work, nunca só \"Work\"."
+    ]
+  },
+  "blocos": [
+    {
+      "id": "manha",
+      "objetivo": "Rotina da manhã com I e she: o -s da terceira pessoa, at + hora e advérbio de frequência.",
+      "itens": [
+        {
+          "id": "manha.base",
+          "tipo": "construcao",
+          "calibracao": true,
+          "solicitacao": "eu acordo às sete horas",
+          "alvo": "I wake up at seven o'clock.",
+          "variantes": ["I wake up at seven.", "I wake up at 7.", "I wake up at 7 o'clock."],
+          "habilidades": ["sujeito_obrigatorio", "preposicao_tempo"],
+          "ajudas": [
+            "Em inglês a frase precisa de um sujeito. Quem acorda?",
+            "Como se diz 'às sete horas'? Qual palavrinha vem antes da hora?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Wake up at seven o'clock.",
+              "habilidade": "sujeito_obrigatorio",
+              "pista": "Falta o sujeito. Quem acorda às sete?"
+            },
+            {
+              "exemplo": "I wake up at seven hours.",
+              "habilidade": "preposicao_tempo",
+              "pista": "Para dizer 'sete horas', usamos hours? Como se diz em inglês?"
+            }
+          ]
+        },
+        {
+          "id": "manha.she",
+          "tipo": "substituicao",
+          "pista": "She.",
+          "alvo": "She wakes up at seven o'clock.",
+          "variantes": ["She wakes up at seven.", "She wakes up at 7.", "She wakes up at 7 o'clock."],
+          "habilidades": ["terceira_pessoa_s"],
+          "ajudas": [
+            "Troque I por she. O verbo muda?",
+            "Com she, o verbo ganha uma letra no fim. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She wake up at seven o'clock.",
+              "habilidade": "terceira_pessoa_s",
+              "pista": "Com she, o verbo wake muda. Como fica?"
+            }
+          ]
+        },
+        {
+          "id": "manha.six_thirty",
+          "tipo": "substituicao",
+          "pista": "Six thirty.",
+          "alvo": "She wakes up at six thirty.",
+          "variantes": ["She wakes up at 6:30.", "She wakes up at half past six."],
+          "habilidades": ["preposicao_tempo", "preservar_cadeia"],
+          "ajudas": [
+            "Troque só a hora e mantenha she. Com seis e meia, ainda usamos o'clock?",
+            "Que hora eu te dei? Ela entra no lugar de seven o'clock; o resto continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She wakes up at six thirty o'clock.",
+              "habilidade": "preposicao_tempo",
+              "pista": "Com seis e meia, ainda usamos o'clock?"
+            },
+            {
+              "exemplo": "I wake up at six thirty.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Quem acorda às seis e meia: eu ou ela?"
+            }
+          ]
+        },
+        {
+          "id": "manha.breakfast",
+          "tipo": "substituicao",
+          "pista": "Have breakfast.",
+          "alvo": "She has breakfast at six thirty.",
+          "variantes": ["She has breakfast at 6:30.", "She has breakfast at half past six."],
+          "habilidades": ["terceira_pessoa_s", "have_refeicao"],
+          "ajudas": [
+            "Troque wakes up por have breakfast. Com she, have muda?",
+            "Com she, have tem uma forma especial. Qual é?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She have breakfast at six thirty.",
+              "habilidade": "terceira_pessoa_s",
+              "pista": "Com she, have muda. Como fica?"
+            },
+            {
+              "exemplo": "She haves breakfast at six thirty.",
+              "habilidade": "terceira_pessoa_s",
+              "pista": "Com she, have não ganha só o -s: tem uma forma especial. Qual é?"
+            }
+          ]
+        },
+        {
+          "id": "manha.always",
+          "tipo": "substituicao",
+          "pista": "Always.",
+          "alvo": "She always has breakfast at six thirty.",
+          "variantes": ["She always has breakfast at 6:30."],
+          "habilidades": ["frequencia", "terceira_pessoa_s"],
+          "ajudas": [
+            "Onde entra always: antes ou depois do verbo?",
+            "Que palavra eu te dei? Ela entra antes de has; o resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "She has always breakfast at six thirty.",
+              "habilidade": "frequencia",
+              "pista": "Always vem antes ou depois do verbo?"
+            },
+            {
+              "exemplo": "She always have breakfast at six thirty.",
+              "habilidade": "terceira_pessoa_s",
+              "pista": "Com she, have continua mudando. Como fica?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negativa",
+      "objetivo": "Negativas com don't e doesn't, com o verbo sem -s, e on + dia da semana.",
+      "itens": [
+        {
+          "id": "neg.base",
+          "tipo": "construcao",
+          "solicitacao": "eu não trabalho aos sábados",
+          "alvo": "I don't work on Saturdays.",
+          "variantes": ["I do not work on Saturdays.", "I don't work on Saturday."],
+          "habilidades": ["negativa_dont", "preposicao_tempo"],
+          "ajudas": [
+            "Em inglês, o 'não' precisa de um ajudante antes do verbo. Qual é?",
+            "Como se diz 'eu não trabalho'? E qual palavrinha vem antes do dia da semana?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I no work on Saturdays.",
+              "habilidade": "negativa_dont",
+              "pista": "O 'não' precisa de um ajudante antes do verbo. Qual é?"
+            },
+            {
+              "exemplo": "I don't work in Saturdays.",
+              "habilidade": "preposicao_tempo",
+              "pista": "Com dia da semana, usamos in mesmo? Qual palavrinha vem antes?"
+            }
+          ]
+        },
+        {
+          "id": "neg.he",
+          "tipo": "substituicao",
+          "pista": "He.",
+          "alvo": "He doesn't work on Saturdays.",
+          "variantes": ["He does not work on Saturdays.", "He doesn't work on Saturday."],
+          "habilidades": ["negativa_doesnt", "verbo_sem_s"],
+          "ajudas": [
+            "Troque I por he. O ajudante do 'não' muda?",
+            "Como se diz 'ele não trabalha' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "He don't work on Saturdays.",
+              "habilidade": "negativa_doesnt",
+              "pista": "Com he, usamos don't ou doesn't?"
+            },
+            {
+              "exemplo": "He doesn't works on Saturdays.",
+              "habilidade": "verbo_sem_s",
+              "pista": "Depois de doesn't, o verbo ainda leva -s?"
+            }
+          ]
+        },
+        {
+          "id": "neg.sundays",
+          "tipo": "substituicao",
+          "pista": "Sundays.",
+          "alvo": "He doesn't work on Sundays.",
+          "variantes": ["He does not work on Sundays.", "He doesn't work on Sunday."],
+          "habilidades": ["preservar_cadeia"],
+          "ajudas": [
+            "Troque Saturdays por Sundays; o resto continua.",
+            "Que palavra eu te dei? Ela entra no lugar de Saturdays; o resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I don't work on Sundays.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! De quem estamos falando agora?"
+            }
+          ]
+        },
+        {
+          "id": "neg.cook",
+          "tipo": "substituicao",
+          "pista": "Cook.",
+          "alvo": "He doesn't cook on Sundays.",
+          "variantes": ["He does not cook on Sundays.", "He doesn't cook on Sunday."],
+          "habilidades": ["verbo_sem_s"],
+          "ajudas": [
+            "Troque work por cook e mantenha o resto.",
+            "Que verbo eu te dei? Ele entra no lugar de work. Depois de doesn't, ele leva -s?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "He doesn't cooks on Sundays.",
+              "habilidade": "verbo_sem_s",
+              "pista": "Depois de doesn't, o verbo leva -s?"
+            }
+          ]
+        },
+        {
+          "id": "neg.we",
+          "tipo": "substituicao",
+          "pista": "We.",
+          "alvo": "We don't cook on Sundays.",
+          "variantes": ["We do not cook on Sundays.", "We don't cook on Sunday."],
+          "habilidades": ["negativa_dont"],
+          "ajudas": [
+            "Troque he por we. O ajudante do 'não' continua o mesmo?",
+            "Como se diz 'nós não cozinhamos' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "We doesn't cook on Sundays.",
+              "habilidade": "negativa_dont",
+              "pista": "Com we, usamos doesn't ou don't?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "perguntas",
+      "objetivo": "Perguntas com Do e Does, mudança de sujeito e de verbo, e a pergunta com Where.",
+      "itens": [
+        {
+          "id": "perg.base",
+          "tipo": "construcao",
+          "solicitacao": "você trabalha em casa?",
+          "alvo": "Do you work from home?",
+          "variantes": ["Do you work at home?"],
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Em inglês, a pergunta começa com um ajudante. Qual é?",
+            "Como se pergunta 'você trabalha…?' em inglês? Que ajudante vem antes de 'você'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "You work from home?",
+              "habilidade": "pergunta_do",
+              "pista": "Falta o ajudante no começo da pergunta. Qual é?"
+            },
+            {
+              "exemplo": "Are you work from home?",
+              "habilidade": "pergunta_do",
+              "pista": "Tem um errinho no are. Com o verbo trabalhar, qual ajudante começa a pergunta?"
+            }
+          ]
+        },
+        {
+          "id": "perg.sister",
+          "tipo": "substituicao",
+          "pista": "Your sister.",
+          "alvo": "Does your sister work from home?",
+          "variantes": ["Does your sister work at home?"],
+          "habilidades": ["pergunta_does", "verbo_sem_s"],
+          "ajudas": [
+            "Your sister é 'ela'. O ajudante do começo muda?",
+            "Como se pergunta 'a sua irmã trabalha…?' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Do your sister work from home?",
+              "habilidade": "pergunta_does",
+              "pista": "Com your sister, usamos do ou does?"
+            },
+            {
+              "exemplo": "Does your sister works from home?",
+              "habilidade": "verbo_sem_s",
+              "pista": "Depois de does, o verbo ainda leva -s?"
+            }
+          ]
+        },
+        {
+          "id": "perg.parents",
+          "tipo": "substituicao",
+          "pista": "Your parents.",
+          "alvo": "Do your parents work from home?",
+          "variantes": ["Do your parents work at home?"],
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Your parents são mais de um. O ajudante do começo muda?",
+            "Como se pergunta 'os seus pais trabalham…?' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Does your parents work from home?",
+              "habilidade": "pergunta_do",
+              "pista": "Parents são mais de um. Does ou do?"
+            }
+          ]
+        },
+        {
+          "id": "perg.live",
+          "tipo": "substituicao",
+          "pista": "Live near you.",
+          "alvo": "Do your parents live near you?",
+          "habilidades": ["preservar_cadeia"],
+          "ajudas": [
+            "Troque work from home por live near you; o começo da pergunta continua.",
+            "Que expressão eu te dei? Ela entra no lugar de work from home."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Do you live near you?",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! De quem estamos falando: de você ou dos seus pais?"
+            }
+          ]
+        },
+        {
+          "id": "perg.where",
+          "tipo": "substituicao",
+          "pista": "Where.",
+          "alvo": "Where do your parents live?",
+          "habilidades": ["pergunta_wh"],
+          "ajudas": [
+            "Agora a pergunta começa com where, e near you sai. O ajudante continua?",
+            "Como se pergunta 'onde os seus pais moram?' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "Where your parents live?",
+              "habilidade": "pergunta_wh",
+              "pista": "Depois de where, falta um ajudante. Qual é?"
+            },
+            {
+              "exemplo": "Where do your parents live near you?",
+              "habilidade": "pergunta_wh",
+              "pista": "Com where, a pergunta já é sobre o lugar. Near you continua?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "horarios",
+      "objetivo": "Pergunta What time + do / does, com have + refeição e get home.",
+      "itens": [
+        {
+          "id": "hora.base",
+          "tipo": "construcao",
+          "solicitacao": "a que horas você almoça? (faça a pergunta)",
+          "alvo": "What time do you have lunch?",
+          "habilidades": ["pergunta_wh", "have_refeicao"],
+          "apoio": "almoco",
+          "ajudas": [
+            "Como se diz 'a que horas'? E qual ajudante vem depois?",
+            "Como se diz 'almoçar' em inglês? A pergunta começa com 'a que horas'."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What time you have lunch?",
+              "habilidade": "pergunta_wh",
+              "pista": "Depois de what time, falta um ajudante. Qual é?"
+            },
+            {
+              "exemplo": "What hours do you have lunch?",
+              "habilidade": "pergunta_wh",
+              "pista": "Para perguntar a hora, usamos hours? Como se diz 'a que horas'?"
+            },
+            {
+              "exemplo": "What time do you lunch?",
+              "habilidade": "have_refeicao",
+              "pista": "Falta um verbo antes de lunch. Como se diz 'almoçar' em inglês?"
+            }
+          ]
+        },
+        {
+          "id": "hora.she",
+          "tipo": "substituicao",
+          "pista": "She.",
+          "alvo": "What time does she have lunch?",
+          "habilidades": ["pergunta_does", "verbo_sem_s"],
+          "ajudas": [
+            "Troque you por she. O ajudante muda?",
+            "Como se pergunta 'a que horas ela almoça' em inglês?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What time do she have lunch?",
+              "habilidade": "pergunta_does",
+              "pista": "Com she, usamos do ou does?"
+            },
+            {
+              "exemplo": "What time does she has lunch?",
+              "habilidade": "verbo_sem_s",
+              "pista": "Depois de does, o verbo fica na forma de she ou volta à forma básica?"
+            }
+          ]
+        },
+        {
+          "id": "hora.home",
+          "tipo": "substituicao",
+          "pista": "Get home.",
+          "alvo": "What time does she get home?",
+          "habilidades": ["verbo_sem_s", "preservar_cadeia"],
+          "ajudas": [
+            "Troque have lunch por get home; o começo da pergunta continua.",
+            "Que expressão eu te dei? Ela entra no lugar de have lunch. Depois de does, o verbo leva -s?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "What time does she gets home?",
+              "habilidade": "verbo_sem_s",
+              "pista": "Depois de does, o verbo leva -s?"
+            },
+            {
+              "exemplo": "What time do you get home?",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! De quem estamos falando agora?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "frequencia",
+      "objetivo": "Advérbios de frequência antes do verbo, com mudança de sujeito e never sem negativa.",
+      "itens": [
+        {
+          "id": "freq.base",
+          "tipo": "construcao",
+          "solicitacao": "eu geralmente vou dormir às onze",
+          "alvo": "I usually go to bed at eleven.",
+          "variantes": [
+            "Usually I go to bed at eleven.",
+            "I usually go to bed at 11.",
+            "I usually go to bed at eleven o'clock.",
+            "I usually go to sleep at eleven."
+          ],
+          "habilidades": ["frequencia", "preposicao_tempo"],
+          "ajudas": [
+            "Como se diz 'geralmente'? Ele vem antes ou depois do verbo?",
+            "Como se diz 'ir dormir' em inglês? E onde entra o 'geralmente'?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "I go usually to bed at eleven.",
+              "habilidade": "frequencia",
+              "pista": "Usually vem antes ou depois do verbo?"
+            },
+            {
+              "exemplo": "I usually go to bed in eleven.",
+              "habilidade": "preposicao_tempo",
+              "pista": "Antes da hora, usamos in mesmo? Qual palavrinha vem antes?"
+            }
+          ]
+        },
+        {
+          "id": "freq.son",
+          "tipo": "substituicao",
+          "pista": "My son.",
+          "alvo": "My son usually goes to bed at eleven.",
+          "variantes": ["My son usually goes to bed at 11.", "Usually my son goes to bed at eleven."],
+          "habilidades": ["terceira_pessoa_s"],
+          "ajudas": [
+            "My son é 'ele'. O verbo muda?",
+            "Com my son, go ganha uma terminação. Como fica?"
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "My son usually go to bed at eleven.",
+              "habilidade": "terceira_pessoa_s",
+              "pista": "My son é 'ele'. O verbo go muda?"
+            }
+          ]
+        },
+        {
+          "id": "freq.never",
+          "tipo": "substituicao",
+          "pista": "Never.",
+          "alvo": "My son never goes to bed at eleven.",
+          "variantes": ["My son never goes to bed at 11."],
+          "habilidades": ["frequencia", "dupla_negativa"],
+          "ajudas": [
+            "Troque usually por never; o resto continua.",
+            "Que palavra eu te dei? Ela entra no lugar de usually; o resto continua igual."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "My son doesn't never go to bed at eleven.",
+              "habilidade": "dupla_negativa",
+              "pista": "Never já é negativo. Precisa de doesn't junto?"
+            }
+          ]
+        },
+        {
+          "id": "freq.early",
+          "tipo": "substituicao",
+          "pista": "Early.",
+          "alvo": "My son never goes to bed early.",
+          "habilidades": ["preservar_cadeia"],
+          "ajudas": [
+            "Troque at eleven por early e mantenha never.",
+            "Que palavra eu te dei? Ela entra no lugar de at eleven; o resto continua."
+          ],
+          "errosPrevistos": [
+            {
+              "exemplo": "My son usually goes to bed early.",
+              "habilidade": "preservar_cadeia",
+              "pista": "Quase! Qual palavra mudou na frase anterior?"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "apoios": {
+    "almoco": {
+      "objetivo": "Reconstruir have + refeição e a pergunta com Do antes de voltar à pergunta What time.",
+      "degraus": [
+        {
+          "id": "almoco.have",
+          "tipo": "repeticao",
+          "modelo": "Have lunch.",
+          "alvo": "Have lunch.",
+          "habilidades": ["have_refeicao"]
+        },
+        {
+          "id": "almoco.i",
+          "tipo": "construcao",
+          "solicitacao": "eu almoço ao meio-dia",
+          "alvo": "I have lunch at noon.",
+          "variantes": ["I have lunch at twelve.", "I have lunch at 12.", "I have lunch at midday."],
+          "habilidades": ["have_refeicao", "preposicao_tempo"],
+          "ajudas": [
+            "Como se diz 'almoçar' em inglês? E 'eu almoço'?",
+            "Como se diz 'eu almoço' em inglês? E 'ao meio-dia'?"
+          ]
+        },
+        {
+          "id": "almoco.you",
+          "tipo": "substituicao",
+          "pista": "You.",
+          "alvo": "You have lunch at noon.",
+          "variantes": ["You have lunch at twelve.", "You have lunch at 12."],
+          "habilidades": ["have_refeicao"],
+          "ajudas": [
+            "Troque I por you. O verbo muda?",
+            "Como se diz 'você almoça' em inglês?"
+          ]
+        },
+        {
+          "id": "almoco.pergunta",
+          "tipo": "substituicao",
+          "pista": "Make it a question.",
+          "alvo": "Do you have lunch at noon?",
+          "variantes": ["Do you have lunch at twelve?", "Do you have lunch at 12?"],
+          "habilidades": ["pergunta_do"],
+          "ajudas": [
+            "Para virar pergunta, qual ajudante vem no começo?",
+            "Como se pergunta 'você almoça…?' em inglês?"
+          ]
+        }
+      ]
+    }
+  },
+  "conversa": [
+    {
+      "id": "conversa.acordar",
+      "tipo": "conversa",
+      "pergunta": "What time do you usually wake up on weekdays?",
+      "criterio": "Resposta pertinente com I (usually) wake up at … (qualquer horário verdadeiro).",
+      "exemplos": ["I usually wake up at six.", "I wake up at seven thirty."],
+      "acompanhamentos": ["Do you have breakfast at home?", "What time do you go to bed?"],
+      "habilidades": ["preposicao_tempo", "sujeito_obrigatorio"]
+    },
+    {
+      "id": "conversa.sabado",
+      "tipo": "conversa",
+      "pergunta": "Do you work on Saturdays?",
+      "criterio": "Yes, I do / No, I don't, ou resposta completa e pertinente no present simple (I work… / I don't work…).",
+      "exemplos": ["No, I don't.", "Yes, I do. I work in the morning."],
+      "acompanhamentos": ["What do you usually do on Saturdays?"],
+      "habilidades": ["negativa_dont"]
+    },
+    {
+      "id": "conversa.cozinha",
+      "tipo": "conversa",
+      "pergunta": "Who cooks in your house?",
+      "criterio": "Resposta pertinente sobre quem cozinha, com o -s na terceira pessoa quando não é I (My mother cooks., I cook., Nobody cooks.).",
+      "exemplos": ["My husband cooks.", "I cook. My kids never cook."],
+      "acompanhamentos": ["Does he cook every day?", "Do you like to cook?"],
+      "habilidades": ["terceira_pessoa_s"]
+    },
+    {
+      "id": "conversa.domingo",
+      "tipo": "conversa",
+      "pergunta": "What do you usually do on Sunday mornings?",
+      "criterio": "Resposta pertinente no present simple sobre o domingo de manhã, com qualquer atividade (I sleep, I go to church, I usually have breakfast with my family).",
+      "exemplos": ["I usually have breakfast with my family.", "I sleep a lot and I watch TV."],
+      "acompanhamentos": ["Do you always do that?"],
+      "habilidades": ["frequencia"]
+    }
+  ],
+  "recuperacao": {
+    "sujeito_obrigatorio": {
+      "id": "rec.sujeito_obrigatorio",
+      "tipo": "construcao",
+      "solicitacao": "eu tomo banho de manhã",
+      "alvo": "I take a shower in the morning.",
+      "variantes": ["I shower in the morning.", "In the morning I take a shower."],
+      "habilidades": ["sujeito_obrigatorio"],
+      "ajudas": [
+        "Lembre do sujeito: quem toma banho?",
+        "Como se diz 'tomar banho' em inglês? E 'de manhã'?"
+      ]
+    },
+    "preposicao_tempo": {
+      "id": "rec.preposicao_tempo",
+      "tipo": "construcao",
+      "solicitacao": "a aula começa às oito e meia",
+      "alvo": "The class starts at eight thirty.",
+      "variantes": ["The class starts at 8:30.", "The class starts at half past eight.", "Class starts at eight thirty."],
+      "habilidades": ["preposicao_tempo", "terceira_pessoa_s"],
+      "ajudas": [
+        "Antes da hora, qual palavrinha usamos?",
+        "Como se diz 'às oito e meia' em inglês?"
+      ]
+    },
+    "terceira_pessoa_s": {
+      "id": "rec.terceira_pessoa_s",
+      "tipo": "construcao",
+      "solicitacao": "o meu chefe trabalha muito",
+      "alvo": "My boss works a lot.",
+      "variantes": ["My boss works hard.", "My boss works very hard."],
+      "habilidades": ["terceira_pessoa_s"],
+      "ajudas": [
+        "My boss é 'ele'. O verbo muda?",
+        "Como se diz 'meu chefe trabalha' em inglês? Lembre do detalhe no fim do verbo."
+      ]
+    },
+    "frequencia": {
+      "id": "rec.frequencia",
+      "tipo": "construcao",
+      "solicitacao": "nós sempre almoçamos juntos",
+      "alvo": "We always have lunch together.",
+      "habilidades": ["frequencia", "have_refeicao"],
+      "ajudas": [
+        "Como se diz 'sempre'? Ele vem antes ou depois do verbo?",
+        "Como se diz 'almoçar' em inglês? E onde entra o 'sempre'?"
+      ]
+    },
+    "negativa_dont": {
+      "id": "rec.negativa_dont",
+      "tipo": "construcao",
+      "solicitacao": "eles não moram aqui",
+      "alvo": "They don't live here.",
+      "variantes": ["They do not live here."],
+      "habilidades": ["negativa_dont"],
+      "ajudas": [
+        "O 'não' precisa de um ajudante antes do verbo. Qual é?",
+        "Como se diz 'eles não moram' em inglês?"
+      ]
+    },
+    "negativa_doesnt": {
+      "id": "rec.negativa_doesnt",
+      "tipo": "construcao",
+      "solicitacao": "minha filha não gosta de café",
+      "alvo": "My daughter doesn't like coffee.",
+      "variantes": ["My daughter does not like coffee."],
+      "habilidades": ["negativa_doesnt", "verbo_sem_s"],
+      "ajudas": [
+        "My daughter é 'ela'. Qual ajudante usamos para o 'não'?",
+        "Como se diz 'ela não gosta' em inglês? Em inglês, gostar não leva 'de'."
+      ]
+    },
+    "verbo_sem_s": {
+      "id": "rec.verbo_sem_s",
+      "tipo": "construcao",
+      "solicitacao": "o meu irmão não dirige",
+      "alvo": "My brother doesn't drive.",
+      "variantes": ["My brother does not drive."],
+      "habilidades": ["verbo_sem_s", "negativa_doesnt"],
+      "ajudas": [
+        "Depois do ajudante do 'não', o verbo leva -s ou não?",
+        "Como se diz 'meu irmão não dirige' em inglês?"
+      ]
+    },
+    "pergunta_do": {
+      "id": "rec.pergunta_do",
+      "tipo": "construcao",
+      "solicitacao": "vocês moram perto daqui?",
+      "alvo": "Do you live near here?",
+      "variantes": ["Do you guys live near here?", "Do you live nearby?"],
+      "habilidades": ["pergunta_do"],
+      "ajudas": [
+        "Por qual ajudante a pergunta começa?",
+        "Como se pergunta 'vocês moram…?' em inglês?"
+      ]
+    },
+    "pergunta_does": {
+      "id": "rec.pergunta_does",
+      "tipo": "construcao",
+      "solicitacao": "o seu filho estuda de manhã?",
+      "alvo": "Does your son study in the morning?",
+      "habilidades": ["pergunta_does", "verbo_sem_s"],
+      "ajudas": [
+        "Your son é 'ele'. Qual ajudante começa a pergunta?",
+        "Como se pergunta 'o seu filho estuda…?' em inglês?"
+      ]
+    },
+    "pergunta_wh": {
+      "id": "rec.pergunta_wh",
+      "tipo": "construcao",
+      "solicitacao": "onde a sua irmã trabalha? (faça a pergunta)",
+      "alvo": "Where does your sister work?",
+      "habilidades": ["pergunta_wh", "pergunta_does"],
+      "ajudas": [
+        "Depois de 'onde', qual ajudante vem?",
+        "Como se pergunta 'onde ela trabalha' em inglês?"
+      ]
+    },
+    "dupla_negativa": {
+      "id": "rec.dupla_negativa",
+      "tipo": "construcao",
+      "solicitacao": "eu nunca bebo café à noite",
+      "alvo": "I never drink coffee at night.",
+      "habilidades": ["dupla_negativa", "frequencia"],
+      "ajudas": [
+        "Como se diz 'nunca'? Precisa de mais um 'não' junto?",
+        "Como se diz 'eu nunca bebo café' em inglês? E onde entra o 'nunca'?"
+      ]
+    },
+    "have_refeicao": {
+      "id": "rec.have_refeicao",
+      "tipo": "construcao",
+      "solicitacao": "eu janto às oito",
+      "alvo": "I have dinner at eight.",
+      "variantes": ["I have dinner at 8.", "I have dinner at eight o'clock."],
+      "habilidades": ["have_refeicao", "preposicao_tempo"],
+      "ajudas": [
+        "Como se diz 'jantar' em inglês? Precisa de um verbo antes?",
+        "Como se diz 'eu janto' em inglês?"
+      ]
+    }
+  }
+}

@@ -78,8 +78,10 @@ npm run dev
    supabase functions deploy tarefa-pronuncia --no-verify-jwt
    supabase functions deploy atividade-gerar-audio
    supabase functions deploy sala-entrar --no-verify-jwt
+   supabase functions deploy tutor-aluno
+   supabase functions deploy poc-tutor --no-verify-jwt
    ```
-   `--no-verify-jwt` é obrigatório nas funções tarefa-\*, convite-\*, link-cadastro-\* e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*, link-cadastro-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter`, `salas-do-aluno` e `aluno-conta-gerenciar` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão).
+   `--no-verify-jwt` é obrigatório nas funções tarefa-\*, convite-\*, link-cadastro-\* e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*, link-cadastro-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter`, `salas-do-aluno`, `aluno-conta-gerenciar` e `tutor-aluno` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão). `poc-tutor` é o laboratório do tutor oral, sem login e protegido por senha; o tutor dentro do produto (beta, migration 0024) está em [docs/TUTOR.md](docs/TUTOR.md).
 6. Gere uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e configure o secret (nunca entra no `.env` do front — só a Edge Function enxerga):
    ```bash
    supabase secrets set GEMINI_API_KEY=sua_chave_aqui
