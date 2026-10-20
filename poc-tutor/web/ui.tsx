@@ -22,6 +22,8 @@ const CAMINHOS = {
   enviar: '<path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>',
   carregando: '<path d="M21 12a9 9 0 1 1-6.2-8.6"/>',
   pare: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  pausa: '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+  continuar: '<path d="M7 5v14l12-7z"/>',
 } as const
 
 export type NomeIcone = keyof typeof CAMINHOS

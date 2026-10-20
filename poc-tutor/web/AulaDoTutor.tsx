@@ -39,7 +39,7 @@ import { CartaoResumo, FolhaDeApoio, PainelDoProfessor, type LinhaDoHistorico, t
  * professor.
  */
 
-type Status = 'inicio' | 'falando' | 'ouvindo' | 'pensando' | 'confirmando' | 'aguardando' | 'fim'
+type Status = 'inicio' | 'falando' | 'ouvindo' | 'pensando' | 'confirmando' | 'aguardando' | 'pausado' | 'fim'
 
 /** `Omit` que respeita cada membro da união. */
 type SemId<T> = T extends unknown ? Omit<T, 'id'> : never
@@ -94,6 +94,13 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
   const microfone = useRef<Microfone | null>(null)
   const vozes = useRef<Vozes>({ pt: null, en: null })
   const interrompido = useRef(false)
+  /**
+   * A vez de quem está falando. Pular, pedir ajuda, digitar, "Devagar" e
+   * pausar começam uma rodada nova: a anterior para de dizer o que faltava
+   * na hora — sem isto as falas do item pulado tocavam por cima das do novo.
+   */
+  const rodada = useRef(0)
+  const pausadoRef = useRef(false)
   const ultimasFalas = useRef<Fala[]>([])
   const aConfirmar = useRef<string | null>(null)
   const opcoesRef = useRef(opcoes)
@@ -164,7 +171,8 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
   }
 
   function recomecar() {
-    pararVoz()
+    cortar()
+    pausadoRef.current = false
     microfone.current?.descartar()
     setGasto({})
     setProfessorAberto(false)
@@ -206,6 +214,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
   }
 
   async function executar(acoes: Acao[], s: Sessao) {
+    const minha = cortar()
     setStatus('falando')
     interrompido.current = false
 
@@ -230,7 +239,9 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
         void voz.primeiroSomMs.then((ms) => detalhar(linha, ms === null ? 'stream falhou: voz do aparelho' : `voz em stream: 1º som em ${ms} ms`))
       }
       // Interrompido: o palco e a legenda continuam mudando, só não é lido.
-      if (!interrompido.current) await dizer(falas[i], voz)
+      if (!interrompido.current) await dizer(falas[i], voz, 1, minha)
+      // Outra rodada começou (pulou, pediu ajuda, pausou): esta não diz mais nada.
+      if (minha !== rodada.current) return
     }
 
     if (s.encerrada) {
@@ -251,13 +262,20 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
    * Uma fala: a voz do Gemini (pré-gravada ou em stream); se ela falhar sem
    * soar nada, a voz do aparelho. A aula não para porque o TTS falhou.
    */
-  async function dizer(fala: Fala, voz?: VozPreparada, velocidade = 1) {
+  async function dizer(fala: Fala, voz?: VozPreparada, velocidade = 1, minha = rodada.current) {
     if (voz) {
       void voz.custos.then(registrarCustos)
       if (await voz.tocar(velocidade)) return
-      if (interrompido.current) return
+      if (interrompido.current || minha !== rodada.current) return
     }
     await falar(fala, vozes.current, velocidade)
+  }
+
+  /** Começa uma rodada nova: cala o tutor e invalida o que a rodada anterior ainda ia dizer. */
+  function cortar(): number {
+    rodada.current++
+    pararVoz()
+    return rodada.current
   }
 
   function registrarCustos(custos: Custo[] = []) {
@@ -275,18 +293,37 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
     pararVoz()
   }
 
-  /** "Devagar": repete as últimas falas mais lentas. */
-  async function devagar() {
+  /** "Devagar" (0.75) e "Continuar" depois da pausa (1): diz de novo as últimas falas e volta a ouvir. */
+  async function repetir(velocidade: number) {
     microfone.current?.descartar()
-    pararVoz()
+    const minha = cortar()
     setStatus('falando')
     interrompido.current = false
     for (const fala of ultimasFalas.current) {
       if (interrompido.current) break
-      await dizer(fala, opcoesRef.current.vozNatural ? preparar(fala) : undefined, 0.75)
+      await dizer(fala, opcoesRef.current.vozNatural ? preparar(fala) : undefined, velocidade, minha)
+      if (minha !== rodada.current) return
     }
     if (microfone.current && !digitandoRef.current && opcoesRef.current.escutaAutomatica) ouvir()
     else setStatus('aguardando')
+  }
+
+  /**
+   * Pausar: o tutor cala, o microfone fecha e nada acontece até Continuar.
+   * Continuar repete o último pedido — depois de uma pausa ninguém lembra
+   * exatamente o que o tutor tinha acabado de pedir.
+   */
+  function pausar() {
+    cortar()
+    microfone.current?.descartar()
+    pausadoRef.current = true
+    setStatus('pausado')
+  }
+
+  function continuar() {
+    destravarAudio()
+    pausadoRef.current = false
+    void repetir(1)
   }
 
   // ── Aluno fala ─────────────────────────────────────────────────────────────
@@ -322,7 +359,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
     const limpo = valor.trim()
     if (!limpo) return
     microfone.current?.descartar()
-    pararVoz()
+    cortar()
     setTexto('')
     setStatus('pensando')
     anotar({ quem: 'aluno', texto: limpo, detalhe: rotulo ?? 'digitado' })
@@ -359,6 +396,11 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
       if (entrada.audio) anotar({ quem: 'aluno', texto: dito || '(nada audível)', detalhe })
       else anotar({ quem: 'nota', texto: `Avaliação: ${detalhe}` })
 
+      // Pausou enquanto a resposta era avaliada: o turno espera o Continuar.
+      if (pausadoRef.current) {
+        await turno(avaliacao, { calado: true })
+        return
+      }
       await turno(avaliacao)
     } catch (e) {
       // Falha de rede ou do servidor não é erro de inglês: a sessão não muda.
@@ -375,14 +417,14 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
 
   function pedir(avaliacao: Avaliacao, rotulo: string) {
     microfone.current?.descartar()
-    pararVoz()
+    cortar()
     anotar({ quem: 'aluno', texto: rotulo })
     void turno(avaliacao)
   }
 
   // ── Controlador decide ─────────────────────────────────────────────────────
 
-  async function turno(avaliacao: Avaliacao) {
+  async function turno(avaliacao: Avaliacao, { calado = false }: { calado?: boolean } = {}) {
     const anterior = sessaoRef.current
     if (!anterior || anterior.encerrada) return
     const { sessao: s, acoes } = receber(anterior, avaliacao)
@@ -392,6 +434,13 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
       .filter((e) => e.tipo === 'decisao' && e.motivo)
       .map((e) => e.motivo!)
     if (motivos.length) anotar({ quem: 'nota', texto: motivos.join(' · ') })
+    if (calado) {
+      // A decisão fica tomada; o que o tutor diria espera o Continuar.
+      for (const acao of acoes) aplicarNoPalco(acao)
+      ultimasFalas.current = acoes.map((acao) => falaDaAcao(acao, s))
+      setLegenda(textoDaFala(ultimasFalas.current.at(-1) ?? []))
+      return
+    }
     await executar(acoes, s)
   }
 
@@ -405,7 +454,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
     )
   }
 
-  const emAula = status !== 'inicio' && status !== 'fim'
+  const emAula = status !== 'inicio' && status !== 'fim' && status !== 'pausado'
   const estadoMic: EstadoMic =
     !microfone.current && emAula ? 'desligado' : status === 'inicio' || status === 'fim' ? 'aguardando' : (status as EstadoMic)
 
@@ -423,6 +472,16 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
         <button onClick={() => setApoioAberto(true)} aria-label="Apoio" title="Estruturas e vocabulário" className="grid h-8 w-8 place-items-center rounded-full bg-[var(--cartao)] text-neutral-600">
           <Icone nome="livro" />
         </button>
+        {(emAula || status === 'pausado') && (
+          <button
+            onClick={() => (status === 'pausado' ? continuar() : pausar())}
+            aria-label={status === 'pausado' ? 'Continuar a aula' : 'Pausar a aula'}
+            title={status === 'pausado' ? 'Continuar' : 'Pausar'}
+            className="grid h-8 w-8 place-items-center rounded-full bg-[var(--cartao)] text-neutral-600"
+          >
+            <Icone nome={status === 'pausado' ? 'continuar' : 'pausa'} />
+          </button>
+        )}
         {modo === 'lab' ? (
           <button onClick={() => setProfessorAberto(true)} aria-label="Modo professor" title="Modo professor" className="grid h-8 w-8 place-items-center rounded-full bg-[var(--cartao)] text-neutral-600">
             <Icone nome="professor" />
@@ -431,7 +490,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
           aoSair && (
             <button
               onClick={() => {
-                pararVoz()
+                cortar()
                 microfone.current?.fechar()
                 aoSair()
               }}
@@ -452,6 +511,15 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
 
       <main className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto py-4">
         {status === 'inicio' && <Boasvindas roteiro={roteiro} />}
+        {status === 'pausado' && (
+          <div className="animar-sobe w-full rounded-3xl bg-[var(--cartao)] p-6 text-center">
+            <p className="text-lg font-extrabold">Aula pausada</p>
+            <p className="mt-1 text-sm text-neutral-500">O tutor espera você. Ao continuar, ele repete o último pedido.</p>
+            <button onClick={continuar} className="mt-4 w-full rounded-full bg-violet-600 py-3.5 text-base font-extrabold text-white">
+              Continuar
+            </button>
+          </div>
+        )}
         {status === 'fim' && resumo && <CartaoResumo resumo={resumo} roteiro={roteiro} aoRefazer={recomecar} />}
         {emAula && sessao && <Palco sessao={sessao} tentativa={tentativa} pergunta={pergunta} />}
       </main>
@@ -459,7 +527,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
       {/* A fala do tutor como legenda — o "balão" de chat sai de cena. */}
       <div className="flex min-h-14 items-center justify-center gap-2.5 px-2 text-center text-[15px]">
         <Onda ativa={status === 'falando'} />
-        <span>{status === 'inicio' ? '' : legenda}</span>
+        <span>{status === 'inicio' || status === 'pausado' ? '' : legenda}</span>
       </div>
 
       <footer className="pt-2 pb-[max(1.1rem,env(safe-area-inset-bottom))]">
@@ -467,7 +535,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
           <button onClick={() => void comecar()} className="w-full rounded-full bg-violet-600 py-4 text-base font-extrabold text-white shadow-[0_10px_30px_rgba(124,58,237,.35)]">
             Começar aula
           </button>
-        ) : status === 'fim' ? null : (
+        ) : status === 'fim' || status === 'pausado' ? null : (
           <>
             {status === 'confirmando' && aConfirmar.current && (
               <div className="mb-3 flex justify-center">
@@ -508,7 +576,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
 
             <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div className="flex flex-col gap-1.5">
-                <Atalho icone="devagar" rotulo="Devagar" aoClicar={() => void devagar()} desligado={status === 'pensando'} />
+                <Atalho icone="devagar" rotulo="Devagar" aoClicar={() => void repetir(0.75)} desligado={status === 'pensando'} />
                 <Atalho icone="teclado" rotulo={digitando ? 'Falar' : 'Digitar'} aoClicar={() => {
                     // Passar a digitar no meio da escuta descarta a gravação.
                     if (!digitando && status === 'ouvindo') {
