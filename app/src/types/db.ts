@@ -34,6 +34,11 @@ export type Professor = {
   plano: PlanoTipo
   /** Aluno só entra na chamada depois que o professor admite (0018). */
   sala_de_espera: boolean
+  /** Preferências do tutor (0024): valem para todos os alunos do professor. */
+  tutor_voz_natural: boolean
+  tutor_escuta_automatica: boolean
+  /** Sessões por aluno por mês; a função usa o menor entre este e `TutorAcesso.max_sessoes_mes`. */
+  tutor_sessoes_mes: number
   criado_em: string
 }
 
@@ -61,6 +66,8 @@ export type Aluno = {
   horario: string | null
   observacoes: string | null
   status: AlunoStatus
+  /** O aluno vê o menu Tutor (0024). Só liga com `tutor_acesso` e dentro do `max_alunos` — o trigger confere. */
+  tutor_ativo: boolean
   criado_em: string
 }
 
@@ -369,6 +376,59 @@ export type Resposta = {
   correta_na_primeira: boolean | null
 }
 
+/** Beta fechado do tutor (0024): só existe a linha de quem foi liberado à mão. O professor só lê. */
+export type TutorAcesso = {
+  professor_id: string
+  max_alunos: number
+  max_sessoes_mes: number
+  observacao: string | null
+  liberado_em: string
+}
+
+/** O `Resumo` do controlador do tutor (poc-tutor/src/tipos.ts): frases e habilidades. */
+export type ResumoTutor = {
+  autonomos: string[]
+  comAjuda: string[]
+  pendentes: string[]
+  paraRevisar: string[]
+  recuperadas: string[]
+}
+
+/** Lição da biblioteca do tutor. `roteiro` é o `Roteiro` de poc-tutor/src/tipos.ts. */
+export type TutorLicao = {
+  id: string
+  titulo: string
+  descricao: string | null
+  nivel_cefr: NivelCefr | null
+  roteiro: unknown
+  falas_gravadas: string[]
+  ordem: number
+  publicada: boolean
+  criado_em: string
+  atualizado_em: string
+}
+
+/** Uma linha = a lição está liberada para o aluno. */
+export type TutorLicaoAluno = {
+  aluno_id: string
+  licao_id: string
+  criado_em: string
+}
+
+/** Uma prática do aluno. `concluida_em` nulo = saiu antes do fim. Só a função escreve. */
+export type TutorSessao = {
+  id: string
+  aluno_id: string
+  professor_id: string
+  licao_id: string
+  iniciada_em: string
+  concluida_em: string | null
+  resumo: ResumoTutor | null
+  gasto: Record<string, { entrada: number; saida: number }>
+  custo_usd: number
+  chamadas: number
+}
+
 /** Campos com default no banco viram opcionais no insert. */
 type Insert<T, Obrigatorios extends keyof T> = Pick<T, Obrigatorios> &
   Partial<Omit<T, Obrigatorios>>
@@ -477,6 +537,10 @@ export type Database = {
         Insert<TrilhaAluno, 'trilha_id' | 'aluno_id'>,
         Partial<TrilhaAluno>
       >
+      tutor_acesso: Tabela<TutorAcesso, never, never>
+      tutor_licoes: Tabela<TutorLicao, never, never>
+      tutor_licoes_alunos: Tabela<TutorLicaoAluno, Insert<TutorLicaoAluno, 'aluno_id' | 'licao_id'>, never>
+      tutor_sessoes: Tabela<TutorSessao, never, never>
     }
     Views: Record<string, never>
     Functions: {
