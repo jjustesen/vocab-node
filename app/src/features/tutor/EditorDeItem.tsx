@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ArrowDown, ArrowUp, ChevronDown, Pause, Play, Plus, Trash2, X } from 'lucide-react'
-import { textoDaFala } from '../../../../poc-tutor/src/falas.ts'
+import { ELOGIOS, OPCOES_DE_ELOGIO, textoDaFala } from '../../../../poc-tutor/src/falas.ts'
 import type { ErroPrevisto, Item, TipoItem } from '../../../../poc-tutor/src/tipos.ts'
 import type { FalaFixa, Tocador } from './audiosDaLicao'
 import { Area, Campo, Linhas } from './campos'
@@ -220,6 +220,8 @@ export function EditorDeItem({
             </>
           )}
 
+          {item.tipo !== 'conversa' && <EscolhaDoElogio elogio={item.elogio} aoMudar={(elogio) => mudar({ elogio })} />}
+
           {item.tipo !== 'conversa' && item.tipo !== 'repeticao' && (
             <>
               <Campo
@@ -431,5 +433,50 @@ export function BotaoIcone({
     >
       <Icone className="h-4 w-4" />
     </button>
+  )
+}
+
+/**
+ * O elogio depois do acerto de primeira deste exercício. Desligado é o padrão:
+ * sem elogio a aula anda mais rápido. Ligado, varia entre os de ELOGIOS ou fica
+ * sempre num só.
+ */
+function EscolhaDoElogio({ elogio, aoMudar }: { elogio: Item['elogio']; aoMudar: (e: Item['elogio']) => void }) {
+  const somenteLeitura = useSomenteLeitura()
+  const frase = elogio?.frase ?? ''
+  return (
+    <div>
+      <label className="flex items-center gap-2 text-xs font-bold text-neutral-600">
+        <input
+          type="checkbox"
+          checked={Boolean(elogio)}
+          disabled={somenteLeitura}
+          onChange={(e) => aoMudar(e.target.checked ? {} : undefined)}
+          className="h-4 w-4 accent-violet-600"
+        />
+        Elogiar quando o aluno acerta de primeira
+      </label>
+      {elogio && (
+        <select
+          aria-label="Qual elogio"
+          value={frase}
+          disabled={somenteLeitura}
+          onChange={(e) => aoMudar(e.target.value ? { frase: e.target.value } : {})}
+          className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 disabled:bg-neutral-50"
+        >
+          <option value="">Variar entre {ELOGIOS.join(' · ')}</option>
+          {OPCOES_DE_ELOGIO.map((o) => (
+            <option key={o} value={o}>
+              Sempre “{o}”
+            </option>
+          ))}
+        </select>
+      )}
+      <p className="mt-1 text-[11px] text-neutral-400">
+        Desligado (o padrão), o tutor não diz nada depois do acerto e já passa para a próxima frase — a aula fica mais
+        dinâmica. Vale só para este exercício. Depois de uma ajuda ele sempre diz “Isso, agora sim.”, para o aluno saber
+        que agora acertou.
+      </p>
+    </div>
   )
 }

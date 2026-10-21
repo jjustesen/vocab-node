@@ -64,6 +64,13 @@ export type Item = {
   errosPrevistos?: ErroPrevisto[]
   /** Escada de pré-requisito (em `Roteiro.apoios`) para quando faltar a base. */
   apoio?: string
+  /**
+   * Elogiar o acerto de primeira deste exercício. Sem isto, nenhum elogio: o
+   * tutor vai direto ao próximo pedido, que deixa a aula mais dinâmica. Com
+   * `{}` ele varia entre os de ELOGIOS (falas.ts); com `frase`, sempre ela.
+   * O "Isso, agora sim." depois de uma ajuda não depende disto.
+   */
+  elogio?: { frase?: string }
 }
 
 export type Bloco = { id: string; objetivo: string; itens: Item[] }
@@ -93,13 +100,6 @@ export type Roteiro = {
    * weren't" é errado…). Entram no prompt do Gemini como a linha "Material:".
    */
   notasParaAvaliador?: string
-  /**
-   * O elogio depois de um acerto de primeira. Sem isto, o tutor varia entre
-   * os de ELOGIOS (falas.ts). `usar: false`: nenhum elogio, vai direto ao
-   * próximo pedido. `frase`: sempre a mesma. O "Isso, agora sim." depois de
-   * uma ajuda continua: ele diz que a frase agora está certa.
-   */
-  elogio?: { usar: boolean; frase?: string }
   /**
    * Como os blocos e as habilidades desta lição aparecem para o aluno: `curto`
    * no selo da tela, `resumo` no que o tutor diz no fim. Sem isto valem os

@@ -4,7 +4,7 @@ import { iniciar, receber } from '../src/controlador.ts'
 import { falaDaAcao, textoDaFala } from '../src/falas.ts'
 import { carregarRoteiro } from '../src/roteiro.ts'
 import { contextoDoTurno, paraAvaliacao } from '../src/turno.ts'
-import type { Acao, Sessao } from '../src/tipos.ts'
+import type { Acao, Item, Sessao } from '../src/tipos.ts'
 
 const roteiro = carregarRoteiro()
 
@@ -72,15 +72,18 @@ describe('falas', () => {
     assert.equal(texto, 'Nova frase. Diga em inglês: ele foi seu professor no ano passado?')
   })
 
-  it('o elogio do acerto de primeira segue a escolha da lição', () => {
-    const elogioCom = (elogio: Sessao['roteiro']['elogio']) => {
-      const r = receber(iniciar({ ...roteiro, elogio }).sessao, { tipo: 'adequada', reconhecido: 'It was sunny this morning.' })
+  it('o elogio do acerto de primeira segue a escolha do exercício, e por padrão não há', () => {
+    const elogioCom = (elogio: Item['elogio']) => {
+      const [bloco, ...outros] = roteiro.blocos
+      const [primeiro, ...resto] = bloco.itens
+      const comElogio = { ...roteiro, blocos: [{ ...bloco, itens: [{ ...primeiro, elogio }, ...resto] }, ...outros] }
+      const r = receber(iniciar(comElogio).sessao, { tipo: 'adequada', reconhecido: 'It was sunny this morning.' })
       assert.equal(r.acoes[0].tipo, 'confirmar_acerto')
       return falaDaAcao(r.acoes[0], r.sessao)
     }
-    assert.match(textoDaFala(elogioCom(undefined)), /^(Isso!|Muito bem\.|Perfeito\.|Boa!|Very good!)$/)
-    assert.equal(textoDaFala(elogioCom({ usar: true, frase: 'Ótimo!' })), 'Ótimo!')
-    assert.deepEqual(elogioCom({ usar: false, frase: 'Ótimo!' }), [])
+    assert.deepEqual(elogioCom(undefined), [])
+    assert.match(textoDaFala(elogioCom({})), /^(Isso!|Muito bem\.|Perfeito\.|Boa!|Very good!)$/)
+    assert.equal(textoDaFala(elogioCom({ frase: 'Ótimo!' })), 'Ótimo!')
   })
 
   it('na conversa, o acerto vira a reação ao conteúdo, em inglês', () => {

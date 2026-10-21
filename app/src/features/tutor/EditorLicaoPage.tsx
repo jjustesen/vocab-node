@@ -6,11 +6,10 @@ import { Chave } from '@/components/Interruptor'
 import type { NivelCefr } from '@/types/db'
 import { avisosDoRoteiro, todosOsItens, validarRoteiro } from '../../../../poc-tutor/src/validacao.ts'
 import type { Item, Roteiro, TipoItem } from '../../../../poc-tutor/src/tipos.ts'
-import { ELOGIOS, OPCOES_DE_ELOGIO } from '../../../../poc-tutor/src/falas.ts'
 import { useCopiarLicao, useExcluirLicao, useLicao, useSalvarLicao } from './api'
 import { type FalaFixa, useFalasDaLicao, useTocador } from './audiosDaLicao'
 import { Area, Campo, Linhas, Secao } from './campos'
-import { SomenteLeitura, useSomenteLeitura } from './edicao'
+import { SomenteLeitura } from './edicao'
 import { slug } from './slug'
 import { type AudiosDoItem, BotaoIcone, EditorDeItem } from './EditorDeItem'
 import { PainelAudios } from './PainelAudios'
@@ -278,7 +277,6 @@ export function EditorLicaoPage() {
             rotulo="Abertura"
             ajuda="A primeira fala do tutor, em voz, ao começar a aula. Uma frase dizendo o que vamos praticar. Não muda a correção."
             valor={r.abertura} linhas={2} aoMudar={(v) => mudar((n) => void (n.abertura = v))} />
-          <EscolhaDoElogio elogio={r.elogio} aoMudar={(e) => mudar((n) => void (n.elogio = e))} />
           <Area
             rotulo="Regras para a IA"
             ajuda={'É o campo que mais muda a correção: a IA lê isto a cada resposta do aluno. Escreva o que é certo, o que é erro e o que vale igual nesta lição — ex.: "I\'m 30 e I\'m 30 years old valem; I have 30 years é erro". Sem isto ela usa o próprio bom senso e pode aceitar ou recusar o que você não esperava.'}
@@ -650,50 +648,5 @@ function AdicionarRevisao({ habilidades, aoEscolher }: { habilidades: string[]; 
         ))}
       </select>
     </label>
-  )
-}
-
-/**
- * O elogio depois de cada acerto de primeira: ligado ou não, e qual. Ligado
- * sem frase escolhida (o padrão) o tutor varia entre os de ELOGIOS.
- */
-function EscolhaDoElogio({ elogio, aoMudar }: { elogio: Roteiro['elogio']; aoMudar: (e: Roteiro['elogio']) => void }) {
-  const somenteLeitura = useSomenteLeitura()
-  const usar = elogio?.usar ?? true
-  const frase = elogio?.frase ?? ''
-  // Ligado e variando é o padrão: fica fora do roteiro.
-  const mudar = (u: boolean, f: string) => aoMudar(u && !f ? undefined : { usar: u, ...(f ? { frase: f } : {}) })
-  return (
-    <div>
-      <label className="flex items-center gap-2 text-xs font-bold text-neutral-600">
-        <input
-          type="checkbox"
-          checked={usar}
-          disabled={somenteLeitura}
-          onChange={(e) => mudar(e.target.checked, frase)}
-          className="h-4 w-4 accent-violet-600"
-        />
-        Elogiar quando o aluno acerta de primeira
-      </label>
-      <select
-        aria-label="Qual elogio"
-        value={frase}
-        disabled={somenteLeitura || !usar}
-        onChange={(e) => mudar(usar, e.target.value)}
-        className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-400 disabled:bg-neutral-50 disabled:text-neutral-400"
-      >
-        <option value="">Variar entre {ELOGIOS.join(' · ')}</option>
-        {OPCOES_DE_ELOGIO.map((o) => (
-          <option key={o} value={o}>
-            Sempre “{o}”
-          </option>
-        ))}
-      </select>
-      <p className="mt-1 text-[11px] text-neutral-400">
-        Desligado, o tutor não diz nada depois do acerto e já passa para a próxima frase — a aula fica mais rápida. Depois
-        de uma ajuda ele continua dizendo “Isso, agora sim.”, para o aluno saber que agora acertou. Um elogio novo precisa
-        ser gravado no painel Áudios; até lá o aluno o ouve em stream.
-      </p>
-    </div>
   )
 }

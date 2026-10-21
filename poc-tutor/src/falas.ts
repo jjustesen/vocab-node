@@ -50,10 +50,10 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
       // Na conversa, a reação ao CONTEÚDO vale mais que um "muito bem".
       if (a.item.tipo === 'conversa') return [en(a.observacao ?? 'Nice!')]
       if (a.resultado !== 'autonomo') return [pt('Isso, agora sim.')]
-      const elogio = s.roteiro.elogio
-      // Sem elogio a fala sai vazia: a aula não diz nada e segue para o próximo pedido.
-      if (elogio && !elogio.usar) return []
-      if (elogio?.frase?.trim()) return [pt(elogio.frase.trim())]
+      // Sem elogio (o padrão) a fala sai vazia: a aula não diz nada e segue para o próximo pedido.
+      const elogio = a.item.elogio
+      if (!elogio) return []
+      if (elogio.frase?.trim()) return [pt(elogio.frase.trim())]
       return [pt(ELOGIOS[s.resultados.length % ELOGIOS.length])]
     }
 
