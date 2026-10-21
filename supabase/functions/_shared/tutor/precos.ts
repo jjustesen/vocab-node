@@ -15,6 +15,8 @@ const PRECOS: Record<string, { entrada: number; saida: number }> = {
   'gemini-3.8-flash-tts': ATE_2027 ? { entrada: 0.5, saida: 9 } : { entrada: 1, saida: 18 },
   'gemini-3.8-flash-lite-tts': ATE_2027 ? { entrada: 0.5, saida: 6 } : { entrada: 1, saida: 12 },
   jev: { entrada: 0.042, saida: 0 },
+  // Por 1 mi de CARACTERES (a "entrada" do custo é o tamanho do texto).
+  'xai-tts': { entrada: 15, saida: 0 },
 }
 
 /** Serviço sem preço conhecido (modelo trocado por secret) cobra como o Flash: melhor sobrar que faltar. */

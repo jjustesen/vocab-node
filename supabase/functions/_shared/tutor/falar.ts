@@ -1,6 +1,12 @@
-// A voz do tutor, gerada na hora pelo Gemini TTS: inteira (WAV) ou em pedaços
-// (NDJSON), tocada enquanto chega. Só para falas que não existem pré-gravadas
-// (pista do Gemini, o que o aluno disse): as fixas a página já tem em arquivo.
+// A voz do tutor, gerada na hora: inteira (WAV) ou em pedaços (NDJSON), tocada
+// enquanto chega. Só para falas que não existem pré-gravadas (pista do Gemini,
+// o que o aluno disse): as fixas a página já tem em arquivo.
+//
+// Desde 21/10/2026 a voz é a Carina do Grok (xAI), escolhida na tela
+// /tutor/vozes: o ritmo dela varia ~13% de uma fala para outra, contra ~24% do
+// Gemini Flash-Lite, e sai em ~0,7 s em vez de ~2,5 s. As falas que já estavam
+// gravadas com o Gemini (Kore) ficaram como estavam. TUTOR_TTS=gemini volta
+// ao Gemini sem mexer no código.
 
 import { CORS_HEADERS } from '../cors.ts'
 import { type Custo, ErroDePedido, TIMEOUT_MS } from './comum.ts'
@@ -8,6 +14,12 @@ import { type Custo, ErroDePedido, TIMEOUT_MS } from './comum.ts'
 // Flash-Lite: 1/3 mais barato que o Flash TTS e feito para baixa latência.
 const MODELO_TTS = Deno.env.get('POC_TUTOR_MODELO_TTS') ?? 'gemini-3.8-flash-lite-tts'
 const VOZ_TTS = Deno.env.get('POC_TUTOR_VOZ') ?? 'Kore'
+
+const PROVEDOR_TTS = Deno.env.get('TUTOR_TTS') ?? 'xai'
+const VOZ_XAI = Deno.env.get('TUTOR_VOZ_XAI') ?? 'carina'
+/** O xAI cobra por caractere: a "entrada" do custo é o número de caracteres (precos.ts). */
+const SERVICO_XAI = 'xai-tts'
+const TAXA_XAI = 24_000
 
 /** Um trecho da fala: o navegador manda separado por idioma, o TTS lê junto. */
 export type Parte = { idioma: 'pt' | 'en'; texto: string }
@@ -26,6 +38,17 @@ export function textoDaFala(fala: Parte[] | undefined): string {
  * trocar de voz — é o que a voz do navegador não consegue.
  */
 export async function falarInteiro(chave: string, texto: string, opcoes: { modelo?: string; voz?: string } = {}) {
+  // Modelo do Gemini pedido pelo nome (tela de comparação): é Gemini mesmo.
+  if (PROVEDOR_TTS === 'xai' && !opcoes.modelo) {
+    const inicio = Date.now()
+    const wav = semSilencioNoFim(pcmParaWav(await pcmDoXai(texto), TAXA_XAI))
+    return {
+      audio: { base64: bytesParaBase64(wav), mimeType: 'audio/wav' },
+      custos: custosDoXai(texto),
+      tempos: { ttsMs: Date.now() - inicio },
+      formatoOriginal: `audio/pcm;rate=${TAXA_XAI}`,
+    }
+  }
   const modelo = opcoes.modelo ?? MODELO_TTS
   const voz = opcoes.voz ?? VOZ_TTS
   // Só o texto, sem instrução de estilo: com uma instrução longa na frente o
@@ -97,6 +120,7 @@ export async function falarEmStream(
   texto: string,
   aoTerminar?: (custos: Custo[]) => Promise<unknown>,
 ): Promise<Response> {
+  if (PROVEDOR_TTS === 'xai') return falarEmStreamXai(texto, aoTerminar)
 
   const inicio = Date.now()
   const controlador = new AbortController()
@@ -221,6 +245,81 @@ export async function falarEmStream(
       } finally {
         clearTimeout(timeoutId)
         if (aoTerminar) await aoTerminar(custosDoUso()).catch((e) => console.error('tutor gasto do stream:', e))
+        saida.close()
+      }
+    },
+  })
+  return new Response(corpo, { headers: { ...CORS_HEADERS, 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store' } })
+}
+
+/**
+ * A fala inteira do Grok em PCM 16-bit mono a 24 kHz, sem cabeçalho.
+ * `language: pt-BR` foi o que soou melhor na comparação com as falas
+ * misturadas; o inglês no meio sai em inglês.
+ */
+async function pcmDoXai(texto: string): Promise<Uint8Array> {
+  const chave = Deno.env.get('XAI_API_KEY')
+  if (!chave) throw new Error('XAI_API_KEY não configurada.')
+  const controlador = new AbortController()
+  const timeoutId = setTimeout(() => controlador.abort(), TIMEOUT_MS)
+  try {
+    const r = await fetch('https://api.x.ai/v1/tts', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${chave}`, 'Content-Type': 'application/json' },
+      signal: controlador.signal,
+      body: JSON.stringify({
+        text: texto,
+        voice_id: VOZ_XAI,
+        language: 'pt-BR',
+        output_format: { codec: 'pcm', sample_rate: TAXA_XAI },
+      }),
+    })
+    if (!r.ok) throw new Error(`TTS respondeu ${r.status}: ${(await r.text()).slice(0, 300)}`)
+    // A documentação diz bytes crus, mas uma página fala em JSON com base64: aceita os dois.
+    if ((r.headers.get('content-type') ?? '').includes('json')) {
+      const j = await r.json()
+      if (!j.audio) throw new Error('O TTS não devolveu áudio.')
+      return base64ParaBytes(j.audio)
+    }
+    const pcm = new Uint8Array(await r.arrayBuffer())
+    return pcm.subarray(0, pcm.length - (pcm.length % 2))
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+const custosDoXai = (texto: string): Custo[] => [{ servico: SERVICO_XAI, entrada: texto.length, saida: 0 }]
+
+/**
+ * O mesmo NDJSON do Gemini (taxa, pedaços de PCM, fim com custos), com a fala
+ * do Grok inteira de uma vez — ela fica pronta em ~0,7 s, menos do que o
+ * Gemini levava para mandar o primeiro pedaço. Silêncio do fim: 300 ms.
+ */
+async function falarEmStreamXai(texto: string, aoTerminar?: (custos: Custo[]) => Promise<unknown>): Promise<Response> {
+  const inicio = Date.now()
+  const codificador = new TextEncoder()
+  const corpo = new ReadableStream<Uint8Array>({
+    async start(saida) {
+      const linha = (o: unknown) => saida.enqueue(codificador.encode(JSON.stringify(o) + '\n'))
+      let cobrou = false
+      try {
+        const wav = semSilencioNoFim(pcmParaWav(await pcmDoXai(texto), TAXA_XAI))
+        cobrou = true
+        const pcm = wav.subarray(44)
+        const primeiroMs = Date.now() - inicio
+        linha({ taxa: TAXA_XAI, formatoOriginal: `audio/pcm;rate=${TAXA_XAI}` })
+        const passo = TAXA_XAI * 2 // 1 s por linha
+        let pedacos = 0
+        for (let i = 0; i < pcm.length; i += passo) {
+          linha({ pcm: bytesParaBase64(pcm.subarray(i, i + passo)) })
+          pedacos++
+        }
+        linha({ fim: true, custos: custosDoXai(texto), tempos: { primeiroPedacoMs: primeiroMs, ttsMs: Date.now() - inicio, pedacos } })
+      } catch (e) {
+        console.error('tutor falar_stream (xai):', e)
+        linha({ erro: e instanceof Error ? e.message : 'Falha no TTS.' })
+      } finally {
+        if (aoTerminar && cobrou) await aoTerminar(custosDoXai(texto)).catch((e) => console.error('tutor gasto do stream:', e))
         saida.close()
       }
     },

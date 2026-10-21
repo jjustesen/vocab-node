@@ -17,6 +17,8 @@ export const PRECOS: Record<string, { nome: string; entrada: number; saida: numb
   'gemini-3.8-flash-tts': { nome: 'Gemini 3.8 Flash TTS', ...(ATE_2027 ? { entrada: 0.5, saida: 9 } : { entrada: 1, saida: 18 }) },
   'gemini-3.8-flash-lite-tts': { nome: 'Gemini 3.8 Flash-Lite TTS', ...(ATE_2027 ? { entrada: 0.5, saida: 6 } : { entrada: 1, saida: 12 }) },
   jev: { nome: 'Jev', entrada: 0.042, saida: 0 },
+  // Por 1 mi de CARACTERES (a "entrada" do custo é o tamanho do texto).
+  'xai-tts': { nome: 'Grok TTS', entrada: 15, saida: 0 },
 }
 
 export type Custo = { servico: string; entrada: number; saida: number }
