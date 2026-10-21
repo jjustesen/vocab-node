@@ -21,6 +21,13 @@ export type Conexao = {
 const CHAVE_CODIGO = 'poc-tutor:codigo'
 
 /**
+ * Onde as funções do tutor rodam: na região do banco (São Paulo). Sem isto o
+ * Supabase escolhia Frankfurt, e cada consulta da função cruzava o Atlântico —
+ * ~0,5 s a mais em cada turno do aluno.
+ */
+export const REGIAO_DAS_FUNCOES = 'sa-east-1'
+
+/**
  * A senha da POC — a secret POC_TUTOR_CODIGO da função, que NUNCA está no
  * código: a pessoa digita na tela de entrada, a função confere, e a página só
  * a lembra neste navegador para não pedir de novo a cada recarga.
@@ -79,7 +86,7 @@ export async function chamar(corpo: Record<string, unknown>): Promise<Response> 
   const c = atual
   return fetch(c.url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(await c.cabecalhos()) },
+    headers: { 'Content-Type': 'application/json', 'x-region': REGIAO_DAS_FUNCOES, ...(await c.cabecalhos()) },
     body: JSON.stringify({ ...corpo, ...c.corpo() }),
   })
 }

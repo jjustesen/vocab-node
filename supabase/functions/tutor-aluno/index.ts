@@ -22,7 +22,6 @@
 // serve o "Experimentar como aluno" do editor: abre as lições dele, inclusive
 // em rascunho, e as globais publicadas. A sessão nasce com `teste = true`, sem
 // aluno — não conta no limite de ninguém — e há um teto de testes por dia.
-import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { avaliarTurno } from '../_shared/tutor/avaliar.ts'
@@ -60,6 +59,37 @@ type Pedido = {
 
 type Db = ReturnType<typeof clienteAdmin>
 
+/** Supabase: segura a função viva depois da resposta (o gasto é gravado sem o aluno esperar). */
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void } | undefined
+
+function depoisDeResponder(p: Promise<unknown>) {
+  if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(p)
+  else void p
+}
+
+/**
+ * Quem está chamando, lido do próprio JWT. A assinatura e a validade já foram
+ * conferidas pelo gateway (a função é publicada com verify-jwt ligado), então
+ * perguntar de novo ao Auth (`getUser`) era uma viagem a mais em todo turno.
+ * A chave anon também passa no gateway: ela não tem `sub`, e cai aqui.
+ */
+function usuarioDoJwt(autorizacao: string): string | null {
+  try {
+    const carga = autorizacao.replace(/^Bearer\s+/i, '').split('.')[1]
+    const json = JSON.parse(atob(carga.replace(/-/g, '+').replace(/_/g, '/')))
+    if (json.role !== 'authenticated' || typeof json.sub !== 'string') return null
+    if (typeof json.exp === 'number' && json.exp * 1000 < Date.now()) return null
+    return json.sub
+  } catch {
+    return null
+  }
+}
+
+/** Embutido pelo PostgREST: um para um às vezes vem objeto, às vezes lista de um. */
+function um<T>(v: T | T[] | null | undefined): T | null {
+  return Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
   if (req.method !== 'POST') return respostaErro('Método não permitido.', 405)
@@ -74,17 +104,20 @@ Deno.serve(async (req) => {
     return respostaErro('Corpo inválido.')
   }
 
-  const dbAluno = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
-    global: { headers: { Authorization: autorizacao } },
-    auth: { persistSession: false },
-  })
-  const { data: sessao, error: erroSessao } = await dbAluno.auth.getUser()
-  if (erroSessao || !sessao.user) return respostaErro('Sessão inválida ou expirada.', 401)
+  const userId = usuarioDoJwt(autorizacao)
+  if (!userId) return respostaErro('Sessão inválida ou expirada.', 401)
 
   const db = clienteAdmin()
+  const inicio = Date.now()
 
-  const ctx = pedido.modo === 'professor' ? await comoProfessor(db, sessao.user.id) : await comoAluno(db, sessao.user.id)
+  // Num turno, a sessão (com o roteiro) é buscada JUNTO com a identidade: duas
+  // consultas em paralelo, e só então se confere se a sessão é de quem pede.
+  const precisaDeSessao = pedido.acao === 'avaliar' || pedido.acao === 'falar_stream'
+  const sessaoP = precisaDeSessao ? buscarSessao(db, pedido.sessaoId, pedido.acao === 'avaliar') : null
+  const ctx = pedido.modo === 'professor' ? await comoProfessor(db, userId) : await comoAluno(db, userId)
   if (ctx instanceof Response) return ctx
+  ctx.sessaoBuscada = sessaoP ?? undefined
+  ctx.inicio = inicio
   if (ctx.teste && pedido.acao === 'licoes') return respostaErro('No modo professor, a lição abre pelo editor.')
 
   try {
@@ -113,20 +146,20 @@ Deno.serve(async (req) => {
 
 const COLUNAS_PREFERENCIAS = 'tutor_voz_natural, tutor_escuta_automatica, tutor_sessoes_mes'
 
-/** O aluno logado: a conta dele, o tutor ligado e o professor no beta. */
+type Preferencias = { tutor_voz_natural: boolean; tutor_escuta_automatica: boolean; tutor_sessoes_mes: number }
+
+/** O aluno logado: a conta dele, o tutor ligado e o professor no beta — numa consulta só. */
 async function comoAluno(db: Db, userId: string): Promise<Contexto | Response> {
   const { data: conta } = await db
     .from('contas_aluno')
-    .select('aluno_id, professor_id')
+    .select(`aluno_id, professor_id, alunos(tutor_ativo, status), professores(${COLUNAS_PREFERENCIAS}, tutor_acesso(max_sessoes_mes))`)
     .eq('user_id', userId)
     .maybeSingle()
   if (!conta) return respostaErro('Conta não encontrada.', 404)
 
-  const [{ data: aluno }, { data: acesso }, { data: professor }] = await Promise.all([
-    db.from('alunos').select('tutor_ativo, status').eq('id', conta.aluno_id).single(),
-    db.from('tutor_acesso').select('max_sessoes_mes').eq('professor_id', conta.professor_id).maybeSingle(),
-    db.from('professores').select(COLUNAS_PREFERENCIAS).eq('id', conta.professor_id).single(),
-  ])
+  const aluno = um(conta.alunos as unknown as { tutor_ativo: boolean; status: string } | null)
+  const professor = um(conta.professores as unknown as (Preferencias & { tutor_acesso: unknown }) | null)
+  const acesso = um(professor?.tutor_acesso as { max_sessoes_mes: number } | { max_sessoes_mes: number }[] | null)
   if (!aluno?.tutor_ativo || aluno.status !== 'ativo' || !acesso || !professor) {
     return respostaErro('O tutor não está ligado para você. Fale com seu professor.', 403)
   }
@@ -137,12 +170,37 @@ async function comoAluno(db: Db, userId: string): Promise<Contexto | Response> {
 
 /** O professor experimentando a lição: precisa estar no beta. */
 async function comoProfessor(db: Db, userId: string): Promise<Contexto | Response> {
-  const [{ data: professor }, { data: acesso }] = await Promise.all([
-    db.from('professores').select(COLUNAS_PREFERENCIAS).eq('id', userId).maybeSingle(),
-    db.from('tutor_acesso').select('professor_id').eq('professor_id', userId).maybeSingle(),
-  ])
-  if (!professor || !acesso) return respostaErro('O tutor não está liberado para a sua conta.', 403)
-  return { db, alunoId: null, professorId: userId, teste: true, limite: TESTES_POR_DIA, professor }
+  const { data: professor } = await db
+    .from('professores')
+    .select(`${COLUNAS_PREFERENCIAS}, tutor_acesso(professor_id)`)
+    .eq('id', userId)
+    .maybeSingle()
+  if (!professor || !um(professor.tutor_acesso as unknown)) return respostaErro('O tutor não está liberado para a sua conta.', 403)
+  return { db, alunoId: null, professorId: userId, teste: true, limite: TESTES_POR_DIA, professor: professor as unknown as Preferencias }
+}
+
+type SessaoBuscada = {
+  id: string
+  aluno_id: string | null
+  professor_id: string
+  teste: boolean
+  licao_id: string
+  iniciada_em: string
+  concluida_em: string | null
+  custo_usd: number
+  tutor_licoes?: { roteiro: unknown } | { roteiro: unknown }[] | null
+}
+
+function buscarSessao(db: Db, sessaoId: string | undefined, comRoteiro: boolean): Promise<SessaoBuscada | null> {
+  if (!sessaoId) return Promise.resolve(null)
+  const colunas = 'id, aluno_id, professor_id, teste, licao_id, iniciada_em, concluida_em, custo_usd'
+  return Promise.resolve(
+    db
+      .from('tutor_sessoes')
+      .select(comRoteiro ? `${colunas}, tutor_licoes(roteiro)` : colunas)
+      .eq('id', sessaoId)
+      .maybeSingle(),
+  ).then(({ data }) => (data as SessaoBuscada | null) ?? null)
 }
 
 type Contexto = {
@@ -154,6 +212,9 @@ type Contexto = {
   /** Aluno: sessões no mês. Professor: testes em 24 h. */
   limite: number
   professor: { tutor_voz_natural: boolean; tutor_escuta_automatica: boolean }
+  /** Nos turnos: a sessão, já a caminho desde o começo da chamada. */
+  sessaoBuscada?: Promise<SessaoBuscada | null>
+  inicio?: number
 }
 
 // ── Lições ───────────────────────────────────────────────────────────────────
@@ -271,12 +332,9 @@ async function iniciar(ctx: Contexto, pedido: Pedido): Promise<Response> {
 /** A sessão aberta DESTE aluno (ou o teste DESTE professor), ainda dentro do tempo e do teto de custo. */
 async function sessaoAberta(ctx: Contexto, sessaoId: string | undefined) {
   if (!sessaoId) throw new ErroDePedido('Falta a sessão.')
-  const consulta = ctx.db.from('tutor_sessoes').select('id, licao_id, iniciada_em, concluida_em, custo_usd').eq('id', sessaoId)
-  const { data: s } = await (ctx.teste
-    ? consulta.eq('professor_id', ctx.professorId).eq('teste', true)
-    : consulta.eq('aluno_id', ctx.alunoId!)
-  ).maybeSingle()
-  if (!s) throw new ErroDePedido('Sessão não encontrada.', 404)
+  const s = await (ctx.sessaoBuscada ?? buscarSessao(ctx.db, sessaoId, false))
+  const deQuemPede = s && (ctx.teste ? s.teste && s.professor_id === ctx.professorId : s.aluno_id === ctx.alunoId)
+  if (!s || !deQuemPede) throw new ErroDePedido('Sessão não encontrada.', 404)
   if (s.concluida_em) throw new ErroDePedido('Esta sessão já terminou.', 410)
   if (Date.now() - new Date(s.iniciada_em).getTime() > DURACAO_MAX_MS) {
     throw new ErroDePedido('A sessão expirou. Comece a lição de novo.', 410)
@@ -293,10 +351,11 @@ async function avaliar(ctx: Contexto, pedido: Pedido): Promise<Response> {
     throw new ErroDePedido('Contexto grande demais.', 413)
   }
 
-  // O roteiro vem do banco: é ele que diz quais itens existem e quais notas de
-  // gramática o avaliador respeita — o navegador não escolhe o prompt.
-  const { data: licao } = await ctx.db.from('tutor_licoes').select('roteiro').eq('id', s.licao_id).single()
-  const roteiro = (licao?.roteiro ?? {}) as Roteiro
+  // O roteiro vem do banco (junto com a sessão): é ele que diz quais itens
+  // existem e quais notas de gramática o avaliador respeita — o navegador não
+  // escolhe o prompt.
+  const roteiro = (um(s.tutor_licoes)?.roteiro ?? {}) as Roteiro
+  const antesDaIaMs = Date.now() - (ctx.inicio ?? Date.now())
   if (!pedido.itemId || !idsDoRoteiro(roteiro).has(pedido.itemId)) {
     throw new ErroDePedido('Item fora desta lição.')
   }
@@ -308,8 +367,11 @@ async function avaliar(ctx: Contexto, pedido: Pedido): Promise<Response> {
     contexto: pedido.contexto,
     notasDoMaterial: roteiro.notasParaAvaliador,
   })
-  await somarGasto(ctx.db, s.id, resultado.custos)
-  return respostaJson(resultado)
+  depoisDeResponder(somarGasto(ctx.db, s.id, resultado.custos))
+  return respostaJson({
+    ...resultado,
+    tempos: { ...resultado.tempos, antesDaIaMs, regiao: Deno.env.get('SB_REGION') ?? null },
+  })
 }
 
 async function falar(ctx: Contexto, pedido: Pedido): Promise<Response> {

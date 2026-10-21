@@ -1,5 +1,5 @@
 import type { RespostaDoAvaliador } from '../src/turno.ts'
-import { chamar, conexao, lembrarSenha, URL_DO_LABORATORIO } from './conexao.ts'
+import { chamar, conexao, lembrarSenha, REGIAO_DAS_FUNCOES, URL_DO_LABORATORIO } from './conexao.ts'
 
 export { codigoDeAcesso, esquecerSenha } from './conexao.ts'
 
@@ -23,7 +23,7 @@ export class ErroDoTutor extends Error {
 export async function entrarComSenha(senha: string): Promise<boolean> {
   const resposta = await fetch(URL_DO_LABORATORIO, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-region': REGIAO_DAS_FUNCOES },
     body: JSON.stringify({ acao: 'verificar', codigo: senha }),
   })
   if (resposta.status === 403) return false

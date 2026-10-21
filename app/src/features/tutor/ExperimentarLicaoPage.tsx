@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
+import { FunctionRegion } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
 import type { LicaoAberta } from '@/features/tutor-aluno/api'
@@ -12,7 +13,7 @@ import { chavesTutor } from './api'
 
 /** A mesma porta do aluno (tutor-aluno), no modo professor: lições dele, até rascunho, como teste. */
 async function chamarComoProfessor<T>(corpo: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke('tutor-aluno', { body: { ...corpo, modo: 'professor' } })
+  const { data, error } = await supabase.functions.invoke('tutor-aluno', { body: { ...corpo, modo: 'professor' }, region: FunctionRegion.SaEast1 })
   if (error) throw new Error(await extrairMensagemDeErro(error))
   return data as T
 }

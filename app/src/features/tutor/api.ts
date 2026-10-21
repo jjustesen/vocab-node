@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { FunctionRegion } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { chavesAlunos } from '@/features/alunos/api'
 import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
@@ -184,7 +185,7 @@ export function useGerarLicao() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (pedido: { material: MaterialDaLicao; nivel: NivelCefr; titulo?: string }): Promise<string> => {
-      const { data, error } = await supabase.functions.invoke('tutor-gerar-licao', { body: pedido })
+      const { data, error } = await supabase.functions.invoke('tutor-gerar-licao', { body: pedido, region: FunctionRegion.SaEast1 })
       if (error) throw new Error(await extrairMensagemDeErro(error))
       return (data as { id: string }).id
     },
@@ -201,7 +202,7 @@ export type ResultadoDaGravacao = {
 
 /** Uma leva de falas fixas virando MP3 no bucket (tutor-gravar-falas, no máximo 6 por vez). */
 export async function gravarFalas(licaoId: string, falas: Fala[]): Promise<ResultadoDaGravacao> {
-  const { data, error } = await supabase.functions.invoke('tutor-gravar-falas', { body: { licaoId, falas } })
+  const { data, error } = await supabase.functions.invoke('tutor-gravar-falas', { body: { licaoId, falas }, region: FunctionRegion.SaEast1 })
   if (error) throw new Error(await extrairMensagemDeErro(error))
   return data as ResultadoDaGravacao
 }

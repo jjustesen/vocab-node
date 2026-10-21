@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { FunctionRegion } from '@supabase/supabase-js'
 import { supabaseAluno } from '@/lib/supabase-aluno'
 import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
 import type { NivelCefr, ResumoTutor } from '@/types/db'
@@ -32,7 +33,7 @@ export type LicaoAberta = {
 }
 
 async function chamarTutor<T>(corpo: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabaseAluno.functions.invoke('tutor-aluno', { body: corpo })
+  const { data, error } = await supabaseAluno.functions.invoke('tutor-aluno', { body: corpo, region: FunctionRegion.SaEast1 })
   if (error) throw new Error(await extrairMensagemDeErro(error))
   return data as T
 }
