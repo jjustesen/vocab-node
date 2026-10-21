@@ -136,3 +136,23 @@ export const atividadeBrutaSchema = z.object({
 })
 
 export type Questao = z.infer<typeof questaoSchema>
+
+/**
+ * Embaralha as alternativas de `multipla_escolha` e `lacuna` depois que a
+ * questão passou na validação.
+ *
+ * A IA põe a resposta certa quase sempre como PRIMEIRA opção — no acervo de
+ * 21/10/2026 eram 98 de 101 múltiplas escolhas e 104 de 105 lacunas. O aluno
+ * percebe o padrão e acerta sem ler. `resposta_correta` é o texto da opção,
+ * não o índice, então reordenar não muda o gabarito. `verdadeiro_falso` fica
+ * de fora: ["true", "false"] é uma ordem fixa de propósito.
+ */
+export function embaralharAlternativas(questao: Questao): Questao {
+  if (questao.tipo !== 'multipla_escolha' && questao.tipo !== 'lacuna') return questao
+  const opcoes = [...questao.opcoes]
+  for (let i = opcoes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[opcoes[i], opcoes[j]] = [opcoes[j], opcoes[i]]
+  }
+  return { ...questao, opcoes }
+}

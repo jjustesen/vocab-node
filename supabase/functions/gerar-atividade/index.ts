@@ -6,6 +6,7 @@ import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { fallbackPrecisaDePaginas, gerarAtividadeComFallback } from '../_shared/ia/provedor.ts'
 import {
   atividadeBrutaSchema,
+  embaralharAlternativas,
   enxugarFichas,
   questaoSchema,
   NIVEIS,
@@ -138,7 +139,7 @@ Deno.serve(async (req) => {
   let descartadas = 0
   for (const q of bruto.data.questoes) {
     const r = questaoSchema.safeParse(enxugarFichasDaQuestao(q))
-    if (r.success) questoesValidas.push(r.data)
+    if (r.success) questoesValidas.push(embaralharAlternativas(r.data))
     else descartadas++
   }
 
@@ -160,7 +161,7 @@ Deno.serve(async (req) => {
       if (brutoComplemento.success) {
         for (const q of brutoComplemento.data.questoes) {
           const r = questaoSchema.safeParse(enxugarFichasDaQuestao(q))
-          if (r.success) questoesValidas.push(r.data)
+          if (r.success) questoesValidas.push(embaralharAlternativas(r.data))
           else descartadas++
         }
       }
