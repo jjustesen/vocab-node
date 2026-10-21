@@ -89,5 +89,6 @@ export function conexaoDoAluno(sessaoAtual: () => string | null): Conexao {
       }
     },
     corpo: () => ({ sessaoId: sessaoAtual() }),
+    vozAoVivo: true,
   }
 }

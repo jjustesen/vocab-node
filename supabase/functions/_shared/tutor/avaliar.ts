@@ -34,7 +34,17 @@ export type PedidoDeAvaliacao = {
    * nunca do navegador.
    */
   notasDoMaterial?: string
+  /** Só para comparar modelos no teste do professor; sem isto, MODELO_TRANSCRICAO. */
+  modeloTranscricao?: string
 }
+
+/**
+ * A transcrição é o passo mais lento do turno (~2 s no Flash). O Flash-Lite
+ * ouve em menos tempo; o que importa é que continue CEGO — "They was" tem de
+ * sair "They was". O Flash segue julgando (o passo que precisa pensar).
+ */
+export const MODELO_TRANSCRICAO = Deno.env.get('TUTOR_MODELO_TRANSCRICAO') ?? 'gemini-3.5-flash-lite'
+export const MODELOS_DE_TRANSCRICAO = ['gemini-3.5-flash-lite', 'gemini-3.6-flash']
 
 type Transcricao = { texto: string; confianca: 'alta' | 'baixa' }
 
@@ -74,14 +84,15 @@ export async function avaliarTurno(chave: string, pedido: PedidoDeAvaliacao): Pr
   let transcricao: Transcricao
   if (pedido.audio) {
     const inicio = Date.now()
-    const r = await chamarGemini<Transcricao>(chave, modelo, {
+    const modeloTranscricao = pedido.modeloTranscricao ?? MODELO_TRANSCRICAO
+    const r = await chamarGemini<Transcricao>(chave, modeloTranscricao, {
       sistema: INSTRUCAO_TRANSCRICAO,
       parts: [{ inline_data: { mime_type: pedido.audio.mimeType, data: pedido.audio.base64 } }],
       schema: SCHEMA_TRANSCRICAO,
       temperatura: 0,
     })
     transcricao = r.dados
-    custos.push({ servico: modelo, ...r.uso })
+    custos.push({ servico: modeloTranscricao, ...r.uso })
     tempos.transcricaoMs = Date.now() - inicio
   } else {
     // Texto digitado: não há incerteza de reconhecimento.

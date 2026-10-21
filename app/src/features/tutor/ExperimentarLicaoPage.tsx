@@ -47,6 +47,7 @@ export function ExperimentarLicaoPage() {
           return { Authorization: `Bearer ${s.session?.access_token ?? ''}`, apikey: import.meta.env.VITE_SUPABASE_ANON_KEY }
         },
         corpo: () => ({ sessaoId: sessaoId.current, modo: 'professor' }),
+        vozAoVivo: true,
       }),
     [],
   )

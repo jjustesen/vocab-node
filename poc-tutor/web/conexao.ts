@@ -16,6 +16,8 @@ export type Conexao = {
   corpo: () => Record<string, unknown>
   /** A função recusou (401/403/…): o laboratório volta à senha; o app mostra o erro. */
   aoRecusar?: (status: number) => void
+  /** A função dá token para a transcrição ao vivo (`token_voz`). O laboratório não dá. */
+  vozAoVivo?: boolean
 }
 
 const CHAVE_CODIGO = 'poc-tutor:codigo'

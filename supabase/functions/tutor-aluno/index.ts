@@ -24,7 +24,7 @@
 // aluno — não conta no limite de ninguém — e há um teto de testes por dia.
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
-import { avaliarTurno } from '../_shared/tutor/avaliar.ts'
+import { avaliarTurno, MODELOS_DE_TRANSCRICAO } from '../_shared/tutor/avaliar.ts'
 import { type Custo, ErroDePedido } from '../_shared/tutor/comum.ts'
 import { falarEmStream, type Parte, textoDaFala } from '../_shared/tutor/falar.ts'
 import { custoEmUsd, gastoPorServico } from '../_shared/tutor/precos.ts'
@@ -38,7 +38,16 @@ const CONTEXTO_MAX = 16 * 1024
 /** Testes do professor em 24 h: experimentar a lição enquanto edita, não dar aula com ela. */
 const TESTES_POR_DIA = 30
 
-type Acao = 'licoes' | 'licao' | 'iniciar' | 'avaliar' | 'falar_stream' | 'concluir'
+type Acao = 'licoes' | 'licao' | 'iniciar' | 'avaliar' | 'falar_stream' | 'concluir' | 'token_voz'
+
+/**
+ * Transcrição ao vivo: o navegador manda o áudio do aluno ao Gemini Live
+ * ENQUANTO ele fala, e quando ele termina o texto já está pronto. A chave do
+ * Google não sai daqui: o navegador recebe um token de poucos minutos, preso a
+ * este modelo e a esta configuração (só ouvir e transcrever).
+ */
+const MODELO_VOZ_AO_VIVO = Deno.env.get('TUTOR_MODELO_AO_VIVO') ?? 'gemini-3.8-live'
+const TOKEN_VOZ_MINUTOS = 30
 
 type Pedido = {
   acao?: Acao
@@ -50,6 +59,8 @@ type Pedido = {
   itemId?: string
   audio?: { base64: string; mimeType: string }
   texto?: string
+  /** Só no teste do professor: comparar modelos de transcrição. */
+  modeloTranscricao?: string
   contexto?: Record<string, unknown>
   // falar_stream
   fala?: Parte[]
@@ -134,6 +145,8 @@ Deno.serve(async (req) => {
         return await falar(ctx, pedido)
       case 'concluir':
         return await concluir(ctx, pedido)
+      case 'token_voz':
+        return await tokenDeVoz(ctx, pedido)
       default:
         return respostaErro('Ação desconhecida.')
     }
@@ -366,6 +379,8 @@ async function avaliar(ctx: Contexto, pedido: Pedido): Promise<Response> {
     texto: pedido.texto,
     contexto: pedido.contexto,
     notasDoMaterial: roteiro.notasParaAvaliador,
+    modeloTranscricao:
+      ctx.teste && MODELOS_DE_TRANSCRICAO.includes(String(pedido.modeloTranscricao)) ? pedido.modeloTranscricao : undefined,
   })
   depoisDeResponder(somarGasto(ctx.db, s.id, resultado.custos))
   return respostaJson({
@@ -399,6 +414,44 @@ async function concluir(ctx: Contexto, pedido: Pedido): Promise<Response> {
     .maybeSingle()
   // Concluir duas vezes (o "Refazer" no meio de um envio lento) não é erro.
   return respostaJson({ ok: true, gravado: Boolean(data) })
+}
+
+/**
+ * Um token efêmero do Gemini Live para esta sessão. As restrições ficam no
+ * token: o navegador não consegue trocar o modelo nem pedir outra coisa.
+ * A detecção de fala é do nosso microfone (activityStart / activityEnd), e o
+ * modelo é instruído a não responder — só a transcrição interessa.
+ */
+async function tokenDeVoz(ctx: Contexto, pedido: Pedido): Promise<Response> {
+  await sessaoAberta(ctx, pedido.sessaoId)
+  const agora = Date.now()
+  const r = await fetch('https://generativelanguage.googleapis.com/v1beta/auth_tokens', {
+    method: 'POST',
+    headers: { 'x-goog-api-key': chaveGemini(), 'Content-Type': 'application/json' },
+    // Uma conexão por token (o padrão): se a conexão cair, a página pede outro.
+    body: JSON.stringify({
+      expireTime: new Date(agora + TOKEN_VOZ_MINUTOS * 60_000).toISOString(),
+      newSessionExpireTime: new Date(agora + 2 * 60_000).toISOString(),
+      bidiGenerateContentSetup: { model: `models/${MODELO_VOZ_AO_VIVO}`, ...CONFIG_VOZ_AO_VIVO },
+    }),
+  })
+  const j = await r.json().catch(() => ({}))
+  if (!r.ok || !j.name) {
+    console.error('tutor-aluno token_voz:', r.status, JSON.stringify(j).slice(0, 300))
+    // No teste do professor, o motivo do Google ajuda a acertar a configuração.
+    throw new Error(ctx.teste ? `Transcrição ao vivo indisponível: ${r.status} ${JSON.stringify(j).slice(0, 400)}` : 'Transcrição ao vivo indisponível.')
+  }
+  return respostaJson({ token: j.name, modelo: MODELO_VOZ_AO_VIVO })
+}
+
+const CONFIG_VOZ_AO_VIVO = {
+  // A resposta do modelo é jogada fora: 1 token de saída é o mínimo que dá para pagar.
+  generationConfig: { responseModalities: ['AUDIO'], maxOutputTokens: 1 },
+  inputAudioTranscription: {},
+  realtimeInputConfig: { automaticActivityDetection: { disabled: true } },
+  systemInstruction: {
+    parts: [{ text: 'Você só escuta. Nunca responda nada; o que importa é a transcrição do que foi dito.' }],
+  },
 }
 
 // ── Apoio ────────────────────────────────────────────────────────────────────

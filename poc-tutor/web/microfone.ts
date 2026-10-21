@@ -41,6 +41,8 @@ export type EventosDaGravacao = {
   aoSilencioLongo: () => void
   /** Nível atual (0–1), para a tela mostrar que está ouvindo. */
   aoNivel?: (nivel: number) => void
+  /** O áudio enquanto é gravado, em PCM 16-bit / 16 kHz — para a transcrição ao vivo (vozAoVivo.ts). */
+  aoPcm?: (pcm: Int16Array) => void
 }
 
 export class Microfone {
@@ -51,6 +53,8 @@ export class Microfone {
   private pedacos: Blob[] = []
   private relogio: ReturnType<typeof setInterval> | null = null
   private formato: string | null = null
+  private processador: ScriptProcessorNode | null = null
+  private ouvintePcm: ((pcm: Int16Array) => void) | null = null
 
   /** `null` enquanto não testado; `false` quando o medidor não reage — aí só o botão encerra o turno. */
   medidorFunciona: boolean | null = null
@@ -72,7 +76,21 @@ export class Microfone {
       if (this.contexto.state === 'suspended') await this.contexto.resume().catch(() => {})
       this.analisador = this.contexto.createAnalyser()
       this.analisador.fftSize = 1024
-      this.contexto.createMediaStreamSource(this.stream).connect(this.analisador)
+      const fonte = this.contexto.createMediaStreamSource(this.stream)
+      fonte.connect(this.analisador)
+      // A transcrição ao vivo quer PCM cru, que o MediaRecorder não dá. O
+      // ScriptProcessor é antigo, mas é o que funciona igual no iPhone e no
+      // Android sem arquivo de worklet; a saída dele fica muda (não escrevemos nela).
+      try {
+        const taxa = this.contexto.sampleRate
+        const processador = this.contexto.createScriptProcessor(4096, 1, 1)
+        processador.onaudioprocess = (e) => this.ouvintePcm?.(para16k(e.inputBuffer.getChannelData(0), taxa))
+        fonte.connect(processador)
+        processador.connect(this.contexto.destination)
+        this.processador = processador
+      } catch {
+        this.processador = null
+      }
     } else {
       this.medidorFunciona = false
     }
@@ -93,6 +111,7 @@ export class Microfone {
     }
     gravador.start()
     this.gravador = gravador
+    this.ouvintePcm = eventos.aoPcm ?? null
 
     const inicio = Date.now()
     let falou = false
@@ -168,6 +187,8 @@ export class Microfone {
 
   fechar(): void {
     this.descartar()
+    this.processador?.disconnect()
+    this.processador = null
     this.stream?.getTracks().forEach((t) => t.stop())
     void this.contexto?.close().catch(() => {})
     this.stream = null
@@ -178,7 +199,23 @@ export class Microfone {
   private pararRelogio() {
     if (this.relogio) clearInterval(this.relogio)
     this.relogio = null
+    this.ouvintePcm = null
   }
+}
+
+/** Float32 na taxa do aparelho (44,1/48 kHz) → Int16 a 16 kHz, pela média de cada janela. */
+function para16k(entrada: Float32Array, taxa: number): Int16Array {
+  const passo = taxa / 16_000
+  const saida = new Int16Array(Math.floor(entrada.length / passo))
+  for (let i = 0; i < saida.length; i++) {
+    const de = Math.floor(i * passo)
+    const ate = Math.min(entrada.length, Math.floor((i + 1) * passo))
+    let soma = 0
+    for (let k = de; k < ate; k++) soma += entrada[k]
+    const v = Math.max(-1, Math.min(1, soma / Math.max(1, ate - de)))
+    saida[i] = v < 0 ? v * 0x8000 : v * 0x7fff
+  }
+  return saida
 }
 
 export function blobParaBase64(blob: Blob): Promise<string> {

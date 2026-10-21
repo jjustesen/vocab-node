@@ -8,6 +8,8 @@ import { avaliarNoServidor, ErroDoTutor } from './api.ts'
 import { custoPorServico, somar, type Custo, type Gasto } from './custo.ts'
 import { destravarAudio, pararAudio, preparar, type VozPreparada } from './vozGemini.ts'
 import { blobParaBase64, Microfone } from './microfone.ts'
+import { chamar, conexao } from './conexao.ts'
+import { TranscritorAoVivo } from './vozAoVivo.ts'
 import { cancelarFala, carregarVozes, destravarVoz, falar, type Vozes } from './voz.ts'
 import {
   Atalho,
@@ -92,6 +94,8 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
   // da sessão e das opções ATUAIS, não das que existiam quando começaram.
   const sessaoRef = useRef<Sessao | null>(null)
   const microfone = useRef<Microfone | null>(null)
+  /** Transcrição enquanto o aluno fala (vozAoVivo.ts); sem ela, o áudio gravado vai inteiro para a função. */
+  const aoVivo = useRef<TranscritorAoVivo | null>(null)
   const vozes = useRef<Vozes>({ pt: null, en: null })
   const interrompido = useRef(false)
   /**
@@ -110,7 +114,13 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
   const aoTerminarRef = useRef(aoTerminar)
   aoTerminarRef.current = aoTerminar
 
-  useEffect(() => () => microfone.current?.fechar(), [])
+  useEffect(
+    () => () => {
+      microfone.current?.fechar()
+      aoVivo.current?.fechar()
+    },
+    [],
+  )
 
   function anotar(linha: SemId<LinhaDoHistorico>): number {
     const id = proximoId++
@@ -159,6 +169,16 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
         setAvisos([...novosAvisos, e instanceof Error ? e.message : 'Não consegui começar a aula.'])
         return
       }
+    }
+
+    // Conecta em segundo plano: o primeiro turno pode ainda não pegar, e cai no áudio gravado.
+    if (microfone.current && conexao().vozAoVivo && !aoVivo.current) {
+      aoVivo.current = new TranscritorAoVivo(async () => {
+        const r = await chamar({ acao: 'token_voz' })
+        if (!r.ok) throw new Error(`token_voz respondeu ${r.status}`)
+        return r.json()
+      })
+      void aoVivo.current.conectar()
     }
 
     const { sessao: s, acoes } = iniciar(roteiro)
@@ -275,6 +295,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
   function cortar(): number {
     rodada.current++
     pararVoz()
+    aoVivo.current?.cancelar()
     return rodada.current
   }
 
@@ -333,11 +354,14 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
     if (!mic) return setStatus('aguardando')
     setNivel(0)
     setStatus('ouvindo')
+    aoVivo.current?.comecar()
     mic.gravar({
       aoNivel: setNivel,
+      aoPcm: (pcm) => aoVivo.current?.enviar(pcm),
       aoFimDaFala: () => void enviarGravacao(),
       aoSilencioLongo: () => {
         mic.descartar()
+        aoVivo.current?.cancelar()
         anotar({ quem: 'nota', texto: 'Silêncio prolongado.' })
         void turno({ tipo: 'silencio' })
       },
@@ -345,12 +369,17 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
   }
 
   async function enviarGravacao() {
-    const gravacao = await microfone.current?.parar()
+    setStatus('pensando')
+    // A gravação fecha e o ao vivo termina juntos: com o texto pronto, nem sobe o áudio.
+    const [gravacao, transcrito] = await Promise.all([
+      microfone.current?.parar() ?? Promise.resolve(null),
+      aoVivo.current?.terminar() ?? Promise.resolve(null),
+    ])
+    if (transcrito) return avaliar({ texto: transcrito, viaVoz: true })
     if (!gravacao) {
       setLegenda('Não ouvi nada. Toque no microfone e tente de novo.')
       return setStatus('aguardando')
     }
-    setStatus('pensando')
     const base64 = await blobParaBase64(gravacao.blob)
     await avaliar({ audio: { base64, mimeType: gravacao.mimeType } })
   }
@@ -366,11 +395,16 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
     await avaliar({ texto: limpo })
   }
 
-  async function avaliar(entrada: { audio?: { base64: string; mimeType: string }; texto?: string }) {
+  async function avaliar(entrada: { audio?: { base64: string; mimeType: string }; texto?: string; viaVoz?: boolean }) {
     const s = sessaoRef.current
     if (!s) return
     try {
-      const resposta = await avaliarNoServidor({ ...entrada, contexto: contextoDoTurno(s), itemId: s.atual?.item.id })
+      const resposta = await avaliarNoServidor({
+        audio: entrada.audio,
+        texto: entrada.texto,
+        contexto: contextoDoTurno(s),
+        itemId: s.atual?.item.id,
+      })
       registrarCustos(resposta.custos)
       const avaliacao = paraAvaliacao(resposta, s)
 
@@ -393,7 +427,8 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
       ]
         .filter(Boolean)
         .join(' · ')
-      if (entrada.audio) anotar({ quem: 'aluno', texto: dito || '(nada audível)', detalhe })
+      if (entrada.viaVoz) anotar({ quem: 'aluno', texto: dito, detalhe: ['transcrito ao vivo', detalhe].filter(Boolean).join(' · ') })
+      else if (entrada.audio) anotar({ quem: 'aluno', texto: dito || '(nada audível)', detalhe })
       else anotar({ quem: 'nota', texto: `Avaliação: ${detalhe}` })
 
       // Pausou enquanto a resposta era avaliada: o turno espera o Continuar.
@@ -492,6 +527,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
               onClick={() => {
                 cortar()
                 microfone.current?.fechar()
+                aoVivo.current?.fechar()
                 aoSair()
               }}
               aria-label="Sair da aula"
