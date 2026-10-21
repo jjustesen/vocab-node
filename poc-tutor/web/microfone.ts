@@ -21,8 +21,12 @@ const FORMATOS = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/og
 
 /** Volume (RMS, 0–1) a partir do qual conta como voz. Ajustável — depende do aparelho e do ambiente. */
 const LIMIAR_VOZ = 0.03
-/** Silêncio depois de ter falado que encerra o turno. Longo o bastante para uma pausa de planejamento ou autocorreção. */
-export const FIM_DA_FALA_MS = 3000
+/**
+ * Silêncio depois de ter falado que encerra o turno. Era 3 s: dava folga para
+ * pausas no meio da frase, mas a espera depois de cada resposta pesava mais.
+ * Quem hesita mais que isso ainda tem "Terminei" e o microfone manual.
+ */
+export const FIM_DA_FALA_MS = 1500
 /** Sem dizer nada por este tempo, o tutor oferece uma pista (especificação §6; a análise sugere 5–8 s). */
 export const SILENCIO_LONGO_MS = 8000
 /** Teto de um turno, como no app. */

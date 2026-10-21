@@ -63,7 +63,7 @@ e o resto no padrão (build `npm run build`, saída `dist`).
 ## Como funciona
 
 ```
- tutor fala ──▶ microfone abre ──▶ aluno fala ──▶ 3 s de silêncio = terminou
+ tutor fala ──▶ microfone abre ──▶ aluno fala ──▶ 1,5 s de silêncio = terminou
      ▲                                                   │
      │                                                   ▼
  falas (src/falas.ts)                        função poc-tutor (Gemini)
@@ -81,7 +81,7 @@ e o resto no padrão (build `npm run build`, saída `dist`).
 ### Na tela
 
 - **Começar aula** pede o microfone. Depois disso o microfone abre sozinho quando o tutor termina de falar (dá para desligar).
-- **Terminei** encerra a vez na hora; senão, 3 s de silêncio depois de falar encerram sozinhos. 8 s sem dizer nada = o tutor dá uma pista.
+- **Terminei** encerra a vez na hora; senão, 1,5 s de silêncio depois de falar encerram sozinhos. 8 s sem dizer nada = o tutor dá uma pista.
 - **Tocar enquanto o tutor fala** interrompe e abre o microfone.
 - **Ajuda**, **Repetir**, e a caixa **Ou digite sua resposta…** (útil no computador).
 - Áudio incerto: o tutor pergunta se entendeu certo — **Foi isso** ou **Falar de novo**. Não conta como erro.
@@ -92,7 +92,7 @@ e o resto no padrão (build `npm run build`, saída `dist`).
 
 | O quê | Onde | Hoje |
 |---|---|---|
-| Silêncio que encerra a vez | `web/microfone.ts` `FIM_DA_FALA_MS` | 3 s |
+| Silêncio que encerra a vez | `web/microfone.ts` `FIM_DA_FALA_MS` | 1,5 s |
 | Silêncio que vira pista | `SILENCIO_LONGO_MS` | 8 s |
 | Volume que conta como voz | `LIMIAR_VOZ` | 0,03 |
 | Erros com o modelo antes de "pendente" | `src/controlador.ts` `ERROS_COM_MODELO_MAX` | 2 |
