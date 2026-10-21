@@ -35,6 +35,7 @@ A ordem importa: `painel-aluno-obter` novo lê `alunos.tutor_ativo`, que só exi
    supabase functions deploy tutor-aluno
    supabase functions deploy tutor-gerar-licao
    supabase functions deploy tutor-gravar-falas
+   supabase functions deploy tutor-comparar-vozes   # tela /tutor/vozes; ELEVENLABS_API_KEY e DEEPGRAM_API_KEY opcionais
    supabase functions deploy painel-aluno-obter
    supabase functions deploy poc-tutor --no-verify-jwt
    ```

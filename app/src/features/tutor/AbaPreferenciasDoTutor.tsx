@@ -1,5 +1,6 @@
 import { useId } from 'react'
-import { AudioLines, CalendarDays, Ear } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AudioLines, CalendarDays, ChevronRight, Ear } from 'lucide-react'
 import { Interruptor } from '@/components/Interruptor'
 import { useSalvarConfiguracoes } from '@/features/configuracoes/api'
 import type { Professor, TutorAcesso } from '@/types/db'
@@ -17,6 +18,13 @@ export function AbaPreferenciasDoTutor({ professor, acesso }: { professor: Profe
           ligado={professor.tutor_voz_natural}
           aoMudar={(ligado) => salvar.mutate({ tutor_voz_natural: ligado })}
         />
+        <Link
+          to="/tutor/vozes"
+          className="flex items-center justify-between gap-3 rounded-3xl bg-white px-5 py-4 text-sm font-bold text-violet-700 hover:bg-violet-50"
+        >
+          Comparar vozes de outros serviços
+          <ChevronRight className="h-4 w-4" />
+        </Link>
         <Interruptor
           Icone={Ear}
           titulo="Microfone automático"

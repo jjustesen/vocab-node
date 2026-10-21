@@ -25,7 +25,9 @@ export function textoDaFala(fala: Parte[] | undefined): string {
  * português e inglês juntos: o modelo troca de idioma no meio da frase sem
  * trocar de voz — é o que a voz do navegador não consegue.
  */
-export async function falarInteiro(chave: string, texto: string) {
+export async function falarInteiro(chave: string, texto: string, opcoes: { modelo?: string; voz?: string } = {}) {
+  const modelo = opcoes.modelo ?? MODELO_TTS
+  const voz = opcoes.voz ?? VOZ_TTS
   // Só o texto, sem instrução de estilo: com uma instrução longa na frente o
   // modelo a lia em voz alta junto (uma fala de 5 s virava 24 s de áudio). O
   // estilo vem da voz escolhida (POC_TUTOR_VOZ).
@@ -36,7 +38,7 @@ export async function falarInteiro(chave: string, texto: string) {
   const timeoutId = setTimeout(() => controlador.abort(), TIMEOUT_MS)
   try {
     const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODELO_TTS}:generateContent?key=${chave}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${chave}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,7 +56,7 @@ export async function falarInteiro(chave: string, texto: string) {
             // folga): com temperatura baixa o modelo chegou a emendar 41 s de
             // silêncio cobrado depois de 3,5 s de fala.
             maxOutputTokens: 150 + texto.length * 6,
-            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: VOZ_TTS } } },
+            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voz } } },
           },
         }),
       },
@@ -65,7 +67,7 @@ export async function falarInteiro(chave: string, texto: string) {
     if (!dados?.data) throw new Error('O TTS não devolveu áudio.')
     const wav = semSilencioNoFim(paraWavLimpo(base64ParaBytes(dados.data), dados.mimeType))
     const m = j.usageMetadata ?? {}
-    const custos: Custo[] = [{ servico: MODELO_TTS, entrada: m.promptTokenCount ?? 0, saida: m.candidatesTokenCount ?? 0 }]
+    const custos: Custo[] = [{ servico: modelo, entrada: m.promptTokenCount ?? 0, saida: m.candidatesTokenCount ?? 0 }]
     return {
       audio: { base64: bytesParaBase64(wav), mimeType: 'audio/wav' },
       custos,

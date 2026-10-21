@@ -55,6 +55,7 @@ const PraticaTutorPage = lazy(() =>
 // O editor também puxa o controlador (as falas fixas do painel Áudios) e a aula de teste.
 const EditorLicaoPage = lazy(() => import('@/features/tutor/EditorLicaoPage').then((m) => ({ default: m.EditorLicaoPage })))
 const NovaLicaoPage = lazy(() => import('@/features/tutor/NovaLicaoPage').then((m) => ({ default: m.NovaLicaoPage })))
+const CompararVozesPage = lazy(() => import('@/features/tutor/CompararVozesPage').then((m) => ({ default: m.CompararVozesPage })))
 const ExperimentarLicaoPage = lazy(() =>
   import('@/features/tutor/ExperimentarLicaoPage').then((m) => ({ default: m.ExperimentarLicaoPage })),
 )
@@ -153,6 +154,14 @@ export default function App() {
             <Route path="/plano" element={<PlanoPage />} />
             <Route path="/configuracoes" element={<ConfiguracoesPage />} />
             <Route path="/tutor" element={<TutorPage />} />
+            <Route
+              path="/tutor/vozes"
+              element={
+                <Suspense fallback={<TelaCarregando />}>
+                  <CompararVozesPage />
+                </Suspense>
+              }
+            />
             <Route
               path="/tutor/licoes/nova"
               element={
