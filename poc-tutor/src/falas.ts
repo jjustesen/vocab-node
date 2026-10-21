@@ -50,6 +50,10 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
       // Na conversa, a reação ao CONTEÚDO vale mais que um "muito bem".
       if (a.item.tipo === 'conversa') return [en(a.observacao ?? 'Nice!')]
       if (a.resultado !== 'autonomo') return [pt('Isso, agora sim.')]
+      const elogio = s.roteiro.elogio
+      // Sem elogio a fala sai vazia: a aula não diz nada e segue para o próximo pedido.
+      if (elogio && !elogio.usar) return []
+      if (elogio?.frase?.trim()) return [pt(elogio.frase.trim())]
       return [pt(ELOGIOS[s.resultados.length % ELOGIOS.length])]
     }
 
@@ -100,7 +104,10 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
   }
 }
 
-const ELOGIOS = ['Isso!', 'Muito bem.', 'Perfeito.', 'Boa!', 'Very good!']
+/** Os que o tutor alterna quando a lição não escolhe um. */
+export const ELOGIOS = ['Isso!', 'Muito bem.', 'Perfeito.', 'Boa!', 'Very good!']
+/** O que o editor oferece para fixar um só. */
+export const OPCOES_DE_ELOGIO = [...ELOGIOS, 'Ótimo!', 'Isso mesmo!', 'Excelente!', 'Great!', 'Exactly!']
 
 function pedido(item: Item, contexto: Contexto, s: Sessao): Fala {
   const antes: Fala = []

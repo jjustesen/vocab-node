@@ -247,11 +247,13 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
     ultimasFalas.current = falas
     // Todas as falas do turno preparadas JUNTAS: as pré-gravadas já estão
     // aqui, e os streams das outras começam agora, enquanto a primeira toca.
-    const vozesDoTurno = opcoesRef.current.vozNatural ? falas.map(preparar) : []
+    const vozesDoTurno = opcoesRef.current.vozNatural ? falas.map((f) => (f.length ? preparar(f) : undefined)) : []
 
     for (const [i, acao] of acoes.entries()) {
       const texto = textoDaFala(falas[i])
       aplicarNoPalco(acao)
+      // Fala vazia (a lição sem elogio): nada a dizer nem a anotar.
+      if (!texto) continue
       setLegenda(texto)
       const voz = vozesDoTurno[i]
       const linha = anotar({ quem: 'tutor', texto, detalhe: voz && (voz.origem === 'gravada' ? 'voz pré-gravada' : 'voz em stream…') })
@@ -322,6 +324,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
     interrompido.current = false
     for (const fala of ultimasFalas.current) {
       if (interrompido.current) break
+      if (!fala.length) continue
       await dizer(fala, opcoesRef.current.vozNatural ? preparar(fala) : undefined, velocidade, minha)
       if (minha !== rodada.current) return
     }
@@ -473,7 +476,7 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
       // A decisão fica tomada; o que o tutor diria espera o Continuar.
       for (const acao of acoes) aplicarNoPalco(acao)
       ultimasFalas.current = acoes.map((acao) => falaDaAcao(acao, s))
-      setLegenda(textoDaFala(ultimasFalas.current.at(-1) ?? []))
+      setLegenda(textoDaFala(ultimasFalas.current.filter((f) => f.length).at(-1) ?? []))
       return
     }
     await executar(acoes, s)

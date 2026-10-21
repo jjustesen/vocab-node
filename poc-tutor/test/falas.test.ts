@@ -72,6 +72,17 @@ describe('falas', () => {
     assert.equal(texto, 'Nova frase. Diga em inglês: ele foi seu professor no ano passado?')
   })
 
+  it('o elogio do acerto de primeira segue a escolha da lição', () => {
+    const elogioCom = (elogio: Sessao['roteiro']['elogio']) => {
+      const r = receber(iniciar({ ...roteiro, elogio }).sessao, { tipo: 'adequada', reconhecido: 'It was sunny this morning.' })
+      assert.equal(r.acoes[0].tipo, 'confirmar_acerto')
+      return falaDaAcao(r.acoes[0], r.sessao)
+    }
+    assert.match(textoDaFala(elogioCom(undefined)), /^(Isso!|Muito bem\.|Perfeito\.|Boa!|Very good!)$/)
+    assert.equal(textoDaFala(elogioCom({ usar: true, frase: 'Ótimo!' })), 'Ótimo!')
+    assert.deepEqual(elogioCom({ usar: false, frase: 'Ótimo!' }), [])
+  })
+
   it('na conversa, o acerto vira a reação ao conteúdo, em inglês', () => {
     const s = ate(iniciar(roteiro).sessao, 'conversa.cidade')
     const r = receber(s, { tipo: 'adequada', reconhecido: 'It was rainy.', observacao: 'Rainy! I hope you stayed dry.' })

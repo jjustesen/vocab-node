@@ -94,6 +94,13 @@ export type Roteiro = {
    */
   notasParaAvaliador?: string
   /**
+   * O elogio depois de um acerto de primeira. Sem isto, o tutor varia entre
+   * os de ELOGIOS (falas.ts). `usar: false`: nenhum elogio, vai direto ao
+   * próximo pedido. `frase`: sempre a mesma. O "Isso, agora sim." depois de
+   * uma ajuda continua: ele diz que a frase agora está certa.
+   */
+  elogio?: { usar: boolean; frase?: string }
+  /**
    * Como os blocos e as habilidades desta lição aparecem para o aluno: `curto`
    * no selo da tela, `resumo` no que o tutor diz no fim. Sem isto valem os
    * nomes da lição do clima (ui.tsx, falas.ts) e, por último, o próprio id.

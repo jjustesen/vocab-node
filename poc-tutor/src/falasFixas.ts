@@ -36,6 +36,7 @@ export function falasFixasComItens(
     for (const a of acoes) {
       if ('item' in a && !ids.has(a.item.id)) continue
       const fala = falaDaAcao(a, s)
+      if (fala.length === 0) continue
       const chave = chaveDaFala(fala)
       const registro = falas.get(chave) ?? { fala, itens: new Set<string>() }
       if ('item' in a) registro.itens.add(a.item.id)
