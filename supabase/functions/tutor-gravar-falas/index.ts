@@ -23,7 +23,13 @@ import { wavParaMp3 } from '../_shared/tutor/mp3.ts'
 const FALAS_POR_CHAMADA = 6
 const BUCKET = 'tutor-falas'
 
-type Pedido = { licaoId?: string; falas?: Parte[][] }
+/**
+ * `regravar`: grava por cima mesmo se o arquivo já existe — para trocar a voz
+ * de falas gravadas antes (os elogios com a Kore do Gemini, por exemplo).
+ * Como o nome do arquivo é o hash do texto, a fala nova vale para todas as
+ * lições que a usam. Quem já tocou a antiga pode ouvi-la do cache do navegador.
+ */
+type Pedido = { licaoId?: string; falas?: Parte[][]; regravar?: boolean }
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -76,7 +82,7 @@ Deno.serve(async (req) => {
     const chave = chaveDaFala(fala)
     try {
       const texto = textoDaFala(fala)
-      if (await existeNoBucket(chave)) {
+      if (!pedido.regravar && (await existeNoBucket(chave))) {
         jaExistiam.push(chave)
         continue
       }
