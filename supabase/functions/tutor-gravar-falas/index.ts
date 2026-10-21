@@ -16,6 +16,7 @@ import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { chaveDaFala } from '../_shared/tutor/chave.ts'
 import { ErroDePedido } from '../_shared/tutor/comum.ts'
 import { falarInteiro, type Parte, textoDaFala } from '../_shared/tutor/falar.ts'
+import { custoEmUsd } from '../_shared/tutor/precos.ts'
 import { wavParaMp3 } from '../_shared/tutor/mp3.ts'
 
 /** Por chamada: o TTS leva 2–4 s por fala e a cota por minuto é baixa. */
@@ -69,6 +70,7 @@ Deno.serve(async (req) => {
   const jaExistiam: string[] = []
   const falharam: { chave: string; erro: string }[] = []
   let limiteDoTts = false
+  let custoUsd = 0
 
   for (const fala of falas) {
     const chave = chaveDaFala(fala)
@@ -83,7 +85,8 @@ Deno.serve(async (req) => {
         falharam.push({ chave, erro: 'limite do TTS' })
         continue
       }
-      const { audio } = await falarInteiro(chaveGemini, texto)
+      const { audio, custos } = await falarInteiro(chaveGemini, texto)
+      custoUsd += custoEmUsd(custos)
       const mp3 = wavParaMp3(base64ParaBytes(audio.base64))
       const { error } = await db.storage.from(BUCKET).upload(`${chave}.mp3`, mp3, {
         contentType: 'audio/mpeg',
@@ -102,13 +105,14 @@ Deno.serve(async (req) => {
   }
 
   const novas = [...gravadas, ...jaExistiam]
-  if (novas.length) {
-    const todas = [...new Set([...(licao.falas_gravadas ?? []), ...novas])]
-    const { error } = await db.from('tutor_licoes').update({ falas_gravadas: todas }).eq('id', licao.id)
+  if (novas.length || custoUsd > 0) {
+    // Junta à lista e soma o custo no banco, numa atualização só: o editor grava
+    // fala por fala em paralelo, e ler-juntar-regravar perderia uma delas.
+    const { error } = await db.rpc('tutor_registrar_falas', { p_licao: licao.id, p_chaves: novas, p_custo_usd: custoUsd })
     if (error) return respostaErro('Gravei os áudios, mas não consegui anotar na lição. Tente de novo.', 500)
   }
 
-  return respostaJson({ gravadas, jaExistiam, falharam, limiteDoTts })
+  return respostaJson({ gravadas, jaExistiam, falharam, limiteDoTts, custoUsd })
 })
 
 async function existeNoBucket(chave: string): Promise<boolean> {

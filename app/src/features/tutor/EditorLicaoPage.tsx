@@ -569,6 +569,7 @@ export function EditorLicaoPage() {
             licaoId={licao.id}
             falas={falas}
             gravadas={gravadas}
+            gasto={Number(licao.custo_audios_usd ?? 0)}
             tocador={tocador}
             podeGravar={!somenteLeitura}
             temMudancas={sujo}

@@ -407,6 +407,8 @@ export type TutorLicao = {
   nivel_cefr: NivelCefr | null
   roteiro: unknown
   falas_gravadas: string[]
+  /** Somado a cada gravação (0026); as gravadas antes disso não entram. */
+  custo_audios_usd: number
   ordem: number
   publicada: boolean
   criado_em: string

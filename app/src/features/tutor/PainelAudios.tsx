@@ -29,6 +29,7 @@ export function PainelAudios({
   licaoId,
   falas,
   gravadas,
+  gasto,
   tocador,
   podeGravar,
   temMudancas,
@@ -36,6 +37,8 @@ export function PainelAudios({
   licaoId: string
   falas: FalaFixa[] | null
   gravadas: Set<string>
+  /** US$ já gastos gravando esta lição (tutor_licoes.custo_audios_usd). */
+  gasto: number
   tocador: Tocador
   podeGravar: boolean
   temMudancas: boolean
@@ -47,6 +50,9 @@ export function PainelAudios({
   const [gerandoUma, setGerandoUma] = useState<Set<string>>(new Set())
 
   const faltam = (falas ?? []).filter((f) => !gravadas.has(f.chave))
+  // Gravadas antes de o custo ser registrado (21/10/2026): só dá para estimar.
+  const gastoEstimado = gasto === 0 && gravadas.size > 0
+  const jaGasto = gastoEstimado ? custoDe((falas ?? []).filter((f) => gravadas.has(f.chave))) : gasto
 
   async function gerar() {
     setErro(null)
@@ -118,9 +124,26 @@ export function PainelAudios({
         <strong>{falas.length - faltam.length}</strong> de {falas.length} falas gravadas.{' '}
         {faltam.length > 0 && 'As que faltam o aluno ouve na hora, pela voz em stream — funciona, mas demora um pouco mais.'}
       </p>
+      <dl className="grid grid-cols-3 gap-2 text-sm">
+        <div className="rounded-2xl bg-neutral-50 px-3 py-2">
+          <dt className="text-xs text-neutral-500">Já gasto</dt>
+          <dd className="font-extrabold">
+            {gastoEstimado && '~'}
+            {emReais(jaGasto)}
+          </dd>
+        </div>
+        <div className="rounded-2xl bg-neutral-50 px-3 py-2">
+          <dt className="text-xs text-neutral-500">Para gerar as que faltam</dt>
+          <dd className="font-extrabold">~{emReais(custoDe(faltam))}</dd>
+        </div>
+        <div className="rounded-2xl bg-neutral-50 px-3 py-2">
+          <dt className="text-xs text-neutral-500">A lição inteira</dt>
+          <dd className="font-extrabold">~{emReais(custoDe(falas))}</dd>
+        </div>
+      </dl>
       <p className="text-xs text-neutral-500">
-        Custo estimado da voz: {faltam.length > 0 && <><strong>{emReais(custoDe(faltam))}</strong> para gerar as que faltam · </>}
-        {emReais(custoDe(falas))} a lição inteira. Paga uma vez só: depois de gravada, a fala toca para todos os alunos sem custo.
+        Paga uma vez só: depois de gravada, a fala toca para todos os alunos sem custo.
+        {gastoEstimado && ' O "já gasto" é estimado: estas falas foram gravadas antes de o custo ser registrado.'}
       </p>
       {temMudancas && (
         <p className="rounded-2xl bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-900">
