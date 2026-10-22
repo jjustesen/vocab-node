@@ -7,7 +7,7 @@ import type { NivelCefr } from '@/types/db'
 import { avisosDoRoteiro, todosOsItens, validarRoteiro } from '../../../../poc-tutor/src/validacao.ts'
 import type { Item, Roteiro, TipoItem } from '../../../../poc-tutor/src/tipos.ts'
 import { useCopiarLicao, useExcluirLicao, useLicao, useSalvarLicao } from './api'
-import { type FalaFixa, useFalasDaLicao, useTocador } from './audiosDaLicao'
+import { type FalaFixa, useFalasDaLicao, useGeradorDeFala, useTocador } from './audiosDaLicao'
 import { Area, Campo, Linhas, Secao } from './campos'
 import { SomenteLeitura } from './edicao'
 import { slug } from './slug'
@@ -65,6 +65,7 @@ export function EditorLicaoPage() {
   const excluir = useExcluirLicao()
   const copiar = useCopiarLicao()
   const tocador = useTocador()
+  const gerador = useGeradorDeFala(id)
   const [rascunho, setRascunho] = useState<Roteiro | null>(null)
   const [nivel, setNivel] = useState<NivelCefr | null>(null)
   const [publicada, setPublicada] = useState(false)
@@ -94,6 +95,14 @@ export function EditorLicaoPage() {
     }
     return mapa
   }, [falas])
+  // Os exercícios que mudaram desde o Salvar: as falas deles no painel ainda são as do texto salvo.
+  const itensMudados = useMemo(() => {
+    if (!normalizado || !roteiroSalvo) return new Set<string>()
+    const salvos = new Map(todosOsItens(roteiroSalvo).map((i) => [i.id, JSON.stringify(i)]))
+    return new Set(todosOsItens(normalizado).filter((i) => salvos.get(i.id) !== JSON.stringify(i)).map((i) => i.id))
+  }, [normalizado, roteiroSalvo])
+  // Áudios de textos que já não existem (o exercício mudou) ficam em falas_gravadas: contam só os das falas atuais.
+  const gravadasAtuais = falas ? falas.filter((f) => gravadas.has(f.chave)).length : (licao?.falas_gravadas.length ?? 0)
   const problemas = useMemo(() => (normalizado ? validarRoteiro(normalizado) : []), [normalizado])
   const avisos = useMemo(() => (normalizado ? avisosDoRoteiro(normalizado) : []), [normalizado])
 
@@ -116,9 +125,18 @@ export function EditorLicaoPage() {
   }
 
   const somenteLeitura = !licao.professor_id
-  const audiosDe = (itemId: string): AudiosDoItem | undefined =>
-    falas ? { falas: falasPorItem.get(itemId) ?? [], gravadas, tocador } : undefined
   const sujo = JSON.stringify(normalizado) !== salvoJson || nivel !== licao.nivel_cefr || publicada !== licao.publicada
+  const audiosDe = (itemId: string): AudiosDoItem | undefined =>
+    falas
+      ? {
+          falas: falasPorItem.get(itemId) ?? [],
+          gravadas,
+          tocador,
+          gerador: somenteLeitura ? undefined : gerador,
+          temMudancas: sujo,
+          mudouDesdeSalvo: itensMudados.has(itemId),
+        }
+      : undefined
   const r = rascunho
   const mudar = (f: (n: Roteiro) => void) =>
     setRascunho((anterior) => {
@@ -564,13 +582,14 @@ export function EditorLicaoPage() {
           </ul>
         </Secao>
 
-        <Secao titulo="Áudios" resumo={`${licao.falas_gravadas.length} falas gravadas — ouça todas e gere as que faltam`}>
+        <Secao titulo="Áudios" resumo={`${gravadasAtuais}${falas ? ` de ${falas.length}` : ''} falas gravadas — ouça todas e gere as que faltam`}>
           <PainelAudios
             licaoId={licao.id}
             falas={falas}
             gravadas={gravadas}
             gasto={Number(licao.custo_audios_usd ?? 0)}
             tocador={tocador}
+            gerador={gerador}
             podeGravar={!somenteLeitura}
             temMudancas={sujo}
           />

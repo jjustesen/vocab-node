@@ -1,14 +1,24 @@
 import { useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronDown, Pause, Play, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown, Loader2, Pause, Play, Plus, Trash2, Wand2, X } from 'lucide-react'
 import { ELOGIOS, OPCOES_DE_ELOGIO, textoDaFala } from '../../../../poc-tutor/src/falas.ts'
 import type { ErroPrevisto, Item, TipoItem } from '../../../../poc-tutor/src/tipos.ts'
-import type { FalaFixa, Tocador } from './audiosDaLicao'
+import type { FalaFixa, GeradorDeFala, Tocador } from './audiosDaLicao'
 import { Area, Campo, Linhas } from './campos'
 import { useSomenteLeitura } from './edicao'
 import { slug } from './slug'
 
 /** As falas fixas DESTE exercício, o que já está gravado e o player da página. */
-export type AudiosDoItem = { falas: FalaFixa[]; gravadas: Set<string>; tocador: Tocador }
+export type AudiosDoItem = {
+  falas: FalaFixa[]
+  gravadas: Set<string>
+  tocador: Tocador
+  /** Sem isto (lição da biblioteca) não há botão de gerar. */
+  gerador?: GeradorDeFala
+  /** A lição tem mudanças não salvas: os áudios são das frases salvas, então gerar espera o Salvar. */
+  temMudancas: boolean
+  /** ESTE exercício mudou desde o último Salvar: as falas abaixo ainda são as do texto antigo. */
+  mudouDesdeSalvo: boolean
+}
 
 const ROTULO_DO_TIPO: Record<TipoItem, string> = {
   construcao: 'Construção',
@@ -322,6 +332,17 @@ function AudiosDoExercicio({ audios }: { audios: AudiosDoItem }) {
           <li key={f.chave} className="flex items-center gap-2 px-2.5 py-1.5 text-xs">
             {audios.gravadas.has(f.chave) ? (
               <BotaoOuvir chave={f.chave} tocador={audios.tocador} rotulo={textoDaFala(f.fala)} />
+            ) : audios.gerador ? (
+              <button
+                type="button"
+                onClick={() => void audios.gerador!.gerar(f)}
+                disabled={audios.gerador.gerando.has(f.chave) || audios.temMudancas}
+                aria-label="Gerar o áudio desta fala"
+                title={audios.temMudancas ? 'Salve a lição antes de gerar' : 'Gerar o áudio desta fala'}
+                className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-neutral-100 text-neutral-600 hover:bg-violet-100 hover:text-violet-700 disabled:opacity-40"
+              >
+                {audios.gerador.gerando.has(f.chave) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+              </button>
             ) : (
               <span className="grid h-7 w-7 shrink-0 place-items-center text-neutral-300" title="Ainda não gravada">
                 —
@@ -331,8 +352,10 @@ function AudiosDoExercicio({ audios }: { audios: AudiosDoItem }) {
           </li>
         ))}
       </ul>
-      {gravadas < audios.falas.length && (
-        <p className="mt-1 text-[11px] text-neutral-400">As que faltam se geram no painel Áudios, no fim da página.</p>
+      {audios.mudouDesdeSalvo && (
+        <p className="mt-1.5 rounded-xl bg-amber-50 px-2.5 py-1.5 text-[11px] font-medium text-amber-900">
+          Você mudou este exercício. Salve a lição para as falas do texto novo aparecerem aqui e poder gerar o áudio delas.
+        </p>
       )}
     </div>
   )

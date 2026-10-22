@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Fala } from '../../../../poc-tutor/src/falas.ts'
 import type { Roteiro } from '../../../../poc-tutor/src/tipos.ts'
-import { URL_DAS_FALAS } from './api'
+import { chavesTutor, gravarFalas, URL_DAS_FALAS } from './api'
 
 /** Uma fala fixa da lição e os itens em que o tutor a diz (ver falasFixasComItens). */
 export type FalaFixa = { chave: string; fala: Fala; itens: string[] }
@@ -21,6 +22,42 @@ export function useFalasDaLicao(roteiro: Roteiro | null): FalaFixa[] | null {
     return () => worker.terminate()
   }, [roteiro])
   return falas
+}
+
+/** Gerar o áudio de UMA fala (o botão da linha, no exercício ou no painel Áudios). */
+export type GeradorDeFala = {
+  gerando: Set<string>
+  erro: string | null
+  gerar: (f: FalaFixa) => Promise<void>
+}
+
+export function useGeradorDeFala(licaoId: string | undefined): GeradorDeFala {
+  const qc = useQueryClient()
+  const [gerando, setGerando] = useState<Set<string>>(new Set())
+  const [erro, setErro] = useState<string | null>(null)
+  const gerar = useCallback(
+    async (f: FalaFixa) => {
+      if (!licaoId) return
+      setErro(null)
+      setGerando((s) => new Set(s).add(f.chave))
+      try {
+        const r = await gravarFalas(licaoId, [f.fala])
+        if (r.falharam.length) setErro(r.limiteDoTts ? 'Limite de voz por minuto. Tente de novo daqui a pouco.' : `Não gravou: ${r.falharam[0].erro}`)
+      } catch (e) {
+        setErro(e instanceof Error ? e.message : 'Não consegui gravar o áudio.')
+      } finally {
+        await qc.invalidateQueries({ queryKey: chavesTutor.licao(licaoId) })
+        qc.invalidateQueries({ queryKey: chavesTutor.todasAsLicoes })
+        setGerando((s) => {
+          const novo = new Set(s)
+          novo.delete(f.chave)
+          return novo
+        })
+      }
+    },
+    [licaoId, qc],
+  )
+  return { gerando, erro, gerar }
 }
 
 export type Tocador = { tocando: string | null; tocar: (chave: string) => void }
