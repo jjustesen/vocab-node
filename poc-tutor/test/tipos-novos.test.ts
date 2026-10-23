@@ -111,4 +111,22 @@ describe('tipos dos drillings', () => {
     assert.ok(s.encerrada)
     assert.equal(s.resultados.filter((x) => x.resultado === 'autonomo').length, 5)
   })
+
+  it('lição sem conversa: o tutor não anuncia a conversa e vai direto ao fim', () => {
+    const tipos = (r: Roteiro) => {
+      let { sessao: s, acoes } = iniciar(r)
+      const vistos = acoes.map((a) => a.tipo)
+      while (!s.encerrada) {
+        ;({ sessao: s, acoes } = receber(s, { tipo: 'adequada', reconhecido: s.atual?.item.alvo ?? 'ok' }))
+        vistos.push(...acoes.map((a) => a.tipo))
+      }
+      return vistos
+    }
+    assert.ok(!tipos(roteiro).includes('iniciar_conversa'))
+    assert.equal(tipos(roteiro).at(-1), 'encerrar')
+
+    const comConversa = structuredClone(roteiro)
+    comConversa.conversa = [{ id: 'conversa.cafe', tipo: 'conversa', pergunta: 'Do you drink coffee?', criterio: 'diz se bebe café', habilidades: ['conversa'] }]
+    assert.ok(tipos(comConversa).includes('iniciar_conversa'))
+  })
 })

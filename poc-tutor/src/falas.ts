@@ -49,7 +49,8 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
     case 'confirmar_acerto': {
       // Na conversa, a reação ao CONTEÚDO vale mais que um "muito bem".
       if (a.item.tipo === 'conversa') return [en(a.observacao ?? 'Nice!')]
-      if (a.resultado !== 'autonomo') return [pt('Isso, agora sim.')]
+      // Na modelagem a frase acabou de ser apresentada: repeti-la é o exercício, e "agora sim" soaria como correção.
+      if (a.resultado !== 'autonomo' && a.item.tipo !== 'modelagem') return [pt('Isso, agora sim.')]
       // Sem elogio (o padrão) a fala sai vazia: a aula não diz nada e segue para o próximo pedido.
       const elogio = a.item.elogio
       if (!elogio) return []
@@ -127,6 +128,14 @@ function pedido(item: Item, contexto: Contexto, s: Sessao): Fala {
       return [...antes, pistaFalada(item)]
     case 'transformacao':
       return [...antes, ...transformacao(item)]
+    case 'modelagem':
+      return [
+        ...antes,
+        pt('Agora iremos modelar uma frase,'),
+        en(item.modelo ?? ''),
+        ...(item.solicitacao?.trim() ? [pt(`Quer dizer: ${comPonto(item.solicitacao)}`)] : []),
+        pt('Repita a frase.'),
+      ]
     case 'conversa':
       return [...antes, en(item.pergunta ?? '')]
   }
@@ -149,7 +158,7 @@ function retomada(item: Item, s: Sessao): Fala {
   if (item.tipo === 'substituicao') return [pistaFalada(item)]
   if (item.tipo === 'transformacao') return transformacao(item)
   if (item.tipo === 'construcao') return [pt(`Diga em inglês: ${comPonto(item.solicitacao ?? '')}`)]
-  if (item.tipo === 'repeticao') return [pt('Repita comigo:'), en(item.modelo ?? '')]
+  if (item.tipo === 'repeticao' || item.tipo === 'modelagem') return [pt('Repita comigo:'), en(item.modelo ?? '')]
   return [en(item.pergunta ?? '')]
 }
 

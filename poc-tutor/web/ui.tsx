@@ -54,9 +54,13 @@ const NOME_DO_BLOCO: Record<string, string> = {
   jantar: 'Jantar',
 }
 
-/** As etapas da aula: os blocos do roteiro, a conversa e o fim. */
+/** As etapas da aula: os blocos do roteiro, a conversa (se a lição tiver) e o fim. */
 export function Trilha({ roteiro, sessao }: { roteiro: Roteiro; sessao: Sessao | null }) {
-  const etapas = [...roteiro.blocos.map((b) => roteiro.nomes?.blocos?.[b.id] ?? NOME_DO_BLOCO[b.id] ?? b.id), 'Conversa', 'Fim']
+  const etapas = [
+    ...roteiro.blocos.map((b) => roteiro.nomes?.blocos?.[b.id] ?? NOME_DO_BLOCO[b.id] ?? b.id),
+    ...(roteiro.conversa.length ? ['Conversa'] : []),
+    'Fim',
+  ]
   const t = sessao?.atual
   let atual = -1
   let fracao = 0
@@ -113,8 +117,13 @@ const NOME_DA_HABILIDADE: Record<string, string> = {
 
 export function Habilidades({ sessao }: { sessao: Sessao | null }) {
   if (!sessao) return null
+  // O selo diz "vai voltar": só vale para a habilidade que tem exercício de
+  // revisão. Lição sem revisão nenhuma não reserva nem o espaço da faixa.
+  const { recuperacao } = sessao.roteiro
+  if (Object.keys(recuperacao).length === 0) return null
   const porHabilidade = new Map<string, boolean>()
   for (const d of sessao.dificuldades) {
+    if (!recuperacao[d.habilidade]) continue
     porHabilidade.set(d.habilidade, (porHabilidade.get(d.habilidade) ?? true) && d.recuperada === true)
   }
   if (porHabilidade.size === 0) return <div className="h-6" />
@@ -156,6 +165,7 @@ function rotuloDoPedido(item: Item, contexto: string): string {
   if (item.tipo === 'substituicao') return 'Substituição'
   if (item.tipo === 'transformacao') return 'Transformação'
   if (item.tipo === 'repeticao') return 'Repita'
+  if (item.tipo === 'modelagem') return 'Modelagem'
   return contexto === 'calibracao' ? 'Primeira frase' : 'Nova frase'
 }
 
@@ -175,7 +185,7 @@ export function Palco({
   // A frase que está sendo transformada: a última aceita (na substituição), ou
   // o modelo a repetir. Numa frase nova, ainda não há nada — só o pedido.
   const frase =
-    t?.item.tipo === 'repeticao' || t?.item.tipo === 'transformacao'
+    t?.item.tipo === 'repeticao' || t?.item.tipo === 'modelagem' || t?.item.tipo === 'transformacao'
       ? (t.item.modelo ?? null)
       : t?.item.tipo === 'substituicao'
         ? sessao.ultimaAceita
@@ -235,6 +245,11 @@ export function Palco({
               <span className="text-[var(--linha)]">· · ·</span>
             )}
           </p>
+          {t.item.tipo === 'modelagem' && t.item.solicitacao?.trim() && (
+            <p key={`${t.item.id}-sentido`} className="animar-surge max-w-[22em] text-[17px] text-neutral-500">
+              Quer dizer: <strong className="text-neutral-900">{t.item.solicitacao}</strong>
+            </p>
+          )}
         </>
       )}
 

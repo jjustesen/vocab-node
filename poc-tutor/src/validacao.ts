@@ -27,6 +27,9 @@ export function validarRoteiro(r: Roteiro): string[] {
       case 'repeticao':
         if (!item.modelo) problemas.push(`${item.id}: repetição sem "modelo"`)
         break
+      case 'modelagem':
+        if (!item.modelo) problemas.push(`${item.id}: modelagem sem "modelo" (a frase em inglês)`)
+        break
       case 'conversa':
         if (!item.pergunta) problemas.push(`${item.id}: conversa sem "pergunta"`)
         if (!item.criterio) problemas.push(`${item.id}: conversa sem "criterio"`)
@@ -106,6 +109,8 @@ export function avisosDoRoteiro(r: Roteiro): string[] {
     [...painel.estruturas, ...painel.exemplos, ...painel.alertas, ...painel.vocabulario.flatMap((v) => [v.en, v.pt])].join(' | '),
   )
   for (const item of r.blocos.flatMap((b) => b.itens)) {
+    // Na repetição e na modelagem a resposta é a frase que o tutor diz: mostrá-la não entrega nada.
+    if (item.tipo === 'repeticao' || item.tipo === 'modelagem') continue
     for (const resposta of [item.alvo, ...(item.variantes ?? [])]) {
       if (resposta && visivel.includes(normal(resposta))) avisos.push(`${item.id}: a folha de apoio mostra a resposta "${resposta}"`)
     }

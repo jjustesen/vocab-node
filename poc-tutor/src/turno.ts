@@ -23,7 +23,7 @@ export function contextoDoTurno(s: Sessao) {
       solicitacao_em_portugues: item.solicitacao ?? null,
       pista: item.pista ?? null,
       idioma_da_pista: item.tipo === 'substituicao' ? (item.idiomaDaPista ?? 'en') : null,
-      modelo_para_repetir: item.tipo === 'repeticao' ? (item.modelo ?? null) : null,
+      modelo_para_repetir: item.tipo === 'repeticao' || item.tipo === 'modelagem' ? (item.modelo ?? null) : null,
       frase_para_transformar: item.tipo === 'transformacao' ? (item.modelo ?? null) : null,
       instrucao: item.instrucao ?? null,
       pergunta: item.pergunta ?? null,

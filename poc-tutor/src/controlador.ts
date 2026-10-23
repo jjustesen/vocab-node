@@ -153,7 +153,9 @@ export function memoria(s: Sessao) {
     solicitacao_pendente: t
       ? t.item.tipo === 'transformacao'
         ? `${t.item.instrucao ?? 'Transforme'}: ${t.item.modelo ?? ''}`
-        : (t.item.pista ?? t.item.solicitacao ?? t.item.modelo ?? t.item.pergunta ?? null)
+        : t.item.tipo === 'modelagem'
+          ? (t.item.modelo ?? null)
+          : (t.item.pista ?? t.item.solicitacao ?? t.item.modelo ?? t.item.pergunta ?? null)
       : null,
     alvo_pendente: t?.item.alvo ?? null,
     variantes_aceitas: t?.item.variantes ?? [],
@@ -190,9 +192,10 @@ function aceitar(s: Sessao, reconhecido: string, acoes: Acao[], observacao?: str
     for (const d of s.dificuldades) {
       if (d.habilidade === t.habilidadeRecuperada) d.recuperada = resultado === 'autonomo'
     }
-  } else if (resultado !== 'autonomo' && (t.origem === 'bloco' || t.origem === 'conversa')) {
+  } else if (resultado !== 'autonomo' && t.item.tipo !== 'modelagem' && (t.origem === 'bloco' || t.origem === 'conversa')) {
     // Precisou de ajuda sem ter errado (pediu ajuda, ficou em silêncio):
-    // ainda assim é um ponto a recuperar.
+    // ainda assim é um ponto a recuperar. Na modelagem não: repetir a frase
+    // que o tutor acabou de apresentar é o exercício, não uma ajuda.
     if (!s.dificuldades.some((d) => d.itemId === t.item.id)) adicionarDificuldade(s, t.item.habilidades[0], t)
   }
 
@@ -357,6 +360,8 @@ function avancar(s: Sessao, acoes: Acao[]) {
       case 'inicio_conversa':
         s.fraseBase = null
         s.ultimaAceita = null
+        // Lição sem conversa: o treino emenda no fechamento, sem anunciar uma etapa que não vem.
+        if (s.roteiro.conversa.length === 0) continue
         decidir(s, 'Treino controlado concluído: passar à aplicação em conversa.')
         acoes.push({ tipo: 'iniciar_conversa' })
         continue
@@ -386,8 +391,8 @@ function comecar(passo: Extract<Passo, { tipo: 'item' }>): Tentando {
     contexto: passo.contexto,
     blocoId: passo.blocoId,
     tentativas: 0,
-    // Na repetição o aluno acabou de ouvir o modelo: começa no nível 3.
-    nivelAjuda: passo.item.tipo === 'repeticao' ? 3 : 0,
+    // Na repetição e na modelagem o aluno acabou de ouvir o modelo: começa no nível 3.
+    nivelAjuda: repeteOModelo(passo.item) ? 3 : 0,
     errosComModelo: 0,
     passouPorApoio: false,
     habilidadeRecuperada: passo.habilidadeRecuperada,
@@ -431,8 +436,13 @@ function encerrar(s: Sessao, acoes: Acao[]) {
 
 // ── Apoio ────────────────────────────────────────────────────────────────────
 
+/** O tutor diz a frase e o aluno a repete: a resposta já foi dada antes da tentativa. */
+function repeteOModelo(item: Item): boolean {
+  return item.tipo === 'repeticao' || item.tipo === 'modelagem'
+}
+
 function resultadoDe(t: Tentando): Resultado {
-  if (t.nivelAjuda === 3 || t.item.tipo === 'repeticao') return 'com_modelo'
+  if (t.nivelAjuda === 3 || repeteOModelo(t.item)) return 'com_modelo'
   if (t.passouPorApoio) return 'apos_apoio'
   if (t.nivelAjuda > 0) return 'com_pista'
   return 'autonomo'

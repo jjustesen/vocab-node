@@ -25,6 +25,7 @@ const ROTULO_DO_TIPO: Record<TipoItem, string> = {
   substituicao: 'Substituição',
   transformacao: 'Transformação',
   repeticao: 'Repetição',
+  modelagem: 'Modelagem',
   conversa: 'Conversa',
 }
 
@@ -37,6 +38,8 @@ const EXPLICACAO_DO_TIPO: Record<TipoItem, string> = {
     'O tutor diz uma frase em inglês e o que fazer com ela (negativa, pergunta, passado…). É o "Change into…" dos drillings. Começa uma frase nova.',
   repeticao:
     'O tutor diz a frase e o aluno repete. Serve de aquecimento, mas nunca conta como "feito sozinho" no resultado — por isso use pouco.',
+  modelagem:
+    'O tutor começa com "Agora iremos modelar uma frase,", diz a frase em inglês e o que ela quer dizer, e o aluno repete. Serve para apresentar uma frase nova: as substituições seguintes partem dela. Repetir certo não conta como "feito sozinho", mas também não vira ponto para revisar.',
   conversa:
     'Uma pergunta real sobre a vida do aluno, no fim da aula. Não há resposta certa: a IA aceita qualquer resposta pertinente, conforme o critério.',
 }
@@ -50,10 +53,12 @@ function resumoDoItem(item: Item): string {
         ? item.pista
         : item.tipo === 'transformacao'
           ? `${item.instrucao ?? ''}: ${item.modelo ?? ''}`
-          : item.tipo === 'repeticao'
+          : item.tipo === 'repeticao' || item.tipo === 'modelagem'
             ? item.modelo
             : item.pergunta
-  return item.tipo === 'conversa' || item.tipo === 'repeticao' ? (pedido ?? '') : `${pedido ?? ''} → ${item.alvo ?? '…'}`
+  return item.tipo === 'conversa' || item.tipo === 'repeticao' || item.tipo === 'modelagem'
+    ? (pedido ?? '')
+    : `${pedido ?? ''} → ${item.alvo ?? '…'}`
 }
 
 /**
@@ -188,6 +193,25 @@ export function EditorDeItem({
               placeholder="I eat bread."
             />
           )}
+          {item.tipo === 'modelagem' && (
+            <>
+              <Campo
+                rotulo="Frase modelada (em inglês)"
+                ajuda='O tutor diz "Agora iremos modelar uma frase," e esta frase, e o aluno repete. Ela também vale como resposta esperada e é a base das substituições seguintes.'
+                valor={item.modelo}
+                aoMudar={(v) => mudar({ modelo: v, alvo: v })}
+                ingles
+                placeholder="I eat bread and butter."
+              />
+              <Campo
+                rotulo="O que a frase quer dizer (em português)"
+                ajuda='Opcional. O tutor diz depois da frase ("Quer dizer: …"), e ela aparece na tela embaixo da frase.'
+                valor={item.solicitacao}
+                aoMudar={(v) => mudar({ solicitacao: v })}
+                placeholder="eu como pão com manteiga"
+              />
+            </>
+          )}
           {item.tipo === 'transformacao' && (
             <Campo
               rotulo="O que o aluno faz com a frase"
@@ -232,7 +256,7 @@ export function EditorDeItem({
 
           {item.tipo !== 'conversa' && <EscolhaDoElogio elogio={item.elogio} aoMudar={(elogio) => mudar({ elogio })} />}
 
-          {item.tipo !== 'conversa' && item.tipo !== 'repeticao' && (
+          {item.tipo !== 'conversa' && item.tipo !== 'repeticao' && item.tipo !== 'modelagem' && (
             <>
               <Campo
                 rotulo="Resposta esperada"

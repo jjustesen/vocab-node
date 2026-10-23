@@ -23,7 +23,7 @@ import {
   type PerguntaDoTutor,
   type Tentativa,
 } from './ui.tsx'
-import { CartaoResumo, FolhaDeApoio, PainelDoProfessor, type LinhaDoHistorico, type Opcoes } from './professor.tsx'
+import { CartaoResumo, FolhaDeApoio, PainelDoProfessor, temFolhaDeApoio, type LinhaDoHistorico, type Opcoes } from './professor.tsx'
 
 /**
  * O ciclo de um turno (especificação §7):
@@ -507,9 +507,11 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
     <div className="mx-auto flex h-dvh max-w-[520px] flex-col px-4">
       <header className="flex items-start gap-2.5 pt-3.5 pb-2">
         <Trilha roteiro={roteiro} sessao={sessao} />
-        <button onClick={() => setApoioAberto(true)} aria-label="Apoio" title="Estruturas e vocabulário" className="grid h-8 w-8 place-items-center rounded-full bg-[var(--cartao)] text-neutral-600">
-          <Icone nome="livro" />
-        </button>
+        {temFolhaDeApoio(roteiro) && (
+          <button onClick={() => setApoioAberto(true)} aria-label="Apoio" title="Estruturas e vocabulário" className="grid h-8 w-8 place-items-center rounded-full bg-[var(--cartao)] text-neutral-600">
+            <Icone nome="livro" />
+          </button>
+        )}
         {(emAula || status === 'pausado') && (
           <button
             onClick={() => (status === 'pausado' ? continuar() : pausar())}

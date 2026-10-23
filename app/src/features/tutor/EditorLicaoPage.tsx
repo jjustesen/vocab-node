@@ -15,7 +15,7 @@ import { type AudiosDoItem, BotaoIcone, EditorDeItem } from './EditorDeItem'
 import { PainelAudios } from './PainelAudios'
 
 const NIVEIS: NivelCefr[] = ['A1', 'A2', 'B1', 'B2', 'C1']
-const TIPOS_DO_BLOCO: TipoItem[] = ['construcao', 'substituicao', 'transformacao', 'repeticao']
+const TIPOS_DO_BLOCO: TipoItem[] = ['construcao', 'substituicao', 'transformacao', 'repeticao', 'modelagem']
 const TIPOS_DA_REVISAO: TipoItem[] = ['construcao', 'transformacao', 'substituicao']
 
 /** A primeira frase da aula é a que mede se o aluno precisa de modelo: o editor garante que só ela tem a marca. */
@@ -627,6 +627,7 @@ function AdicionarItem({ tipos, aoEscolher }: { tipos: TipoItem[]; aoEscolher: (
     substituicao: 'Substituição',
     transformacao: 'Transformação',
     repeticao: 'Repetição',
+    modelagem: 'Modelagem',
   }
   return (
     <label className="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-bold">

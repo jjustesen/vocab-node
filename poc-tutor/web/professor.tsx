@@ -172,7 +172,12 @@ function TabelaDeCustos({ gasto }: { gasto: Gasto }) {
   )
 }
 
-/** R04: o painel do aluno — estruturas e vocabulário, nunca as respostas das cadeias. */
+/** A lição tem algo na folha de apoio. Sem nada, a aula nem mostra o botão. */
+export function temFolhaDeApoio({ painel }: Roteiro): boolean {
+  return painel.estruturas.length + painel.vocabulario.length + painel.exemplos.length + painel.alertas.length > 0
+}
+
+/** R04: o painel do aluno — estruturas e vocabulário, nunca as respostas das cadeias. Parte vazia não aparece. */
 export function FolhaDeApoio({ roteiro, aberta, aoFechar }: { roteiro: Roteiro; aberta: boolean; aoFechar: () => void }) {
   if (!aberta) return null
   const { painel } = roteiro
@@ -186,20 +191,36 @@ export function FolhaDeApoio({ roteiro, aberta, aoFechar }: { roteiro: Roteiro; 
             <Icone nome="fechar" />
           </button>
         </div>
-        <Titulo>Estruturas</Titulo>
-        <ul className="mt-1 space-y-0.5">{painel.estruturas.map((e) => <li key={e} className="font-medium">{e}</li>)}</ul>
-        <Titulo>Vocabulário</Titulo>
-        <div className="mt-1 flex flex-wrap gap-1.5">
-          {painel.vocabulario.map((v) => (
-            <span key={v.en} className="rounded-full bg-violet-100 px-2.5 py-1 text-xs">
-              <strong>{v.en}</strong> <span className="text-neutral-500">{v.pt}</span>
-            </span>
-          ))}
-        </div>
-        <Titulo>Exemplos</Titulo>
-        <ul className="mt-1 space-y-0.5">{painel.exemplos.map((e) => <li key={e}>{e}</li>)}</ul>
-        <Titulo>Atenção</Titulo>
-        <ul className="mt-1 space-y-0.5">{painel.alertas.map((e) => <li key={e}>{e}</li>)}</ul>
+        {painel.estruturas.length > 0 && (
+          <>
+            <Titulo>Estruturas</Titulo>
+            <ul className="mt-1 space-y-0.5">{painel.estruturas.map((e) => <li key={e} className="font-medium">{e}</li>)}</ul>
+          </>
+        )}
+        {painel.vocabulario.length > 0 && (
+          <>
+            <Titulo>Vocabulário</Titulo>
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {painel.vocabulario.map((v) => (
+                <span key={v.en} className="rounded-full bg-violet-100 px-2.5 py-1 text-xs">
+                  <strong>{v.en}</strong> <span className="text-neutral-500">{v.pt}</span>
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+        {painel.exemplos.length > 0 && (
+          <>
+            <Titulo>Exemplos</Titulo>
+            <ul className="mt-1 space-y-0.5">{painel.exemplos.map((e) => <li key={e}>{e}</li>)}</ul>
+          </>
+        )}
+        {painel.alertas.length > 0 && (
+          <>
+            <Titulo>Atenção</Titulo>
+            <ul className="mt-1 space-y-0.5">{painel.alertas.map((e) => <li key={e}>{e}</li>)}</ul>
+          </>
+        )}
       </section>
     </>
   )
