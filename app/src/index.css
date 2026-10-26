@@ -108,7 +108,8 @@
 }
 
 /* ==========================================================================
-   A tira de vídeo da sala (features/sala/SalaPage.tsx).
+   O vídeo da sala fora do grid: a tira, o professor em destaque e a própria
+   câmera (features/sala/SalaPage.tsx).
 
    O pacote de estilos do LiveKit fixa `object-fit: cover` no vídeo, e reforça
    a regra para vídeo landscape. Cover é a escolha certa quando o ladrilho tem
@@ -120,8 +121,8 @@
    Precisa vir por CSS e com especificidade maior: as duas regras do pacote são
    por classe, e Tailwind não alcança um elemento que este código não renderiza.
    ========================================================================== */
-[data-tira-de-video] .lk-participant-media-video,
-[data-tira-de-video] .lk-participant-media-video[data-lk-orientation='landscape'] {
+[data-video-inteiro] .lk-participant-media-video,
+[data-video-inteiro] .lk-participant-media-video[data-lk-orientation='landscape'] {
   object-fit: contain;
   background-color: #000;
 }

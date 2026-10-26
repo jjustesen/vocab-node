@@ -7,6 +7,7 @@ import {
   RoomAudioRenderer,
   useIsSpeaking,
   useParticipants,
+  useSpeakingParticipants,
   useTracks,
 } from '@livekit/components-react'
 import { Track, type Participant } from 'livekit-client'
@@ -40,6 +41,7 @@ import { useAlunosDaTurma } from '@/features/turmas/api'
 import { aulaDeAgora } from './aula-de-agora'
 import { useCanal, useSalaConectada } from './canal'
 import { BarraDeMidia } from './BarraDeMidia'
+import { arranjarCameras, quantosCabem, type ArranjoDasCameras } from './arranjo-das-cameras'
 import {
   FRACAO_MAX_DA_AREA,
   proximaPosicao,
@@ -348,9 +350,16 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
   /** Qual aluno o painel esta mostrando. Numa turma, o professor escolhe. */
   const [alunoNoPainel, setAlunoNoPainel] = useState<string | null>(null)
 
-  const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare], {
-    onlySubscribed: false,
-  })
+  // A câmera com marcador: quem entrou sem câmera (negou a permissão, câmera
+  // ocupada) continua na tela como um ladrilho com o nome. Sem isso o
+  // professor sem câmera simplesmente sumia — e com ele o destaque do aluno.
+  const tracks = useTracks(
+    [
+      { source: Track.Source.Camera, withPlaceholder: true },
+      { source: Track.Source.ScreenShare, withPlaceholder: false },
+    ],
+    { onlySubscribed: false },
+  )
 
   // O painel e do professor. Numa turma ele lista a turma inteira; no 1:1, o
   // unico aluno. Os dois casos passam pela mesma tela.
@@ -477,6 +486,12 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
   )
   const cameras = useMemo(() => tracks.filter((t) => t.source === Track.Source.Camera), [tracks])
 
+  // Só para redesenhar quando muda quem fala: a ordem dos `outros` depende
+  // disso, e `useTracks` não avisa. Sem `useMemo` no arranjo pelo mesmo
+  // motivo — `isSpeaking` muda dentro do mesmo objeto de participante.
+  useSpeakingParticipants()
+  const arranjo = arranjarCameras(cameras, { eu, ehProfessor })
+
   /** Há algo no centro — palco OU tela — e as câmeras vão para a tira. */
   const temDestaque = noPalco || Boolean(telaCompartilhada)
 
@@ -541,7 +556,7 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
           */}
           {temDestaque ? (
             <>
-              <TiraDeVideo tracks={cameras} posicao={posicao} tamanho={tamanho} />
+              <TiraDeVideo arranjo={arranjo} posicao={posicao} tamanho={tamanho} />
               <Divisor
                 posicao={posicao}
                 arrastando={arrastandoDivisor}
@@ -551,11 +566,7 @@ function SalaAberta({ acesso }: { acesso: AcessoSala }) {
               />
             </>
           ) : (
-            <div className="min-h-0 flex-1">
-              <GridLayout tracks={tracks} className="h-full">
-                <ParticipantTile />
-              </GridLayout>
-            </div>
+            <VideoSemPalco arranjo={arranjo} cameras={cameras} ehProfessor={ehProfessor} />
           )}
 
           {telaCompartilhada ? (
@@ -790,6 +801,168 @@ function Divisor({
 }
 
 /**
+ * O vídeo quando NÃO há nada no palco.
+ *
+ * O grid igualitário servia ao 1:1 e falhou na primeira turma grande: com
+ * vinte câmeras o professor virava um ladrilho entre vinte e ninguém se
+ * achava. Agora o aluno vê o professor grande e a própria câmera no canto,
+ * e os colegas numa faixa embaixo, sem rolagem (ver `arranjo-das-cameras.ts`).
+ *
+ * O professor não tem quem destacar além dos alunos: num 1:1 o aluno é o
+ * destaque, numa turma os alunos ficam no grid do LiveKit (que pagina em vez
+ * de rolar). Nos dois casos a câmera dele fica no canto.
+ *
+ * Sem professor na sala ainda, o aluno vê o grid de sempre — não há o que
+ * pôr no centro.
+ */
+function VideoSemPalco({
+  arranjo,
+  cameras,
+  ehProfessor,
+}: {
+  arranjo: ArranjoDasCameras
+  cameras: TrackReferenceOrPlaceholder[]
+  ehProfessor: boolean
+}) {
+  const { propria, outros } = arranjo
+  const foco = arranjo.destaque ?? (ehProfessor && outros.length === 1 ? outros[0] : null)
+  const restantes = foco ? outros.filter((t) => t !== foco) : outros
+
+  if (!foco) {
+    // Professor sozinho (ainda sem alunos) ou aluno antes de o professor
+    // chegar: o grid com todo mundo, a própria câmera inclusa.
+    const soGrid = !ehProfessor || restantes.length === 0
+    return (
+      <div className="relative min-h-0 flex-1">
+        <GridLayout tracks={soGrid ? cameras : restantes} className="h-full">
+          <ParticipantTile />
+        </GridLayout>
+        {!soGrid && propria && <PropriaCamera track={propria} />}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
+      <div data-video-inteiro className="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-black">
+        <ParticipantTile trackRef={foco} className="h-full w-full" />
+        {propria && <PropriaCamera track={propria} />}
+      </div>
+      {restantes.length > 0 && (
+        <div data-video-inteiro className="h-20 shrink-0 sm:h-28">
+          <FilaDeCameras tracks={restantes} fixos={0} horizontal />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * A câmera de quem está olhando, no canto do vídeo principal — o "estou
+ * aparecendo?" que os alunos não conseguiam responder com vinte câmeras na
+ * tela. Pequena de propósito: é conferência, não conteúdo.
+ */
+function PropriaCamera({ track }: { track: TrackReferenceOrPlaceholder }) {
+  return (
+    <div
+      data-video-inteiro
+      className="absolute bottom-2 right-2 z-10 aspect-video w-28 overflow-hidden rounded-lg bg-neutral-900 shadow-lg ring-2 ring-neutral-950 sm:w-44"
+    >
+      <ParticipantTile trackRef={track} className="h-full w-full" />
+    </div>
+  )
+}
+
+/** Em px e não classe do Tailwind: `quantosCabem` precisa do mesmo número. */
+const GAP_DA_FILA = 8
+
+/**
+ * Uma fila de ladrilhos 16:9 que NUNCA rola.
+ *
+ * A versão anterior rolava quando não cabia, como no Meet — e numa turma de
+ * vinte isso virou barra de rolagem no topo e na lateral, com o professor e
+ * a própria câmera do aluno perdidos lá no meio. Agora a fila mede o espaço,
+ * mostra quantos cabem e resume o resto num "+N". Os primeiros `fixos`
+ * (professor, a própria câmera) nunca saem; quem sai são os últimos da
+ * lista, que `arranjarCameras` já ordenou por quem falou por último.
+ *
+ * Ladrilho que não é renderizado também não é baixado, com `adaptiveStream`.
+ */
+function FilaDeCameras({
+  tracks,
+  fixos,
+  horizontal,
+}: {
+  tracks: TrackReferenceOrPlaceholder[]
+  fixos: number
+  horizontal: boolean
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [cabem, setCabem] = useState(tracks.length)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const medir = () => {
+      const { width, height } = el.getBoundingClientRect()
+      setCabem(
+        quantosCabem({
+          eixo: horizontal ? width : height,
+          lado: horizontal ? height : width,
+          horizontal,
+          gap: GAP_DA_FILA,
+        }),
+      )
+    }
+    medir()
+    const observador = new ResizeObserver(medir)
+    observador.observe(el)
+    return () => observador.disconnect()
+  }, [horizontal])
+
+  const cortar = tracks.length > cabem
+  // Com corte, uma vaga vai para o "+N" — mas os fixos ficam mesmo que a
+  // fila esteja apertada demais para eles: some a contagem, não o professor.
+  const visiveis = cortar ? tracks.slice(0, Math.max(fixos, cabem - 1)) : tracks
+  const escondidos = tracks.slice(visiveis.length)
+
+  return (
+    <div
+      ref={ref}
+      className={`flex h-full w-full justify-center overflow-hidden ${horizontal ? '' : 'flex-col'}`}
+      style={{ gap: GAP_DA_FILA }}
+    >
+      {/*
+        Encolhíveis (`min-w-0`/`min-h-0`) só para o caso em que nem os fixos
+        cabem — professor e própria câmera num celular em pé. Aí o ladrilho
+        estreita e o vídeo, que é `contain`, ganha tarja em vez de ser cortado
+        pela borda da fila. Quando cabe, nada encolhe.
+      */}
+      {visiveis.map((track) => (
+        <div
+          key={`${track.participant.identity}:${track.source}`}
+          className={`aspect-video overflow-hidden rounded-lg bg-black ${
+            horizontal ? 'h-full min-w-0' : 'min-h-0 w-full'
+          }`}
+        >
+          <ParticipantTile trackRef={track} className="h-full w-full" />
+        </div>
+      ))}
+      {escondidos.length > 0 && (
+        <div
+          title={escondidos.map((t) => t.participant.name || t.participant.identity).join(', ')}
+          className={`grid aspect-video shrink-0 place-items-center rounded-lg bg-neutral-800 text-sm font-extrabold text-neutral-200 ${
+            horizontal ? 'h-full' : 'w-full'
+          }`}
+        >
+          +{escondidos.length}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
  * O vídeo quando há algo no palco.
  *
  * ── Por que não é o `GridLayout` encolhido ──────────────────────────────────
@@ -800,58 +973,41 @@ function Divisor({
  * a câmera 16:9 de cada um virava uma tira em que só sobrava a testa. Era o
  * enquadramento que se perdia, não a resolução.
  *
- * Agora cada ladrilho tem proporção 16:9 fixa (`aspect-video`) e a lista rola
- * quando não cabe, como no Meet: o tamanho cai, o enquadramento não. O
- * `object-fit: contain` vem do CSS em index.css — a regra do pacote de estilos
- * do LiveKit força `cover` até em vídeo landscape, então tem que ser
- * sobrescrita por fora.
+ * Cada ladrilho tem proporção 16:9 fixa (`aspect-video`), e o que não cabe
+ * vira "+N" em vez de rolagem (ver `FilaDeCameras`). A ordem é a do arranjo:
+ * o professor primeiro (para o aluno), a própria câmera em seguida, e então
+ * os outros por quem falou por último. O `object-fit: contain` vem do CSS em
+ * index.css — a regra do pacote de estilos do LiveKit força `cover` até em
+ * vídeo landscape, então tem que ser sobrescrita por fora.
  */
 function TiraDeVideo({
-  tracks,
+  arranjo,
   posicao,
   tamanho,
 }: {
-  tracks: TrackReferenceOrPlaceholder[]
+  arranjo: ArranjoDasCameras
   posicao: PosicaoDaCamera
   /** Quanto do eixo a tira ocupa, em pixels — o que o divisor ajusta. */
   tamanho: number
 }) {
   const lateral = posicao !== 'topo'
   const teto = `${FRACAO_MAX_DA_AREA * 100}%`
+  const fixos = [arranjo.destaque, arranjo.propria].filter(
+    (t): t is TrackReferenceOrPlaceholder => t !== null,
+  )
 
   return (
     <div
-      data-tira-de-video
+      data-video-inteiro
       // Pixels, com um teto em fração da área: o tamanho que a pessoa ajustou
       // não muda quando a janela muda, mas numa tela pequena a tira não pode
       // passar por cima do palco. Ver `layout-da-sala.ts`.
       style={
         lateral ? { width: tamanho, maxWidth: teto } : { height: tamanho, maxHeight: teto }
       }
-      className={lateral ? 'shrink-0 overflow-y-auto' : 'shrink-0 overflow-x-auto'}
+      className="shrink-0 overflow-hidden"
     >
-      {/*
-        `justify-center` para uma câmera só não ficar encostada no canto, e
-        `min-w-full`/`min-h-full` (e não `max`) para que a lista ocupe o eixo
-        inteiro enquanto cabe — é o que faz o centro ser o centro da tira — e
-        cresça e role quando NÃO couber, em vez de espremer os ladrilhos.
-      */}
-      <div
-        className={`flex gap-2 ${
-          lateral ? 'min-h-full w-full flex-col justify-center' : 'h-full min-w-full justify-center'
-        }`}
-      >
-        {tracks.map((track) => (
-          <div
-            key={`${track.participant.identity}:${track.source}`}
-            className={`aspect-video shrink-0 overflow-hidden rounded-lg bg-black ${
-              lateral ? 'w-full' : 'h-full'
-            }`}
-          >
-            <ParticipantTile trackRef={track} className="h-full w-full" />
-          </div>
-        ))}
-      </div>
+      <FilaDeCameras tracks={[...fixos, ...arranjo.outros]} fixos={fixos.length} horizontal={!lateral} />
     </div>
   )
 }
