@@ -206,7 +206,8 @@ function aceitar(s: Sessao, reconhecido: string, acoes: Acao[], observacao?: str
       : `Resposta adequada ${ROTULO_RESULTADO[resultado]}: registrar como produção com ajuda e seguir.`,
     t.item.id,
   )
-  acoes.push({ tipo: 'confirmar_acerto', item: t.item, reconhecido, resultado, observacao })
+  const deCara = t.tentativas === 0 && t.ultimaAjuda === undefined
+  acoes.push({ tipo: 'confirmar_acerto', item: t.item, reconhecido, resultado, deCara, observacao })
   s.atual = null
   avancar(s, acoes)
 }

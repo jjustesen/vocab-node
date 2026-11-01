@@ -57,10 +57,21 @@ professor: nível CEFR, número de questões, habilidades e foco.
 8. Varie os tipos de questão ao longo da atividade. Não entregue dez
    múltiplas escolhas seguidas.
 
-8b. Use "pronuncia" e "ordenar_audio" com parcimônia: no máximo 2 de cada por
-   atividade, e só quando o professor pedir as habilidades "fala" ou
-   "listening". Cada uma custa uma geração de áudio ou uma chamada de
+8b. Por padrão, use "pronuncia" e "ordenar_audio" com parcimônia: no máximo 2
+   de cada por atividade, e só quando o professor pedir as habilidades "fala"
+   ou "listening". Cada uma custa uma geração de áudio ou uma chamada de
    avaliação a mais — não são intercambiáveis com os tipos de texto.
+   ESTE LIMITE CAI quando o professor pede uma quantidade ou um tipo no campo
+   "Pedido do professor" (ex.: "no mínimo 5 áudios para o aluno escrever"):
+   nesse caso o pedido vale, e o limite de 2 não se aplica.
+
+8c. O "Pedido do professor", quando existe, tem PRIORIDADE sobre as regras 8 e
+   8b e sobre qualquer preferência de variedade. Ele é uma exigência, não uma
+   sugestão: cumpra quantidades ("no mínimo 5", "só 3"), tipos de questão e
+   temas ao pé da letra, e confira a contagem antes de responder. Se o pedido
+   for de áudios para o aluno escrever/montar, use "ordenar_audio" (o aluno
+   ouve e monta a frase). Só deixe de cumprir uma parte do pedido se o
+   material realmente não der conta — e nunca por preguiça ou variedade.
 
 9. Se a imagem estiver ilegível, cortada ou fora de foco a ponto de você não
    ter certeza do conteúdo, gere apenas o que consegue ler com segurança.
@@ -164,8 +175,20 @@ export function montarBlocoParametros(parametros: ParametrosGeracao, questoesJaA
     `- Nível: ${parametros.nivel}`,
     `- Número de questões: ${parametros.quantidade}`,
     `- Habilidades: ${parametros.habilidades.length > 0 ? parametros.habilidades.join(', ') : 'livre, siga o material'}`,
-    `- Foco: ${parametros.foco?.trim() || 'livre, siga o que o material enfatiza'}`,
   ]
+
+  const pedido = parametros.foco?.trim()
+  if (pedido) {
+    linhas.push(
+      '',
+      'PEDIDO DO PROFESSOR — PRIORIDADE MÁXIMA. Cumpra ao pé da letra, inclusive quantidades e tipos de questão,' +
+        ' mesmo que isso contrarie as regras de variedade (8) e de parcimônia com áudio (8b). Antes de responder,' +
+        ' conte as questões e confirme que o pedido foi atendido:',
+      `"""${pedido}"""`,
+    )
+  } else {
+    linhas.push('- Pedido do professor: nenhum, siga o que o material enfatiza')
+  }
 
   if (parametros.errosRecorrentes?.trim()) {
     linhas.push(

@@ -50,7 +50,9 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
       // Na conversa, a reação ao CONTEÚDO vale mais que um "muito bem".
       if (a.item.tipo === 'conversa') return [en(a.observacao ?? 'Nice!')]
       // Na modelagem a frase acabou de ser apresentada: repeti-la é o exercício, e "agora sim" soaria como correção.
-      if (a.resultado !== 'autonomo' && a.item.tipo !== 'modelagem') return [pt('Isso, agora sim.')]
+      // Na repetição também, quando sai de cara: o resultado é sempre "com modelo", mas não houve correção nenhuma.
+      const repetiuDeCara = a.item.tipo === 'repeticao' && a.deCara
+      if (a.resultado !== 'autonomo' && a.item.tipo !== 'modelagem' && !repetiuDeCara) return [pt('Isso, agora sim.')]
       // Sem elogio (o padrão) a fala sai vazia: a aula não diz nada e segue para o próximo pedido.
       const elogio = a.item.elogio
       if (!elogio) return []

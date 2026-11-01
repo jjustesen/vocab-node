@@ -86,6 +86,26 @@ describe('falas', () => {
     assert.equal(textoDaFala(elogioCom({ frase: 'Ótimo!' })), 'Ótimo!')
   })
 
+  it('a repetição certa de cara segue o elogio do exercício; o "agora sim" fica para quando houve erro', () => {
+    const [bloco, ...outros] = roteiro.blocos
+    const [primeiro, ...resto] = bloco.itens
+    const repeticao = (elogio?: Item['elogio']) => ({
+      ...roteiro,
+      blocos: [
+        { ...bloco, itens: [{ ...primeiro, tipo: 'repeticao' as const, modelo: 'It was sunny this morning.', elogio }, ...resto] },
+        ...outros,
+      ],
+    })
+    const deCara = (elogio?: Item['elogio']) =>
+      textoDaFala(falaDaAcao(receber(iniciar(repeticao(elogio)).sessao, { tipo: 'adequada', reconhecido: 'It was sunny this morning.' }).acoes[0], iniciar(roteiro).sessao))
+    assert.equal(deCara(), '')
+    assert.equal(deCara({ frase: 'Great!' }), 'Great!')
+
+    const errou = receber(iniciar(repeticao()).sessao, { tipo: 'erro', reconhecido: 'It is sunny.', habilidade: primeiro.habilidades[0], problema: 'p' })
+    const r = receber(errou.sessao, { tipo: 'adequada', reconhecido: 'It was sunny this morning.' })
+    assert.equal(textoDaFala(falaDaAcao(r.acoes[0], r.sessao)), 'Isso, agora sim.')
+  })
+
   it('na conversa, o acerto vira a reação ao conteúdo, em inglês', () => {
     const s = ate(iniciar(roteiro).sessao, 'conversa.cidade')
     const r = receber(s, { tipo: 'adequada', reconhecido: 'It was rainy.', observacao: 'Rainy! I hope you stayed dry.' })

@@ -310,12 +310,12 @@ export function GerarAtividadePage() {
 
             <label className="mt-4 block">
               <span className="text-xs font-bold text-neutral-600">
-                Foco <span className="font-medium text-neutral-400">(opcional)</span>
+                Pedido do professor <span className="font-medium text-neutral-400">(opcional)</span>
               </span>
               <input
                 value={foco}
                 onChange={(e) => setFoco(e.target.value)}
-                placeholder="ex.: past simple, phrasal verbs de viagem..."
+                placeholder="ex.: past simple; no mínimo 5 áudios para o aluno escrever..."
                 disabled={gerar.isPending}
                 className="mt-1.5 w-full rounded-2xl bg-neutral-100 px-4 py-3 text-sm outline-none ring-neutral-900 focus:ring-2"
               />

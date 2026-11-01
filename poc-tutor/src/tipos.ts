@@ -170,7 +170,8 @@ export type Acao =
   | { tipo: 'solicitar'; item: Item; contexto: Contexto }
   /** Dar o modelo em inglês, verificar o sentido e pedir repetição. */
   | { tipo: 'modelar'; item: Item; modelo: string }
-  | { tipo: 'confirmar_acerto'; item: Item; reconhecido: string; resultado: Resultado; observacao?: string }
+  /** `deCara`: acertou na primeira tentativa, sem erro nem pedido de ajuda — numa repetição o `resultado` não diz isso. */
+  | { tipo: 'confirmar_acerto'; item: Item; reconhecido: string; resultado: Resultado; deCara: boolean; observacao?: string }
   /** Ajuda de nível 1–3 e, em seguida, pedir a frase INTEIRA de novo (R08). */
   | { tipo: 'ajudar'; item: Item; nivel: NivelAjuda; conteudo: string; acertoParcial?: string }
   | { tipo: 'confirmar_audio'; item: Item; reconhecido?: string }
