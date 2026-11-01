@@ -53,6 +53,8 @@ export type Item = {
   instrucao?: string
   /** `conversa`: a pergunta real. */
   pergunta?: string
+  /** `conversa`: a pergunta em português, para a legenda quando a lição pede legenda em português. */
+  traducaoDaPergunta?: string
   /** `conversa`: o que conta como resposta pertinente. */
   criterio?: string
   exemplos?: string[]
@@ -96,6 +98,13 @@ export type Roteiro = {
   blocos: Bloco[]
   apoios: Record<string, Apoio>
   conversa: Item[]
+  /**
+   * A etapa de conversa, para quem está começando: em que idioma o tutor
+   * reage ao que o aluno contou (`resposta`) e em que idioma sai a legenda.
+   * A pergunta é sempre em inglês — é ela que o aluno responde. Sem isto,
+   * os dois em inglês.
+   */
+  idiomasDaConversa?: { resposta: 'pt' | 'en'; legenda: 'pt' | 'en' }
   /** R11: por habilidade, um item em contexto novo para testar de novo. */
   recuperacao: Record<string, Item>
   /**
@@ -126,8 +135,12 @@ export type Roteiro = {
  * `erro` — é um tipo à parte justamente para não contaminar o desempenho.
  */
 export type Avaliacao =
-  /** `observacao`: na conversa, a reação curta do tutor ao conteúdo (em inglês). */
-  | { tipo: 'adequada'; reconhecido: string; observacao?: string }
+  /**
+   * `observacao`: na conversa, a reação curta do tutor ao conteúdo, no idioma
+   * de `idiomasDaConversa.resposta`; `traducaoDaObservacao`, a mesma no outro
+   * idioma, para a legenda.
+   */
+  | { tipo: 'adequada'; reconhecido: string; observacao?: string; traducaoDaObservacao?: string }
   | {
       tipo: 'erro'
       reconhecido: string
@@ -171,7 +184,15 @@ export type Acao =
   /** Dar o modelo em inglês, verificar o sentido e pedir repetição. */
   | { tipo: 'modelar'; item: Item; modelo: string }
   /** `deCara`: acertou na primeira tentativa, sem erro nem pedido de ajuda — numa repetição o `resultado` não diz isso. */
-  | { tipo: 'confirmar_acerto'; item: Item; reconhecido: string; resultado: Resultado; deCara: boolean; observacao?: string }
+  | {
+      tipo: 'confirmar_acerto'
+      item: Item
+      reconhecido: string
+      resultado: Resultado
+      deCara: boolean
+      observacao?: string
+      traducaoDaObservacao?: string
+    }
   /** Ajuda de nível 1–3 e, em seguida, pedir a frase INTEIRA de novo (R08). */
   | { tipo: 'ajudar'; item: Item; nivel: NivelAjuda; conteudo: string; acertoParcial?: string }
   | { tipo: 'confirmar_audio'; item: Item; reconhecido?: string }

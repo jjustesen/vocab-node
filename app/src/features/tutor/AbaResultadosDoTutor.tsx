@@ -1,5 +1,5 @@
 import { useAlunos } from '@/features/alunos/api'
-import type { Professor, TutorAcesso } from '@/types/db'
+import type { Professor } from '@/types/db'
 import { emReais, useSessoesDoMes, useTodasAsLicoes } from './api'
 import { SessaoNaLista } from './SessaoNaLista'
 
@@ -11,7 +11,7 @@ const RECENTES = 12
  * professor ("Experimentar como aluno") entram no custo, mas à parte: não são
  * resultado de ninguém.
  */
-export function AbaResultadosDoTutor({ professor, acesso }: { professor: Professor; acesso: TutorAcesso }) {
+export function AbaResultadosDoTutor({ professor }: { professor: Professor }) {
   const { data: alunos } = useAlunos('ativo')
   const { data: licoes } = useTodasAsLicoes()
   const { data: sessoes } = useSessoesDoMes()
@@ -21,7 +21,7 @@ export function AbaResultadosDoTutor({ professor, acesso }: { professor: Profess
   const dosAlunos = (sessoes ?? []).filter((s) => !s.teste)
   const testes = (sessoes ?? []).filter((s) => s.teste)
   const custo = (lista: typeof dosAlunos) => lista.reduce((total, s) => total + s.custo_usd, 0)
-  const limite = Math.min(professor.tutor_sessoes_mes, acesso.max_sessoes_mes)
+  const limite = professor.tutor_sessoes_mes
 
   return (
     <>

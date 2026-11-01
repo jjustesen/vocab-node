@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { iniciar, receber } from '../src/controlador.ts'
-import { falaDaAcao, textoDaFala, type Fala } from '../src/falas.ts'
+import { ehDaConversa, falaDaAcao, legendaDaFala, textoDaFala, type Fala } from '../src/falas.ts'
 import { contextoDoTurno, paraAvaliacao } from '../src/turno.ts'
 import { validarRoteiro } from '../src/validacao.ts'
 import type { Acao, Avaliacao, Resumo, Roteiro, Sessao } from '../src/tipos.ts'
@@ -82,6 +82,8 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
 
   // O que o palco mostra além da frase.
   const [legenda, setLegenda] = useState('')
+  /** Na conversa a legenda cresce: quem está começando lê enquanto ouve. */
+  const [legendaGrande, setLegendaGrande] = useState(false)
   const [tentativa, setTentativa] = useState<Tentativa | null>(null)
   const [pergunta, setPergunta] = useState<PerguntaDoTutor | null>(null)
 
@@ -254,7 +256,9 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
       aplicarNoPalco(acao)
       // Fala vazia (a lição sem elogio): nada a dizer nem a anotar.
       if (!texto) continue
-      setLegenda(texto)
+      const daConversa = ehDaConversa(acao)
+      setLegenda(daConversa ? legendaDaFala(falas[i], s.roteiro.idiomasDaConversa?.legenda ?? 'en') : texto)
+      setLegendaGrande(daConversa)
       const voz = vozesDoTurno[i]
       const linha = anotar({ quem: 'tutor', texto, detalhe: voz && (voz.origem === 'gravada' ? 'voz pré-gravada' : 'voz em stream…') })
       if (voz?.origem === 'stream') {
@@ -566,7 +570,11 @@ export function AulaDoTutor({ roteiro, modo, opcoesIniciais, aoComecar, aoTermin
       </main>
 
       {/* A fala do tutor como legenda — o "balão" de chat sai de cena. */}
-      <div className="flex min-h-14 items-center justify-center gap-2.5 px-2 text-center text-[15px]">
+      <div
+        className={`flex min-h-14 items-center justify-center gap-2.5 px-2 text-center ${
+          legendaGrande && status !== 'fim' ? 'text-[22px] leading-snug font-semibold' : 'text-[15px]'
+        }`}
+      >
         <Onda ativa={status === 'falando'} />
         <span>{status === 'inicio' || status === 'pausado' ? '' : legenda}</span>
       </div>

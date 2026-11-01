@@ -3,15 +3,13 @@ import { Loader2 } from 'lucide-react'
 import { Chave } from '@/components/Interruptor'
 import { useAlunos } from '@/features/alunos/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
-import type { TutorAcesso } from '@/types/db'
 import { formatarCusto, useAlternarTutor, useLiberacoesTutor, useSessoesDoMes } from './api'
 
 /**
- * Quem tem o tutor: todos os alunos ativos, cada um com a chave. O limite do
- * beta é o trigger `conferir_tutor_do_aluno` quem segura; aqui a chave só fica
- * desligada quando não cabe mais ninguém.
+ * Quem tem o tutor: todos os alunos ativos, cada um com a chave. Não há limite
+ * de alunos (0028): o que segura o uso são as sessões por mês do professor.
  */
-export function AbaAlunosDoTutor({ acesso }: { acesso: TutorAcesso }) {
+export function AbaAlunosDoTutor() {
   const { data: alunos, isLoading } = useAlunos('ativo')
   const { data: liberacoes } = useLiberacoesTutor()
   const { data: sessoes } = useSessoesDoMes()
@@ -29,9 +27,7 @@ export function AbaAlunosDoTutor({ acesso }: { acesso: TutorAcesso }) {
     <>
       <h2 className="mt-8 text-xs font-extrabold uppercase tracking-wide text-neutral-500">
         Alunos com tutor{' '}
-        <span className="text-neutral-400">
-          · {comTutor} de {acesso.max_alunos} no beta
-        </span>
+        <span className="text-neutral-400">· {comTutor}</span>
       </h2>
 
       {alternar.isError && (
@@ -52,7 +48,6 @@ export function AbaAlunosDoTutor({ acesso }: { acesso: TutorAcesso }) {
           {alunos.map((aluno) => {
             const nLicoes = liberacoes?.get(aluno.id)?.size ?? 0
             const uso = porAluno.get(aluno.id)
-            const cheio = !aluno.tutor_ativo && comTutor >= acesso.max_alunos
             return (
               <li key={aluno.id} className="flex items-center gap-3 px-5 py-3.5">
                 {/* A chave fica FORA do link: clicar nela liga o tutor, não abre a ficha. */}
@@ -76,7 +71,6 @@ export function AbaAlunosDoTutor({ acesso }: { acesso: TutorAcesso }) {
                 <Chave
                   rotulo={`Tutor de ${aluno.nome}`}
                   ligado={aluno.tutor_ativo}
-                  desabilitado={cheio}
                   aoMudar={(ligado) => alternar.mutate({ alunoId: aluno.id, ligado })}
                 />
               </li>

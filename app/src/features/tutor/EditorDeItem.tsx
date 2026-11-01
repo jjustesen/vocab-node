@@ -230,6 +230,12 @@ export function EditorDeItem({
                 aoMudar={(v) => mudar({ pergunta: v })}
                 ingles
               />
+              <Campo
+                rotulo="Pergunta em português (legenda)"
+                ajuda="Aparece na legenda quando a conversa está com legenda em português. O tutor continua perguntando em inglês."
+                valor={item.traducaoDaPergunta}
+                aoMudar={(v) => mudar({ traducaoDaPergunta: v })}
+              />
               <Area
                 rotulo="O que conta como resposta"
                 ajuda='É o que a IA usa para aceitar ou não. Diga o que precisa aparecer ("diz uma comida usando I like ou I don&apos;t like"). Erros fora disso não impedem a resposta de valer.'

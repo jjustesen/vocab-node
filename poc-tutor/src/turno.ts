@@ -32,6 +32,10 @@ export function contextoDoTurno(s: Sessao) {
     erros_previstos: item.errosPrevistos ?? [],
     // Escada só existe para o item que a tem, e nunca dentro de outra escada.
     apoio_disponivel: Boolean(item.apoio) && !s.suspenso && t.origem !== 'apoio',
+    // Com a 2ª ajuda do roteiro, a segunda tentativa não precisa que o Gemini escreva a pista.
+    tem_segunda_ajuda: Boolean(item.ajudas?.[1]?.trim()),
+    // Na conversa, em que idioma o tutor reage ao que o aluno contou.
+    ...(t.origem === 'conversa' ? { idioma_da_reacao: s.roteiro.idiomasDaConversa?.resposta ?? 'en' } : {}),
   }
 }
 
@@ -47,6 +51,7 @@ export type RespostaDoAvaliador = {
         acerto_parcial?: string
         resposta_duvida?: string
         reacao?: string
+        reacao_traducao?: string
         ajuda?: string
         pista?: string
       }
@@ -78,7 +83,7 @@ export function paraAvaliacao(r: RespostaDoAvaliador, s: Sessao): Avaliacao {
     case 'audio_incerto':
       return { tipo: 'audio_incerto', reconhecido: ou(reconhecido) }
     case 'adequada':
-      return { tipo: 'adequada', reconhecido, observacao: ou(a.reacao) }
+      return { tipo: 'adequada', reconhecido, observacao: ou(a.reacao), traducaoDaObservacao: ou(a.reacao_traducao) }
     case 'erro':
       return {
         tipo: 'erro',

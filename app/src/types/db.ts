@@ -37,7 +37,7 @@ export type Professor = {
   /** Preferências do tutor (0024): valem para todos os alunos do professor. */
   tutor_voz_natural: boolean
   tutor_escuta_automatica: boolean
-  /** Sessões por aluno por mês; a função usa o menor entre este e `TutorAcesso.max_sessoes_mes`. */
+  /** Sessões por aluno por mês (1–200): a única trava de uso do tutor (0028). */
   tutor_sessoes_mes: number
   criado_em: string
 }
@@ -66,7 +66,7 @@ export type Aluno = {
   horario: string | null
   observacoes: string | null
   status: AlunoStatus
-  /** O aluno vê o menu Tutor (0024). Só liga com `tutor_acesso` e dentro do `max_alunos` — o trigger confere. */
+  /** O aluno vê o menu Tutor (0024). Só liga com `tutor_acesso`, sem limite de alunos (0028) — o trigger confere. */
   tutor_ativo: boolean
   criado_em: string
 }
@@ -379,7 +379,9 @@ export type Resposta = {
 /** Beta fechado do tutor (0024): só existe a linha de quem foi liberado à mão. O professor só lê. */
 export type TutorAcesso = {
   professor_id: string
+  /** Sem uso desde 0028: não há mais limite de alunos nem teto do beta para as sessões. */
   max_alunos: number
+  /** Sem uso desde 0028: vale só o `tutor_sessoes_mes` do professor. */
   max_sessoes_mes: number
   observacao: string | null
   liberado_em: string

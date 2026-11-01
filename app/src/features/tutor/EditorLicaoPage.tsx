@@ -409,6 +409,24 @@ export function EditorLicaoPage() {
 
         <h2 className="pt-4 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Depois dos exercícios</h2>
         <Secao titulo="Conversa" resumo={`${r.conversa.length} perguntas sobre a vida do aluno, no fim da aula`}>
+          <div className="mb-3 flex flex-wrap gap-x-5 gap-y-2 rounded-2xl bg-neutral-50 px-3 py-2.5 text-sm">
+            <EscolhaDeIdioma
+              rotulo="O tutor reage em"
+              valor={r.idiomasDaConversa?.resposta ?? 'en'}
+              desativado={somenteLeitura}
+              aoMudar={(resposta) => mudar((n) => void (n.idiomasDaConversa = { legenda: n.idiomasDaConversa?.legenda ?? 'en', resposta }))}
+            />
+            <EscolhaDeIdioma
+              rotulo="Legenda em"
+              valor={r.idiomasDaConversa?.legenda ?? 'en'}
+              desativado={somenteLeitura}
+              aoMudar={(legenda) => mudar((n) => void (n.idiomasDaConversa = { resposta: n.idiomasDaConversa?.resposta ?? 'en', legenda }))}
+            />
+            <p className="w-full text-xs text-neutral-500">
+              A pergunta é sempre feita em inglês. Para quem está começando, português nos dois ajuda; a legenda da conversa
+              aparece maior.
+            </p>
+          </div>
           <ul className="space-y-2">
             {r.conversa.map((item, ii) => (
               <EditorDeItem
@@ -666,6 +684,35 @@ function AdicionarRevisao({ habilidades, aoEscolher }: { habilidades: string[]; 
             {h.replaceAll('_', ' ')}
           </option>
         ))}
+      </select>
+    </label>
+  )
+}
+
+type Idioma = 'pt' | 'en'
+
+function EscolhaDeIdioma({
+  rotulo,
+  valor,
+  desativado,
+  aoMudar,
+}: {
+  rotulo: string
+  valor: Idioma
+  desativado: boolean
+  aoMudar: (v: Idioma) => void
+}) {
+  return (
+    <label className="inline-flex items-center gap-2 font-bold text-neutral-700">
+      {rotulo}
+      <select
+        value={valor}
+        disabled={desativado}
+        onChange={(e) => aoMudar(e.target.value as Idioma)}
+        className="rounded-full border border-neutral-300 bg-white px-3 py-1 text-sm font-medium"
+      >
+        <option value="en">inglês</option>
+        <option value="pt">português</option>
       </select>
     </label>
   )

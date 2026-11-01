@@ -17,17 +17,32 @@ import type { Acao, Contexto, Item, Roteiro, Sessao } from './tipos.ts'
  */
 
 export type Idioma = 'pt' | 'en'
-export type Parte = { idioma: Idioma; texto: string }
+/**
+ * `traducao`: o mesmo trecho no OUTRO idioma, só para a legenda da conversa
+ * (`Roteiro.idiomasDaConversa`). Não é lida nem entra na chave da gravação.
+ */
+export type Parte = { idioma: Idioma; texto: string; traducao?: string }
 export type Fala = Parte[]
 
-const pt = (texto: string): Parte => ({ idioma: 'pt', texto })
+const pt = (texto: string, traducao?: string): Parte => ({ idioma: 'pt', texto, ...(traducao ? { traducao } : {}) })
 /** Fecha a frase com ponto, sem dobrar a pontuação que ela já tem ("passado?"). */
 const comPonto = (t: string) => (/[.?!)]$/.test(t.trim()) ? t.trim() : `${t.trim()}.`)
-const en = (texto: string): Parte => ({ idioma: 'en', texto })
+const en = (texto: string, traducao?: string): Parte => ({ idioma: 'en', texto, ...(traducao ? { traducao } : {}) })
+const naLingua = (idioma: Idioma, texto: string, traducao?: string) => (idioma === 'pt' ? pt(texto, traducao) : en(texto, traducao))
 
 /** A fala inteira como texto, para mostrar na tela. */
 export function textoDaFala(fala: Fala): string {
   return fala.map((p) => p.texto).join(' ')
+}
+
+/** A legenda num idioma só: cada trecho no outro idioma troca pela tradução, quando tem. */
+export function legendaDaFala(fala: Fala, idioma: Idioma): string {
+  return fala.map((p) => (p.idioma !== idioma && p.traducao ? p.traducao : p.texto)).join(' ')
+}
+
+/** As falas da etapa de conversa: o anúncio e tudo o que é sobre um item de conversa. */
+export function ehDaConversa(a: Acao): boolean {
+  return a.tipo === 'iniciar_conversa' || ('item' in a && a.item.tipo === 'conversa')
 }
 
 export function falaDaAcao(a: Acao, s: Sessao): Fala {
@@ -47,8 +62,12 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
       ]
 
     case 'confirmar_acerto': {
-      // Na conversa, a reação ao CONTEÚDO vale mais que um "muito bem".
-      if (a.item.tipo === 'conversa') return [en(a.observacao ?? 'Nice!')]
+      // Na conversa, a reação ao CONTEÚDO vale mais que um "muito bem" — no idioma que a lição escolheu.
+      if (a.item.tipo === 'conversa') {
+        const idioma = s.roteiro.idiomasDaConversa?.resposta ?? 'en'
+        if (a.observacao) return [naLingua(idioma, a.observacao, a.traducaoDaObservacao)]
+        return [idioma === 'pt' ? pt('Legal!', 'Nice!') : en('Nice!', 'Legal!')]
+      }
       // Na modelagem a frase acabou de ser apresentada: repeti-la é o exercício, e "agora sim" soaria como correção.
       // Na repetição também, quando sai de cara: o resultado é sempre "com modelo", mas não houve correção nenhuma.
       const repetiuDeCara = a.item.tipo === 'repeticao' && a.deCara
@@ -77,7 +96,7 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
       } else {
         partes.push(pt(a.conteudo))
       }
-      partes.push(pt(a.item.tipo === 'conversa' ? 'Tente responder de novo.' : 'Agora diga a frase inteira.'))
+      partes.push(a.item.tipo === 'conversa' ? pt('Tente responder de novo.', 'Try answering again.') : pt('Agora diga a frase inteira.'))
       return partes
     }
 
@@ -100,7 +119,12 @@ export function falaDaAcao(a: Acao, s: Sessao): Fala {
       return [pt('Tudo bem. A frase é:'), en(a.modelo), pt('Vamos voltar a ela depois.')]
 
     case 'iniciar_conversa':
-      return [pt('Ótimo treino! Agora vamos conversar um pouco. Responda em inglês, com a sua realidade.')]
+      return [
+        pt(
+          'Ótimo treino! Agora vamos conversar um pouco. Responda em inglês, com a sua realidade.',
+          "Great practice! Now let's talk a little. Answer in English, about your own life.",
+        ),
+      ]
 
     case 'encerrar':
       return encerramento(a.resumo, s.roteiro)
@@ -139,7 +163,7 @@ function pedido(item: Item, contexto: Contexto, s: Sessao): Fala {
         pt('Repita a frase.'),
       ]
     case 'conversa':
-      return [...antes, en(item.pergunta ?? '')]
+      return [...antes, en(item.pergunta ?? '', item.traducaoDaPergunta)]
   }
 }
 
@@ -161,7 +185,7 @@ function retomada(item: Item, s: Sessao): Fala {
   if (item.tipo === 'transformacao') return transformacao(item)
   if (item.tipo === 'construcao') return [pt(`Diga em inglês: ${comPonto(item.solicitacao ?? '')}`)]
   if (item.tipo === 'repeticao' || item.tipo === 'modelagem') return [pt('Repita comigo:'), en(item.modelo ?? '')]
-  return [en(item.pergunta ?? '')]
+  return [en(item.pergunta ?? '', item.traducaoDaPergunta)]
 }
 
 function jaHouveSubstituicao(s: Sessao): boolean {

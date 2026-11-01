@@ -74,9 +74,9 @@ export function TutorPage() {
       </div>
 
       {aba === 'licoes' && <AbaLicoes />}
-      {aba === 'alunos' && <AbaAlunosDoTutor acesso={acesso} />}
-      {aba === 'resultados' && <AbaResultadosDoTutor professor={professor} acesso={acesso} />}
-      {aba === 'preferencias' && <AbaPreferenciasDoTutor professor={professor} acesso={acesso} />}
+      {aba === 'alunos' && <AbaAlunosDoTutor />}
+      {aba === 'resultados' && <AbaResultadosDoTutor professor={professor} />}
+      {aba === 'preferencias' && <AbaPreferenciasDoTutor professor={professor} />}
     </div>
   )
 }

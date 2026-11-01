@@ -91,7 +91,7 @@ export function receber(anterior: Sessao, avaliacao: Avaliacao): { sessao: Sessa
 
   switch (avaliacao.tipo) {
     case 'adequada':
-      aceitar(s, avaliacao.reconhecido, acoes, avaliacao.observacao)
+      aceitar(s, avaliacao.reconhecido, acoes, avaliacao.observacao, avaliacao.traducaoDaObservacao)
       break
     case 'erro':
       errar(s, avaliacao, acoes)
@@ -173,7 +173,7 @@ export function memoria(s: Sessao) {
 
 // ── Turnos ───────────────────────────────────────────────────────────────────
 
-function aceitar(s: Sessao, reconhecido: string, acoes: Acao[], observacao?: string) {
+function aceitar(s: Sessao, reconhecido: string, acoes: Acao[], observacao?: string, traducaoDaObservacao?: string) {
   const t = s.atual!
   const resultado = resultadoDe(t)
   concluir(s, t, resultado, reconhecido)
@@ -207,7 +207,7 @@ function aceitar(s: Sessao, reconhecido: string, acoes: Acao[], observacao?: str
     t.item.id,
   )
   const deCara = t.tentativas === 0 && t.ultimaAjuda === undefined
-  acoes.push({ tipo: 'confirmar_acerto', item: t.item, reconhecido, resultado, deCara, observacao })
+  acoes.push({ tipo: 'confirmar_acerto', item: t.item, reconhecido, resultado, deCara, observacao, traducaoDaObservacao })
   s.atual = null
   avancar(s, acoes)
 }

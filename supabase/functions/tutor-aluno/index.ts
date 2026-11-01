@@ -177,7 +177,8 @@ async function comoAluno(db: Db, userId: string): Promise<Contexto | Response> {
     return respostaErro('O tutor não está ligado para você. Fale com seu professor.', 403)
   }
 
-  const limite = Math.min(professor.tutor_sessoes_mes, acesso.max_sessoes_mes)
+  // A única trava é a do professor: sessões por aluno por mês (0028).
+  const limite = professor.tutor_sessoes_mes
   return { db, alunoId: conta.aluno_id as string, professorId: conta.professor_id as string, teste: false, limite, professor }
 }
 

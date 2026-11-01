@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { iniciar, receber } from '../src/controlador.ts'
-import { falaDaAcao, textoDaFala } from '../src/falas.ts'
+import { ehDaConversa, falaDaAcao, legendaDaFala, textoDaFala } from '../src/falas.ts'
 import { carregarRoteiro } from '../src/roteiro.ts'
 import { contextoDoTurno, paraAvaliacao } from '../src/turno.ts'
 import type { Acao, Item, Sessao } from '../src/tipos.ts'
@@ -104,6 +104,26 @@ describe('falas', () => {
     const errou = receber(iniciar(repeticao()).sessao, { tipo: 'erro', reconhecido: 'It is sunny.', habilidade: primeiro.habilidades[0], problema: 'p' })
     const r = receber(errou.sessao, { tipo: 'adequada', reconhecido: 'It was sunny this morning.' })
     assert.equal(textoDaFala(falaDaAcao(r.acoes[0], r.sessao)), 'Isso, agora sim.')
+  })
+
+  it('na conversa em português, a reação sai na voz em português e a legenda escolhe o idioma', () => {
+    const emPortugues = { ...roteiro, idiomasDaConversa: { resposta: 'pt' as const, legenda: 'pt' as const } }
+    const s = ate(iniciar(emPortugues).sessao, 'conversa.cidade')
+    assert.equal(contextoDoTurno(s).idioma_da_reacao, 'pt')
+    const r = receber(s, { tipo: 'adequada', reconhecido: 'It was rainy.', observacao: 'Chuva! Espero que tenha ficado seco.', traducaoDaObservacao: 'Rainy! I hope you stayed dry.' })
+    const fala = falaDaAcao(r.acoes[0], r.sessao)
+    assert.equal(fala[0].idioma, 'pt')
+    assert.ok(ehDaConversa(r.acoes[0]))
+    assert.equal(legendaDaFala(fala, 'pt'), 'Chuva! Espero que tenha ficado seco.')
+    assert.equal(legendaDaFala(fala, 'en'), 'Rainy! I hope you stayed dry.')
+    // A pergunta é sempre dita em inglês; a legenda usa a tradução quando a lição tem.
+    const pergunta = [{ idioma: 'en' as const, texto: 'Where were you?', traducao: 'Onde você estava?' }]
+    assert.equal(legendaDaFala(pergunta, 'pt'), 'Onde você estava?')
+    assert.equal(legendaDaFala([{ idioma: 'en', texto: 'Where were you?' }], 'pt'), 'Where were you?')
+  })
+
+  it('fora da conversa, o contexto não leva idioma de reação', () => {
+    assert.equal('idioma_da_reacao' in contextoDoTurno(iniciar(roteiro).sessao), false)
   })
 
   it('na conversa, o acerto vira a reação ao conteúdo, em inglês', () => {

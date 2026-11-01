@@ -18,6 +18,7 @@
 // Acerto e erro comuns — a maioria dos turnos — saem só com transcrição + Jev.
 
 import { type Custo, ErroDePedido, TIMEOUT_MS } from './comum.ts'
+import { SUFIXO_CACHE } from './precos.ts'
 
 /** ~30s de webm/opus ficam bem abaixo disto; acima, algo está errado. */
 const AUDIO_MAX_BASE64 = 4 * 1024 * 1024
@@ -46,6 +47,13 @@ export type PedidoDeAvaliacao = {
 export const MODELO_TRANSCRICAO = Deno.env.get('TUTOR_MODELO_TRANSCRICAO') ?? 'gemini-3.5-flash-lite'
 export const MODELOS_DE_TRANSCRICAO = ['gemini-3.5-flash-lite', 'gemini-3.6-flash']
 
+/**
+ * Para escrever frases curtas — a reação na conversa, a pista de um erro que o
+ * roteiro não previu — o Flash-Lite basta e custa ~60% menos. O Flash fica com
+ * o que pede julgamento: dúvida de gramática, Jev sem certeza, falta de base.
+ */
+const MODELO_LEVE = Deno.env.get('TUTOR_MODELO_LEVE') ?? 'gemini-3.5-flash-lite'
+
 type Transcricao = { texto: string; confianca: 'alta' | 'baixa' }
 
 type AvaliacaoGemini = {
@@ -56,6 +64,7 @@ type AvaliacaoGemini = {
   acerto_parcial?: string
   resposta_duvida?: string
   reacao?: string
+  reacao_traducao?: string
   ajuda?: string
 }
 
@@ -75,7 +84,7 @@ export async function avaliarTurno(chave: string, pedido: PedidoDeAvaliacao): Pr
   if (!pedido.audio && typeof pedido.texto !== 'string') throw new ErroDePedido('Mande áudio ou texto.')
   if (pedido.audio && pedido.audio.base64.length > AUDIO_MAX_BASE64) throw new ErroDePedido('Áudio longo demais.', 413)
 
-  const modelo = Deno.env.get('POC_TUTOR_MODELO') ?? Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.6-flash'
+  let modelo = Deno.env.get('POC_TUTOR_MODELO') ?? Deno.env.get('GEMINI_MODEL') ?? 'gemini-3.6-flash'
   const custos: Custo[] = []
   const tempos: Record<string, number> = {}
   const contexto = pedido.contexto
@@ -92,7 +101,7 @@ export async function avaliarTurno(chave: string, pedido: PedidoDeAvaliacao): Pr
       temperatura: 0,
     })
     transcricao = r.dados
-    custos.push({ servico: modeloTranscricao, ...r.uso })
+    custos.push(...custosDe(modeloTranscricao, r.uso))
     tempos.transcricaoMs = Date.now() - inicio
   } else {
     // Texto digitado: não há incerteza de reconhecimento.
@@ -106,7 +115,11 @@ export async function avaliarTurno(chave: string, pedido: PedidoDeAvaliacao): Pr
   }
 
   // ── 2. Jev: certo, errado, ou não é resposta ──────────────────────────────
+  // Depois do Jev, três saídas: ele mesmo decide (quase de graça), o modelo
+  // leve escreve uma frase curta (pista, reação), ou o Flash julga o que pede
+  // raciocínio (dúvida de gramática, Jev sem certeza, falta de base).
   let motivoGemini = 'Jev indisponível'
+  let leve = false
   const chaveJev = Deno.env.get('TYPESAFE_API_KEY')
   if (chaveJev) {
     try {
@@ -116,17 +129,24 @@ export async function avaliarTurno(chave: string, pedido: PedidoDeAvaliacao): Pr
       custos.push({ servico: 'jev', entrada: jev.uso.entrada, saida: 0 })
 
       const conversa = contexto.modo === 'conversa'
-      const apoio = contexto.apoio_disponivel === true
+      const erro = jev.classe === 'erro'
+      const nivelAjuda = Number(contexto.nivel_ajuda ?? 0)
+      // A escada só entra a partir do segundo erro: o primeiro quase sempre se
+      // resolve com uma pista, e decidir "falta a base" é o julgamento caro.
+      const apoio = contexto.apoio_disponivel === true && Number(contexto.tentativas_item ?? 0) > 0
+      // Depois da 2ª pista vem a frase inteira (nível 3), que não precisa de
+      // texto novo; e a 2ª pista pode ser a que o professor escreveu no roteiro.
+      const proximaAjudaPronta = nivelAjuda >= 2 || (nivelAjuda === 1 && contexto.tem_segunda_ajuda === true)
       if (jev.confianca < CONFIANCA_MINIMA_JEV) motivoGemini = `Jev sem certeza (${jev.classe}, ${jev.confianca})`
       else if (jev.classe === 'outro') motivoGemini = 'não é tentativa de resposta (dúvida ou pedido)'
-      else if (jev.classe === 'parte') motivoGemini = 'respondeu só à pergunta da pista'
-      else if (conversa) motivoGemini = 'conversa: reagir ao conteúdo'
-      else if (jev.classe === 'erro' && apoio) motivoGemini = 'erro com escada de apoio disponível'
-      else if (jev.classe === 'erro' && jev.habilidade === 'outra') motivoGemini = 'erro fora das habilidades do exercício'
-      // A pista do roteiro só serve na primeira tentativa e para o erro que ele
-      // previu. Fora disso, o Gemini escreve a pergunta para ESTE erro.
-      else if (jev.classe === 'erro' && Number(contexto.nivel_ajuda ?? 0) > 0) motivoGemini = 'segunda tentativa: pergunta para este erro'
-      else if (jev.classe === 'erro' && !erroPrevisto(contexto, jev.habilidade)) motivoGemini = 'erro não previsto: escrever a pergunta'
+      else if (erro && apoio) motivoGemini = 'erro repetido com escada de apoio disponível'
+      else if (jev.classe === 'parte') [motivoGemini, leve] = ['respondeu só à pergunta da pista', true]
+      else if (conversa) [motivoGemini, leve] = ['conversa: reagir ao conteúdo', true]
+      else if (erro && jev.habilidade === 'outra') [motivoGemini, leve] = ['erro fora das habilidades do exercício', true]
+      // A pista do roteiro serve na primeira tentativa, para o erro que ele
+      // previu; na segunda, a 2ª ajuda do item. Sem elas, o modelo leve escreve.
+      else if (erro && nivelAjuda > 0 && !proximaAjudaPronta) [motivoGemini, leve] = ['segunda tentativa: pergunta para este erro', true]
+      else if (erro && nivelAjuda === 0 && !erroPrevisto(contexto, jev.habilidade)) [motivoGemini, leve] = ['erro não previsto: escrever a pergunta', true]
       else {
         const avaliacao: AvaliacaoGemini =
           jev.classe === 'adequada'
@@ -142,20 +162,23 @@ export async function avaliarTurno(chave: string, pedido: PedidoDeAvaliacao): Pr
   }
 
   // ── 3. Gemini: quando é preciso julgar mais fino ou escrever algo ─────────
+  // A instrução (fixa por lição) vem primeiro e o turno por último: é esse
+  // começo repetido que o cache implícito do Gemini cobra a 10%.
   const inicio = Date.now()
+  if (leve) modelo = MODELO_LEVE
   const r = await chamarGemini<AvaliacaoGemini>(chave, modelo, {
     sistema: instrucaoDeAvaliacao(pedido.notasDoMaterial),
     parts: [
       {
         text:
-          `CONTEXTO DO EXERCÍCIO (JSON):\n${JSON.stringify(contexto, null, 2)}\n\n` +
+          `CONTEXTO DO EXERCÍCIO (JSON):\n${JSON.stringify(contexto)}\n\n` +
           `RESPOSTA DO ALUNO (transcrita):\n"""${transcricao.texto}"""`,
       },
     ],
     schema: SCHEMA_AVALIACAO,
     temperatura: 0.2,
   })
-  custos.push({ servico: modelo, ...r.uso })
+  custos.push(...custosDe(modelo, r.uso))
   tempos.avaliacaoMs = Date.now() - inicio
   return { transcricao, avaliacao: r.dados, decidiuPor: 'gemini', motivoGemini, custos, tempos }
 }
@@ -252,7 +275,14 @@ async function classificarComJev(chave: string, contexto: Record<string, unknown
 
 // ── Gemini (texto) ───────────────────────────────────────────────────────────
 
-type Uso = { entrada: number; saida: number }
+type Uso = { entrada: number; saida: number; emCache: number }
+
+/** O uso de uma chamada como custos: a entrada cheia e, se houver, a parte em cache. */
+function custosDe(servico: string, uso: Uso): Custo[] {
+  const custos = [{ servico, entrada: uso.entrada, saida: uso.saida }]
+  if (uso.emCache > 0) custos.push({ servico: `${servico}${SUFIXO_CACHE}`, entrada: uso.emCache, saida: 0 })
+  return custos
+}
 
 async function chamarGemini<T>(
   chave: string,
@@ -286,9 +316,16 @@ async function chamarGemini<T>(
     const json = await resposta.json()
     const texto = json.candidates?.[0]?.content?.parts?.find((p: { text?: string }) => typeof p.text === 'string')?.text
     if (typeof texto !== 'string') throw new Error('Gemini não devolveu conteúdo.')
-    // `thoughtsTokenCount` é cobrado como saída nos modelos que "pensam".
+    // `thoughtsTokenCount` é cobrado como saída nos modelos que "pensam". O que
+    // veio do cache implícito (o começo repetido do prompt) sai da entrada e é
+    // cobrado à parte, bem mais barato — ver SUFIXO_CACHE em precos.ts.
     const m = json.usageMetadata ?? {}
-    const uso = { entrada: m.promptTokenCount ?? 0, saida: (m.candidatesTokenCount ?? 0) + (m.thoughtsTokenCount ?? 0) }
+    const emCache = m.cachedContentTokenCount ?? 0
+    const uso = {
+      entrada: (m.promptTokenCount ?? 0) - emCache,
+      saida: (m.candidatesTokenCount ?? 0) + (m.thoughtsTokenCount ?? 0),
+      emCache,
+    }
     return { dados: JSON.parse(texto) as T, uso }
   } catch (e) {
     if (controlador.signal.aborted) throw new Error(`Gemini não respondeu em ${TIMEOUT_MS / 1000}s.`)
@@ -336,7 +373,7 @@ TIPOS
 - Substituição com pista em português ("idioma_da_pista": "pt", como "alemão"): o aluno põe o equivalente EM INGLÊS na última frase aceita ("I speak German."). Dizer a palavra em português na frase não realiza o pedido.
 - Transformação: o tutor disse "frase_para_transformar" e pediu a "instrucao" (passar para a negativa, a interrogativa, o passado, a afirmativa…). Adequada se o aluno disse ESSA frase transformada, preservando o resto dela. Repetir a frase sem transformar não realiza o pedido.
 - Conversa: qualquer resposta pertinente e plausível à pergunta, mesmo diferente dos exemplos (se o exemplo diz sunny e o aluno diz rainy, vale). Exija só a estrutura-alvo compreensível; erros secundários não impedem.
-- Na conversa, preencha "reacao": uma frase curta e natural, EM INGLÊS, reagindo ao conteúdo ("Rainy and cold! I hope you stayed warm."). Sem fazer nova pergunta.
+- Na conversa, preencha "reacao": uma frase curta e natural reagindo ao conteúdo, sem fazer nova pergunta, no idioma de "idioma_da_reacao" ("en": "Rainy and cold! I hope you stayed warm."; "pt": "Chuva e frio! Espero que tenha ficado aquecido."). Sem "idioma_da_reacao", em inglês. Preencha também "reacao_traducao": a mesma frase no outro idioma, para a legenda.
 
 "erro"
 - A resposta não realiza o pedido, ou tem erro na estrutura-alvo.
@@ -382,10 +419,11 @@ const SCHEMA_AVALIACAO = {
     acerto_parcial: { type: 'STRING' },
     resposta_duvida: { type: 'STRING' },
     reacao: { type: 'STRING' },
+    reacao_traducao: { type: 'STRING' },
     ajuda: { type: 'STRING' },
   },
   required: ['tipo'],
   // Ordem explícita: sem ela o modelo chegou a escrever a pista DENTRO de
   // resposta_duvida, com o JSON quebrado. A pista vem logo depois do problema.
-  propertyOrdering: ['tipo', 'habilidade', 'problema', 'pista', 'acerto_parcial', 'ajuda', 'resposta_duvida', 'reacao'],
+  propertyOrdering: ['tipo', 'habilidade', 'problema', 'pista', 'acerto_parcial', 'ajuda', 'resposta_duvida', 'reacao', 'reacao_traducao'],
 }

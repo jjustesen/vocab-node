@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 import { AudioLines, CalendarDays, ChevronRight, Ear } from 'lucide-react'
 import { Interruptor } from '@/components/Interruptor'
 import { useSalvarConfiguracoes } from '@/features/configuracoes/api'
-import type { Professor, TutorAcesso } from '@/types/db'
+import type { Professor } from '@/types/db'
 
 /** Como o tutor se comporta com todos os alunos do professor. */
-export function AbaPreferenciasDoTutor({ professor, acesso }: { professor: Professor; acesso: TutorAcesso }) {
+export function AbaPreferenciasDoTutor({ professor }: { professor: Professor }) {
   const salvar = useSalvarConfiguracoes()
   return (
     <>
@@ -32,11 +32,7 @@ export function AbaPreferenciasDoTutor({ professor, acesso }: { professor: Profe
           ligado={professor.tutor_escuta_automatica}
           aoMudar={(ligado) => salvar.mutate({ tutor_escuta_automatica: ligado })}
         />
-        <SessoesPorMes
-          valor={professor.tutor_sessoes_mes}
-          maximo={acesso.max_sessoes_mes}
-          aoMudar={(n) => salvar.mutate({ tutor_sessoes_mes: n })}
-        />
+        <SessoesPorMes valor={professor.tutor_sessoes_mes} aoMudar={(n) => salvar.mutate({ tutor_sessoes_mes: n })} />
       </div>
 
       {salvar.isError && (
@@ -48,14 +44,13 @@ export function AbaPreferenciasDoTutor({ professor, acesso }: { professor: Profe
   )
 }
 
-/** As opções do limite por aluno, cortadas no máximo do beta. */
-const OPCOES_SESSOES = [5, 10, 15, 20, 30, 40, 60]
+/** As opções do limite por aluno; o banco aceita de 1 a 200 (0024). */
+const OPCOES_SESSOES = [5, 10, 15, 20, 30, 40, 60, 80, 100, 150, 200]
 
-function SessoesPorMes({ valor, maximo, aoMudar }: { valor: number; maximo: number; aoMudar: (n: number) => void }) {
+/** A única trava do tutor (0028): quantas sessões cada aluno faz por mês. */
+function SessoesPorMes({ valor, aoMudar }: { valor: number; aoMudar: (n: number) => void }) {
   const id = useId()
-  const opcoes = [...new Set([...OPCOES_SESSOES.filter((n) => n <= maximo), Math.min(valor, maximo), maximo])].sort(
-    (a, b) => a - b,
-  )
+  const opcoes = [...new Set([...OPCOES_SESSOES, valor])].sort((a, b) => a - b)
   return (
     <div className="flex items-start gap-4 rounded-3xl bg-white p-5">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-violet-100 text-violet-700">
@@ -66,12 +61,12 @@ function SessoesPorMes({ valor, maximo, aoMudar }: { valor: number; maximo: numb
           Sessões por aluno por mês
         </label>
         <p className="mt-1 text-sm text-neutral-500">
-          Uma sessão é uma lição do começo ao fim. O beta permite até {maximo}.
+          Uma sessão é uma lição do começo ao fim. Ao chegar no limite, o aluno só volta a praticar no mês seguinte.
         </p>
       </div>
       <select
         id={id}
-        value={Math.min(valor, maximo)}
+        value={valor}
         onChange={(e) => aoMudar(Number(e.target.value))}
         className="mt-1 shrink-0 rounded-full border border-neutral-300 bg-white px-3 py-2 text-sm font-bold"
       >

@@ -22,9 +22,24 @@ const PRECOS: Record<string, { entrada: number; saida: number }> = {
 /** Serviço sem preço conhecido (modelo trocado por secret) cobra como o Flash: melhor sobrar que faltar. */
 const PRECO_DESCONHECIDO = PRECOS['gemini-3.6-flash']
 
+/**
+ * "gemini-3.6-flash:cache" é a entrada que o Gemini leu do cache implícito (o
+ * começo do prompt que se repete entre chamadas). Custa 10% da entrada normal.
+ */
+export const SUFIXO_CACHE = ':cache'
+const FATOR_CACHE = 0.1
+
+function precoDe(servico: string): { entrada: number; saida: number } {
+  if (servico.endsWith(SUFIXO_CACHE)) {
+    const base = PRECOS[servico.slice(0, -SUFIXO_CACHE.length)] ?? PRECO_DESCONHECIDO
+    return { entrada: base.entrada * FATOR_CACHE, saida: 0 }
+  }
+  return PRECOS[servico] ?? PRECO_DESCONHECIDO
+}
+
 export function custoEmUsd(custos: Custo[]): number {
   return custos.reduce((total, c) => {
-    const p = PRECOS[c.servico] ?? PRECO_DESCONHECIDO
+    const p = precoDe(c.servico)
     return total + (c.entrada * p.entrada + c.saida * p.saida) / 1_000_000
   }, 0)
 }

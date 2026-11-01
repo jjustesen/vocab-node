@@ -25,6 +25,7 @@ const ITEM = {
     modelo: STR,
     instrucao: STR,
     pergunta: STR,
+    traducaoDaPergunta: STR,
     criterio: STR,
     exemplos: LISTA,
     acompanhamentos: LISTA,
@@ -53,6 +54,7 @@ const ITEM = {
     'modelo',
     'instrucao',
     'pergunta',
+    'traducaoDaPergunta',
     'criterio',
     'exemplos',
     'acompanhamentos',
@@ -146,7 +148,7 @@ TIPOS DE ITEM (preencha só os campos do tipo; os outros ficam "" ou [])
 - "construcao": o tutor pede "solicitacao" (português, minúsculas, sem ponto final) e o aluno diz em inglês. "alvo" = a frase natural em inglês.
 - "substituicao": o tutor diz "pista" e o aluno transforma a última frase aceita. "idiomaDaPista": "pt" quando a pista é em português ("alemão", "não quero", "comeu?"), "en" quando é em inglês. "alvo" = a frase inteira transformada.
 - "transformacao": o tutor diz "modelo" (uma frase em inglês) e a "instrucao" ("Passe para a negativa", "Passe para a pergunta", "Passe para o passado", "Passe para a afirmativa"). "alvo" = a frase transformada.
-- "conversa": "pergunta" (inglês) sobre a vida do aluno; "criterio" (português) diz o que conta como resposta pertinente; "exemplos" (2–3 respostas em inglês); "acompanhamentos" (1–2 perguntas de seguimento). "alvo" = "".
+- "conversa": "pergunta" (inglês) sobre a vida do aluno; "traducaoDaPergunta" (a mesma pergunta em português, para a legenda de quem está começando); "criterio" (português) diz o que conta como resposta pertinente; "exemplos" (2–3 respostas em inglês); "acompanhamentos" (1–2 perguntas de seguimento). "alvo" = "".
 
 COMO LER UMA PÁGINA DE DRILLINGS
 - Cada seção ("Verbs practice", "Vocabulary", "Useful expressions", "Grammar", "Practice", "Change into …") vira um bloco, na ordem da página. "nome" = 1–2 palavras em português ("Verbos", "Vocabulário", "Expressões", "Gramática", "Negativa", "Passado").
@@ -218,6 +220,7 @@ type ItemIA = {
   modelo?: string
   instrucao?: string
   pergunta?: string
+  traducaoDaPergunta?: string
   criterio?: string
   exemplos?: string[]
   acompanhamentos?: string[]
@@ -253,6 +256,7 @@ type ItemDoRoteiro = {
   modelo?: string
   instrucao?: string
   pergunta?: string
+  traducaoDaPergunta?: string
   criterio?: string
   exemplos?: string[]
   acompanhamentos?: string[]
@@ -336,6 +340,7 @@ export function paraRoteiro(bruto: unknown, id: string) {
       ...(tipo === 'conversa'
         ? {
             ...so('pergunta', texto(i.pergunta)),
+            ...so('traducaoDaPergunta', texto(i.traducaoDaPergunta)),
             criterio: texto(i.criterio) || CRITERIO_PADRAO,
             ...soLista('exemplos', lista(i.exemplos)),
             ...soLista('acompanhamentos', lista(i.acompanhamentos)),

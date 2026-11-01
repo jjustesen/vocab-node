@@ -16,9 +16,9 @@ A tela da aula é a mesma do laboratório ([`poc-tutor/web/AulaDoTutor.tsx`](../
 | Regra | Onde é garantida |
 |---|---|
 | Só professor liberado vê o tutor | `tutor_acesso` sem policy de escrita: só o SQL Editor libera |
-| Até `max_alunos` com tutor ligado | trigger `conferir_tutor_do_aluno` em `alunos` |
+| Tutor ligado só para aluno de professor liberado — sem limite de alunos (0028) | trigger `conferir_tutor_do_aluno` em `alunos` |
 | Aluno só pratica com o tutor ligado e lição liberada | `tutor-aluno`, em toda chamada |
-| Sessões por mês: menor entre `professores.tutor_sessoes_mes` e `tutor_acesso.max_sessoes_mes` | `tutor-aluno`, ação `iniciar` (mês de America/Sao_Paulo) |
+| Sessões por aluno por mês: `professores.tutor_sessoes_mes`, escolhido pelo professor (1–200) | `tutor-aluno`, ação `iniciar` (mês de America/Sao_Paulo) |
 | Sessão vale 2 h e até US$ 0,50 | `tutor-aluno` (`DURACAO_MAX_MS`, `TETO_POR_SESSAO_USD`) |
 | Voz natural desligada = nada de Gemini TTS | `tutor-aluno` recusa `falar_stream` |
 | O prompt do avaliador vem do banco, não do navegador | `tutor-aluno` lê `notasParaAvaliador` do roteiro e confere o `itemId` |

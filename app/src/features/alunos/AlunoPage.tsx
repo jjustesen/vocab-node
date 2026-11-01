@@ -430,7 +430,7 @@ export function AlunoPage() {
 
       {aba === 'Pagamentos' && <AbaPagamentos alunoId={aluno.id} valorMensal={aluno.valor_mensal} />}
 
-      {aba === 'Tutor' && acessoTutor && <AbaTutorAluno aluno={aluno} acesso={acessoTutor} temConta={Boolean(conta)} />}
+      {aba === 'Tutor' && acessoTutor && <AbaTutorAluno aluno={aluno} temConta={Boolean(conta)} />}
     </div>
   )
 }

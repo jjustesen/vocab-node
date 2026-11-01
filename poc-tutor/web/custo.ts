@@ -35,7 +35,15 @@ export function somar(gasto: Gasto, custos: Custo[] = []): Gasto {
   return novo
 }
 
+/** "gemini-3.6-flash:cache": a entrada lida do cache implícito, a 10% do preço (espelho de precos.ts). */
+const SUFIXO_CACHE = ':cache'
+const FATOR_CACHE = 0.1
+
 export function precoDe(servico: string, entrada: number, saida: number): number {
+  if (servico.endsWith(SUFIXO_CACHE)) {
+    const base = PRECOS[servico.slice(0, -SUFIXO_CACHE.length)]
+    return base ? (entrada * base.entrada * FATOR_CACHE) / 1_000_000 : 0
+  }
   const p = PRECOS[servico]
   return p ? (entrada * p.entrada + saida * p.saida) / 1_000_000 : 0
 }
@@ -71,6 +79,7 @@ export function custoPorServico(custos: Custo[] = []): string {
 }
 
 export function nomeDoServico(servico: string): string {
+  if (servico.endsWith(SUFIXO_CACHE)) return `${nomeDoServico(servico.slice(0, -SUFIXO_CACHE.length))} (cache)`
   return PRECOS[servico]?.nome ?? servico
 }
 

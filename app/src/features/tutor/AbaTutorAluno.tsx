@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Check, Loader2, Mic } from 'lucide-react'
 import { Chave } from '@/components/Interruptor'
 import { useProfessor } from '@/features/planos/api'
-import type { Aluno, TutorAcesso } from '@/types/db'
+import type { Aluno } from '@/types/db'
 import {
   inicioDoMesNoBrasil,
   useAlternarLicao,
@@ -18,7 +18,7 @@ import { SessaoNaLista } from './SessaoNaLista'
  * A aba Tutor da ficha do aluno: a chave do tutor DESTE aluno, quais lições
  * da biblioteca ele pratica e como foram as práticas.
  */
-export function AbaTutorAluno({ aluno, acesso, temConta }: { aluno: Aluno; acesso: TutorAcesso; temConta: boolean }) {
+export function AbaTutorAluno({ aluno, temConta }: { aluno: Aluno; temConta: boolean }) {
   const id = useId()
   const alternar = useAlternarTutor()
   const { data: licoes, isLoading: carregandoLicoes } = useLicoesTutor()
@@ -31,7 +31,8 @@ export function AbaTutorAluno({ aluno, acesso, temConta }: { aluno: Aluno; acess
   const tituloDe = new Map((licoes ?? []).map((l) => [l.id, l.titulo]))
   const inicioDoMes = inicioDoMesNoBrasil()
   const doMes = (sessoes ?? []).filter((s) => s.iniciada_em >= inicioDoMes).length
-  const limite = Math.min(professor?.tutor_sessoes_mes ?? acesso.max_sessoes_mes, acesso.max_sessoes_mes)
+  // A única trava do tutor: as sessões por mês que o professor escolheu (0028).
+  const limite = professor?.tutor_sessoes_mes ?? 20
 
   return (
     <div className="mt-5 space-y-6">
