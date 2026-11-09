@@ -13,13 +13,17 @@ import { useTurmasComMembros, type TurmaComMembros } from './api'
  * escolhida sai dos avulsos na hora de enviar — já vai pela turma.
  *
  * @param turmaInicial a turma cuja tela abriu o envio — já vem escolhida.
+ * @param turmasIniciais as que já recebem (o tutor abre o seletor com o estado atual).
  */
 export function useDestinos({
   turmaInicial,
+  turmasIniciais,
   alunosIniciais,
-}: { turmaInicial?: string; alunosIniciais?: string[] } = {}) {
+}: { turmaInicial?: string; turmasIniciais?: string[]; alunosIniciais?: string[] } = {}) {
   const { data: turmas } = useTurmasComMembros()
-  const [turmaIds, setTurmaIds] = useState<Set<string>>(() => new Set(turmaInicial ? [turmaInicial] : []))
+  const [turmaIds, setTurmaIds] = useState<Set<string>>(
+    () => new Set([...(turmaInicial ? [turmaInicial] : []), ...(turmasIniciais ?? [])]),
+  )
   const [avulsos, setAvulsos] = useState<Set<string>>(() => new Set(alunosIniciais))
 
   const escolhidas: TurmaComMembros[] = useMemo(

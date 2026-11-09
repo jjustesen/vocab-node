@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, Copy, Loader2, Play, Plus, Save, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, Copy, Loader2, Play, Plus, Save, Send, Trash2 } from 'lucide-react'
 import { BotaoApagar } from '@/components/BotaoApagar'
-import { Chave } from '@/components/Interruptor'
 import type { NivelCefr } from '@/types/db'
 import { avisosDoRoteiro, todosOsItens, validarRoteiro } from '../../../../poc-tutor/src/validacao.ts'
 import type { Item, Roteiro, TipoItem } from '../../../../poc-tutor/src/tipos.ts'
 import { useCopiarLicao, useExcluirLicao, useLicao, useSalvarLicao } from './api'
+import { LiberarLicaoModal } from './LiberarLicaoModal'
 import { type FalaFixa, useFalasDaLicao, useGeradorDeFala, useTocador } from './audiosDaLicao'
 import { Area, Campo, Linhas, Secao } from './campos'
 import { SomenteLeitura } from './edicao'
@@ -54,7 +54,8 @@ function itemVazio(r: Roteiro, prefixo: string, tipo: TipoItem): Item {
  * /tutor/licoes/:id — o editor da lição do tutor: tudo o que o tutor pede,
  * aceita, dica e corrige, mais as "regras para a IA" que o avaliador segue.
  * O rascunho fica em estado local até Salvar; `validarRoteiro` aponta o que
- * quebraria a aula (e impede publicar) e `avisosDoRoteiro` o que a deixaria pior.
+ * quebraria a aula (e impede liberar) e `avisosDoRoteiro` o que a deixaria pior.
+ * Publicar não é um passo à parte: a primeira liberação publica (0029).
  * Lição da biblioteca abre só para leitura.
  */
 export function EditorLicaoPage() {
@@ -68,14 +69,13 @@ export function EditorLicaoPage() {
   const gerador = useGeradorDeFala(id)
   const [rascunho, setRascunho] = useState<Roteiro | null>(null)
   const [nivel, setNivel] = useState<NivelCefr | null>(null)
-  const [publicada, setPublicada] = useState(false)
+  const [liberando, setLiberando] = useState(false)
 
   // Recomeça do salvo quando a lição chega ou é salva (o atualizado_em muda).
   useEffect(() => {
     if (!licao) return
     setRascunho(structuredClone(licao.roteiro))
     setNivel(licao.nivel_cefr)
-    setPublicada(licao.publicada)
   }, [licao?.id, licao?.atualizado_em]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const normalizado = useMemo(() => (rascunho ? normalizar(rascunho) : null), [rascunho])
@@ -125,7 +125,8 @@ export function EditorLicaoPage() {
   }
 
   const somenteLeitura = !licao.professor_id
-  const sujo = JSON.stringify(normalizado) !== salvoJson || nivel !== licao.nivel_cefr || publicada !== licao.publicada
+  const publicada = licao.publicada
+  const sujo = JSON.stringify(normalizado) !== salvoJson || nivel !== licao.nivel_cefr
   const audiosDe = (itemId: string): AudiosDoItem | undefined =>
     falas
       ? {
@@ -188,16 +189,10 @@ export function EditorLicaoPage() {
           </select>
         </label>
 
-        {!somenteLeitura && (
-          <label className="flex items-center gap-2 text-sm font-bold text-neutral-600">
-            <Chave
-              rotulo="Publicada"
-              ligado={publicada}
-              desabilitado={!publicada && problemas.length > 0}
-              aoMudar={setPublicada}
-            />
-            {publicada ? 'Publicada' : 'Rascunho'}
-          </label>
+        {!somenteLeitura && !publicada && (
+          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800" title="Só você vê. Ao liberar, ela é publicada.">
+            rascunho
+          </span>
         )}
 
         <span className="ml-auto flex flex-wrap items-center gap-2">
@@ -233,13 +228,24 @@ export function EditorLicaoPage() {
               />
             </>
           )}
+          <button
+            type="button"
+            onClick={() => setLiberando(true)}
+            disabled={sujo || problemas.length > 0}
+            title={sujo ? 'Salve antes de liberar' : problemas.length > 0 ? 'Corrija os problemas antes de liberar' : undefined}
+            className="inline-flex items-center gap-1 rounded-full bg-amber-300 px-5 py-2 text-sm font-extrabold text-neutral-900 disabled:opacity-40"
+          >
+            <Send className="h-4 w-4" /> Liberar
+          </button>
         </span>
       </div>
 
       {!somenteLeitura && (
         <p className="mt-2 text-[11px] text-neutral-400">
-          Nível: só organiza a lição na sua lista, não muda como a IA corrige. Publicada: só lição publicada pode ser liberada
-          para um aluno; em rascunho você ainda pode experimentar.
+          Nível: só organiza a lição na sua lista, não muda como a IA corrige.{' '}
+          {publicada
+            ? 'Mudanças salvas valem na hora para quem já tem a lição.'
+            : 'Em rascunho só você vê e experimenta; ao liberar, ela é publicada.'}
         </p>
       )}
       {somenteLeitura && (
@@ -271,9 +277,10 @@ export function EditorLicaoPage() {
       )}
       {publicada && problemas.length > 0 && !somenteLeitura && (
         <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
-          A lição está publicada, mas tem problemas: corrija-os ou volte para rascunho antes de salvar.
+          A lição já foi liberada e tem problemas que quebrariam a aula: corrija-os antes de salvar.
         </p>
       )}
+      {liberando && <LiberarLicaoModal licao={licao} aoFechar={() => setLiberando(false)} />}
 
       {(problemas.length > 0 || avisos.length > 0) && (
         <div className="mt-4 space-y-2">

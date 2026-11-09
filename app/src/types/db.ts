@@ -176,6 +176,8 @@ export type TurmaConteudo = {
   trilha_id: string | null
   atividade_id: string | null
   material_id: string | null
+  /** Lição do tutor liberada para a turma (0029). */
+  licao_tutor_id: string | null
   criado_em: string
 }
 

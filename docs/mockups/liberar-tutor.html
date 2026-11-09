@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liberar no tutor</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<style>
+  body { background:#f6f4ef; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; color:#171717; }
+  .tela { background:#f6f4ef; border:1px solid #e5e2da; border-radius:28px; padding:28px; position:relative; overflow:hidden; }
+  .rotulo-tela { font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#a3a3a3; }
+  svg.i { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+</style>
+</head>
+<body class="antialiased">
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="users" viewBox="0 0 24 24"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></symbol>
+  <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="sparkles" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8L20 10l-6.1 1.2L12 17l-1.9-5.8L4 10l6.1-1.2Z"/></symbol>
+  <symbol id="chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9Z"/></symbol>
+  <symbol id="save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
+  <symbol id="wa" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+</svg>
+
+<div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+  <h1 class="text-3xl font-extrabold">Liberar o tutor como se envia uma atividade</h1>
+  <p class="mt-2 max-w-3xl text-neutral-600">Proposta: um botão <b>Liberar</b> em cada lição abre o mesmo seletor do envio de atividade (turmas + alunos). Liberar já publica a lição e liga o tutor de quem recebeu. Somem a chave por aluno e o checklist na ficha.</p>
+
+  <!-- Antes x depois -->
+  <div class="mt-8 grid gap-4 md:grid-cols-2">
+    <div class="rounded-3xl bg-white p-6">
+      <p class="text-xs font-extrabold uppercase tracking-wide text-rose-600">Hoje · 3 lugares, aluno por aluno</p>
+      <ol class="mt-3 space-y-2 text-sm text-neutral-700">
+        <li class="flex gap-3"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-neutral-100 text-xs font-extrabold">1</span>Editor da lição: marcar <b>Publicada</b> e salvar</li>
+        <li class="flex gap-3"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-neutral-100 text-xs font-extrabold">2</span>Tutor › Alunos: ligar a chave do tutor de cada aluno</li>
+        <li class="flex gap-3"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-neutral-100 text-xs font-extrabold">3</span>Abrir a ficha de cada aluno › aba Tutor › marcar a lição</li>
+      </ol>
+      <p class="mt-3 text-xs text-neutral-500">5 alunos = 1 + 5 + 5×2 cliques e telas. Sem turma, sem confirmação de que chegou.</p>
+    </div>
+    <div class="rounded-3xl bg-white p-6">
+      <p class="text-xs font-extrabold uppercase tracking-wide text-emerald-700">Proposta · 1 lugar, igual atividade</p>
+      <ol class="mt-3 space-y-2 text-sm text-neutral-700">
+        <li class="flex gap-3"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-neutral-900 text-xs font-extrabold text-white">1</span>Na lição, <b>Liberar</b></li>
+        <li class="flex gap-3"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-neutral-900 text-xs font-extrabold text-white">2</span>Escolher turma ou alunos</li>
+        <li class="flex gap-3"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-neutral-900 text-xs font-extrabold text-white">3</span><b>Liberar para 5 alunos</b> — publicada e ligada na hora</li>
+      </ol>
+      <p class="mt-3 text-xs text-neutral-500">Turma escolhida: quem entrar depois também recebe, como já acontece com atividade.</p>
+    </div>
+  </div>
+
+  <div class="mt-12 grid gap-8 lg:grid-cols-2">
+
+    <!-- TELA 1: Tutor › Lições -->
+    <section>
+      <p class="rotulo-tela mb-2">1 · Tutor › Lições</p>
+      <div class="tela">
+        <h2 class="text-2xl font-extrabold">Tutor</h2>
+        <p class="mt-0.5 text-sm text-neutral-500">O tutor conversa com o aluno em voz nas lições que você liberar.</p>
+        <div class="mt-5 flex flex-wrap gap-1.5">
+          <span class="rounded-full bg-neutral-900 px-4 py-2 text-sm font-bold text-white">Lições</span>
+          <span class="rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-500">Alunos</span>
+          <span class="rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-500">Resultados</span>
+          <span class="rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-500">Preferências</span>
+        </div>
+        <div class="mt-7 flex items-center justify-between">
+          <h3 class="text-xs font-extrabold uppercase tracking-wide text-neutral-500">Suas lições</h3>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-bold text-white"><svg class="i"><use href="#sparkles"/></svg>Nova lição com IA</span>
+        </div>
+        <ul class="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
+          <li class="flex items-center gap-3 px-5 py-3.5">
+            <span class="min-w-0 flex-1">
+              <span class="flex flex-wrap items-center gap-2"><span class="font-bold">Was / were: o clima</span><span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-extrabold text-indigo-700">A2</span></span>
+              <span class="mt-0.5 flex items-center gap-1 text-xs text-neutral-500"><svg class="i" style="width:12px;height:12px"><use href="#users"/></svg>Turma Terça 19h · Ana, Bruno</span>
+            </span>
+            <button onclick="abrirModal()" class="inline-flex items-center gap-1.5 rounded-full bg-amber-300 px-4 py-2 text-sm font-extrabold text-neutral-900 ring-4 ring-amber-300/40"><svg class="i"><use href="#send"/></svg>Liberar</button>
+          </li>
+          <li class="flex items-center gap-3 px-5 py-3.5">
+            <span class="min-w-0 flex-1">
+              <span class="flex flex-wrap items-center gap-2"><span class="font-bold">Apresentações</span><span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-extrabold text-indigo-700">A1</span><span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">rascunho</span></span>
+              <span class="mt-0.5 block text-xs text-neutral-500">Ninguém ainda · editada em 08/11</span>
+            </span>
+            <button class="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-4 py-2 text-sm font-bold text-neutral-700"><svg class="i"><use href="#send"/></svg>Liberar</button>
+          </li>
+          <li class="flex items-center gap-3 px-5 py-3.5">
+            <span class="min-w-0 flex-1">
+              <span class="flex flex-wrap items-center gap-2"><span class="font-bold">Rotina no presente</span><span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-extrabold text-indigo-700">A1</span></span>
+              <span class="mt-0.5 block text-xs text-neutral-500">Carla, Diego, +3</span>
+            </span>
+            <button class="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-4 py-2 text-sm font-bold text-neutral-700"><svg class="i"><use href="#send"/></svg>Liberar</button>
+          </li>
+        </ul>
+        <h3 class="mt-7 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Biblioteca</h3>
+        <ul class="mt-3 overflow-hidden rounded-3xl bg-white">
+          <li class="flex items-center gap-3 px-5 py-3.5">
+            <span class="min-w-0 flex-1"><span class="font-bold">Pedindo comida</span> <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-extrabold text-indigo-700">A2</span><span class="mt-0.5 block text-xs text-neutral-500">Lição pronta do Vocab Node · ninguém ainda</span></span>
+            <button class="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-4 py-2 text-sm font-bold text-neutral-700"><svg class="i"><use href="#send"/></svg>Liberar</button>
+          </li>
+        </ul>
+        <p class="mt-3 text-xs text-neutral-500">A linha diz <b>para quem</b> está liberada (turma ou nomes), não só "3 alunos". Lição da biblioteca também se libera direto, sem copiar.</p>
+      </div>
+    </section>
+
+    <!-- TELA 2: modal liberar (interativo) -->
+    <section>
+      <p class="rotulo-tela mb-2">2 · Liberar no tutor <span class="normal-case tracking-normal font-medium">(clique nos alunos e turmas)</span></p>
+      <div class="tela grid place-items-center bg-neutral-900/60" style="background:rgba(23,23,23,.6); min-height:640px">
+        <div id="modal" class="w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl">
+          <div class="flex items-start justify-between">
+            <div>
+              <h2 class="text-lg font-extrabold">Liberar no tutor</h2>
+              <p class="text-sm text-neutral-500">Was / were: o clima · 24 exercícios · ~12 min</p>
+            </div>
+            <span class="text-neutral-400"><svg class="i" style="width:20px;height:20px"><use href="#x"/></svg></span>
+          </div>
+
+          <div id="passo-escolha">
+            <p class="mt-4 text-xs font-bold text-neutral-600">Para quem vai</p>
+            <div class="mt-2 flex flex-wrap items-center gap-1.5" id="turmas"></div>
+            <div class="relative mt-1.5">
+              <svg class="i pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400"><use href="#search"/></svg>
+              <input placeholder="Buscar aluno..." class="w-full rounded-2xl bg-neutral-100 py-2.5 pl-10 pr-3 text-sm outline-none ring-neutral-900 focus:ring-2">
+            </div>
+            <div class="mt-1.5 max-h-60 space-y-1.5 overflow-y-auto" id="alunos"></div>
+            <p class="mt-4 rounded-2xl bg-neutral-100 px-4 py-2.5 text-xs text-neutral-600">Quem receber passa a ver <b>Tutor</b> no app. Para tirar, toque de novo no nome de quem já tem.</p>
+            <button id="btn" onclick="liberar()" class="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-3.5 text-sm font-extrabold text-white disabled:opacity-50"></button>
+          </div>
+
+          <div id="passo-feito" class="hidden">
+            <p class="mt-4 rounded-2xl bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-800">Liberado! A lição já aparece no Tutor do app de cada aluno. Quem entrar na turma depois recebe também.</p>
+            <div class="mt-3 space-y-1.5" id="feitos"></div>
+            <button onclick="reiniciar()" class="mt-5 w-full rounded-full bg-neutral-900 py-3 text-sm font-extrabold text-white">Concluir</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA 3: Editor da lição -->
+    <section>
+      <p class="rotulo-tela mb-2">3 · Editor da lição (cabeçalho)</p>
+      <div class="tela">
+        <p class="text-xs font-bold text-neutral-400">Tutor › Lições</p>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <h2 class="min-w-0 flex-1 text-2xl font-extrabold">Apresentações</h2>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-700"><svg class="i"><use href="#play"/></svg>Experimentar</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-bold text-neutral-700"><svg class="i"><use href="#save"/></svg>Salvar</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-bold text-white"><svg class="i"><use href="#send"/></svg>Liberar</span>
+        </div>
+        <div class="mt-3 flex items-center gap-2 text-sm">
+          <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">rascunho</span>
+          <span class="text-neutral-500">Só você vê. Ao liberar, ela é publicada.</span>
+        </div>
+        <div class="mt-5 space-y-2 opacity-60">
+          <div class="h-14 rounded-2xl bg-white"></div><div class="h-14 rounded-2xl bg-white"></div><div class="h-14 rounded-2xl bg-white"></div>
+        </div>
+        <p class="mt-4 text-xs text-neutral-500">Sai a caixa <b>Publicada</b> e a explicação "só lição publicada pode ser liberada". Publicar vira consequência de liberar. Uma lição liberada que você edita continua liberada.</p>
+      </div>
+    </section>
+
+    <!-- TELA 4: Ficha do aluno › Tutor -->
+    <section>
+      <p class="rotulo-tela mb-2">4 · Ficha do aluno › Tutor</p>
+      <div class="tela">
+        <div class="flex items-center gap-3">
+          <span class="grid h-11 w-11 place-items-center rounded-full bg-sky-100 font-extrabold text-sky-800">A</span>
+          <div><p class="text-lg font-extrabold">Ana Souza</p><p class="text-xs text-neutral-500">A2 · Turma Terça 19h</p></div>
+        </div>
+        <div class="mt-5 flex items-center justify-between">
+          <h3 class="text-xs font-extrabold uppercase tracking-wide text-neutral-500">Lições no tutor</h3>
+          <span class="inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-bold text-white"><svg class="i"><use href="#plus"/></svg>Liberar lição</span>
+        </div>
+        <ul class="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
+          <li class="flex items-center gap-3 px-5 py-3.5">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-violet-100 text-violet-700"><svg class="i"><use href="#mic"/></svg></span>
+            <span class="min-w-0 flex-1"><span class="block font-bold">Was / were: o clima</span><span class="flex items-center gap-1 text-xs text-violet-700"><svg class="i" style="width:12px;height:12px"><use href="#users"/></svg>pela turma Terça 19h · 2 práticas</span></span>
+          </li>
+          <li class="flex items-center gap-3 px-5 py-3.5">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-violet-100 text-violet-700"><svg class="i"><use href="#mic"/></svg></span>
+            <span class="min-w-0 flex-1"><span class="block font-bold">Rotina no presente</span><span class="block text-xs text-neutral-500">liberada em 02/11 · ainda não praticou</span></span>
+            <button class="rounded-full px-3 py-1.5 text-xs font-bold text-neutral-500 hover:bg-neutral-100">Remover</button>
+          </li>
+        </ul>
+        <h3 class="mt-6 text-xs font-extrabold uppercase tracking-wide text-neutral-500">Práticas <span class="text-neutral-400">· 2 de 20 no mês</span></h3>
+        <div class="mt-3 h-12 rounded-2xl bg-white opacity-60"></div>
+        <p class="mt-4 text-xs text-neutral-500">Sem chave "Tutor ligado" e sem a lista de todas as lições com caixinhas: aparecem só as liberadas. <b>Liberar lição</b> abre o mesmo seletor, só que escolhendo lições para esta aluna.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="mt-12 rounded-3xl bg-white p-6 text-sm text-neutral-700">
+    <p class="font-extrabold">O que muda por baixo</p>
+    <ul class="mt-2 list-disc space-y-1 pl-5">
+      <li><b>Chave por aluno sai.</b> O aluno vê o Tutor quando tem pelo menos uma lição liberada (direta ou pela turma). A aba Tutor › Alunos vira só leitura: quem tem lições, práticas e custo no mês.</li>
+      <li><b>Liberar publica.</b> Rascunho continua existindo para experimentar; o primeiro "Liberar" publica.</li>
+      <li><b>Turma como destino</b>, igual atividade: quem entrar na turma depois recebe as lições liberadas para ela.</li>
+      <li><b>Limite de sessões/mês</b> continua em Preferências, sem mudança.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  const turmas = [{ id: 't1', nome: 'Terça 19h', membros: ['ana', 'bruno'] }, { id: 't2', nome: 'Sábado manhã', membros: ['carla', 'diego', 'elisa'] }]
+  const alunos = [
+    { id: 'ana', nome: 'Ana Souza', nivel: 'A2' }, { id: 'bruno', nome: 'Bruno Lima', nivel: 'A2' },
+    { id: 'carla', nome: 'Carla Dias', nivel: 'A1' }, { id: 'diego', nome: 'Diego Melo', nivel: 'A2' },
+    { id: 'elisa', nome: 'Elisa Rocha', nivel: 'B1' }, { id: 'fabio', nome: 'Fábio Nunes', nivel: 'A2' },
+  ]
+  // Já liberada pela turma Terça 19h.
+  const jaTinha = { turmas: new Set(['t1']), avulsos: new Set() }
+  let est
+  function reiniciar() {
+    est = { turmas: new Set(jaTinha.turmas), avulsos: new Set(jaTinha.avulsos) }
+    document.getElementById('passo-escolha').classList.remove('hidden')
+    document.getElementById('passo-feito').classList.add('hidden')
+    render()
+  }
+  function abrirModal() { reiniciar(); document.getElementById('modal').scrollIntoView({ behavior: 'smooth', block: 'center' }) }
+  const pelaTurma = (id) => turmas.find((t) => est.turmas.has(t.id) && t.membros.includes(id))
+  function render() {
+    document.getElementById('turmas').innerHTML = '<span class="text-[11px] font-extrabold uppercase tracking-wide text-neutral-400">Turmas</span>' +
+      turmas.map((t) => { const on = est.turmas.has(t.id); return `<button onclick="togT('${t.id}')" class="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold ${on ? 'bg-violet-600 text-white' : 'bg-violet-50 text-violet-800'}"><svg class="i" style="width:14px;height:14px"><use href="#${on ? 'check' : 'users'}"/></svg>${t.nome}<span class="${on ? 'text-violet-200' : 'text-violet-400'}">${t.membros.length}</span></button>` }).join('')
+    document.getElementById('alunos').innerHTML = alunos.map((a) => {
+      const t = pelaTurma(a.id); const on = !!t || est.avulsos.has(a.id)
+      const novo = on && !(jaTinha.avulsos.has(a.id) || turmas.some((x) => jaTinha.turmas.has(x.id) && x.membros.includes(a.id)))
+      return `<button onclick="togA('${a.id}')" ${t ? 'disabled' : ''} class="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-left ${t ? 'bg-violet-100 cursor-default' : on ? 'bg-neutral-900' : 'bg-neutral-50'}">
+        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-extrabold ${on ? 'bg-amber-300 text-neutral-900' : 'bg-white text-neutral-500'}">${a.nome[0]}</span>
+        <span class="min-w-0 flex-1 text-sm font-bold ${t ? 'text-violet-900' : on ? 'text-white' : 'text-neutral-700'}">${a.nome}<span class="text-neutral-400"> · ${a.nivel}</span>
+          ${t ? `<span class="flex items-center gap-1 text-[11px] font-medium text-violet-700">pela turma ${t.nome}${novo ? '' : ' · já pratica'}</span>` : ''}</span>
+        ${on && !t ? '<span class="grid h-5 w-5 place-items-center rounded-full bg-white"><svg class="i text-neutral-900" style="width:14px;height:14px"><use href="#check"/></svg></span>' : ''}
+      </button>`
+    }).join('')
+    const n = alunos.filter((a) => pelaTurma(a.id) || est.avulsos.has(a.id)).length
+    const btn = document.getElementById('btn')
+    const tsel = turmas.filter((t) => est.turmas.has(t.id)).map((t) => t.nome)
+    const av = alunos.filter((a) => est.avulsos.has(a.id) && !pelaTurma(a.id)).length
+    const partes = [...tsel.map((x) => 'turma ' + x), ...(av ? [av + (av === 1 ? ' aluno' : ' alunos')] : [])]
+    btn.disabled = n === 0
+    btn.innerHTML = n === 0 ? 'Escolha para quem vai' : `<svg class="i"><use href="#send"/></svg>Liberar para ${partes.join(' + ')}`
+  }
+  function togT(id) { est.turmas.has(id) ? est.turmas.delete(id) : est.turmas.add(id); render() }
+  function togA(id) { est.avulsos.has(id) ? est.avulsos.delete(id) : est.avulsos.add(id); render() }
+  function liberar() {
+    const recebem = alunos.filter((a) => pelaTurma(a.id) || est.avulsos.has(a.id))
+    document.getElementById('feitos').innerHTML = recebem.map((a) => `<div class="flex items-center gap-3 rounded-2xl bg-neutral-50 px-4 py-2.5"><span class="grid h-7 w-7 place-items-center rounded-full bg-white text-xs font-extrabold text-neutral-500">${a.nome[0]}</span><span class="min-w-0 flex-1 text-sm font-bold">${a.nome}</span><span class="grid h-8 w-8 place-items-center rounded-xl bg-emerald-500 text-white" title="Avisar pelo WhatsApp"><svg class="i"><use href="#wa"/></svg></span></div>`).join('')
+    document.getElementById('passo-escolha').classList.add('hidden')
+    document.getElementById('passo-feito').classList.remove('hidden')
+  }
+  reiniciar()
+</script>
+</body>
+</html>

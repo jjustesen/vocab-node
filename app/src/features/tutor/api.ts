@@ -3,9 +3,10 @@ import { FunctionRegion } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { chavesAlunos } from '@/features/alunos/api'
 import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
-import type { Aluno, NivelCefr, TutorAcesso, TutorLicao, TutorSessao } from '@/types/db'
+import type { NivelCefr, TutorAcesso, TutorLicao, TutorSessao } from '@/types/db'
 import type { Fala } from '../../../../poc-tutor/src/falas.ts'
 import type { Roteiro } from '../../../../poc-tutor/src/tipos.ts'
+import { validarRoteiro } from '../../../../poc-tutor/src/validacao.ts'
 
 /**
  * O lado do professor do tutor oral (migration 0024).
@@ -23,6 +24,8 @@ export const chavesTutor = {
   licao: (id: string) => ['tutor', 'licoes', 'uma', id] as const,
   /** Todas as liberações do professor, para contar lições por aluno. */
   liberacoes: ['tutor', 'liberacoes'] as const,
+  /** Para quais turmas cada lição foi liberada. */
+  turmasDasLicoes: ['tutor', 'turmas-das-licoes'] as const,
   sessoesDoMes: ['tutor', 'sessoes', 'mes'] as const,
   sessoesDoAluno: (alunoId: string) => ['tutor', 'sessoes', 'aluno', alunoId] as const,
 }
@@ -227,78 +230,151 @@ export function useLiberacoesTutor() {
   })
 }
 
-/** Libera ou tira uma lição de um aluno. Otimista, como a chave do tutor. */
-export function useAlternarLicao() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async ({ alunoId, licaoId, liberada }: { alunoId: string; licaoId: string; liberada: boolean }) => {
-      const { error } = liberada
-        ? await supabase.from('tutor_licoes_alunos').upsert({ aluno_id: alunoId, licao_id: licaoId })
-        : await supabase.from('tutor_licoes_alunos').delete().eq('aluno_id', alunoId).eq('licao_id', licaoId)
+/** licao_id → turmas para as quais a lição foi liberada (0029). */
+export function useTurmasDasLicoes() {
+  return useQuery({
+    queryKey: chavesTutor.turmasDasLicoes,
+    queryFn: async (): Promise<Map<string, Set<string>>> => {
+      const { data, error } = await supabase
+        .from('turmas_conteudos')
+        .select('turma_id, licao_tutor_id')
+        .not('licao_tutor_id', 'is', null)
       if (error) throw error
-    },
-    onMutate: async ({ alunoId, licaoId, liberada }) => {
-      await qc.cancelQueries({ queryKey: chavesTutor.liberacoes })
-      const anterior = qc.getQueryData<Map<string, Set<string>>>(chavesTutor.liberacoes)
-      if (anterior) {
-        const novo = new Map(anterior)
-        const doAluno = new Set(novo.get(alunoId) ?? [])
-        if (liberada) doAluno.add(licaoId)
-        else doAluno.delete(licaoId)
-        novo.set(alunoId, doAluno)
-        qc.setQueryData(chavesTutor.liberacoes, novo)
+      const mapa = new Map<string, Set<string>>()
+      for (const v of data) {
+        if (!v.licao_tutor_id) continue
+        if (!mapa.has(v.licao_tutor_id)) mapa.set(v.licao_tutor_id, new Set())
+        mapa.get(v.licao_tutor_id)!.add(v.turma_id)
       }
-      return { anterior }
+      return mapa
     },
-    onError: (_erro, _variaveis, contexto) => {
-      if (contexto?.anterior) qc.setQueryData(chavesTutor.liberacoes, contexto.anterior)
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: chavesTutor.liberacoes }),
   })
+}
+
+/** Publica a lição do professor que ainda é rascunho: liberar é o que publica. */
+async function publicarSeRascunho(licao: { id: string; publicada: boolean; professor_id: string | null }) {
+  if (licao.publicada || !licao.professor_id) return
+  // O editor confere ao salvar, mas rascunho pode ser salvo com problema: a aula quebraria no aluno.
+  const { data, error: erroLeitura } = await supabase.from('tutor_licoes').select('titulo, roteiro').eq('id', licao.id).single()
+  if (erroLeitura) throw erroLeitura
+  if (validarRoteiro(data.roteiro as Roteiro).length > 0) {
+    throw new Error(`"${data.titulo}" ainda tem problemas que quebrariam a aula. Corrija no editor antes de liberar.`)
+  }
+  const { error } = await supabase.from('tutor_licoes').update({ publicada: true }).eq('id', licao.id)
+  if (error) throw error
+}
+
+export type Liberacao = {
+  licao: { id: string; publicada: boolean; professor_id: string | null }
+  /** Como estava ao abrir o seletor. */
+  antes: { turmaIds: string[]; alunoIds: string[] }
+  /** Como deve ficar: as turmas escolhidas e TODOS os alunos que ficam com a lição (pela turma ou avulsos). */
+  depois: { turmaIds: string[]; alunoIds: string[] }
 }
 
 /**
- * Liga ou desliga o tutor de um aluno. Otimista na lista e na ficha; quem
- * segura o limite é o trigger `conferir_tutor_do_aluno`, e a recusa dele volta
- * aqui como mensagem para a tela.
+ * O "Liberar" da lição: deixa as turmas e os alunos dela iguais ao que o
+ * professor escolheu no seletor. Quem foi desmarcado perde a lição; a turma
+ * desmarcada deixa de passá-la a quem entrar. Devolve quem recebeu agora.
+ *
+ * `alunos.tutor_ativo` acompanha sozinho (trigger 0029), e liberar para a
+ * turma entrega aos membros no banco.
  */
-export function useAlternarTutor() {
+export function useLiberarLicao() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ alunoId, ligado }: { alunoId: string; ligado: boolean }) => {
-      const { error } = await supabase.from('alunos').update({ tutor_ativo: ligado }).eq('id', alunoId)
-      if (error) throw new Error(mensagemDoTrigger(error))
-    },
-    onMutate: async ({ alunoId, ligado }) => {
-      await qc.cancelQueries({ queryKey: chavesAlunos.todos })
-      const lista = qc.getQueryData<Aluno[]>(chavesAlunos.lista('ativo'))
-      const um = qc.getQueryData<Aluno>(chavesAlunos.um(alunoId))
-      if (lista) {
-        qc.setQueryData<Aluno[]>(
-          chavesAlunos.lista('ativo'),
-          lista.map((a) => (a.id === alunoId ? { ...a, tutor_ativo: ligado } : a)),
-        )
+    mutationFn: async ({ licao, antes, depois }: Liberacao): Promise<string[]> => {
+      await publicarSeRascunho(licao)
+
+      const turmasQueSaem = antes.turmaIds.filter((t) => !depois.turmaIds.includes(t))
+      const turmasQueEntram = depois.turmaIds.filter((t) => !antes.turmaIds.includes(t))
+      const alunosQueSaem = antes.alunoIds.filter((a) => !depois.alunoIds.includes(a))
+      const novos = depois.alunoIds.filter((a) => !antes.alunoIds.includes(a))
+
+      if (turmasQueSaem.length > 0) {
+        const { error } = await supabase
+          .from('turmas_conteudos')
+          .delete()
+          .eq('licao_tutor_id', licao.id)
+          .in('turma_id', turmasQueSaem)
+        if (error) throw new Error(mensagemDoTrigger(error))
       }
-      if (um) qc.setQueryData<Aluno>(chavesAlunos.um(alunoId), { ...um, tutor_ativo: ligado })
-      return { lista, um }
+      if (alunosQueSaem.length > 0) {
+        const { error } = await supabase
+          .from('tutor_licoes_alunos')
+          .delete()
+          .eq('licao_id', licao.id)
+          .in('aluno_id', alunosQueSaem)
+        if (error) throw new Error(mensagemDoTrigger(error))
+      }
+      if (turmasQueEntram.length > 0) {
+        const { error } = await supabase.from('turmas_conteudos').upsert(
+          turmasQueEntram.map((turma_id) => ({
+            turma_id,
+            trilha_id: null,
+            atividade_id: null,
+            material_id: null,
+            licao_tutor_id: licao.id,
+          })),
+          { onConflict: 'turma_id,licao_tutor_id', ignoreDuplicates: true },
+        )
+        if (error) throw new Error(mensagemDoTrigger(error))
+      }
+      if (novos.length > 0) {
+        const { error } = await supabase
+          .from('tutor_licoes_alunos')
+          .upsert(novos.map((aluno_id) => ({ aluno_id, licao_id: licao.id })), { ignoreDuplicates: true })
+        if (error) throw new Error(mensagemDoTrigger(error))
+      }
+      return novos
     },
-    onError: (_erro, { alunoId }, contexto) => {
-      if (contexto?.lista) qc.setQueryData(chavesAlunos.lista('ativo'), contexto.lista)
-      if (contexto?.um) qc.setQueryData(chavesAlunos.um(alunoId), contexto.um)
-    },
-    onSettled: () => qc.invalidateQueries({ queryKey: chavesAlunos.todos }),
+    onSettled: () => invalidarLiberacoes(qc),
   })
 }
 
-function mensagemDoTrigger(error: { message: string; details?: string | null }): string {
-  if (error.message.includes('limite_tutor')) {
-    const max = Number(error.details)
-    return max
-      ? `No beta, o tutor vale para até ${max} ${max === 1 ? 'aluno' : 'alunos'}. Desligue de outro aluno para ligar deste.`
-      : 'Você chegou ao limite de alunos com tutor do beta.'
-  }
+/** A ficha do aluno: libera várias lições para ele de uma vez. */
+export function useLiberarParaAluno() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({
+      alunoId,
+      licoes,
+    }: {
+      alunoId: string
+      licoes: { id: string; publicada: boolean; professor_id: string | null }[]
+    }) => {
+      for (const l of licoes) await publicarSeRascunho(l)
+      const { error } = await supabase
+        .from('tutor_licoes_alunos')
+        .upsert(licoes.map((l) => ({ aluno_id: alunoId, licao_id: l.id })), { ignoreDuplicates: true })
+      if (error) throw new Error(mensagemDoTrigger(error))
+    },
+    onSettled: () => invalidarLiberacoes(qc),
+  })
+}
+
+/** Tira uma lição de um aluno (a que ele recebeu avulsa, não pela turma). */
+export function useTirarLicaoDoAluno() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ alunoId, licaoId }: { alunoId: string; licaoId: string }) => {
+      const { error } = await supabase.from('tutor_licoes_alunos').delete().eq('aluno_id', alunoId).eq('licao_id', licaoId)
+      if (error) throw new Error(mensagemDoTrigger(error))
+    },
+    onSettled: () => invalidarLiberacoes(qc),
+  })
+}
+
+/** Liberar mexe nas lições (publicada), nas liberações, nas turmas e no `tutor_ativo` dos alunos. */
+function invalidarLiberacoes(qc: ReturnType<typeof useQueryClient>) {
+  qc.invalidateQueries({ queryKey: chavesTutor.todos })
+  qc.invalidateQueries({ queryKey: chavesAlunos.todos })
+  qc.invalidateQueries({ queryKey: ['turmas'] })
+}
+
+function mensagemDoTrigger(error: { message: string }): string {
   if (error.message.includes('tutor_nao_liberado')) return 'O tutor ainda não foi liberado para a sua conta.'
-  return 'Não consegui salvar. Verifique sua internet e tente de novo.'
+  return 'Não consegui liberar. Verifique sua internet e tente de novo.'
 }
 
 export type SessaoTutor = Pick<
