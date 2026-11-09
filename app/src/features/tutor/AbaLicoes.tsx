@@ -1,10 +1,29 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Loader2, Send, Sparkles, UsersRound } from 'lucide-react'
+import { Loader2, Search, Send, Sparkles, UsersRound } from 'lucide-react'
+import { Chip } from '@/components/Chip'
+import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
+import { ordenar, useOrdem } from '@/lib/ordenar'
 import { useAlunos } from '@/features/alunos/api'
 import { useTurmasComMembros } from '@/features/turmas/api'
 import { type LicaoNaLista, useLiberacoesTutor, useTodasAsLicoes, useTurmasDasLicoes } from './api'
 import { LiberarLicaoModal } from './LiberarLicaoModal'
+
+const GRUPOS_NIVEL = [
+  { rotulo: 'Todos os níveis', niveis: [] as string[] },
+  { rotulo: 'A1–A2', niveis: ['A1', 'A2'] },
+  { rotulo: 'B1–B2', niveis: ['B1', 'B2'] },
+  { rotulo: 'C1', niveis: ['C1'] },
+]
+
+type Situacao = 'todas' | 'liberadas' | 'ninguem' | 'rascunhos'
+
+const SITUACOES: { id: Situacao; rotulo: string }[] = [
+  { id: 'todas', rotulo: 'Todas' },
+  { id: 'liberadas', rotulo: 'Liberadas' },
+  { id: 'ninguem', rotulo: 'Ninguém ainda' },
+  { id: 'rascunhos', rotulo: 'Rascunhos' },
+]
 
 /**
  * As lições do tutor: as do professor (geradas pela IA a partir do material
@@ -18,6 +37,10 @@ export function AbaLicoes() {
   const { data: turmas } = useTurmasComMembros()
   const { data: alunos } = useAlunos('ativo')
   const [liberando, setLiberando] = useState<LicaoNaLista | null>(null)
+  const [busca, setBusca] = useState('')
+  const [grupoNivel, setGrupoNivel] = useState(0)
+  const [situacao, setSituacao] = useState<Situacao>('todas')
+  const [ordem, setOrdem] = useOrdem('tutor-licoes', 'recentes')
 
   const nomeDaTurma = new Map((turmas ?? []).map((t) => [t.id, t.nome]))
   const membrosDa = new Map((turmas ?? []).map((t) => [t.id, t.alunoIds]))
@@ -32,9 +55,28 @@ export function AbaLicoes() {
     return { turmas: ids.flatMap((id) => (nomeDaTurma.has(id) ? [nomeDaTurma.get(id)!] : [])), avulsos }
   }
 
+  const termo = busca.trim().toLowerCase()
+  const niveis = GRUPOS_NIVEL[grupoNivel].niveis
+  const filtradas = ordenar(
+    (licoes ?? []).filter((l) => {
+      if (niveis.length > 0 && !(l.nivel_cefr && niveis.includes(l.nivel_cefr))) return false
+      if (termo && !`${l.titulo} ${l.descricao ?? ''}`.toLowerCase().includes(termo)) return false
+      const destino = paraQuem(l.id)
+      const liberada = destino.turmas.length > 0 || destino.avulsos.length > 0
+      if (situacao === 'liberadas') return liberada
+      if (situacao === 'ninguem') return !liberada
+      if (situacao === 'rascunhos') return Boolean(l.professor_id) && !l.publicada
+      return true
+    }),
+    ordem,
+    { nome: (l) => l.titulo, data: (l) => l.atualizado_em },
+  )
+  const filtrando = termo !== '' || grupoNivel !== 0 || situacao !== 'todas'
+
   // O RLS só devolve as do professor e as da biblioteca: professor_id preenchido = dele.
-  const minhas = (licoes ?? []).filter((l) => l.professor_id)
-  const biblioteca = (licoes ?? []).filter((l) => !l.professor_id)
+  const minhas = filtradas.filter((l) => l.professor_id)
+  const biblioteca = filtradas.filter((l) => !l.professor_id)
+  const temMinhas = (licoes ?? []).some((l) => l.professor_id)
 
   return (
     <>
@@ -49,11 +91,43 @@ export function AbaLicoes() {
         </Link>
       </div>
 
+      {(licoes?.length ?? 0) > 0 && (
+        <div className="mt-3 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative min-w-52 flex-1">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <input
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                placeholder="Buscar lição..."
+                className="w-full rounded-full bg-white py-2.5 pl-11 pr-4 text-sm outline-none ring-neutral-900 focus:ring-2"
+              />
+            </div>
+            <SeletorDeOrdem ordem={ordem} aoMudar={setOrdem} />
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {SITUACOES.map((s) => (
+              <Chip key={s.id} ativo={situacao === s.id} aoClicar={() => setSituacao(s.id)}>
+                {s.rotulo}
+              </Chip>
+            ))}
+            <span className="mx-1 h-4 w-px bg-neutral-300" aria-hidden />
+            {GRUPOS_NIVEL.map((g, i) => (
+              <Chip key={g.rotulo} ativo={grupoNivel === i} aoClicar={() => setGrupoNivel(i)}>
+                {g.rotulo}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="mt-6 flex justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
         </div>
-      ) : minhas.length === 0 ? (
+      ) : filtrando && filtradas.length === 0 ? (
+        <p className="mt-3 rounded-3xl bg-white px-5 py-8 text-center text-sm text-neutral-400">Nenhuma lição com esse filtro.</p>
+      ) : !temMinhas ? (
         <div className="mt-3 rounded-3xl border-2 border-dashed border-neutral-300 px-6 py-10 text-center">
           <p className="font-bold text-neutral-700">Nenhuma lição sua ainda</p>
           <p className="mt-1 text-sm text-neutral-500">
@@ -61,7 +135,7 @@ export function AbaLicoes() {
             alunos.
           </p>
         </div>
-      ) : (
+      ) : minhas.length === 0 ? null : (
         <ul className="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
           {minhas.map((l) => (
             <LinhaDaLicao key={l.id} licao={l} paraQuem={paraQuem(l.id)} aoLiberar={() => setLiberando(l)} />
