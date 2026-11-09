@@ -69,7 +69,7 @@ describe('falas', () => {
     // Aceitar o último item do bloco "sujeito" abre o bloco das perguntas.
     const r = receber(ate(iniciar(roteiro).sessao, 'sujeito.i'), { tipo: 'adequada', reconhecido: 'ok' })
     const texto = textoDaFala(falaDaAcao(r.acoes.at(-1)!, r.sessao))
-    assert.equal(texto, 'Nova frase. Diga em inglês: ele foi seu professor no ano passado?')
+    assert.equal(texto, 'Nova frase. Pergunte em inglês: ele foi seu professor no ano passado?')
   })
 
   it('o elogio do acerto de primeira segue a escolha do exercício, e por padrão não há', () => {

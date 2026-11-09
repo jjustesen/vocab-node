@@ -145,7 +145,8 @@ function pedido(item: Item, contexto: Contexto, s: Sessao): Fala {
     case 'repeticao':
       return [...antes, pt('Repita comigo:'), en(item.modelo ?? '')]
     case 'construcao': {
-      const abertura = contexto === 'calibracao' ? 'Primeiro, diga em inglês:' : contexto === 'cadeia' ? 'Nova frase. Diga em inglês:' : 'Diga em inglês:'
+      const verbo = comandoDaConstrucao(item.solicitacao)
+      const abertura = contexto === 'calibracao' ? `Primeiro, ${verbo.toLowerCase()}` : contexto === 'cadeia' ? `Nova frase. ${verbo}` : verbo
       return [...antes, pt(`${abertura} ${comPonto(item.solicitacao ?? '')}`)]
     }
     case 'substituicao':
@@ -167,6 +168,14 @@ function pedido(item: Item, contexto: Contexto, s: Sessao): Fala {
   }
 }
 
+/**
+ * A entonação da voz nem sempre deixa claro que o pedido é uma pergunta;
+ * quando ele termina em "?", o próprio comando avisa.
+ */
+function comandoDaConstrucao(solicitacao: string | undefined): string {
+  return solicitacao?.trim().endsWith('?') ? 'Pergunte em inglês:' : 'Diga em inglês:'
+}
+
 /** A pista na voz do idioma dela: "alemão" lido em inglês seria outra palavra. */
 function pistaFalada(item: Item): Parte {
   return item.idiomaDaPista === 'pt' ? pt(item.pista ?? '') : en(item.pista ?? '')
@@ -183,7 +192,7 @@ function retomada(item: Item, s: Sessao): Fala {
   if (item.tipo === 'substituicao' && s.ultimaAceita) return [pt('A frase era:'), en(s.ultimaAceita), pistaFalada(item)]
   if (item.tipo === 'substituicao') return [pistaFalada(item)]
   if (item.tipo === 'transformacao') return transformacao(item)
-  if (item.tipo === 'construcao') return [pt(`Diga em inglês: ${comPonto(item.solicitacao ?? '')}`)]
+  if (item.tipo === 'construcao') return [pt(`${comandoDaConstrucao(item.solicitacao)} ${comPonto(item.solicitacao ?? '')}`)]
   if (item.tipo === 'repeticao' || item.tipo === 'modelagem') return [pt('Repita comigo:'), en(item.modelo ?? '')]
   return [en(item.pergunta ?? '', item.traducaoDaPergunta)]
 }

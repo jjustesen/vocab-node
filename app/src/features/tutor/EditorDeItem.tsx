@@ -149,7 +149,7 @@ export function EditorDeItem({
           {item.tipo === 'construcao' && (
             <Campo
               rotulo="O que o tutor pede (em português)"
-              ajuda='O tutor lê em voz alta: "Diga em inglês: <isto>". Escreva como você pediria em aula, sem a resposta em inglês.'
+              ajuda='O tutor lê em voz alta: "Diga em inglês: <isto>" (ou "Pergunte em inglês:" se terminar em ?). Escreva como você pediria em aula, sem a resposta em inglês.'
               valor={item.solicitacao}
               aoMudar={(v) => mudar({ solicitacao: v })}
               placeholder="eu falo inglês"
