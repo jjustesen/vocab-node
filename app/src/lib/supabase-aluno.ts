@@ -20,11 +20,19 @@ if (!url || !anonKey) {
  * cabeçalho de supabase/migrations/0001_init.sql) — o painel do aluno passa
  * pela Edge Function painel-aluno-obter, não por select direto.
  */
+/*
+ * `flowType: 'pkce'`: o link de "esqueci minha senha" volta com `?code=` na
+ * URL, que só este cliente troca por sessão (RedefinirSenhaAlunoPage). No
+ * fluxo padrão a sessão viria no `#hash`, e o cliente do PROFESSOR, que lê a
+ * URL de qualquer página (detectSessionInUrl), a pegaria para ele. O login
+ * por senha e o verifyOtp da compra (ProntoPage) não mudam com isso.
+ */
 export const supabaseAluno = createClient(url, anonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: false,
+    flowType: 'pkce',
     storageKey: 'sb-aluno-auth-token',
   },
 })
