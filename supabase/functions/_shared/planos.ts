@@ -5,7 +5,7 @@
 
 export const LIMITE_ALUNOS: Record<string, number | null> = {
   gratuito: 3,
-  pro: 20,
+  pro: 30,
   ilimitado: null, // sem teto
 }
 

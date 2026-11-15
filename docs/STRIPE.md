@@ -20,8 +20,9 @@ Professor clica "Assinar" (/plano)
   tem apenas SELECT da própria linha.
 - Trocar de plano, trocar cartão, baixar fatura e cancelar acontecem no
   **Billing Portal** (Edge Function `stripe-portal`) — não são telas nossas.
-- Planos e limites: `gratuito` (3 alunos, 5 IA/mês), `pro` (20 alunos,
-  30 IA/mês, R$ 100), `ilimitado` (sem teto de alunos, 100 IA/mês, R$ 300).
+- Planos e limites: `gratuito` (3 alunos, 5 IA/mês), `pro` (30 alunos,
+  30 IA/mês, R$ 200 — R$ 160 com o cupom de lançamento), `ilimitado` (sem
+  teto de alunos, 100 IA/mês, R$ 400).
   Definidos em `app/src/lib/planos.ts` + `supabase/functions/_shared/planos.ts`
   (espelhados — mude de um lado, mude do outro).
 
@@ -33,10 +34,28 @@ No [Dashboard](https://dashboard.stripe.com) → Product catalog → Add product
 
 | Produto | Preço | Recorrência |
 |---|---|---|
-| Vocab Node Pro | R$ 100,00 BRL | Mensal |
-| Vocab Node Ilimitado | R$ 300,00 BRL | Mensal |
+| Vocab Node Pro | R$ 200,00 BRL | Mensal |
+| Vocab Node Ilimitado | R$ 400,00 BRL | Mensal |
 
 Guarde os dois `price_...` gerados.
+
+### 1b. Cupom de lançamento (opcional)
+
+Product catalog → Coupons → Create coupon: valor fixo de **R$ 40,00 BRL**,
+aplicado só ao produto **Vocab Node Pro**. A duração (forever = preço de
+fundador; repeating = N meses) e os limites (data final, máximo de resgates)
+são decididos aqui, não no código. Guarde o **ID do cupom**.
+
+O `stripe-checkout` aplica o cupom sozinho no Pro enquanto a secret
+`STRIPE_CUPOM_LANCAMENTO` existir. Para **encerrar a promoção**:
+
+```bash
+supabase secrets unset STRIPE_CUPOM_LANCAMENTO
+```
+
+e tire o `precoLancamento` de `app/src/lib/planos.ts` e da landing
+(`app/index.html`). Quem já assinou continua com o desconto pelo tempo que o
+cupom definir.
 
 ### 2. Billing Portal
 
@@ -52,6 +71,12 @@ Settings → Billing → Customer portal:
 
 ```bash
 supabase secrets set STRIPE_SECRET_KEY=sk_test_... STRIPE_PRICE_PRO=price_... STRIPE_PRICE_ILIMITADO=price_... APP_URL=https://SEU-APP.com
+```
+
+Com a promoção de lançamento:
+
+```bash
+supabase secrets set STRIPE_CUPOM_LANCAMENTO=<id-do-cupom>
 ```
 
 (`APP_URL` é a origem do front — em dev local, `http://localhost:5173`.)

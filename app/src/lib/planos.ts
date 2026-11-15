@@ -10,7 +10,15 @@ import type { PlanoTipo } from '@/types/db'
 
 export type PlanoInfo = {
   nome: string
+  /** O preço cheio — o do `price` no Stripe. */
   precoMensal: number
+  /**
+   * Preço com a promoção de lançamento, quando houver. Só VITRINE: quem
+   * desconta de verdade é o cupom que o `stripe-checkout` aplica (secret
+   * STRIPE_CUPOM_LANCAMENTO). Encerrou a promoção? Apague a secret E tire
+   * este campo — senão a tela promete um preço que o checkout não dá.
+   */
+  precoLancamento?: number
   limiteAlunos: number | null // null = sem teto
   limiteGeracoes: number
   descricao: string
@@ -26,14 +34,15 @@ export const PLANOS: Record<PlanoTipo, PlanoInfo> = {
   },
   pro: {
     nome: 'Pro',
-    precoMensal: 100,
-    limiteAlunos: 20,
+    precoMensal: 200,
+    precoLancamento: 160,
+    limiteAlunos: 30,
     limiteGeracoes: 30,
     descricao: 'Para quem vive de dar aula.',
   },
   ilimitado: {
     nome: 'Ilimitado',
-    precoMensal: 300,
+    precoMensal: 400,
     limiteAlunos: null,
     limiteGeracoes: 100,
     descricao: 'Para agendas cheias, sem teto de alunos.',
