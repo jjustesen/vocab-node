@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { FunctionRegion } from '@supabase/supabase-js'
 import { supabaseAluno } from '@/lib/supabase-aluno'
 import { extrairMensagemDeErro, statusDoErro } from '@/lib/erro-edge-function'
 import type { MaterialTipo, NivelCefr } from '@/types/db'
@@ -73,7 +74,11 @@ export type TrilhaDoAluno = {
 
 /** O aluno marca o material como lido (trilha-passo-concluir). */
 export async function marcarMaterialLido(etapaId: string): Promise<void> {
-  const { error } = await supabaseAluno.functions.invoke('trilha-passo-concluir', { body: { etapaId } })
+  // sa-east-1: o banco é em São Paulo; sem isto a função roda em Frankfurt.
+  const { error } = await supabaseAluno.functions.invoke('trilha-passo-concluir', {
+    body: { etapaId },
+    region: FunctionRegion.SaEast1,
+  })
   if (error) throw new Error(await extrairMensagemDeErro(error))
 }
 
