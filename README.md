@@ -74,6 +74,11 @@ npm run dev
    supabase functions deploy painel-aluno-obter
    supabase functions deploy materiais-aluno-obter
    supabase functions deploy salas-do-aluno
+   supabase functions deploy aluno-assinaturas
+   supabase functions deploy professor-vendas
+   supabase functions deploy creditos-comprar
+   supabase functions deploy plano-venda --no-verify-jwt
+   supabase functions deploy repasses-diario --no-verify-jwt
    supabase functions deploy aluno-conta-gerenciar
    supabase functions deploy tarefa-pronuncia --no-verify-jwt
    supabase functions deploy atividade-gerar-audio
@@ -83,7 +88,7 @@ npm run dev
    supabase functions deploy tutor-gravar-falas
    supabase functions deploy poc-tutor --no-verify-jwt
    ```
-   `--no-verify-jwt` é obrigatório nas funções tarefa-\*, convite-\*, link-cadastro-\* e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*, link-cadastro-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter`, `salas-do-aluno`, `aluno-conta-gerenciar`, `tutor-aluno`, `tutor-gerar-licao` e `tutor-gravar-falas` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão). `poc-tutor` é o laboratório do tutor oral, sem login e protegido por senha; o tutor dentro do produto (beta, migration 0024) está em [docs/TUTOR.md](docs/TUTOR.md).
+   `--no-verify-jwt` é obrigatório nas funções tarefa-\*, convite-\*, link-cadastro-\*, em `sala-entrar`, em `plano-venda` (a página de venda é pública; o JWT do aluno logado, quando vem, é conferido dentro dela), em `repasses-diario` (chamada pelo agendador, com o cabeçalho `x-cron-secret`) e em `stripe-webhook`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*, link-cadastro-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter`, `salas-do-aluno`, `aluno-conta-gerenciar`, `tutor-aluno`, `tutor-gerar-licao` e `tutor-gravar-falas` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão). `poc-tutor` é o laboratório do tutor oral, sem login e protegido por senha; o tutor dentro do produto (beta, migration 0024) está em [docs/TUTOR.md](docs/TUTOR.md).
 6. Gere uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e configure o secret (nunca entra no `.env` do front — só a Edge Function enxerga):
    ```bash
    supabase secrets set GEMINI_API_KEY=sua_chave_aqui
