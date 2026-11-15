@@ -55,6 +55,8 @@ export type Assinatura = {
 }
 
 export type Aluno = {
+  /** 'loja': entrou comprando um plano (0033) e fica fora do limite de alunos. */
+  origem?: 'professor' | 'loja'
   id: string
   professor_id: string
   nome: string
@@ -533,6 +535,46 @@ export type PlanoAluno = {
   stripe_price_id: string | null
   criado_em: string
   atualizado_em: string
+  /** O link de venda: /p/:slug (0033). */
+  slug: string
+  mostrar_no_painel: boolean
+}
+
+export type AssinaturaAluno = {
+  id: string
+  plano_id: string
+  professor_id: string
+  aluno_id: string
+  status: 'ativa' | 'encerrada'
+  cancela_no_fim: boolean
+  motivo_cancelamento: string | null
+  periodo_inicio: string
+  periodo_fim: string
+  preco_centavos: number
+  praticas_mes: number
+  praticas_extra: number
+  pago_por: 'aluno' | 'professor'
+  forma: 'stripe' | 'creditos'
+  encerrada_em: string | null
+  motivo_encerramento: 'cancelada' | 'pagamento_recusado' | 'sem_creditos' | 'professor' | null
+  criado_em: string
+}
+
+export type CobrancaAluno = {
+  id: string
+  assinatura_id: string
+  professor_id: string
+  aluno_id: string
+  periodo_inicio: string
+  periodo_fim: string
+  valor_centavos: number
+  tarifa_centavos: number | null
+  taxa_centavos: number | null
+  custo_ia_centavos: number | null
+  estorno_centavos: number
+  repasse_centavos: number | null
+  status: 'aguardando' | 'transferido' | 'sem_conta' | 'negativo' | 'estornado'
+  repassado_em: string | null
 }
 
 export type PlanoAlunoTrilha = { plano_id: string; trilha_id: string }
@@ -661,6 +703,8 @@ export type Database = {
       creditos_movimentos: Tabela<CreditoMovimento, never, never>
       planos_aluno: Tabela<PlanoAluno, never, never>
       planos_aluno_trilhas: Tabela<PlanoAlunoTrilha, never, never>
+      assinaturas_aluno: Tabela<AssinaturaAluno, never, never>
+      cobrancas_aluno: Tabela<CobrancaAluno, never, never>
     }
     // Sem tipar views aqui: `from()` de tabela ainda não registrada cai neste
     // Record e devolve `never` (planos/api.ts depende disso). A view

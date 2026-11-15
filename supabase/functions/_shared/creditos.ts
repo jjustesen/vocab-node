@@ -19,7 +19,24 @@ type Db = ReturnType<typeof clienteAdmin>
 /** A mesma de `cotacao_dolar()` no banco e de REAIS_POR_DOLAR no app. */
 export const REAIS_POR_DOLAR = 5.5
 
-export type OrigemDoGasto = 'sessao' | 'teste' | 'falas' | 'licao'
+export type OrigemDoGasto = 'sessao' | 'teste' | 'falas' | 'licao' | 'assinatura'
+
+/**
+ * Débito de valor conhecido (o plano contratado pelo professor, §5.4): reserva
+ * e acerta pelo mesmo valor, na mesma trava. Sem saldo, lança `SemCreditos`.
+ */
+export async function debitarCreditos(
+  db: Db,
+  professorId: string,
+  valorReais: number,
+  origem: OrigemDoGasto,
+  ref: string,
+  descricao: string,
+): Promise<void> {
+  const reserva = await reservarCreditos(db, professorId, valorReais, origem, ref, descricao)
+  const { error } = await db.rpc('creditos_acertar', { p_reserva: reserva, p_real: valorReais, p_descricao: descricao })
+  if (error) throw new Error(`debitar créditos: ${error.message}`)
+}
 
 export class SemCreditos extends Error {
   constructor(

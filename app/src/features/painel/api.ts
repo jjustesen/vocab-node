@@ -1,3 +1,4 @@
+import { cabecalhoDoProfessor } from '@/lib/professor-do-aluno'
 import { useQuery } from '@tanstack/react-query'
 import { FunctionRegion } from '@supabase/supabase-js'
 import { supabaseAluno } from '@/lib/supabase-aluno'
@@ -70,6 +71,9 @@ export type TrilhaDoAluno = {
   atualId: string | null
   etapas: EtapaDaTrilha[]
   concluidas: number
+  /** Pausada porque a assinatura do plano terminou (0033): mostra "Assinar de novo". */
+  assinaturaEncerrada?: boolean
+  slugDoPlano?: string | null
 }
 
 /** O aluno marca o material como lido (trilha-passo-concluir). */
@@ -77,6 +81,7 @@ export async function marcarMaterialLido(etapaId: string): Promise<void> {
   // sa-east-1: o banco é em São Paulo; sem isto a função roda em Frankfurt.
   const { error } = await supabaseAluno.functions.invoke('trilha-passo-concluir', {
     body: { etapaId },
+    headers: cabecalhoDoProfessor(),
     region: FunctionRegion.SaEast1,
   })
   if (error) throw new Error(await extrairMensagemDeErro(error))
@@ -85,6 +90,9 @@ export async function marcarMaterialLido(etapaId: string): Promise<void> {
 export type PainelAluno = {
   alunoNome: string
   professorNome: string
+  /** O professor desta conta, e todos os do login (o "Trocar" do painel). */
+  professorId?: string
+  professores?: { id: string; nome: string }[]
   /** O professor ligou o tutor para este aluno e está no beta (0024): mostra o item Tutor. */
   tutorAtivo: boolean
   /** As etapas destas trilhas NÃO se repetem em `pendentes`/`concluidas`. */
@@ -115,7 +123,7 @@ export function usePainelAluno() {
   return useQuery({
     queryKey: ['painel-aluno'],
     queryFn: async (): Promise<PainelAluno> => {
-      const { data, error } = await supabaseAluno.functions.invoke('painel-aluno-obter', { body: {} })
+      const { data, error } = await supabaseAluno.functions.invoke('painel-aluno-obter', { body: {}, headers: cabecalhoDoProfessor() })
       if (error) {
         const mensagem = await extrairMensagemDeErro(error)
         // 404 aqui é identidade, não indisponibilidade: a função achou a
@@ -159,7 +167,7 @@ export function useMateriaisAluno() {
   return useQuery({
     queryKey: ['materiais-aluno'],
     queryFn: async (): Promise<MaterialDoAluno[]> => {
-      const { data, error } = await supabaseAluno.functions.invoke('materiais-aluno-obter', { body: {} })
+      const { data, error } = await supabaseAluno.functions.invoke('materiais-aluno-obter', { body: {}, headers: cabecalhoDoProfessor() })
       if (error) throw new Error(await extrairMensagemDeErro(error))
       return (data as { materiais: MaterialDoAluno[] }).materiais
     },
@@ -174,6 +182,7 @@ export function useMateriaisAluno() {
 export async function urlDoMaterialDoAluno(materialId: string): Promise<string> {
   const { data, error } = await supabaseAluno.functions.invoke('materiais-aluno-obter', {
     body: { materialId },
+    headers: cabecalhoDoProfessor(),
   })
   if (error) throw new Error(await extrairMensagemDeErro(error))
   return (data as { url: string }).url
@@ -199,7 +208,7 @@ export function useSalasDoAluno() {
     // que faz o botão aparecer sem ela precisar recarregar a página.
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<SalaDoAluno[]> => {
-      const { data, error } = await supabaseAluno.functions.invoke('salas-do-aluno', { body: {} })
+      const { data, error } = await supabaseAluno.functions.invoke('salas-do-aluno', { body: {}, headers: cabecalhoDoProfessor() })
       if (error) {
         const mensagem = await extrairMensagemDeErro(error)
         if (statusDoErro(error) === 404) throw new ContaNaoEDeAluno(mensagem)

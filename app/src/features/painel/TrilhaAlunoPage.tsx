@@ -181,9 +181,25 @@ function CabecalhoTrilha({
         </span>
       </div>
 
-      {pausada && (
-        <p className="relative mt-2 text-xs font-semibold text-violet-900/70">Seu professor pausou esta trilha por enquanto.</p>
-      )}
+      {pausada &&
+        (trilha.assinaturaEncerrada ? (
+          // A assinatura terminou (0033): o progresso ficou guardado.
+          <div className="relative mt-3 rounded-2xl bg-white/70 p-3">
+            <p className="text-xs font-semibold text-neutral-700">
+              Sua assinatura terminou. Seu progresso está guardado: assine de novo para continuar de onde parou.
+            </p>
+            {trilha.slugDoPlano && (
+              <Link
+                to={`/p/${trilha.slugDoPlano}`}
+                className="mt-2 inline-block rounded-full bg-neutral-900 px-4 py-2 text-xs font-extrabold text-white"
+              >
+                Assinar de novo
+              </Link>
+            )}
+          </div>
+        ) : (
+          <p className="relative mt-2 text-xs font-semibold text-violet-900/70">Seu professor pausou esta trilha por enquanto.</p>
+        ))}
     </div>
   )
 }

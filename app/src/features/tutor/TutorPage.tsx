@@ -1,18 +1,22 @@
 import { useSearchParams } from 'react-router-dom'
-import { BadgeDollarSign, BookOpen, ChartColumn, Loader2, SlidersHorizontal, Users } from 'lucide-react'
+import { BadgeDollarSign, Banknote, BookOpen, ChartColumn, Loader2, SlidersHorizontal, UserCheck, Users } from 'lucide-react'
 import { useProfessor } from '@/features/planos/api'
 import { useAcessoTutor } from './api'
 import { AbaAlunosDoTutor } from './AbaAlunosDoTutor'
 import { AbaLicoes } from './AbaLicoes'
 import { AbaPlanos } from './AbaPlanos'
+import { AbaAssinantes } from './AbaAssinantes'
+import { AbaRepasses } from './AbaRepasses'
 import { AbaPreferenciasDoTutor } from './AbaPreferenciasDoTutor'
 import { AbaResultadosDoTutor } from './AbaResultadosDoTutor'
 
-type Aba = 'licoes' | 'planos' | 'alunos' | 'resultados' | 'preferencias'
+type Aba = 'licoes' | 'planos' | 'assinantes' | 'repasses' | 'alunos' | 'resultados' | 'preferencias'
 
 const ABAS: { id: Aba; rotulo: string; Icone: typeof Users }[] = [
   { id: 'licoes', rotulo: 'Lições', Icone: BookOpen },
   { id: 'planos', rotulo: 'Planos', Icone: BadgeDollarSign },
+  { id: 'assinantes', rotulo: 'Assinantes', Icone: UserCheck },
+  { id: 'repasses', rotulo: 'Repasses', Icone: Banknote },
   { id: 'alunos', rotulo: 'Alunos', Icone: Users },
   { id: 'resultados', rotulo: 'Resultados', Icone: ChartColumn },
   { id: 'preferencias', rotulo: 'Preferências', Icone: SlidersHorizontal },
@@ -77,6 +81,8 @@ export function TutorPage() {
 
       {aba === 'licoes' && <AbaLicoes />}
       {aba === 'planos' && <AbaPlanos />}
+      {aba === 'assinantes' && <AbaAssinantes />}
+      {aba === 'repasses' && <AbaRepasses />}
       {aba === 'alunos' && <AbaAlunosDoTutor />}
       {aba === 'resultados' && <AbaResultadosDoTutor professor={professor} />}
       {aba === 'preferencias' && <AbaPreferenciasDoTutor professor={professor} />}

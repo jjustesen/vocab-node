@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Loader2, Plus, Route, X } from 'lucide-react'
+import { Check, Copy, ExternalLink, Loader2, Plus, Route, X } from 'lucide-react'
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { useTrilhas } from '@/features/trilhas/api'
 import {
@@ -21,7 +21,7 @@ import {
 /**
  * Aba Planos do tutor (docs/TUTOR-TRILHAS.md §5): o que o aluno vai assinar.
  * Preço, práticas do tutor por mês e as trilhas incluídas, com o preço mínimo
- * ao lado. A venda pelo link é a próxima etapa.
+ * ao lado, e o link de venda de cada plano (/p/:slug, 0033).
  */
 export function AbaPlanos() {
   const { data: planos, isLoading } = usePlanosAluno()
@@ -33,8 +33,8 @@ export function AbaPlanos() {
     <div className="mt-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-md text-sm text-neutral-500">
-          O que o aluno assina: as trilhas, quantas práticas com o tutor por mês e o preço. A venda pelo link começa na
-          próxima etapa.
+          O que o aluno assina: as trilhas, quantas práticas com o tutor por mês e o preço. Mande o link de venda: quem
+          ainda não tem conta ganha uma ao pagar.
         </p>
         <button
           type="button"
@@ -85,6 +85,7 @@ export function AbaPlanos() {
                   ))}
                 </span>
               </button>
+              <LinkDeVenda slug={p.slug} />
             </li>
           ))}
         </ul>
@@ -270,6 +271,32 @@ function Conta({ rotulo, valor }: { rotulo: string; valor: string }) {
     <div className="flex items-baseline justify-between gap-3 py-0.5">
       <span className="text-neutral-500">{rotulo}</span>
       <span className="shrink-0 font-bold">{valor}</span>
+    </div>
+  )
+}
+
+/** O link que o professor manda para os alunos (§6): /p/:slug. */
+function LinkDeVenda({ slug }: { slug: string }) {
+  const [copiado, setCopiado] = useState(false)
+  const url = `${window.location.origin}/p/${slug}`
+  return (
+    <div className="mt-1.5 flex items-center gap-2 px-2">
+      <button
+        type="button"
+        onClick={() => {
+          void navigator.clipboard?.writeText(url).then(() => {
+            setCopiado(true)
+            setTimeout(() => setCopiado(false), 2000)
+          })
+        }}
+        className="inline-flex items-center gap-1 text-xs font-bold text-violet-700 hover:underline"
+      >
+        {copiado ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+        {copiado ? 'Link copiado' : 'Copiar link de venda'}
+      </button>
+      <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-bold text-neutral-500 hover:underline">
+        <ExternalLink className="h-3.5 w-3.5" /> Ver página
+      </a>
     </div>
   )
 }

@@ -37,7 +37,8 @@ export function useUsoDoMes() {
       inicioMes.setHours(0, 0, 0, 0)
 
       const [{ count: alunosAtivos }, { count: geracoesDoMes }] = await Promise.all([
-        supabase.from('alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo'),
+        // Quem veio da venda de um plano (origem 'loja', 0033) não conta no limite.
+        supabase.from('alunos').select('*', { count: 'exact', head: true }).eq('status', 'ativo').neq('origem', 'loja'),
         supabase
           .from('geracoes_ia')
           .select('*', { count: 'exact', head: true })

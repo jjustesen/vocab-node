@@ -8,6 +8,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { calcularLiberacoes } from '../_shared/trilha-liberacao.ts'
+import { contasDoLogin } from '../_shared/conta-aluno.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -25,11 +26,10 @@ Deno.serve(async (req) => {
 
   const db = clienteAdmin()
 
-  const { data: conta } = await db
-    .from('contas_aluno')
-    .select('aluno_id, professor_id')
-    .eq('user_id', sessao.user.id)
-    .maybeSingle()
+  // Um login pode ter um professor por conta (§6.1). O cabeçalho x-professor
+  // diz qual o aluno escolheu; sem ele, a conta mais antiga.
+  const contas = await contasDoLogin(db, sessao.user.id)
+  const conta = contas.find((c) => c.professor_id === req.headers.get('x-professor')) ?? contas[0]
   if (!conta) return respostaErro('Conta não encontrada.', 404)
 
   await db.from('contas_aluno').update({ ultimo_login: new Date().toISOString() }).eq('user_id', sessao.user.id)
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
   // ---------------------------------------------------------------------------
   const { data: vinculos } = await db
     .from('trilha_alunos')
-    .select('trilha_id, status, iniciada_em')
+    .select('trilha_id, status, iniciada_em, assinatura_id')
     .eq('aluno_id', conta.aluno_id)
 
   const trilhas: unknown[] = []
@@ -113,6 +113,13 @@ Deno.serve(async (req) => {
     ])
 
     const trilhaPorId = new Map((dadosTrilhas ?? []).map((t) => [t.id, t]))
+    const idsAssinaturas = vinculos.flatMap((v) => (v.assinatura_id ? [v.assinatura_id] : []))
+    const { data: assinaturas } = idsAssinaturas.length
+      ? await db.from('assinaturas_aluno').select('id, status, planos_aluno(slug)').in('id', idsAssinaturas)
+      : { data: [] }
+    const assinaturaPorId = new Map(
+      (assinaturas ?? []).map((a) => [a.id as string, { status: a.status as string, slug: (a.planos_aluno as unknown as { slug: string } | null)?.slug ?? null }]),
+    )
     const conclusaoPorEtapa = new Map((concluidos ?? []).map((c) => [c.etapa_id, c.concluida_em as string]))
 
     // Reatribuir a trilha cria uma tentativa nova por etapa (RF-127). Vale a
@@ -218,7 +225,11 @@ Deno.serve(async (req) => {
         }
       })
 
+      const assinatura = vinculo.assinatura_id ? assinaturaPorId.get(vinculo.assinatura_id) : undefined
       trilhas.push({
+        // Pausada porque a assinatura terminou: o aluno vê "Assinar de novo".
+        assinaturaEncerrada: vinculo.status === 'pausada' && assinatura?.status === 'encerrada',
+        slugDoPlano: assinatura?.slug ?? null,
         id: trilha.id,
         nome: trilha.nome,
         nivel: trilha.nivel,
@@ -265,6 +276,8 @@ Deno.serve(async (req) => {
   return respostaJson({
     alunoNome: aluno?.nome ?? 'aluno',
     professorNome: professor?.nome ?? 'seu professor',
+    professorId: conta.professor_id,
+    professores: contas.map((c) => ({ id: c.professor_id, nome: c.professores?.nome ?? 'Professor' })),
     tutorAtivo,
     trilhas,
     pendentes,

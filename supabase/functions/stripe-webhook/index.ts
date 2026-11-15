@@ -17,11 +17,23 @@
 //   checkout.session.completed (mode=payment, pago)   → soma os créditos
 //   checkout.session.async_payment_succeeded          → idem, quando é Pix
 //
+// E a assinatura do ALUNO num plano do professor (plano-venda, 0033), que
+// tem `metadata.tipo = 'plano_aluno'` e nunca mexe em `professores.plano`:
+//
+//   checkout.session.completed / invoice.paid  → cria conta, aluno, assinatura
+//                                                e matrícula (uma vez só); cada
+//                                                fatura paga vira uma cobrança
+//                                                com repasse um mês depois
+//   invoice.payment_failed                     → cancela NA HORA no Stripe e
+//                                                encerra o acesso (sem carência)
+//   customer.subscription.updated / deleted    → cancelamento agendado, fim
+//
 // Idempotente por construção: cada evento sincroniza o estado ATUAL da
 // subscription (upsert), então evento repetido ou fora de ordem converge.
 import Stripe from 'npm:stripe@18'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { clienteStripe, cryptoProvider, planoDoPrice } from '../_shared/stripe.ts'
+import { encerrarAssinatura, garantirAssinatura, TIPO_PLANO_ALUNO } from '../_shared/assinatura-aluno.ts'
 
 // past_due entra como "ainda pago": o Stripe está no meio das retentativas de
 // cobrança e cortar o professor no primeiro cartão recusado seria brutal. Se
@@ -29,6 +41,7 @@ import { clienteStripe, cryptoProvider, planoDoPrice } from '../_shared/stripe.t
 const STATUS_COM_ACESSO = ['active', 'trialing', 'past_due']
 
 async function sincronizarAssinatura(sub: Stripe.Subscription): Promise<void> {
+  if (sub.metadata?.tipo === TIPO_PLANO_ALUNO) return sincronizarAssinaturaDeAluno(sub)
   const admin = clienteAdmin()
   const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id
 
@@ -104,6 +117,92 @@ async function creditarCompra(sessao: Stripe.Checkout.Session): Promise<void> {
   if (error) throw new Error(`creditos: ${error.message}`)
 }
 
+// ── Assinatura do aluno (0033) ─────────────────────────────────────────────
+
+const STATUS_ENCERRADOS = ['canceled', 'unpaid', 'incomplete_expired']
+
+async function sincronizarAssinaturaDeAluno(sub: Stripe.Subscription): Promise<void> {
+  const db = clienteAdmin()
+  if (STATUS_ENCERRADOS.includes(sub.status)) {
+    const { data } = await db.from('assinaturas_aluno').select('id').eq('stripe_subscription_id', sub.id).maybeSingle()
+    if (data) await encerrarAssinatura(db, data.id, 'cancelada')
+    return
+  }
+  // 'incomplete': o primeiro pagamento ainda não passou. Só provisiona pago.
+  if (sub.status === 'active' || sub.status === 'trialing') await garantirAssinatura(db, sub)
+}
+
+/** O id da assinatura de uma fatura: mudou de lugar na API de 2025 (parent.subscription_details). */
+function assinaturaDaFatura(invoice: Stripe.Invoice): string | null {
+  const antiga = (invoice as unknown as { subscription?: string | { id: string } | null }).subscription
+  const nova = (invoice as unknown as { parent?: { subscription_details?: { subscription?: string | { id: string } } } }).parent
+    ?.subscription_details?.subscription
+  const v = nova ?? antiga
+  return !v ? null : typeof v === 'string' ? v : v.id
+}
+
+/** A cobrança (charge) de uma fatura paga: é a `source_transaction` da transferência do repasse. */
+async function cobrancaDaFatura(stripe: Stripe, invoice: Stripe.Invoice): Promise<string | null> {
+  const antiga = (invoice as unknown as { charge?: string | { id: string } | null }).charge
+  if (antiga) return typeof antiga === 'string' ? antiga : antiga.id
+  try {
+    const pagamentos = await stripe.invoicePayments.list({ invoice: invoice.id!, limit: 1 })
+    const pi = pagamentos.data[0]?.payment?.payment_intent
+    if (!pi) return null
+    const intent = await stripe.paymentIntents.retrieve(typeof pi === 'string' ? pi : pi.id)
+    const carga = intent.latest_charge
+    return !carga ? null : typeof carga === 'string' ? carga : carga.id
+  } catch (e) {
+    console.error('stripe-webhook: cobrança da fatura', invoice.id, e)
+    return null
+  }
+}
+
+async function registrarFaturaPaga(stripe: Stripe, invoice: Stripe.Invoice): Promise<void> {
+  const subId = assinaturaDaFatura(invoice)
+  if (!subId || !invoice.amount_paid) return
+  const sub = await stripe.subscriptions.retrieve(subId)
+  if (sub.metadata?.tipo !== TIPO_PLANO_ALUNO) return
+  const db = clienteAdmin()
+  const assinatura = await garantirAssinatura(db, sub)
+  if (!assinatura) return
+
+  // O período que ESTA fatura pagou (a linha da fatura), não o atual da assinatura.
+  const linha = invoice.lines?.data?.[0]?.period
+  const inicio = linha?.start ? new Date(linha.start * 1000).toISOString() : assinatura.periodo_inicio
+  const fim = linha?.end ? new Date(linha.end * 1000).toISOString() : assinatura.periodo_fim
+
+  const { error } = await db.from('cobrancas_aluno').upsert(
+    {
+      assinatura_id: assinatura.id,
+      professor_id: assinatura.professor_id,
+      aluno_id: assinatura.aluno_id,
+      periodo_inicio: inicio,
+      periodo_fim: fim,
+      valor_centavos: invoice.amount_paid,
+      stripe_invoice_id: invoice.id,
+      stripe_charge_id: await cobrancaDaFatura(stripe, invoice),
+    },
+    { onConflict: 'stripe_invoice_id', ignoreDuplicates: true },
+  )
+  if (error) throw new Error(`cobrancas_aluno: ${error.message}`)
+}
+
+/**
+ * Renovação recusada encerra na hora (§5, "cobrança recusada"): cancela no
+ * Stripe, para nenhuma nova tentativa cobrar um período que o aluno não teve.
+ */
+async function encerrarPorFalha(stripe: Stripe, invoice: Stripe.Invoice): Promise<void> {
+  const subId = assinaturaDaFatura(invoice)
+  if (!subId) return
+  const sub = await stripe.subscriptions.retrieve(subId)
+  if (sub.metadata?.tipo !== TIPO_PLANO_ALUNO) return
+  if (!STATUS_ENCERRADOS.includes(sub.status)) await stripe.subscriptions.cancel(subId)
+  const db = clienteAdmin()
+  const { data } = await db.from('assinaturas_aluno').select('id').eq('stripe_subscription_id', subId).maybeSingle()
+  if (data) await encerrarAssinatura(db, data.id, 'pagamento_recusado')
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('Método não permitido.', { status: 405 })
 
@@ -152,6 +251,14 @@ Deno.serve(async (req) => {
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
         await sincronizarAssinatura(evento.data.object as Stripe.Subscription)
+        break
+      }
+      case 'invoice.paid': {
+        await registrarFaturaPaga(stripe, evento.data.object as Stripe.Invoice)
+        break
+      }
+      case 'invoice.payment_failed': {
+        await encerrarPorFalha(stripe, evento.data.object as Stripe.Invoice)
         break
       }
       default:
