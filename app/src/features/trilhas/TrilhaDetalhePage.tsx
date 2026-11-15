@@ -2,24 +2,18 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  ChevronDown,
-  ChevronUp,
   Copy,
-  Info,
   Loader2,
   Milestone,
   MoreHorizontal,
   Pause,
   Play,
-  Plus,
   Trash2,
-  Unlock,
   UserPlus,
   X,
   UsersRound,
 } from 'lucide-react'
 import {
-  useAdicionarEtapa,
   useAlterarStatusNaTrilha,
   useAlunosDaTrilha,
   atribuirTrilha,
@@ -27,10 +21,8 @@ import {
   useEtapasDaTrilha,
   useExcluirTrilha,
   useRemoverAlunoDaTrilha,
-  useRemoverEtapa,
-  useReordenarEtapas,
+  useModulos,
   useTrilha,
-  type EtapaComAtividade,
   type LinkDaEtapa,
   type ProgressoAluno,
 } from './api'
@@ -38,21 +30,21 @@ import { useAlunos, useAlunosComConta } from '@/features/alunos/api'
 import { AtalhosDeTurma } from '@/features/turmas/AtalhosDeTurma'
 import { rotuloDosDestinos, useDestinos } from '@/features/turmas/turmas-do-envio'
 import { atribuirTrilhaParaTurmas, invalidarConteudos } from '@/features/turmas/conteudos'
-import { useAtividades } from '@/features/atividades/api'
 import { corDoAvatar, inicial } from '@/lib/avatar'
-import type { Aluno, TrilhaEtapa } from '@/types/db'
+import type { Aluno } from '@/types/db'
 import { BotaoApagar } from '@/components/BotaoApagar'
+import { ConfiguracaoDaTrilha, ModulosDaTrilha } from './EditorDaTrilha'
 
 export function TrilhaDetalhePage() {
   const { id } = useParams<{ id: string }>()
   const navegar = useNavigate()
   const { data: trilha, isLoading, error } = useTrilha(id)
   const { data: etapas } = useEtapasDaTrilha(id)
+  const { data: modulos } = useModulos(id)
   const { data: alunosNaTrilha } = useAlunosDaTrilha(id)
   const excluir = useExcluirTrilha()
   const duplicar = useDuplicarTrilha()
   const [menuAberto, setMenuAberto] = useState(false)
-  const [modalAtividade, setModalAtividade] = useState(false)
   const [modalAluno, setModalAluno] = useState(false)
 
   if (isLoading) {
@@ -142,39 +134,26 @@ export function TrilhaDetalhePage() {
         <section className="min-w-0 lg:col-span-2">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <h2 className="flex items-center gap-1.5 text-sm font-bold text-neutral-900">
-              <Milestone className="h-4 w-4" /> Sequência da trilha
+              <Milestone className="h-4 w-4" /> Módulos e passos
             </h2>
-            <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800">
-              <Unlock className="h-3.5 w-3.5" /> Todas liberadas para o aluno
+            <span className="text-xs font-medium text-neutral-400">
+              A ordem aqui é a ordem que o aluno segue.
             </span>
           </div>
-
-          <div className="rounded-3xl bg-white p-5">
-            {etapas && etapas.length > 0 ? (
-              <Sequencia trilhaId={trilha.id} etapas={etapas} />
-            ) : (
-              <p className="py-6 text-center text-sm text-neutral-400">
-                Nenhuma etapa ainda. Adicione atividades da sua biblioteca.
-              </p>
-            )}
-
-            <button
-              onClick={() => setModalAtividade(true)}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-neutral-300 py-3 text-sm font-bold text-neutral-500 transition hover:border-neutral-400"
-            >
-              <Plus className="h-4 w-4" /> Adicionar atividade
-            </button>
-          </div>
-
-          <div className="mt-3 flex gap-2.5 rounded-2xl bg-amber-100 px-4 py-3 text-xs text-amber-900">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
-            <span>
-              <b>A ordem é um roteiro, não uma trava.</b> O aluno recebe a trilha inteira liberada e faz
-              uma etapa por vez, na ordem sugerida — mas pode emendar tudo numa sentada ou pular uma
-              etapa. Você não precisa liberar nada.
-            </span>
-          </div>
+          {modulos ? (
+            <ModulosDaTrilha trilhaId={trilha.id} modulos={modulos} passos={etapas ?? []} />
+          ) : (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
+            </div>
+          )}
         </section>
+
+        <div className="min-w-0 space-y-4">
+          <section>
+            <h2 className="mb-2 text-sm font-bold text-neutral-900">Como o aluno vê</h2>
+            <ConfiguracaoDaTrilha trilha={trilha} />
+          </section>
 
         <section className="min-w-0">
           <h2 className="mb-2 text-sm font-bold text-neutral-900">
@@ -195,15 +174,9 @@ export function TrilhaDetalhePage() {
             </p>
           )}
         </section>
+        </div>
       </div>
 
-      {modalAtividade && (
-        <ModalAdicionarAtividade
-          trilhaId={trilha.id}
-          jaNaTrilha={new Set((etapas ?? []).map((e) => e.atividade_id))}
-          aoFechar={() => setModalAtividade(false)}
-        />
-      )}
       {modalAluno && (
         <ModalAtribuir
           trilhaId={trilha.id}
@@ -211,75 +184,6 @@ export function TrilhaDetalhePage() {
           aoFechar={() => setModalAluno(false)}
         />
       )}
-    </div>
-  )
-}
-
-/**
- * Reordenação por setas, não arrastar: o HTML5 drag-and-drop não funciona em
- * toque, e o app é usado no celular (RNF-06). Sem biblioteca de DnD, setas
- * dão o mesmo resultado em qualquer dispositivo.
- */
-function Sequencia({ trilhaId, etapas }: { trilhaId: string; etapas: EtapaComAtividade[] }) {
-  const reordenar = useReordenarEtapas(trilhaId)
-  const remover = useRemoverEtapa(trilhaId)
-
-  function mover(indice: number, direcao: -1 | 1) {
-    const nova = [...etapas]
-    const destino = indice + direcao
-    if (destino < 0 || destino >= nova.length) return
-    ;[nova[indice], nova[destino]] = [nova[destino], nova[indice]]
-    reordenar.mutate(nova as TrilhaEtapa[])
-  }
-
-  return (
-    <div>
-      {etapas.map((etapa, i) => (
-        <div key={etapa.id} className="flex gap-3">
-          <div className="flex shrink-0 flex-col items-center">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-violet-300 text-xs font-extrabold text-violet-900">
-              {i + 1}
-            </span>
-            {i < etapas.length - 1 && <span className="my-1 flex-1 border-l-2 border-dashed border-neutral-200" />}
-          </div>
-
-          {/* min-w-0 no flex item: sem isso o título não encolhe e os três
-              botões de ação empurram a linha para fora da tela no celular. */}
-          <div className="mb-2 flex min-w-0 flex-1 items-center gap-2 rounded-2xl bg-neutral-50 px-3 py-3">
-            <Link to={`/atividades/${etapa.atividade_id}`} className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-neutral-800">{etapa.atividadeTitulo}</p>
-              <p className="text-xs font-medium text-neutral-400">
-                {etapa.atividadeNivel} · {etapa.questoes} {etapa.questoes === 1 ? 'questão' : 'questões'}
-              </p>
-            </Link>
-
-            <button
-              onClick={() => mover(i, -1)}
-              disabled={i === 0 || reordenar.isPending}
-              title="Subir"
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-neutral-400 hover:bg-neutral-200 disabled:opacity-25"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => mover(i, 1)}
-              disabled={i === etapas.length - 1 || reordenar.isPending}
-              title="Descer"
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-neutral-400 hover:bg-neutral-200 disabled:opacity-25"
-            >
-              <ChevronDown className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => remover.mutate(etapa.id)}
-              disabled={remover.isPending}
-              title="Tirar da trilha"
-              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-neutral-300 hover:bg-rose-50 hover:text-rose-600"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      ))}
     </div>
   )
 }
@@ -334,77 +238,6 @@ function LinhaAluno({ trilhaId, progresso }: { trilhaId: string; progresso: Prog
             aoConfirmar={() => removerAluno.mutate(progresso.alunoId)}
           />
         </span>
-      </div>
-    </div>
-  )
-}
-
-function ModalAdicionarAtividade({
-  trilhaId,
-  jaNaTrilha,
-  aoFechar,
-}: {
-  trilhaId: string
-  jaNaTrilha: Set<string>
-  aoFechar: () => void
-}) {
-  const { data: atividades } = useAtividades()
-  const adicionar = useAdicionarEtapa(trilhaId)
-  const [busca, setBusca] = useState('')
-
-  const termo = busca.trim().toLowerCase()
-  const visiveis = (atividades ?? []).filter((a) => !termo || a.titulo.toLowerCase().includes(termo))
-
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-neutral-900/60 p-4" onClick={aoFechar}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl">
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-lg font-extrabold">Adicionar atividade</h2>
-            <p className="text-sm text-neutral-500">Da sua biblioteca — a trilha não cria conteúdo novo.</p>
-          </div>
-          <button onClick={aoFechar} className="text-neutral-400">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <input
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          placeholder="Buscar atividade..."
-          className="mt-4 w-full rounded-2xl bg-neutral-100 px-4 py-2.5 text-sm outline-none ring-neutral-900 focus:ring-2"
-        />
-
-        <div className="mt-3 max-h-72 space-y-1.5 overflow-y-auto">
-          {visiveis.length === 0 && (
-            <p className="rounded-xl bg-neutral-50 px-3 py-3 text-sm text-neutral-500">
-              Nenhuma atividade encontrada.
-            </p>
-          )}
-          {visiveis.map((a) => {
-            const repetida = jaNaTrilha.has(a.id)
-            return (
-              <button
-                key={a.id}
-                onClick={async () => {
-                  await adicionar.mutateAsync(a.id)
-                  aoFechar()
-                }}
-                disabled={adicionar.isPending}
-                className="flex w-full items-center gap-3 rounded-2xl bg-neutral-50 px-4 py-2.5 text-left transition hover:bg-neutral-100 disabled:opacity-50"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-bold text-neutral-800">{a.titulo}</span>
-                  <span className="text-xs text-neutral-400">
-                    {a.nivel} · {a.questoes} {a.questoes === 1 ? 'questão' : 'questões'}
-                    {repetida && ' · já está na trilha'}
-                  </span>
-                </span>
-                <Plus className="h-4 w-4 shrink-0 text-neutral-400" />
-              </button>
-            )
-          })}
-        </div>
       </div>
     </div>
   )

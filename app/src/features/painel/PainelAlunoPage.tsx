@@ -229,7 +229,10 @@ export function PainelAlunoPage() {
 function CartaoTrilha({ trilha }: { trilha: TrilhaDoAluno }) {
   const pausada = trilha.status === 'pausada'
   const percentual = trilha.etapas.length > 0 ? (trilha.concluidas / trilha.etapas.length) * 100 : 0
-  const atual = trilha.etapas.find((e) => !e.concluidaEm)
+  // O próximo passo vem do servidor: com módulos travados, "o primeiro não
+  // concluído" pode ser um passo que o aluno ainda nem consegue abrir.
+  const atual = trilha.etapas.find((e) => e.etapaId === trilha.atualId)
+  const travada = !atual && trilha.etapas.some((e) => !e.concluidaEm && !e.opcional)
 
   return (
     <Link
@@ -261,7 +264,9 @@ function CartaoTrilha({ trilha }: { trilha: TrilhaDoAluno }) {
           ? 'Seu professor pausou esta trilha por enquanto.'
           : atual
             ? `Próxima: ${atual.titulo}`
-            : 'Trilha concluída!'}
+            : travada
+              ? 'O próximo módulo ainda vai abrir.'
+              : 'Trilha concluída!'}
       </p>
     </Link>
   )

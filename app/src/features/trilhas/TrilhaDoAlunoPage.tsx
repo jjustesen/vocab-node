@@ -156,8 +156,13 @@ function LinhaEtapa({
   alunoTelefone: string | null
 }) {
   const concluida = Boolean(etapa.concluidaEm)
+  const ehAtividade = etapa.tipo === 'atividade'
   const percentual = etapa.total ? (etapa.acertos ?? 0) / etapa.total : 1
-  const sugereReforco = concluida && percentual < 0.7
+  const sugereReforco = ehAtividade && concluida && percentual < 0.7
+  /** Material e lição não têm questões: a linha diz o tipo. */
+  const resumo = ehAtividade
+    ? `${etapa.nivel} · ${etapa.questoes} questões`
+    : `${etapa.detalhe}${etapa.opcional ? ' · opcional' : ''}`
   const minutos = etapa.tempoMs ? Math.max(1, Math.round(etapa.tempoMs / 60000)) : null
 
   const marcador = concluida ? (
@@ -198,10 +203,9 @@ function LinhaEtapa({
             </span>
             <p className="relative mt-2 font-extrabold text-neutral-900">{etapa.titulo}</p>
             <p className="relative text-xs font-medium text-violet-900/70">
-              {etapa.nivel} · {etapa.questoes} questões
+              {resumo}
               {etapa.enviadaEm && ` · enviada ${rotuloDias(diasDesde(etapa.enviadaEm))}`}
-              {' · '}
-              {etapa.iniciadaEm ? 'começou, não terminou' : 'não iniciada'}
+              {ehAtividade && (etapa.iniciadaEm ? ' · começou, não terminou' : ' · não iniciada')}
             </p>
             <div className="relative mt-3 flex flex-wrap gap-2">
               <a
@@ -215,12 +219,14 @@ function LinhaEtapa({
               >
                 <MessageCircle className="h-3.5 w-3.5" /> Cobrar no WhatsApp
               </a>
-              <Link
-                to={`/atividades/${etapa.atividadeId}`}
-                className="rounded-full bg-white px-4 py-2 text-xs font-bold text-neutral-700"
-              >
-                Ver atividade
-              </Link>
+              {etapa.atividadeId && (
+                <Link
+                  to={`/atividades/${etapa.atividadeId}`}
+                  className="rounded-full bg-white px-4 py-2 text-xs font-bold text-neutral-700"
+                >
+                  Ver atividade
+                </Link>
+              )}
             </div>
           </div>
         ) : (
@@ -228,7 +234,7 @@ function LinhaEtapa({
             <div className="min-w-0">
               <p className="flex flex-wrap items-center gap-2 font-bold text-neutral-900">
                 <span className="truncate">{etapa.titulo}</span>
-                {concluida && (
+                {concluida && ehAtividade && etapa.total !== null && (
                   <span
                     className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold ${corDaNota(etapa.acertos ?? 0, etapa.total ?? 0)}`}
                   >
@@ -243,9 +249,11 @@ function LinhaEtapa({
                   ? `Concluída em ${dataCurta(etapa.concluidaEm)}${minutos ? ` · ${minutos} min` : ''}${
                       sugereReforco ? ' · sugerido reforço' : ''
                     }`
-                  : `${etapa.nivel} · ${etapa.questoes} questões · ~${minutosEstimados(etapa.questoes)} min · ${
-                      etapa.atribuicaoId ? 'disponível, não iniciada' : 'ainda não atribuída'
-                    }`}
+                  : ehAtividade
+                    ? `${resumo} · ~${minutosEstimados(etapa.questoes)} min · ${
+                        etapa.atribuicaoId ? 'disponível, não iniciada' : 'ainda não atribuída'
+                      }`
+                    : `${resumo} · ainda não ${etapa.tipo === 'material' ? 'lido' : 'praticada'}`}
               </p>
             </div>
             {concluida && etapa.atribuicaoId && (
@@ -356,8 +364,10 @@ function CartaoAjustes({
 
   // Reforço faz sentido no que já foi feito e foi mal — refazer uma etapa que
   // o aluno ainda nem abriu não é reforço, é duplicata.
+  // Só atividade tem nota e link para reenviar.
   const paraReforcar = etapas.filter(
-    (e) => e.concluidaEm && e.total && (e.acertos ?? 0) / e.total < 0.7,
+    (e): e is EtapaDoAluno & { atividadeId: string } =>
+      e.atividadeId !== null && Boolean(e.concluidaEm && e.total && (e.acertos ?? 0) / e.total < 0.7),
   )
 
   return (

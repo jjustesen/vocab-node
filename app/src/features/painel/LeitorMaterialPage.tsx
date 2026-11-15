@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { AlertTriangle, ChevronLeft, ExternalLink, FileText, Loader2, ZoomIn, ZoomOut } from 'lucide-react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { AlertTriangle, Check, ChevronLeft, ExternalLink, FileText, Loader2, ZoomIn, ZoomOut } from 'lucide-react'
 import { carregarPdfjs } from '@/lib/arquivo'
-import { urlDoMaterialDoAluno, useMateriaisAluno, type MaterialDoAluno } from './api'
+import { marcarMaterialLido, urlDoMaterialDoAluno, useMateriaisAluno, usePainelAluno, type MaterialDoAluno } from './api'
 
 /**
  * /painel/materiais/:id — o material aberto DENTRO do app.
@@ -31,6 +32,14 @@ export function LeitorMaterialPage() {
   const [zoom, setZoom] = useState<(typeof ZOOMS)[number]>(1)
   const [rotuloPagina, setRotuloPagina] = useState<string | null>(null)
   const arquivo = useUrlDoArquivo(material)
+  // Aberto a partir de um passo da trilha (?passo=…): no fim, "Li este material".
+  const [busca] = useSearchParams()
+  const passoId = busca.get('passo')
+  const [chegouAoFim, setChegouAoFim] = useState(false)
+  const paginas = rotuloPagina?.match(/Página (\d+) de (\d+)/)
+  if (!chegouAoFim && (paginas ? paginas[1] === paginas[2] : material && material.tipo !== 'pdf')) {
+    setChegouAoFim(true)
+  }
 
   if (isLoading) return <TelaCheia><Loader2 className="h-6 w-6 animate-spin text-neutral-400" /></TelaCheia>
 
@@ -108,9 +117,11 @@ export function LeitorMaterialPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-3 pb-16 pt-3">
+      <main className={`mx-auto max-w-3xl px-3 pt-3 ${passoId ? 'pb-32' : 'pb-16'}`}>
         <Conteudo material={material} arquivo={arquivo} zoom={zoom} aoMudarRotulo={setRotuloPagina} />
       </main>
+
+      {passoId && <BarraDoPasso passoId={passoId} chegouAoFim={chegouAoFim} />}
     </div>
   )
 }
@@ -635,4 +646,68 @@ function gravarArmazenado(chave: string, valor: string) {
   } catch {
     /* sem armazenamento: só não lembra a página */
   }
+}
+
+// ---------------------------------------------------------------------------
+// "Li este material" — o passo de material da trilha
+// ---------------------------------------------------------------------------
+
+/**
+ * Só aparece quando o leitor foi aberto por um passo da trilha. No PDF, o
+ * botão liga quando o aluno chega à última página; nos outros tipos, na hora.
+ * Quem confere se o passo está liberado é a função (`trilha-passo-concluir`).
+ */
+function BarraDoPasso({ passoId, chegouAoFim }: { passoId: string; chegouAoFim: boolean }) {
+  const qc = useQueryClient()
+  const { data: painel } = usePainelAluno()
+  const [salvando, setSalvando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+  const [marcado, setMarcado] = useState(false)
+
+  const trilha = painel?.trilhas.find((t) => t.etapas.some((e) => e.etapaId === passoId))
+  const passo = trilha?.etapas.find((e) => e.etapaId === passoId)
+  const feito = marcado || passo?.estado === 'feito'
+  const voltar = trilha ? `/painel/trilha/${trilha.id}` : '/painel'
+
+  async function marcar() {
+    setErro(null)
+    setSalvando(true)
+    try {
+      await marcarMaterialLido(passoId)
+      setMarcado(true)
+      await qc.invalidateQueries({ queryKey: ['painel-aluno'] })
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : 'Não consegui marcar como lido.')
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-neutral-200 bg-white/95 px-4 pt-3 backdrop-blur"
+      style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}
+    >
+      <div className="mx-auto max-w-sm">
+        {feito ? (
+          <Link
+            to={voltar}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-3 text-sm font-extrabold text-white"
+          >
+            <Check className="h-4 w-4" /> Lido · voltar para a trilha
+          </Link>
+        ) : (
+          <button
+            onClick={marcar}
+            disabled={!chegouAoFim || salvando}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-3 text-sm font-extrabold text-white disabled:bg-neutral-200 disabled:text-neutral-500"
+          >
+            {salvando && <Loader2 className="h-4 w-4 animate-spin" />}
+            {chegouAoFim ? 'Li este material' : 'Role até o fim para concluir'}
+          </button>
+        )}
+        {erro && <p className="mt-2 text-center text-xs font-medium text-rose-700">{erro}</p>}
+      </div>
+    </div>
+  )
 }

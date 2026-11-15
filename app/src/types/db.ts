@@ -317,13 +317,55 @@ export type Trilha = {
   nivel: NivelCefr
   descricao: string | null
   criada_em: string
+  /** Como o aluno percorre os passos de um módulo (0030). */
+  navegacao: TrilhaNavegacao
+  /** Numa trilha em sequência, o aluno pode trocar para a visão por abas. */
+  permite_abas: boolean
+  /** Quando cada módulo abre (0030). */
+  liberacao: TrilhaLiberacao
+  liberacao_dias: number
+  /** Nota mínima (0–100) para a atividade contar como concluída; null = basta terminar. */
+  nota_minima: number | null
 }
 
+export type TrilhaNavegacao = 'sequencia' | 'sugerida' | 'abas'
+export type TrilhaLiberacao = 'tudo' | 'progresso' | 'periodo' | 'progresso_e_periodo'
+
+export type TrilhaModulo = {
+  id: string
+  trilha_id: string
+  ordem: number
+  titulo: string
+  criado_em: string
+}
+
+/**
+ * Um PASSO da trilha (o nome da tabela ficou de antes da 0030). Exatamente um
+ * de `atividade_id`, `material_id` e `licao_tutor_id` vem preenchido.
+ */
 export type TrilhaEtapa = {
   id: string
   trilha_id: string
-  atividade_id: string
+  modulo_id: string
+  atividade_id: string | null
+  material_id: string | null
+  licao_tutor_id: string | null
+  opcional: boolean
   ordem: number
+}
+
+export type TipoDePasso = 'atividade' | 'material' | 'tutor'
+
+export function tipoDoPasso(e: Pick<TrilhaEtapa, 'atividade_id' | 'material_id'>): TipoDePasso {
+  return e.atividade_id ? 'atividade' : e.material_id ? 'material' : 'tutor'
+}
+
+export type PassoConcluido = {
+  aluno_id: string
+  etapa_id: string
+  trilha_id: string
+  concluida_em: string
+  percentual: number | null
 }
 
 export type TrilhaAlunoStatus = 'ativa' | 'pausada' | 'concluida'
@@ -544,8 +586,13 @@ export type Database = {
       trilhas: Tabela<Trilha, Insert<Trilha, 'professor_id' | 'nome' | 'nivel'>, Partial<Trilha>>
       trilha_etapas: Tabela<
         TrilhaEtapa,
-        Insert<TrilhaEtapa, 'trilha_id' | 'atividade_id' | 'ordem'>,
+        Insert<TrilhaEtapa, 'trilha_id' | 'ordem'>,
         Partial<TrilhaEtapa>
+      >
+      trilha_modulos: Tabela<
+        TrilhaModulo,
+        Insert<TrilhaModulo, 'trilha_id' | 'ordem' | 'titulo'>,
+        Partial<TrilhaModulo>
       >
       trilha_alunos: Tabela<
         TrilhaAluno,
@@ -561,6 +608,9 @@ export type Database = {
       tutor_licoes_alunos: Tabela<TutorLicaoAluno, Insert<TutorLicaoAluno, 'aluno_id' | 'licao_id'>, never>
       tutor_sessoes: Tabela<TutorSessao, never, never>
     }
+    // Sem tipar views aqui: `from()` de tabela ainda não registrada cai neste
+    // Record e devolve `never` (planos/api.ts depende disso). A view
+    // trilha_passos_concluidos é lida com cast para `PassoConcluido`.
     Views: Record<string, never>
     Functions: {
       cadastrar_perfil_professor: { Args: { p_nome: string }; Returns: undefined }

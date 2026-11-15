@@ -2,13 +2,25 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { gerarTokenDeAcesso } from '@/lib/token'
 import { lembrarToken } from '@/lib/links-lembrados'
-import type { Aluno, NivelCefr, Trilha, TrilhaAluno, TrilhaAlunoStatus, TrilhaEtapa } from '@/types/db'
+import {
+  tipoDoPasso,
+  type Aluno,
+  type NivelCefr,
+  type PassoConcluido,
+  type TipoDePasso,
+  type Trilha,
+  type TrilhaAluno,
+  type TrilhaAlunoStatus,
+  type TrilhaEtapa,
+  type TrilhaModulo,
+} from '@/types/db'
 
 export const chavesTrilhas = {
   todas: ['trilhas'] as const,
   lista: ['trilhas', 'lista'] as const,
   uma: (id: string) => ['trilhas', id] as const,
   etapas: (id: string) => ['trilhas', id, 'etapas'] as const,
+  modulos: (id: string) => ['trilhas', id, 'modulos'] as const,
   alunos: (id: string) => ['trilhas', id, 'alunos'] as const,
   doAluno: (alunoId: string) => ['trilhas', 'aluno', alunoId] as const,
   doAlunoNaTrilha: (trilhaId: string, alunoId: string) =>
@@ -88,14 +100,12 @@ export function useTrilhas() {
         etapaIdsPorTrilha.set(e.trilha_id, [...(etapaIdsPorTrilha.get(e.trilha_id) ?? []), e.id])
       }
 
+      const idsAtividades = [...new Set(etapas.flatMap((e) => (e.atividade_id ? [e.atividade_id] : [])))]
       const [nomePorAluno, concluidas, { data: questoes }] = await Promise.all([
         buscarNomes([...new Set(vinculos.map((v) => v.aluno_id))]),
         buscarConcluidas(etapas.map((e) => e.id)),
-        etapas.length > 0
-          ? supabase
-              .from('questoes')
-              .select('id, atividade_id')
-              .in('atividade_id', [...new Set(etapas.map((e) => e.atividade_id))])
+        idsAtividades.length > 0
+          ? supabase.from('questoes').select('id, atividade_id').in('atividade_id', idsAtividades)
           : Promise.resolve({ data: [] as { id: string; atividade_id: string }[] }),
       ])
 
@@ -105,6 +115,7 @@ export function useTrilhas() {
       }
       const questoesPorTrilha = new Map<string, number>()
       for (const e of etapas) {
+        if (!e.atividade_id) continue
         questoesPorTrilha.set(
           e.trilha_id,
           (questoesPorTrilha.get(e.trilha_id) ?? 0) + (questoesPorAtividade.get(e.atividade_id) ?? 0),
@@ -131,29 +142,27 @@ async function buscarNomes(ids: string[]): Promise<Map<string, string>> {
 }
 
 /**
- * Chaves `alunoId|etapaId` das etapas concluídas.
- *
- * Conta só a tentativa MAIS RECENTE de cada etapa: reenviar a trilha como
- * reforço (RF-122/127) cria uma tentativa nova, e a etapa volta a ser uma
- * pendência de verdade. Contar "qualquer tentativa já concluída" faria o
- * professor ver a etapa como pronta enquanto o aluno vê "Continuar" no painel.
+ * Os passos concluídos, de qualquer tipo, lidos da view da 0030: atividade
+ * pela tentativa MAIS RECENTE (reenviar como reforço reabre o passo,
+ * RF-122/127) e com a nota mínima da trilha, material pelo "Li este
+ * material", lição pela sessão do tutor terminada.
  */
-async function buscarConcluidas(etapaIds: string[]): Promise<Set<string>> {
-  if (etapaIds.length === 0) return new Set()
-  const { data, error } = await supabase
-    .from('atribuicoes')
-    .select('aluno_id, trilha_etapa_id, concluida_em, enviada_em')
-    .in('trilha_etapa_id', etapaIds)
-    .order('enviada_em', { ascending: false })
+async function lerPassosConcluidos(etapaIds: string[], alunoId?: string): Promise<PassoConcluido[]> {
+  if (etapaIds.length === 0) return []
+  let consulta = supabase
+    .from('trilha_passos_concluidos')
+    .select('aluno_id, etapa_id, trilha_id, concluida_em, percentual')
+    .in('etapa_id', etapaIds)
+  if (alunoId) consulta = consulta.eq('aluno_id', alunoId)
+  const { data, error } = await consulta
   if (error) throw error
+  return (data ?? []) as unknown as PassoConcluido[]
+}
 
-  const maisRecentePorPar = new Map<string, string | null>()
-  for (const a of data) {
-    const chave = `${a.aluno_id}|${a.trilha_etapa_id}`
-    if (!maisRecentePorPar.has(chave)) maisRecentePorPar.set(chave, a.concluida_em)
-  }
-
-  return new Set([...maisRecentePorPar.entries()].filter(([, em]) => em !== null).map(([chave]) => chave))
+/** Chaves `alunoId|etapaId` dos passos concluídos. */
+async function buscarConcluidas(etapaIds: string[]): Promise<Set<string>> {
+  const passos = await lerPassosConcluidos(etapaIds)
+  return new Set(passos.map((p) => `${p.aluno_id}|${p.etapa_id}`))
 }
 
 export function useTrilha(id: string | undefined) {
@@ -168,47 +177,205 @@ export function useTrilha(id: string | undefined) {
   })
 }
 
-export type EtapaComAtividade = TrilhaEtapa & {
-  atividadeTitulo: string
-  atividadeNivel: NivelCefr
+/** Um passo com o que a tela precisa mostrar dele, qualquer que seja o tipo. */
+export type PassoDaTrilha = TrilhaEtapa & {
+  tipo: TipoDePasso
+  titulo: string
+  /** "8 questões", "PDF", "Lição do tutor"… */
+  detalhe: string
+  nivel: NivelCefr | null
   questoes: number
+}
+
+/** @deprecated nome de antes dos três tipos de passo; use `PassoDaTrilha`. */
+export type EtapaComAtividade = PassoDaTrilha
+
+const ROTULO_MATERIAL: Record<string, string> = {
+  pdf: 'PDF',
+  docx: 'Word',
+  imagem: 'Imagem',
+  audio: 'Áudio',
+  texto: 'Texto',
+}
+
+/**
+ * Os passos de uma ou mais trilhas, com título e detalhe de cada tipo,
+ * ordenados como o aluno vê: pelo módulo e, dentro dele, pela ordem.
+ */
+async function carregarPassos(trilhaIds: string[]): Promise<PassoDaTrilha[]> {
+  if (trilhaIds.length === 0) return []
+  const [{ data: etapas, error }, { data: modulos, error: erroModulos }] = await Promise.all([
+    supabase.from('trilha_etapas').select('*').in('trilha_id', trilhaIds),
+    supabase.from('trilha_modulos').select('id, ordem').in('trilha_id', trilhaIds),
+  ])
+  if (error) throw error
+  if (erroModulos) throw erroModulos
+  if (etapas.length === 0) return []
+
+  const ids = (campo: 'atividade_id' | 'material_id' | 'licao_tutor_id') => [
+    ...new Set(etapas.flatMap((e) => (e[campo] ? [e[campo] as string] : []))),
+  ]
+  const idsAtividades = ids('atividade_id')
+  const idsMateriais = ids('material_id')
+  const idsLicoes = ids('licao_tutor_id')
+  const vazio = Promise.resolve({ data: [], error: null })
+
+  const [atividades, questoes, materiais, licoes] = await Promise.all([
+    idsAtividades.length ? supabase.from('atividades').select('id, titulo, nivel').in('id', idsAtividades) : vazio,
+    idsAtividades.length ? supabase.from('questoes').select('id, atividade_id').in('atividade_id', idsAtividades) : vazio,
+    idsMateriais.length ? supabase.from('materiais').select('id, nome, tipo').in('id', idsMateriais) : vazio,
+    idsLicoes.length ? supabase.from('tutor_licoes').select('id, titulo, nivel_cefr').in('id', idsLicoes) : vazio,
+  ])
+  for (const r of [atividades, questoes, materiais, licoes]) if (r.error) throw r.error
+
+  const atividadePorId = new Map(
+    ((atividades.data ?? []) as { id: string; titulo: string; nivel: NivelCefr }[]).map((a) => [a.id, a]),
+  )
+  const materialPorId = new Map(
+    ((materiais.data ?? []) as { id: string; nome: string; tipo: string }[]).map((m) => [m.id, m]),
+  )
+  const licaoPorId = new Map(
+    ((licoes.data ?? []) as { id: string; titulo: string; nivel_cefr: NivelCefr | null }[]).map((l) => [l.id, l]),
+  )
+  const questoesPorAtividade = new Map<string, number>()
+  for (const q of (questoes.data ?? []) as { atividade_id: string }[]) {
+    questoesPorAtividade.set(q.atividade_id, (questoesPorAtividade.get(q.atividade_id) ?? 0) + 1)
+  }
+  const ordemDoModulo = new Map(modulos.map((m) => [m.id, m.ordem]))
+
+  return etapas
+    .map((e): PassoDaTrilha => {
+      const tipo = tipoDoPasso(e)
+      if (tipo === 'atividade') {
+        const a = atividadePorId.get(e.atividade_id!)
+        const n = questoesPorAtividade.get(e.atividade_id!) ?? 0
+        return {
+          ...e,
+          tipo,
+          titulo: a?.titulo ?? 'Atividade removida',
+          detalhe: `${n} ${n === 1 ? 'questão' : 'questões'}`,
+          nivel: a?.nivel ?? null,
+          questoes: n,
+        }
+      }
+      if (tipo === 'material') {
+        const m = materialPorId.get(e.material_id!)
+        return {
+          ...e,
+          tipo,
+          titulo: m?.nome ?? 'Material removido',
+          detalhe: m ? (ROTULO_MATERIAL[m.tipo] ?? 'Material') : 'Material',
+          nivel: null,
+          questoes: 0,
+        }
+      }
+      const l = licaoPorId.get(e.licao_tutor_id!)
+      return {
+        ...e,
+        tipo,
+        titulo: l?.titulo ?? 'Lição removida',
+        detalhe: 'Lição do tutor',
+        nivel: l?.nivel_cefr ?? null,
+        questoes: 0,
+      }
+    })
+    .sort(
+      (a, b) =>
+        (ordemDoModulo.get(a.modulo_id) ?? 0) - (ordemDoModulo.get(b.modulo_id) ?? 0) || a.ordem - b.ordem,
+    )
 }
 
 export function useEtapasDaTrilha(trilhaId: string | undefined) {
   return useQuery({
     queryKey: chavesTrilhas.etapas(trilhaId!),
     enabled: Boolean(trilhaId),
-    queryFn: async (): Promise<EtapaComAtividade[]> => {
-      const { data: etapas, error } = await supabase
-        .from('trilha_etapas')
+    queryFn: () => carregarPassos([trilhaId!]),
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Módulos (0030)
+// ---------------------------------------------------------------------------
+
+export function useModulos(trilhaId: string | undefined) {
+  return useQuery({
+    queryKey: chavesTrilhas.modulos(trilhaId!),
+    enabled: Boolean(trilhaId),
+    queryFn: async (): Promise<TrilhaModulo[]> => {
+      const { data, error } = await supabase
+        .from('trilha_modulos')
         .select('*')
         .eq('trilha_id', trilhaId!)
         .order('ordem')
       if (error) throw error
-      if (etapas.length === 0) return []
-
-      const idsAtividades = [...new Set(etapas.map((e) => e.atividade_id))]
-      const [{ data: atividades, error: erroAtividades }, { data: questoes, error: erroQuestoes }] =
-        await Promise.all([
-          supabase.from('atividades').select('id, titulo, nivel').in('id', idsAtividades),
-          supabase.from('questoes').select('id, atividade_id').in('atividade_id', idsAtividades),
-        ])
-      if (erroAtividades) throw erroAtividades
-      if (erroQuestoes) throw erroQuestoes
-
-      const atividadePorId = new Map(atividades.map((a) => [a.id, a]))
-      const questoesPorAtividade = new Map<string, number>()
-      for (const q of questoes) {
-        questoesPorAtividade.set(q.atividade_id, (questoesPorAtividade.get(q.atividade_id) ?? 0) + 1)
-      }
-
-      return etapas.map((e) => ({
-        ...e,
-        atividadeTitulo: atividadePorId.get(e.atividade_id)?.titulo ?? 'Atividade removida',
-        atividadeNivel: atividadePorId.get(e.atividade_id)?.nivel ?? 'A1',
-        questoes: questoesPorAtividade.get(e.atividade_id) ?? 0,
-      }))
+      return data
     },
+  })
+}
+
+export function useCriarModulo(trilhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (titulo: string) => {
+      const { data: ultimo, error: erroUltimo } = await supabase
+        .from('trilha_modulos')
+        .select('ordem')
+        .eq('trilha_id', trilhaId)
+        .order('ordem', { ascending: false })
+        .limit(1)
+      if (erroUltimo) throw erroUltimo
+      const { error } = await supabase
+        .from('trilha_modulos')
+        .insert({ trilha_id: trilhaId, ordem: (ultimo[0]?.ordem ?? 0) + 1, titulo: titulo.trim() || 'Novo módulo' })
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.uma(trilhaId) }),
+  })
+}
+
+export function useRenomearModulo(trilhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, titulo }: { id: string; titulo: string }) => {
+      const { error } = await supabase.from('trilha_modulos').update({ titulo: titulo.trim() }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.modulos(trilhaId) }),
+  })
+}
+
+/** Apaga o módulo e os passos dele. A trilha nunca fica sem módulo. */
+export function useExcluirModulo(trilhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (moduloId: string) => {
+      const { count } = await supabase
+        .from('trilha_modulos')
+        .select('*', { count: 'exact', head: true })
+        .eq('trilha_id', trilhaId)
+      if ((count ?? 0) <= 1) throw new Error('A trilha precisa de pelo menos um módulo.')
+      const { error } = await supabase.from('trilha_modulos').delete().eq('id', moduloId)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.todas }),
+  })
+}
+
+/**
+ * Troca dois módulos de lugar. Numa requisição só: a unique(trilha_id, ordem)
+ * é DEFERRABLE, verificada no commit (mesmo motivo de `salvarOrdem`).
+ */
+export function useTrocarModulos(trilhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ([a, b]: [TrilhaModulo, TrilhaModulo]) => {
+      const { error } = await supabase.from('trilha_modulos').upsert([
+        { id: a.id, trilha_id: a.trilha_id, titulo: a.titulo, ordem: b.ordem },
+        { id: b.id, trilha_id: b.trilha_id, titulo: b.titulo, ordem: a.ordem },
+      ])
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.uma(trilhaId) }),
   })
 }
 
@@ -295,8 +462,14 @@ export function useTrilhasDoAluno(alunoId: string | undefined) {
 export type EtapaDoAluno = {
   etapaId: string
   ordem: number
-  atividadeId: string
+  moduloId: string
+  tipo: TipoDePasso
+  opcional: boolean
+  /** Só nos passos de atividade. */
+  atividadeId: string | null
   titulo: string
+  /** "PDF", "Lição do tutor", "8 questões"… */
+  detalhe: string
   nivel: NivelCefr
   questoes: number
   /** null quando a etapa nunca foi atribuída a este aluno. */
@@ -347,14 +520,14 @@ export function useTrilhaDoAluno(trilhaId: string | undefined, alunoId: string |
       ])
       if (erroTrilha) throw erroTrilha
 
-      const { data: etapas, error: erroEtapas } = await supabase
-        .from('trilha_etapas')
-        .select('*')
-        .eq('trilha_id', trilhaId!)
-        .order('ordem')
-      if (erroEtapas) throw erroEtapas
+      const etapas = await carregarPassos([trilhaId!])
+      const passosConcluidos = await lerPassosConcluidos(
+        etapas.map((e) => e.id),
+        alunoId!,
+      )
+      const conclusaoPorEtapa = new Map(passosConcluidos.map((p) => [p.etapa_id, p.concluida_em]))
 
-      const idsAtividades = [...new Set(etapas.map((e) => e.atividade_id))]
+      const idsAtividades = [...new Set(etapas.flatMap((e) => (e.atividade_id ? [e.atividade_id] : [])))]
       const [{ data: atividades }, { data: questoes }, { data: atribuicoes }] = await Promise.all([
         supabase.from('atividades').select('id, titulo, nivel, habilidades').in('id', idsAtividades),
         supabase.from('questoes').select('id, atividade_id').in('atividade_id', idsAtividades),
@@ -414,18 +587,24 @@ export function useTrilhaDoAluno(trilhaId: string | undefined, alunoId: string |
       const saida: EtapaDoAluno[] = etapas.map((e) => {
         const atribuicao = atribuicaoPorEtapa.get(e.id)
         const placar = atribuicao ? placarPorAtribuicao.get(atribuicao.id) : undefined
-        const atividade = atividadePorId.get(e.atividade_id)
+        const atividade = e.atividade_id ? atividadePorId.get(e.atividade_id) : undefined
         return {
           etapaId: e.id,
           ordem: e.ordem,
+          moduloId: e.modulo_id,
+          tipo: e.tipo,
+          opcional: e.opcional,
           atividadeId: e.atividade_id,
-          titulo: atividade?.titulo ?? 'Atividade removida',
-          nivel: atividade?.nivel ?? 'A1',
-          questoes: questoesPorAtividade.get(e.atividade_id) ?? 0,
+          titulo: atividade?.titulo ?? e.titulo,
+          detalhe: e.detalhe,
+          nivel: atividade?.nivel ?? e.nivel ?? 'A1',
+          questoes: e.atividade_id ? (questoesPorAtividade.get(e.atividade_id) ?? 0) : 0,
           atribuicaoId: atribuicao?.id ?? null,
           enviadaEm: atribuicao?.enviada_em ?? null,
           iniciadaEm: atribuicao?.iniciada_em ?? null,
-          concluidaEm: atribuicao?.concluida_em ?? null,
+          // A conclusão vem da view: com nota mínima, terminar a atividade
+          // abaixo da nota não conclui o passo.
+          concluidaEm: conclusaoPorEtapa.get(e.id) ?? null,
           acertos: placar?.acertos ?? null,
           total: placar?.total ?? null,
           tempoMs: placar?.tempoMs ?? null,
@@ -545,7 +724,14 @@ export function useCriarTrilha() {
 export function useAtualizarTrilha(trilhaId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (campos: Partial<Pick<Trilha, 'nome' | 'nivel' | 'descricao'>>) => {
+    mutationFn: async (
+      campos: Partial<
+        Pick<
+          Trilha,
+          'nome' | 'nivel' | 'descricao' | 'navegacao' | 'permite_abas' | 'liberacao' | 'liberacao_dias' | 'nota_minima'
+        >
+      >,
+    ) => {
       const { error } = await supabase.from('trilhas').update(campos).eq('id', trilhaId)
       if (error) throw error
     },
@@ -564,11 +750,27 @@ export function useExcluirTrilha() {
   })
 }
 
-/** Entra sempre no fim da sequência; reordenar é ação separada. */
+export type NovoPasso = {
+  tipo: TipoDePasso
+  /** id da atividade, do material ou da lição do tutor. */
+  itemId: string
+  /** Sem módulo, entra no último. */
+  moduloId?: string
+}
+
+/**
+ * Entra sempre no fim do módulo; reordenar é ação separada. A ordem é única
+ * na trilha inteira, e quem mostra agrupa por módulo — então "fim do módulo"
+ * é simplesmente o maior número da trilha mais um.
+ *
+ * Material e lição chegam a quem já está na trilha pelo trigger da 0030;
+ * atividade precisa de token, então vai por aqui.
+ */
 export function useAdicionarEtapa(trilhaId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (atividadeId: string) => {
+    mutationFn: async (passo: NovoPasso | string) => {
+      const novo: NovoPasso = typeof passo === 'string' ? { tipo: 'atividade', itemId: passo } : passo
       const { data: existentes, error: erroExistentes } = await supabase
         .from('trilha_etapas')
         .select('ordem')
@@ -580,12 +782,19 @@ export function useAdicionarEtapa(trilhaId: string) {
       const proxima = (existentes[0]?.ordem ?? 0) + 1
       const { data: etapa, error } = await supabase
         .from('trilha_etapas')
-        .insert({ trilha_id: trilhaId, atividade_id: atividadeId, ordem: proxima })
+        .insert({
+          trilha_id: trilhaId,
+          ordem: proxima,
+          ...(novo.moduloId ? { modulo_id: novo.moduloId } : {}),
+          atividade_id: novo.tipo === 'atividade' ? novo.itemId : null,
+          material_id: novo.tipo === 'material' ? novo.itemId : null,
+          licao_tutor_id: novo.tipo === 'tutor' ? novo.itemId : null,
+        })
         .select('id, atividade_id')
         .single()
       if (error) throw error
 
-      await enviarEtapaAQuemJaEstaNaTrilha(trilhaId, etapa)
+      if (etapa.atividade_id) await enviarEtapaAQuemJaEstaNaTrilha(trilhaId, { id: etapa.id, atividade_id: etapa.atividade_id })
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: chavesTrilhas.todas })
@@ -680,14 +889,82 @@ async function salvarOrdem(etapas: TrilhaEtapa[]) {
   // `EtapaComAtividade`, que carrega título/nível/questões calculados no
   // cliente. Um spread mandaria esses campos para o PostgREST, que rejeita
   // coluna inexistente com 400 (PGRST204).
+  //
+  // Todas as colunas obrigatórias e as três de tipo vão junto: o upsert é um
+  // INSERT … ON CONFLICT, e o Postgres confere o check `etapa_de_um_tipo`
+  // na linha proposta antes de cair no UPDATE.
   const linhas = etapas.map((e, i) => ({
     id: e.id,
     trilha_id: e.trilha_id,
+    modulo_id: e.modulo_id,
     atividade_id: e.atividade_id,
+    material_id: e.material_id,
+    licao_tutor_id: e.licao_tutor_id,
+    opcional: e.opcional,
     ordem: i + 1,
   }))
   const { error } = await supabase.from('trilha_etapas').upsert(linhas)
   if (error) throw error
+}
+
+/**
+ * Troca dois passos de lugar dentro do módulo: cada um fica com o número do
+ * outro, e o resto da trilha não muda. Numa requisição só, pelo mesmo motivo
+ * de `salvarOrdem` (a unique é verificada no commit).
+ */
+export function useTrocarPassos(trilhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ([a, b]: [TrilhaEtapa, TrilhaEtapa]) => {
+      const linha = (e: TrilhaEtapa, ordem: number) => ({
+        id: e.id,
+        trilha_id: e.trilha_id,
+        modulo_id: e.modulo_id,
+        atividade_id: e.atividade_id,
+        material_id: e.material_id,
+        licao_tutor_id: e.licao_tutor_id,
+        opcional: e.opcional,
+        ordem,
+      })
+      const { error } = await supabase.from('trilha_etapas').upsert([linha(a, b.ordem), linha(b, a.ordem)])
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.etapas(trilhaId) }),
+  })
+}
+
+/** Liga e desliga "opcional": passo opcional aparece, mas não segura o avanço. */
+export function useAlternarOpcional(trilhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ etapaId, opcional }: { etapaId: string; opcional: boolean }) => {
+      const { error } = await supabase.from('trilha_etapas').update({ opcional }).eq('id', etapaId)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.etapas(trilhaId) }),
+  })
+}
+
+/** Leva o passo para outro módulo, no fim dele. */
+export function useMoverPassoDeModulo(trilhaId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ etapaId, moduloId }: { etapaId: string; moduloId: string }) => {
+      const { data: ultimo, error: erroUltimo } = await supabase
+        .from('trilha_etapas')
+        .select('ordem')
+        .eq('trilha_id', trilhaId)
+        .order('ordem', { ascending: false })
+        .limit(1)
+      if (erroUltimo) throw erroUltimo
+      const { error } = await supabase
+        .from('trilha_etapas')
+        .update({ modulo_id: moduloId, ordem: (ultimo[0]?.ordem ?? 0) + 1 })
+        .eq('id', etapaId)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: chavesTrilhas.etapas(trilhaId) }),
+  })
 }
 
 export function useReordenarEtapas(trilhaId: string) {
@@ -719,13 +996,13 @@ export type LinkDaEtapa = {
 export async function atribuirTrilha(trilhaId: string, alunos: Aluno[]): Promise<LinkDaEtapa[]> {
   if (alunos.length === 0) return []
 
-  const { data: etapas, error: erroEtapas } = await supabase
-    .from('trilha_etapas')
-    .select('*')
-    .eq('trilha_id', trilhaId)
-    .order('ordem')
-  if (erroEtapas) throw erroEtapas
-  if (etapas.length === 0) throw new Error('Adicione ao menos uma etapa antes de atribuir a trilha.')
+  const passos = await carregarPassos([trilhaId])
+  if (passos.length === 0) throw new Error('Adicione ao menos um passo antes de atribuir a trilha.')
+  // Só atividade vira atribuição (com token e link). Material e lição chegam
+  // ao aluno pelo trigger da 0030, quando ele entra em `trilha_alunos` abaixo.
+  const etapas = passos.filter(
+    (e): e is PassoDaTrilha & { atividade_id: string } => e.atividade_id !== null,
+  )
 
   const idsAtividades = [...new Set(etapas.map((e) => e.atividade_id))]
   const idsAlunos = alunos.map((a) => a.id)
@@ -782,10 +1059,11 @@ export async function atribuirTrilha(trilhaId: string, alunos: Aluno[]): Promise
     }
   }
 
-  const { data: criadas, error: erroInsert } = await supabase
-    .from('atribuicoes')
-    .insert(linhas)
-    .select('id, atividade_id, aluno_id, tentativa')
+  // Trilha só de material e lição: não há atribuição a criar.
+  const { data: criadas, error: erroInsert } =
+    linhas.length > 0
+      ? await supabase.from('atribuicoes').insert(linhas).select('id, atividade_id, aluno_id, tentativa')
+      : { data: [], error: null }
   if (erroInsert) throw erroInsert
 
   for (const c of criadas ?? []) {
@@ -894,21 +1172,54 @@ export function useDuplicarTrilha() {
           nome: `${trilha.nome} (cópia)`,
           nivel: trilha.nivel,
           descricao: trilha.descricao,
+          navegacao: trilha.navegacao,
+          permite_abas: trilha.permite_abas,
+          liberacao: trilha.liberacao,
+          liberacao_dias: trilha.liberacao_dias,
+          nota_minima: trilha.nota_minima,
         })
         .select('*')
         .single()
       if (error) throw error
 
-      const { data: etapas, error: erroEtapas } = await supabase
-        .from('trilha_etapas')
-        .select('*')
-        .eq('trilha_id', trilha.id)
-        .order('ordem')
+      const [{ data: modulos, error: erroModulos }, { data: etapas, error: erroEtapas }, { data: primeiro }] =
+        await Promise.all([
+          supabase.from('trilha_modulos').select('*').eq('trilha_id', trilha.id).order('ordem'),
+          supabase.from('trilha_etapas').select('*').eq('trilha_id', trilha.id).order('ordem'),
+          // A trilha nova já nasceu com um "Módulo 1" (trigger da 0030).
+          supabase.from('trilha_modulos').select('id').eq('trilha_id', nova.id).order('ordem').limit(1),
+        ])
+      if (erroModulos) throw erroModulos
       if (erroEtapas) throw erroEtapas
+
+      // Módulos: o primeiro reaproveita o que já existe; os outros são criados.
+      const novoPorAntigo = new Map<string, string>()
+      for (const [i, m] of modulos.entries()) {
+        if (i === 0 && primeiro?.[0]) {
+          await supabase.from('trilha_modulos').update({ titulo: m.titulo }).eq('id', primeiro[0].id)
+          novoPorAntigo.set(m.id, primeiro[0].id)
+          continue
+        }
+        const { data: criado, error: erroCriado } = await supabase
+          .from('trilha_modulos')
+          .insert({ trilha_id: nova.id, ordem: m.ordem, titulo: m.titulo })
+          .select('id')
+          .single()
+        if (erroCriado) throw erroCriado
+        novoPorAntigo.set(m.id, criado.id)
+      }
 
       if (etapas.length > 0) {
         const { error: erroCopia } = await supabase.from('trilha_etapas').insert(
-          etapas.map((e) => ({ trilha_id: nova.id, atividade_id: e.atividade_id, ordem: e.ordem })),
+          etapas.map((e) => ({
+            trilha_id: nova.id,
+            modulo_id: novoPorAntigo.get(e.modulo_id),
+            atividade_id: e.atividade_id,
+            material_id: e.material_id,
+            licao_tutor_id: e.licao_tutor_id,
+            opcional: e.opcional,
+            ordem: e.ordem,
+          })),
         )
         if (erroCopia) throw erroCopia
       }

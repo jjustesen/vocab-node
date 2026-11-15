@@ -20,16 +20,40 @@ export type TarefaConcluida = {
   concluidaEm: string
 }
 
+export type EstadoDoPasso = 'feito' | 'atual' | 'aberto' | 'travado'
+
+/** Um passo da trilha, de qualquer tipo, com o estado calculado no servidor (0030). */
 export type EtapaDaTrilha = {
+  etapaId: string
+  /** Posição na trilha inteira, contando todos os módulos (1, 2, 3…). */
   ordem: number
+  moduloId: string
+  tipo: 'atividade' | 'material' | 'tutor'
+  opcional: boolean
+  estado: EstadoDoPasso
   titulo: string
-  nivel: NivelCefr
+  nivel: NivelCefr | null
   totalQuestoes: number
-  /** null se a atribuição sumiu (aluno removido da trilha, por exemplo). */
+  /** Atividade: null se a atribuição sumiu (aluno removido da trilha, por exemplo). */
   atribuicaoId: string | null
+  materialId: string | null
+  licaoId: string | null
+  /** Material: o tipo do arquivo (pdf, imagem…). */
+  detalhe: string | null
   concluidaEm: string | null
   acertos: number | null
   total: number | null
+}
+
+export type ModuloDaTrilha = {
+  id: string
+  titulo: string
+  aberto: boolean
+  concluido: boolean
+  /** Travado porque falta concluir este módulo. */
+  esperaConcluir: string | null
+  /** Travado até esta data (ISO). */
+  abreEm: string | null
 }
 
 export type TrilhaDoAluno = {
@@ -38,8 +62,19 @@ export type TrilhaDoAluno = {
   nivel: NivelCefr
   descricao: string | null
   status: 'ativa' | 'pausada' | 'concluida'
+  navegacao: 'sequencia' | 'sugerida' | 'abas'
+  permiteAbas: boolean
+  modulos: ModuloDaTrilha[]
+  /** O passo para fazer agora, na trilha toda. */
+  atualId: string | null
   etapas: EtapaDaTrilha[]
   concluidas: number
+}
+
+/** O aluno marca o material como lido (trilha-passo-concluir). */
+export async function marcarMaterialLido(etapaId: string): Promise<void> {
+  const { error } = await supabaseAluno.functions.invoke('trilha-passo-concluir', { body: { etapaId } })
+  if (error) throw new Error(await extrairMensagemDeErro(error))
 }
 
 export type PainelAluno = {
