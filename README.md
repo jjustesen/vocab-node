@@ -210,7 +210,7 @@ Duas limitações que valem saber:
 
 ### Materiais e biblioteca (fechados depois da etapa 7)
 
-- **Materiais avulsos por aluno** (RF-50/51/52): aba "Materiais" na ficha — enviar PDF/DOCX/imagem/áudio (até 25 MB) ou colar texto, ver o texto guardado, baixar e excluir. Antes disso, `materiais` só nascia como subproduto da geração por IA; agora o professor guarda material direto, vinculado ao aluno (`materiais.aluno_id`).
+- **Materiais avulsos por aluno** (RF-50/51/52): aba "Materiais" na ficha — enviar PDF/DOCX/imagem/áudio (até 200 MB) ou colar texto, ver o texto guardado, baixar e excluir. Antes disso, `materiais` só nascia como subproduto da geração por IA; agora o professor guarda material direto, vinculado ao aluno (`materiais.aluno_id`).
 - **Download por URL assinada** (RNF-10): o bucket é privado; a URL de 1h é gerada **no clique**, não ao renderizar a lista — assinar tudo de antemão gastaria requisição em link que ninguém abre, e deixaria mais links válidos circulando.
 - **Abas "Minhas atividades" / "Rascunhos" / "Trilhas"** na biblioteca. Rascunho aqui é a atividade **que ainda não foi enviada a ninguém**, não `atividades.status`: o campo existe no banco mas é cosmético (nenhuma policy, constraint ou índice depende dele).
 

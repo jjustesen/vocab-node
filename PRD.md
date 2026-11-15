@@ -187,7 +187,7 @@ Este é o ponto mais sensível do produto: **o aluno pode existir em dois estado
 
 | ID | Requisito | Pri |
 |---|---|---|
-| RF-50 | Upload de PDF, DOCX, imagem (foto de página de livro) e áudio, até 25 MB por arquivo | P0 |
+| RF-50 | Upload de PDF, DOCX, imagem (foto de página de livro) e áudio, até 200 MB por arquivo | P0 |
 | RF-51 | Colar texto direto, sem arquivo | P0 |
 | RF-52 | Material vinculado a um aluno e/ou a uma aula | P0 |
 | RF-53 | Compartilhar material com o aluno pelo mesmo tipo de link da tarefa | P1 |
