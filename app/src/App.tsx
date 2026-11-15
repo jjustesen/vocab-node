@@ -53,6 +53,9 @@ const PraticaTutorPage = lazy(() =>
   import('@/features/tutor-aluno/PraticaTutorPage').then((m) => ({ default: m.PraticaTutorPage })),
 )
 // O editor também puxa o controlador (as falas fixas do painel Áudios) e a aula de teste.
+const LeitorMaterialPage = lazy(() =>
+  import('@/features/painel/LeitorMaterialPage').then((m) => ({ default: m.LeitorMaterialPage })),
+)
 const EditorLicaoPage = lazy(() => import('@/features/tutor/EditorLicaoPage').then((m) => ({ default: m.EditorLicaoPage })))
 const NovaLicaoPage = lazy(() => import('@/features/tutor/NovaLicaoPage').then((m) => ({ default: m.NovaLicaoPage })))
 const CompararVozesPage = lazy(() => import('@/features/tutor/CompararVozesPage').then((m) => ({ default: m.CompararVozesPage })))
@@ -92,6 +95,14 @@ export default function App() {
           <Route element={<ExigeSessaoAluno />}>
             <Route path="/painel" element={<PainelAlunoPage />} />
             <Route path="/painel/materiais" element={<MateriaisAlunoPage />} />
+            <Route
+              path="/painel/materiais/:id"
+              element={
+                <Suspense fallback={<TelaCarregando />}>
+                  <LeitorMaterialPage />
+                </Suspense>
+              }
+            />
             {/* `/painel/sala` é a LISTA; as salas em si ficam abaixo dela e
                 espelham as rotas do professor (`/sala/:alunoId` e
                 `/sala/turma/:turmaId`) — ver AulasAoVivoPage. */}
