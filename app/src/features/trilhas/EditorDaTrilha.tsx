@@ -27,7 +27,9 @@ import {
 } from './api'
 import { useAtividades } from '@/features/atividades/api'
 import { useAcervo } from '@/features/materiais/api'
-import { useAcessoTutor, useLicoesTutor } from '@/features/tutor/api'
+import { useAcessoTutor, useCustoDasLicoes, useLicoesTutor } from '@/features/tutor/api'
+import { reais, REAIS_POR_DOLAR } from '@/lib/custo-ia'
+import type { CustoDaLicao } from '@/types/db'
 import type { TipoDePasso, Trilha, TrilhaLiberacao, TrilhaModulo, TrilhaNavegacao } from '@/types/db'
 import type { LucideIcon } from 'lucide-react'
 
@@ -61,6 +63,8 @@ export function ModulosDaTrilha({
   const criarModulo = useCriarModulo(trilhaId)
   const trocar = useTrocarModulos(trilhaId)
   const [adicionarEm, setAdicionarEm] = useState<string | null>(null)
+  // A mesma chave do painel de custo (ids únicos e ordenados): uma consulta só.
+  const { data: custos } = useCustoDasLicoes(passos.flatMap((p) => (p.licao_tutor_id ? [p.licao_tutor_id] : [])))
 
   return (
     <div className="space-y-3">
@@ -71,6 +75,7 @@ export function ModulosDaTrilha({
           modulo={m}
           numero={i + 1}
           passos={passos.filter((p) => p.modulo_id === m.id)}
+          custos={custos}
           outrosModulos={modulos.filter((o) => o.id !== m.id)}
           podeSubir={i > 0}
           podeDescer={i < modulos.length - 1}
@@ -106,6 +111,7 @@ function Modulo({
   modulo,
   numero,
   passos,
+  custos,
   outrosModulos,
   podeSubir,
   podeDescer,
@@ -118,6 +124,8 @@ function Modulo({
   modulo: TrilhaModulo
   numero: number
   passos: PassoDaTrilha[]
+  /** Estimativa por prática das lições do tutor (0031). */
+  custos: Map<string, CustoDaLicao> | undefined
   outrosModulos: TrilhaModulo[]
   podeSubir: boolean
   podeDescer: boolean
@@ -202,6 +210,11 @@ function Modulo({
                 <p className="truncate text-xs font-medium text-neutral-400">
                   {visual.nome} · {p.detalhe}
                   {p.nivel ? ` · ${p.nivel}` : ''}
+                  {p.licao_tutor_id && custos?.get(p.licao_tutor_id) && (
+                    <span title="Custo de IA estimado de uma prática desta lição">
+                      {' · '}~{reais(custos.get(p.licao_tutor_id)!.estimativa_usd * REAIS_POR_DOLAR)} por prática
+                    </span>
+                  )}
                 </p>
               </div>
               <button

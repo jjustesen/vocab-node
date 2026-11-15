@@ -499,6 +499,56 @@ export type AlunoUpdate = Partial<Omit<Aluno, 'id' | 'professor_id' | 'criado_em
  */
 type Tabela<Row, Ins, Upd> = { Row: Row; Insert: Ins; Update: Upd; Relationships: [] }
 
+// ── Créditos e plano do aluno (0031) ────────────────────────────────────────
+
+export type Creditos = { professor_id: string; saldo: number; atualizado_em: string }
+
+export type TipoDeMovimento = 'compra' | 'bonus' | 'reserva' | 'consumo' | 'estorno' | 'ajuste'
+export type OrigemDoMovimento = 'stripe' | 'sessao' | 'teste' | 'falas' | 'licao' | 'manual'
+
+export type CreditoMovimento = {
+  id: string
+  professor_id: string
+  tipo: TipoDeMovimento
+  origem: OrigemDoMovimento
+  /** + entrou, - saiu (reais). */
+  valor: number
+  saldo_depois: number
+  reservado: number | null
+  ref: string | null
+  descricao: string
+  criado_em: string
+  acertado_em: string | null
+}
+
+export type PlanoAluno = {
+  id: string
+  professor_id: string
+  nome: string
+  descricao: string | null
+  preco_centavos: number
+  praticas_mes: number
+  aceitando: boolean
+  stripe_product_id: string | null
+  stripe_price_id: string | null
+  criado_em: string
+  atualizado_em: string
+}
+
+export type PlanoAlunoTrilha = { plano_id: string; trilha_id: string }
+
+/** Linha de `tutor_custo_das_licoes`: estimativa por sessão, em dólar. */
+export type CustoDaLicao = {
+  licao_id: string
+  itens: number
+  sessoes: number
+  mediana_usd: number | null
+  p90_usd: number | null
+  estimativa_usd: number
+  /** 'sessoes': média de 5+ sessões reais em 30 dias. 'inicial': pelo tamanho da lição. */
+  fonte: 'sessoes' | 'inicial'
+}
+
 /** O que `copiar_dados_do_aluno` devolve: quantas linhas entraram no destino. */
 export type ResumoDaCopia = {
   tarefas: number
@@ -607,6 +657,10 @@ export type Database = {
       >
       tutor_licoes_alunos: Tabela<TutorLicaoAluno, Insert<TutorLicaoAluno, 'aluno_id' | 'licao_id'>, never>
       tutor_sessoes: Tabela<TutorSessao, never, never>
+      creditos: Tabela<Creditos, never, never>
+      creditos_movimentos: Tabela<CreditoMovimento, never, never>
+      planos_aluno: Tabela<PlanoAluno, never, never>
+      planos_aluno_trilhas: Tabela<PlanoAlunoTrilha, never, never>
     }
     // Sem tipar views aqui: `from()` de tabela ainda não registrada cai neste
     // Record e devolve `never` (planos/api.ts depende disso). A view
@@ -630,6 +684,23 @@ export type Database = {
       copiar_dados_do_aluno: {
         Args: { p_origem: string; p_destino: string }
         Returns: ResumoDaCopia
+      }
+      /** Acerta reservas vencidas e devolve o saldo do professor logado (0031). */
+      meus_creditos: { Args: Record<string, never>; Returns: number }
+      tutor_custo_das_licoes: { Args: { p_licoes: string[] }; Returns: CustoDaLicao[] }
+      custo_medio_por_pratica_usd: { Args: { p_trilhas: string[] }; Returns: number }
+      /** Cria (p_id null) ou edita; recusa preço abaixo do mínimo ('preco_abaixo_do_minimo', DETAIL = mínimo em centavos). */
+      salvar_plano_aluno: {
+        Args: {
+          p_id: string | null
+          p_nome: string
+          p_descricao: string
+          p_preco_centavos: number
+          p_praticas_mes: number
+          p_aceitando: boolean
+          p_trilhas: string[]
+        }
+        Returns: string
       }
     }
     Enums: Record<string, never>

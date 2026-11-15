@@ -12,6 +12,11 @@
 //                                       renovação, falha de cobrança (past_due)
 //   customer.subscription.deleted     → assinatura morreu → volta ao gratuito
 //
+// E a compra de créditos do tutor (creditos-comprar, pagamento único):
+//
+//   checkout.session.completed (mode=payment, pago)   → soma os créditos
+//   checkout.session.async_payment_succeeded          → idem, quando é Pix
+//
 // Idempotente por construção: cada evento sincroniza o estado ATUAL da
 // subscription (upsert), então evento repetido ou fora de ordem converge.
 import Stripe from 'npm:stripe@18'
@@ -72,6 +77,33 @@ async function sincronizarAssinatura(sub: Stripe.Subscription): Promise<void> {
   if (erroProfessor) throw new Error(`professores: ${erroProfessor.message}`)
 }
 
+/**
+ * Compra de créditos (creditos-comprar). Só soma com o pagamento confirmado:
+ * no Pix, `checkout.session.completed` chega com `unpaid` e o crédito entra no
+ * `async_payment_succeeded`. O id da sessão é a chave: o mesmo evento duas
+ * vezes, ou os dois eventos, nunca somam duas vezes (creditos_adicionar).
+ */
+async function creditarCompra(sessao: Stripe.Checkout.Session): Promise<void> {
+  if (sessao.metadata?.tipo !== 'creditos' || sessao.payment_status !== 'paid') return
+  const professorId = sessao.metadata.professor_id
+  // O valor pago de fato, não o do metadata: um cupom no checkout mudaria o total.
+  const centavos = sessao.amount_total ?? Number(sessao.metadata.valor_centavos)
+  if (!professorId || !centavos) {
+    console.error(`stripe-webhook: compra de créditos ${sessao.id} sem professor ou valor`)
+    return
+  }
+  const valor = centavos / 100
+  const { error } = await clienteAdmin().rpc('creditos_adicionar', {
+    p_professor: professorId,
+    p_valor: valor,
+    p_tipo: 'compra',
+    p_origem: 'stripe',
+    p_ref: sessao.id,
+    p_descricao: `Compra de créditos (${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+  })
+  if (error) throw new Error(`creditos: ${error.message}`)
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return new Response('Método não permitido.', { status: 405 })
 
@@ -97,8 +129,17 @@ Deno.serve(async (req) => {
 
   try {
     switch (evento.type) {
+      case 'checkout.session.async_payment_succeeded': {
+        // Pix: o pagamento confirma depois que o checkout terminou.
+        await creditarCompra(evento.data.object as Stripe.Checkout.Session)
+        break
+      }
       case 'checkout.session.completed': {
         const sessao = evento.data.object as Stripe.Checkout.Session
+        if (sessao.mode === 'payment') {
+          await creditarCompra(sessao)
+          break
+        }
         if (sessao.mode !== 'subscription' || !sessao.subscription) break
         const subId = typeof sessao.subscription === 'string' ? sessao.subscription : sessao.subscription.id
         // O objeto da sessão não traz a subscription inteira — buscamos o

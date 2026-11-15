@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Image as ImageIcon, Loader2, Sparkles, Type, Upload } from 'lucide-react'
 import { imagemParaMaterial, pdfParaMaterial } from '@/lib/arquivo'
 import type { NivelCefr } from '@/types/db'
+import { AvisoDeSaldo } from '@/features/creditos/AvisoDeSaldo'
+import { REAIS_POR_DOLAR } from '@/lib/custo-ia'
 import { type MaterialDaLicao, useGerarLicao } from './api'
 
 const NIVEIS: NivelCefr[] = ['A1', 'A2', 'B1', 'B2', 'C1']
@@ -172,6 +174,9 @@ export function NovaLicaoPage() {
         {gerar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
         {gerar.isPending ? 'Montando a lição… (até 2 minutos)' : 'Gerar a lição'}
       </button>
+      <div className="mt-2">
+        <AvisoDeSaldo reserva={0.15 * REAIS_POR_DOLAR} acao="gerar uma lição" />
+      </div>
     </form>
   )
 }

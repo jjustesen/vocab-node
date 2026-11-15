@@ -44,6 +44,7 @@ import { TrilhaDetalhePage } from '@/features/trilhas/TrilhaDetalhePage'
 import { TrilhaDoAlunoPage } from '@/features/trilhas/TrilhaDoAlunoPage'
 import { FinanceiroPage } from '@/features/financeiro/FinanceiroPage'
 import { PlanoPage } from '@/features/planos/PlanoPage'
+import { CreditosPage } from '@/features/creditos/CreditosPage'
 import { ConfiguracoesPage } from '@/features/configuracoes/ConfiguracoesPage'
 import { TutorPage } from '@/features/tutor/TutorPage'
 
@@ -165,6 +166,7 @@ export default function App() {
             <Route path="/plano" element={<PlanoPage />} />
             <Route path="/configuracoes" element={<ConfiguracoesPage />} />
             <Route path="/tutor" element={<TutorPage />} />
+            <Route path="/creditos" element={<CreditosPage />} />
             <Route
               path="/tutor/vozes"
               element={

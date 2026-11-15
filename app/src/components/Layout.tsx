@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   Calendar,
+  Coins,
   GraduationCap,
   Library,
   LogOut,
@@ -33,8 +34,10 @@ const ITENS: { para: string; rotulo: string; Icone: LucideIcon }[] = [
   { para: "/financeiro", rotulo: "Financeiro", Icone: Wallet },
 ];
 
-/** Só para quem foi liberado no beta do tutor (tutor_acesso) — entra depois de Atividades. */
+/** Só para quem foi liberado no beta do tutor (tutor_acesso) — entram depois de Atividades. */
 const TUTOR = { para: "/tutor", rotulo: "Tutor", Icone: Mic };
+/** O saldo que paga a IA do tutor (0031). */
+const CREDITOS = { para: "/creditos", rotulo: "Créditos", Icone: Coins };
 
 /** A partir daqui a barra começa aberta (ícone e nome); abaixo, recolhida em ícones. */
 const TELA_LARGA = "(min-width: 1280px)";
@@ -92,7 +95,9 @@ export function Layout() {
     (session?.user.user_metadata.nome as string | undefined) ?? "Professor";
   const { data: acessoTutor } = useAcessoTutor();
   const itens = acessoTutor
-    ? ITENS.flatMap((item) => (item.para === "/atividades" ? [item, TUTOR] : [item]))
+    ? ITENS.flatMap((item) =>
+        item.para === "/atividades" ? [item, TUTOR] : item.para === "/financeiro" ? [item, CREDITOS] : [item],
+      )
     : ITENS;
   const { estado, alternar } = usePreferenciaDaBarra();
   const [gaveta, setGaveta] = useState(false);

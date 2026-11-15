@@ -18,10 +18,16 @@ import { ErroDePedido } from '../_shared/tutor/comum.ts'
 import { falarInteiro, type Parte, textoDaFala } from '../_shared/tutor/falar.ts'
 import { custoEmUsd } from '../_shared/tutor/precos.ts'
 import { wavParaMp3 } from '../_shared/tutor/mp3.ts'
+import { acertarCreditos, REAIS_POR_DOLAR, reservarCreditos, respostaSemCreditos, SemCreditos } from '../_shared/creditos.ts'
 
 /** Por chamada: o TTS leva 2–4 s por fala e a cota por minuto é baixa. */
 const FALAS_POR_CHAMADA = 6
 const BUCKET = 'tutor-falas'
+/**
+ * Quanto se reserva dos créditos por fala, antes de gravar. Uma fala custa
+ * menos de US$ 0,002 no TTS; o acerto devolve a diferença na mesma chamada.
+ */
+const RESERVA_POR_FALA_USD = 0.01
 
 /**
  * `regravar`: grava por cima mesmo se o arquivo já existe — para trocar a voz
@@ -60,7 +66,7 @@ Deno.serve(async (req) => {
     db.from('tutor_acesso').select('professor_id').eq('professor_id', sessao.user.id).maybeSingle(),
     db
       .from('tutor_licoes')
-      .select('id, falas_gravadas')
+      .select('id, titulo, falas_gravadas')
       .eq('id', pedido.licaoId)
       .eq('professor_id', sessao.user.id)
       .maybeSingle(),
@@ -71,6 +77,22 @@ Deno.serve(async (req) => {
 
   const chaveGemini = Deno.env.get('GEMINI_API_KEY')
   if (!chaveGemini) return respostaErro('GEMINI_API_KEY não configurada.', 500)
+
+  // Créditos (0031): reserva o pior caso desta leva e acerta pelo custo real no fim.
+  let reserva: string
+  try {
+    reserva = await reservarCreditos(
+      db,
+      sessao.user.id,
+      falas.length * RESERVA_POR_FALA_USD * REAIS_POR_DOLAR,
+      'falas',
+      licao.id,
+      `Gravar falas: ${licao.titulo}`,
+    )
+  } catch (e) {
+    if (e instanceof SemCreditos) return respostaSemCreditos(e, 'Gravar estas falas')
+    throw e
+  }
 
   const gravadas: string[] = []
   const jaExistiam: string[] = []
@@ -109,6 +131,8 @@ Deno.serve(async (req) => {
       falharam.push({ chave, erro: erro.includes('429') ? 'limite do TTS' : erro.slice(0, 200) })
     }
   }
+
+  await acertarCreditos(db, reserva, custoUsd)
 
   const novas = [...gravadas, ...jaExistiam]
   if (novas.length || custoUsd > 0) {

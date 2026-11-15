@@ -3,7 +3,7 @@ import { FunctionRegion } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { chavesAlunos } from '@/features/alunos/api'
 import { extrairMensagemDeErro } from '@/lib/erro-edge-function'
-import type { NivelCefr, TutorAcesso, TutorLicao, TutorSessao } from '@/types/db'
+import type { CustoDaLicao, NivelCefr, TutorAcesso, TutorLicao, TutorSessao } from '@/types/db'
 import type { Fala } from '../../../../poc-tutor/src/falas.ts'
 import type { Roteiro } from '../../../../poc-tutor/src/tipos.ts'
 import { validarRoteiro } from '../../../../poc-tutor/src/validacao.ts'
@@ -193,6 +193,8 @@ export function useGerarLicao() {
       return (data as { id: string }).id
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: chavesTutor.licoes }),
+    // Gastou (ou devolveu) créditos, deu certo ou não.
+    onSettled: () => qc.invalidateQueries({ queryKey: ['creditos'] }),
   })
 }
 
@@ -208,6 +210,35 @@ export async function gravarFalas(licaoId: string, falas: Fala[]): Promise<Resul
   const { data, error } = await supabase.functions.invoke('tutor-gravar-falas', { body: { licaoId, falas }, region: FunctionRegion.SaEast1 })
   if (error) throw new Error(await extrairMensagemDeErro(error))
   return data as ResultadoDaGravacao
+}
+
+/**
+ * Quanto custa uma prática de cada lição (tutor_custo_das_licoes, 0031): a
+ * média das sessões reais dos últimos 30 dias, ou a estimativa inicial pelo
+ * tamanho da lição. Em dólar, como a IA cobra; a tela converte.
+ */
+export function useCustoDasLicoes(ids: string[]) {
+  const chave = [...new Set(ids)].sort()
+  return useQuery({
+    queryKey: ['tutor', 'custo', chave] as const,
+    enabled: chave.length > 0,
+    staleTime: 10 * 60_000,
+    queryFn: async (): Promise<Map<string, CustoDaLicao>> => {
+      const { data, error } = await supabase.rpc('tutor_custo_das_licoes', { p_licoes: chave })
+      if (error) throw error
+      return new Map(
+        (data ?? []).map((c) => [
+          c.licao_id,
+          {
+            ...c,
+            estimativa_usd: Number(c.estimativa_usd),
+            mediana_usd: c.mediana_usd === null ? null : Number(c.mediana_usd),
+            p90_usd: c.p90_usd === null ? null : Number(c.p90_usd),
+          },
+        ]),
+      )
+    },
+  })
 }
 
 /** Onde as falas gravadas moram — o mesmo endereço que `tutor-aluno` dá à página do aluno. */

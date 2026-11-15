@@ -34,6 +34,7 @@ import { corDoAvatar, inicial } from '@/lib/avatar'
 import type { Aluno } from '@/types/db'
 import { BotaoApagar } from '@/components/BotaoApagar'
 import { ConfiguracaoDaTrilha, ModulosDaTrilha } from './EditorDaTrilha'
+import { CustoDaTrilha } from './CustoDaTrilha'
 
 export function TrilhaDetalhePage() {
   const { id } = useParams<{ id: string }>()
@@ -153,6 +154,11 @@ export function TrilhaDetalhePage() {
           <section>
             <h2 className="mb-2 text-sm font-bold text-neutral-900">Como o aluno vê</h2>
             <ConfiguracaoDaTrilha trilha={trilha} />
+          </section>
+
+          <section>
+            <h2 className="mb-2 text-sm font-bold text-neutral-900">Custo de IA por aluno</h2>
+            <CustoDaTrilha passos={etapas ?? []} />
           </section>
 
         <section className="min-w-0">
