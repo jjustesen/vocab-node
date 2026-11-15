@@ -46,6 +46,7 @@ import { FinanceiroPage } from '@/features/financeiro/FinanceiroPage'
 import { PlanoPage } from '@/features/planos/PlanoPage'
 import { CreditosPage } from '@/features/creditos/CreditosPage'
 import { VendaPage } from '@/features/venda/VendaPage'
+import { RedefinirSenhaAlunoPage } from '@/features/aluno-auth/RedefinirSenhaAlunoPage'
 import { ProntoPage } from '@/features/venda/ProntoPage'
 import { MinhaContaPage } from '@/features/painel/MinhaContaPage'
 import { ConfiguracoesPage } from '@/features/configuracoes/ConfiguracoesPage'
@@ -99,6 +100,7 @@ export default function App() {
           <Route path="/p/:slug/pronto" element={<ProntoPage />} />
           <Route path="/entrar" element={<EntrarAlunoPage />} />
           <Route path="/entrar-aluno" element={<EntrarAlunoPage />} />
+          <Route path="/redefinir-senha-aluno" element={<RedefinirSenhaAlunoPage />} />
           <Route element={<ExigeSessaoAluno />}>
             <Route path="/painel" element={<PainelAlunoPage />} />
             <Route path="/painel/materiais" element={<MateriaisAlunoPage />} />
