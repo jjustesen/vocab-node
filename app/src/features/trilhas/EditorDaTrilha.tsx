@@ -153,6 +153,7 @@ function Modulo({
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           onBlur={() => titulo.trim() && titulo !== modulo.titulo && renomear.mutate({ id: modulo.id, titulo })}
+          onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
           aria-label={`Nome do módulo ${numero}`}
           className="min-w-0 flex-1 rounded-lg px-2 py-1 text-sm font-extrabold text-neutral-900 outline-none hover:bg-neutral-50 focus:bg-neutral-50"
         />
