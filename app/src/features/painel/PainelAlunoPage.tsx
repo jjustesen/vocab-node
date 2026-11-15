@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { ChevronRight, Clock, Loader2, LogOut, Milestone, Play, RotateCw, TrendingUp } from 'lucide-react'
+import { ChevronRight, Clock, Loader2, Milestone, Play, RotateCw, TrendingUp, UserRound } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { escolherProfessor } from '@/lib/professor-do-aluno'
 import { useAlunoAuth } from '@/features/aluno-auth/AlunoAuthProvider'
 import { corDaNota, minutosEstimados } from '@/features/tarefa/formato'
 import { guardarMotivoDaSaida } from '@/lib/motivo-saida'
@@ -11,6 +13,7 @@ import { NavAluno } from './NavAluno'
 export function PainelAlunoPage() {
   const { sair } = useAlunoAuth()
   const { data, isLoading, error, refetch, isFetching } = usePainelAluno()
+  const qc = useQueryClient()
 
   // Professor que entrou pela porta do aluno: a senha confere (mesmo GoTrue),
   // mas não existe aluno nenhum por trás. Derruba a sessão em vez de deixar a
@@ -96,14 +99,37 @@ export function PainelAlunoPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-extrabold text-neutral-900">Oi, {data.alunoNome.split(' ')[0]}</h1>
-            <p className="text-xs font-medium text-neutral-500">com {data.professorNome}</p>
+            {(data.professores?.length ?? 0) > 1 ? (
+              // Aluno de mais de um professor (§6.1): cada um tem o seu painel.
+              <label className="flex items-center gap-1 text-xs font-medium text-neutral-500">
+                com
+                <select
+                  value={data.professorId}
+                  onChange={(e) => {
+                    escolherProfessor(e.target.value)
+                    void qc.resetQueries()
+                  }}
+                  aria-label="Trocar de professor"
+                  className="rounded-lg bg-white px-1.5 py-0.5 font-bold text-neutral-700"
+                >
+                  {data.professores!.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nome}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <p className="text-xs font-medium text-neutral-500">com {data.professorNome}</p>
+            )}
           </div>
-          <button
-            onClick={sair}
+          <Link
+            to="/painel/conta"
+            aria-label="Minha conta"
             className="grid h-9 w-9 place-items-center rounded-full bg-white text-neutral-400 hover:text-neutral-700"
           >
-            <LogOut className="h-4 w-4" />
-          </button>
+            <UserRound className="h-4 w-4" />
+          </Link>
         </div>
 
         {data.trilhas.map((t) => (
@@ -229,7 +255,10 @@ export function PainelAlunoPage() {
 function CartaoTrilha({ trilha }: { trilha: TrilhaDoAluno }) {
   const pausada = trilha.status === 'pausada'
   const percentual = trilha.etapas.length > 0 ? (trilha.concluidas / trilha.etapas.length) * 100 : 0
-  const atual = trilha.etapas.find((e) => !e.concluidaEm)
+  // O próximo passo vem do servidor: com módulos travados, "o primeiro não
+  // concluído" pode ser um passo que o aluno ainda nem consegue abrir.
+  const atual = trilha.etapas.find((e) => e.etapaId === trilha.atualId)
+  const travada = !atual && trilha.etapas.some((e) => !e.concluidaEm && !e.opcional)
 
   return (
     <Link
@@ -261,7 +290,9 @@ function CartaoTrilha({ trilha }: { trilha: TrilhaDoAluno }) {
           ? 'Seu professor pausou esta trilha por enquanto.'
           : atual
             ? `Próxima: ${atual.titulo}`
-            : 'Trilha concluída!'}
+            : travada
+              ? 'O próximo módulo ainda vai abrir.'
+              : 'Trilha concluída!'}
       </p>
     </Link>
   )

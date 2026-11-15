@@ -25,7 +25,7 @@ export const chavesMateriais = {
 }
 
 /** RF-50: teto por arquivo. */
-export const TAMANHO_MAX_MATERIAL = 25 * 1024 * 1024
+export const TAMANHO_MAX_MATERIAL = 200 * 1024 * 1024
 
 const TIPO_POR_MIME: { prefixo: string; tipo: MaterialTipo }[] = [
   { prefixo: 'application/pdf', tipo: 'pdf' },
@@ -341,7 +341,7 @@ async function subirParaOAcervo(entrada: NovoMaterial, pastaId: string | null = 
   const { arquivo } = entrada
   const tipo = tipoDoArquivo(arquivo.type, arquivo.name)
   if (!tipo) throw new Error('Formato não aceito. Envie PDF, DOCX, imagem, áudio ou TXT.')
-  if (arquivo.size > TAMANHO_MAX_MATERIAL) throw new Error('Arquivo muito grande — o limite é 25 MB.')
+  if (arquivo.size > TAMANHO_MAX_MATERIAL) throw new Error('Arquivo muito grande — o limite é 200 MB.')
 
   if (tipo === 'texto') {
     const { data, error } = await supabase

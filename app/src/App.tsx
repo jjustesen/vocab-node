@@ -44,6 +44,10 @@ import { TrilhaDetalhePage } from '@/features/trilhas/TrilhaDetalhePage'
 import { TrilhaDoAlunoPage } from '@/features/trilhas/TrilhaDoAlunoPage'
 import { FinanceiroPage } from '@/features/financeiro/FinanceiroPage'
 import { PlanoPage } from '@/features/planos/PlanoPage'
+import { CreditosPage } from '@/features/creditos/CreditosPage'
+import { VendaPage } from '@/features/venda/VendaPage'
+import { ProntoPage } from '@/features/venda/ProntoPage'
+import { MinhaContaPage } from '@/features/painel/MinhaContaPage'
 import { ConfiguracoesPage } from '@/features/configuracoes/ConfiguracoesPage'
 import { TutorPage } from '@/features/tutor/TutorPage'
 
@@ -53,6 +57,9 @@ const PraticaTutorPage = lazy(() =>
   import('@/features/tutor-aluno/PraticaTutorPage').then((m) => ({ default: m.PraticaTutorPage })),
 )
 // O editor também puxa o controlador (as falas fixas do painel Áudios) e a aula de teste.
+const LeitorMaterialPage = lazy(() =>
+  import('@/features/painel/LeitorMaterialPage').then((m) => ({ default: m.LeitorMaterialPage })),
+)
 const EditorLicaoPage = lazy(() => import('@/features/tutor/EditorLicaoPage').then((m) => ({ default: m.EditorLicaoPage })))
 const NovaLicaoPage = lazy(() => import('@/features/tutor/NovaLicaoPage').then((m) => ({ default: m.NovaLicaoPage })))
 const CompararVozesPage = lazy(() => import('@/features/tutor/CompararVozesPage').then((m) => ({ default: m.CompararVozesPage })))
@@ -87,11 +94,22 @@ export default function App() {
           {/* Link ABERTO da atividade (0010): rota pública, mas dentro do
               provider — se já houver sessão de aluno, o link vira atalho. */}
           <Route path="/a/:token" element={<LinkAbertoPage />} />
+          {/* Venda de um plano (0033): pública, mas reconhece o aluno logado. */}
+          <Route path="/p/:slug" element={<VendaPage />} />
+          <Route path="/p/:slug/pronto" element={<ProntoPage />} />
           <Route path="/entrar" element={<EntrarAlunoPage />} />
           <Route path="/entrar-aluno" element={<EntrarAlunoPage />} />
           <Route element={<ExigeSessaoAluno />}>
             <Route path="/painel" element={<PainelAlunoPage />} />
             <Route path="/painel/materiais" element={<MateriaisAlunoPage />} />
+            <Route
+              path="/painel/materiais/:id"
+              element={
+                <Suspense fallback={<TelaCarregando />}>
+                  <LeitorMaterialPage />
+                </Suspense>
+              }
+            />
             {/* `/painel/sala` é a LISTA; as salas em si ficam abaixo dela e
                 espelham as rotas do professor (`/sala/:alunoId` e
                 `/sala/turma/:turmaId`) — ver AulasAoVivoPage. */}
@@ -99,6 +117,7 @@ export default function App() {
             <Route path="/painel/sala/individual" element={<SalaAlunoPage />} />
             <Route path="/painel/sala/turma/:turmaId" element={<SalaAlunoTurmaPage />} />
             <Route path="/painel/trilha/:id" element={<TrilhaAlunoPage />} />
+            <Route path="/painel/conta" element={<MinhaContaPage />} />
             <Route path="/painel/tarefa/:atribuicaoId" element={<TarefaPage />} />
             <Route path="/painel/tutor" element={<TutorAlunoPage />} />
             <Route
@@ -154,6 +173,7 @@ export default function App() {
             <Route path="/plano" element={<PlanoPage />} />
             <Route path="/configuracoes" element={<ConfiguracoesPage />} />
             <Route path="/tutor" element={<TutorPage />} />
+            <Route path="/creditos" element={<CreditosPage />} />
             <Route
               path="/tutor/vozes"
               element={

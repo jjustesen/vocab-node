@@ -13,6 +13,7 @@
 // quem assina é o service_role, depois de confirmar que o material é dele.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
+import { filtroDoProfessor } from '../_shared/conta-aluno.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 
 /** Uma hora: folga para abrir o arquivo sem deixar o link circulando. */
@@ -38,6 +39,9 @@ Deno.serve(async (req) => {
     .from('contas_aluno')
     .select('aluno_id')
     .eq('user_id', sessao.user.id)
+    .match(filtroDoProfessor(req))
+    .order('criado_em')
+    .limit(1)
     .maybeSingle()
   // 404 é identidade, não indisponibilidade — o painel usa esse status para
   // derrubar a sessão de quem entrou pela porta errada (ver features/painel/api.ts).

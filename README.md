@@ -74,6 +74,11 @@ npm run dev
    supabase functions deploy painel-aluno-obter
    supabase functions deploy materiais-aluno-obter
    supabase functions deploy salas-do-aluno
+   supabase functions deploy aluno-assinaturas
+   supabase functions deploy professor-vendas
+   supabase functions deploy creditos-comprar
+   supabase functions deploy plano-venda --no-verify-jwt
+   supabase functions deploy repasses-diario --no-verify-jwt
    supabase functions deploy aluno-conta-gerenciar
    supabase functions deploy tarefa-pronuncia --no-verify-jwt
    supabase functions deploy atividade-gerar-audio
@@ -83,7 +88,7 @@ npm run dev
    supabase functions deploy tutor-gravar-falas
    supabase functions deploy poc-tutor --no-verify-jwt
    ```
-   `--no-verify-jwt` é obrigatório nas funções tarefa-\*, convite-\*, link-cadastro-\* e em `sala-entrar`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*, link-cadastro-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter`, `salas-do-aluno`, `aluno-conta-gerenciar`, `tutor-aluno`, `tutor-gerar-licao` e `tutor-gravar-falas` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão). `poc-tutor` é o laboratório do tutor oral, sem login e protegido por senha; o tutor dentro do produto (beta, migration 0024) está em [docs/TUTOR.md](docs/TUTOR.md).
+   `--no-verify-jwt` é obrigatório nas funções tarefa-\*, convite-\*, link-cadastro-\*, em `sala-entrar`, em `plano-venda` (a página de venda é pública; o JWT do aluno logado, quando vem, é conferido dentro dela), em `repasses-diario` (chamada pelo agendador, com o cabeçalho `x-cron-secret`) e em `stripe-webhook`: quem chama é o navegador do aluno sem sessão (tarefa-\*, sala pelo link) ou ainda sem conta (convite-\*, link-cadastro-\*) — a autorização vem da posse do token, validado por hash dentro de cada função, nunca do gateway. `gerar-atividade`, `painel-aluno-obter`, `materiais-aluno-obter`, `salas-do-aluno`, `aluno-conta-gerenciar`, `tutor-aluno`, `tutor-gerar-licao` e `tutor-gravar-falas` são o oposto — quem chama já está autenticado (professor ou aluno logado), então rodam com verify-jwt ligado (padrão). `poc-tutor` é o laboratório do tutor oral, sem login e protegido por senha; o tutor dentro do produto (beta, migration 0024) está em [docs/TUTOR.md](docs/TUTOR.md).
 6. Gere uma chave em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) e configure o secret (nunca entra no `.env` do front — só a Edge Function enxerga):
    ```bash
    supabase secrets set GEMINI_API_KEY=sua_chave_aqui
@@ -210,7 +215,7 @@ Duas limitações que valem saber:
 
 ### Materiais e biblioteca (fechados depois da etapa 7)
 
-- **Materiais avulsos por aluno** (RF-50/51/52): aba "Materiais" na ficha — enviar PDF/DOCX/imagem/áudio (até 25 MB) ou colar texto, ver o texto guardado, baixar e excluir. Antes disso, `materiais` só nascia como subproduto da geração por IA; agora o professor guarda material direto, vinculado ao aluno (`materiais.aluno_id`).
+- **Materiais avulsos por aluno** (RF-50/51/52): aba "Materiais" na ficha — enviar PDF/DOCX/imagem/áudio (até 200 MB) ou colar texto, ver o texto guardado, baixar e excluir. Antes disso, `materiais` só nascia como subproduto da geração por IA; agora o professor guarda material direto, vinculado ao aluno (`materiais.aluno_id`).
 - **Download por URL assinada** (RNF-10): o bucket é privado; a URL de 1h é gerada **no clique**, não ao renderizar a lista — assinar tudo de antemão gastaria requisição em link que ninguém abre, e deixaria mais links válidos circulando.
 - **Abas "Minhas atividades" / "Rascunhos" / "Trilhas"** na biblioteca. Rascunho aqui é a atividade **que ainda não foi enviada a ninguém**, não `atividades.status`: o campo existe no banco mas é cosmético (nenhuma policy, constraint ou índice depende dele).
 

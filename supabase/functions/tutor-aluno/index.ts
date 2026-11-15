@@ -13,6 +13,16 @@
 //   falar_stream → a voz do tutor, dentro de uma sessão aberta
 //   concluir     → grava o resumo do fim da aula
 //
+// ── Créditos (0031) ─────────────────────────────────────────────────────────
+//
+// Toda sessão sai dos créditos do professor: o teste dele e a prática dos
+// alunos particulares. Quem ASSINA um plano (0033) não usa créditos: a IA dele
+// é descontada do repasse, e o limite é o do plano, contado desde o início do
+// período pago (não do mês do calendário).
+// `iniciar` reserva o teto da sessão; o acerto pelo custo real acontece no
+// banco depois que a sessão termina (creditos_acertar_vencidas). Sem saldo, o
+// aluno vê o tutor pausado e o professor, "Adicionar créditos".
+//
 // Toda chamada confere de novo se o tutor continua ligado: o professor que
 // desliga no meio da aula corta o próximo turno, não o próximo mês.
 //
@@ -23,11 +33,13 @@
 // em rascunho, e as globais publicadas. A sessão nasce com `teste = true`, sem
 // aluno — não conta no limite de ninguém — e há um teto de testes por dia.
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
+import { filtroDoProfessor } from '../_shared/conta-aluno.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { avaliarTurno, MODELOS_DE_TRANSCRICAO } from '../_shared/tutor/avaliar.ts'
 import { type Custo, ErroDePedido } from '../_shared/tutor/comum.ts'
 import { falarEmStream, type Parte, textoDaFala } from '../_shared/tutor/falar.ts'
 import { custoEmUsd, gastoPorServico } from '../_shared/tutor/precos.ts'
+import { REAIS_POR_DOLAR, reservarCreditos, SemCreditos } from '../_shared/creditos.ts'
 
 /** Uma aula do roteiro leva ~15 min; 2 h é a aba esquecida aberta, não uma aula. */
 const DURACAO_MAX_MS = 2 * 60 * 60 * 1000
@@ -125,7 +137,7 @@ Deno.serve(async (req) => {
   // consultas em paralelo, e só então se confere se a sessão é de quem pede.
   const precisaDeSessao = pedido.acao === 'avaliar' || pedido.acao === 'falar_stream'
   const sessaoP = precisaDeSessao ? buscarSessao(db, pedido.sessaoId, pedido.acao === 'avaliar') : null
-  const ctx = pedido.modo === 'professor' ? await comoProfessor(db, userId) : await comoAluno(db, userId)
+  const ctx = pedido.modo === 'professor' ? await comoProfessor(db, userId) : await comoAluno(db, userId, req)
   if (ctx instanceof Response) return ctx
   ctx.sessaoBuscada = sessaoP ?? undefined
   ctx.inicio = inicio
@@ -162,24 +174,42 @@ const COLUNAS_PREFERENCIAS = 'tutor_voz_natural, tutor_escuta_automatica, tutor_
 type Preferencias = { tutor_voz_natural: boolean; tutor_escuta_automatica: boolean; tutor_sessoes_mes: number }
 
 /** O aluno logado: a conta dele, o tutor ligado e o professor no beta — numa consulta só. */
-async function comoAluno(db: Db, userId: string): Promise<Contexto | Response> {
+async function comoAluno(db: Db, userId: string, req: Request): Promise<Contexto | Response> {
   const { data: conta } = await db
     .from('contas_aluno')
-    .select(`aluno_id, professor_id, alunos(tutor_ativo, status), professores(${COLUNAS_PREFERENCIAS}, tutor_acesso(max_sessoes_mes))`)
+    .select(`aluno_id, professor_id, alunos(nome, tutor_ativo, status), professores(${COLUNAS_PREFERENCIAS}, tutor_acesso(max_sessoes_mes))`)
     .eq('user_id', userId)
+    .match(filtroDoProfessor(req))
+    .order('criado_em')
+    .limit(1)
     .maybeSingle()
   if (!conta) return respostaErro('Conta não encontrada.', 404)
 
-  const aluno = um(conta.alunos as unknown as { tutor_ativo: boolean; status: string } | null)
+  const aluno = um(conta.alunos as unknown as { nome: string; tutor_ativo: boolean; status: string } | null)
   const professor = um(conta.professores as unknown as (Preferencias & { tutor_acesso: unknown }) | null)
   const acesso = um(professor?.tutor_acesso as { max_sessoes_mes: number } | { max_sessoes_mes: number }[] | null)
   if (!aluno?.tutor_ativo || aluno.status !== 'ativo' || !acesso || !professor) {
     return respostaErro('O tutor não está ligado para você. Fale com seu professor.', 403)
   }
 
-  // A única trava é a do professor: sessões por aluno por mês (0028).
+  // Assinante: o limite do plano (somando os planos ativos e as práticas
+  // avulsas), no período pago. Senão, a trava do professor: sessões por mês (0028).
+  const { data: assinaturas } = await db
+    .from('assinaturas_aluno')
+    .select('praticas_mes, praticas_extra, periodo_inicio, periodo_fim')
+    .eq('aluno_id', conta.aluno_id)
+    .eq('status', 'ativa')
+  if (assinaturas?.length) {
+    const limite = assinaturas.reduce((t, a) => t + a.praticas_mes + a.praticas_extra, 0)
+    const desde = assinaturas.map((a) => a.periodo_inicio).sort()[0]
+    const renova = assinaturas.map((a) => a.periodo_fim).sort()[0]
+    return {
+      db, alunoId: conta.aluno_id as string, alunoNome: aluno.nome, professorId: conta.professor_id as string,
+      teste: false, limite, professor, assinante: { desde, renova },
+    }
+  }
   const limite = professor.tutor_sessoes_mes
-  return { db, alunoId: conta.aluno_id as string, professorId: conta.professor_id as string, teste: false, limite, professor }
+  return { db, alunoId: conta.aluno_id as string, alunoNome: aluno.nome, professorId: conta.professor_id as string, teste: false, limite, professor }
 }
 
 /** O professor experimentando a lição: precisa estar no beta. */
@@ -190,7 +220,7 @@ async function comoProfessor(db: Db, userId: string): Promise<Contexto | Respons
     .eq('id', userId)
     .maybeSingle()
   if (!professor || !um(professor.tutor_acesso as unknown)) return respostaErro('O tutor não está liberado para a sua conta.', 403)
-  return { db, alunoId: null, professorId: userId, teste: true, limite: TESTES_POR_DIA, professor: professor as unknown as Preferencias }
+  return { db, alunoId: null, alunoNome: null, professorId: userId, teste: true, limite: TESTES_POR_DIA, professor: professor as unknown as Preferencias }
 }
 
 type SessaoBuscada = {
@@ -221,10 +251,13 @@ type Contexto = {
   db: Db
   /** null no modo professor (sessão de teste). */
   alunoId: string | null
+  alunoNome: string | null
   professorId: string
   teste: boolean
-  /** Aluno: sessões no mês. Professor: testes em 24 h. */
+  /** Aluno: sessões no mês (ou no período do plano). Professor: testes em 24 h. */
   limite: number
+  /** Assina um plano: conta desde o início do período pago e não usa créditos. */
+  assinante?: { desde: string; renova: string }
   professor: { tutor_voz_natural: boolean; tutor_escuta_automatica: boolean }
   /** Nos turnos: a sessão, já a caminho desde o começo da chamada. */
   sessaoBuscada?: Promise<SessaoBuscada | null>
@@ -233,7 +266,8 @@ type Contexto = {
 
 // ── Lições ───────────────────────────────────────────────────────────────────
 
-async function listarLicoes({ db, alunoId, professorId, limite }: Contexto): Promise<Response> {
+async function listarLicoes(ctx: Contexto): Promise<Response> {
+  const { db, alunoId, professorId, limite } = ctx
   const { data: liberadas } = await db.from('tutor_licoes_alunos').select('licao_id').eq('aluno_id', alunoId!)
   const ids = (liberadas ?? []).map((l) => l.licao_id as string)
 
@@ -253,7 +287,7 @@ async function listarLicoes({ db, alunoId, professorId, limite }: Contexto): Pro
       .eq('aluno_id', alunoId!)
       .order('iniciada_em', { ascending: false })
       .limit(200),
-    sessoesDoMes(db, alunoId!),
+    sessoesUsadas(ctx),
   ])
 
   // A mais recente de cada lição — a lista já vem do mais novo para o mais velho.
@@ -330,7 +364,9 @@ async function iniciar(ctx: Contexto, pedido: Pedido): Promise<Response> {
     throw new ErroDePedido(
       ctx.teste
         ? `Você já fez ${ctx.limite} testes nas últimas 24 horas. Tente de novo amanhã.`
-        : `Você já fez as ${ctx.limite} sessões deste mês. No mês que vem tem mais!`,
+        : ctx.assinante
+          ? `Você usou as ${ctx.limite} práticas deste mês. Renova em ${new Date(ctx.assinante.renova).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })}.`
+          : `Você já fez as ${ctx.limite} sessões deste mês. No mês que vem tem mais!`,
       429,
     )
   }
@@ -340,6 +376,32 @@ async function iniciar(ctx: Contexto, pedido: Pedido): Promise<Response> {
     .select('id')
     .single()
   if (error || !data) throw new Error('Não consegui abrir a sessão.')
+
+  // Assinante: a IA sai do repasse do professor, não dos créditos.
+  if (ctx.assinante) return respostaJson({ sessaoId: data.id, restantes: Math.max(0, ctx.limite - usadas - 1) })
+
+  try {
+    await reservarCreditos(
+      ctx.db,
+      ctx.professorId,
+      TETO_POR_SESSAO_USD * REAIS_POR_DOLAR,
+      ctx.teste ? 'teste' : 'sessao',
+      data.id,
+      ctx.teste ? `Teste: ${licao.titulo}` : `Prática de ${ctx.alunoNome ?? 'aluno'}: ${licao.titulo}`,
+    )
+  } catch (e) {
+    // Sem a reserva a sessão não existe: não conta no limite de ninguém.
+    await ctx.db.from('tutor_sessoes').delete().eq('id', data.id)
+    if (e instanceof SemCreditos) {
+      throw new ErroDePedido(
+        ctx.teste
+          ? `Seus créditos acabaram. Um teste reserva até R$ ${(TETO_POR_SESSAO_USD * REAIS_POR_DOLAR).toFixed(2).replace('.', ',')}. Adicione créditos para testar.`
+          : 'O tutor do seu professor está pausado. As outras tarefas continuam.',
+        402,
+      )
+    }
+    throw e
+  }
   return respostaJson({ sessaoId: data.id, restantes: Math.max(0, ctx.limite - usadas - 1) })
 }
 
@@ -506,6 +568,14 @@ async function somarGasto(db: Db, sessaoId: string, custos: Custo[]) {
 
 /** O que conta no limite: sessões do aluno no mês, ou testes do professor em 24 h. */
 async function sessoesUsadas(ctx: Contexto): Promise<number> {
+  if (ctx.assinante) {
+    const { count } = await ctx.db
+      .from('tutor_sessoes')
+      .select('id', { count: 'exact', head: true })
+      .eq('aluno_id', ctx.alunoId!)
+      .gte('iniciada_em', ctx.assinante.desde)
+    return count ?? 0
+  }
   if (!ctx.teste) return sessoesDoMes(ctx.db, ctx.alunoId!)
   const { count } = await ctx.db
     .from('tutor_sessoes')

@@ -182,7 +182,7 @@ function ModalNovoMaterial({ alunoId, aoFechar }: { alunoId: string; aoFechar: (
       return setErroLocal('Formato não aceito. Envie PDF, DOCX, imagem, áudio ou TXT.')
     }
     if (escolhido.size > TAMANHO_MAX_MATERIAL) {
-      return setErroLocal('Arquivo muito grande — o limite é 25 MB.')
+      return setErroLocal('Arquivo muito grande — o limite é 200 MB.')
     }
     setArquivo(escolhido)
   }
@@ -254,7 +254,7 @@ function ModalNovoMaterial({ alunoId, aoFechar }: { alunoId: string; aoFechar: (
                 <input type="file" onChange={escolherArquivo} className="hidden" />
                 <Upload className="h-5 w-5 text-neutral-400" />
                 <span className="text-sm font-bold text-neutral-600">Clique para escolher um arquivo</span>
-                <span className="text-xs text-neutral-400">PDF, DOCX, imagem, áudio ou TXT · até 25 MB</span>
+                <span className="text-xs text-neutral-400">PDF, DOCX, imagem, áudio ou TXT · até 200 MB</span>
               </label>
             )}
           </div>

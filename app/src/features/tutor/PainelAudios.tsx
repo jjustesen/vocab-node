@@ -2,11 +2,16 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Loader2, Pause, Play, Wand2 } from 'lucide-react'
 import { textoDaFala } from '../../../../poc-tutor/src/falas.ts'
+import { AvisoDeSaldo } from '@/features/creditos/AvisoDeSaldo'
+import { chavesCreditos } from '@/features/creditos/api'
+import { REAIS_POR_DOLAR } from '@/lib/custo-ia'
 import { chavesTutor, emReais, gravarFalas } from './api'
 import type { FalaFixa, GeradorDeFala, Tocador } from './audiosDaLicao'
 
 /** Por chamada a tutor-gravar-falas: o TTS leva 2–4 s por fala, e a função tem tempo contado. */
 const LEVA = 4
+/** O que tutor-gravar-falas reserva dos créditos por fala (RESERVA_POR_FALA_USD × cotação). */
+const RESERVA_POR_FALA_REAIS = 0.01 * REAIS_POR_DOLAR
 /** Depois de um "limite do TTS", quanto esperar antes de mandar a mesma leva de novo. */
 const ESPERA_DO_LIMITE_MS = 30_000
 /**
@@ -89,6 +94,7 @@ export function PainelAudios({
       setProgresso(null)
       qc.invalidateQueries({ queryKey: chavesTutor.licao(licaoId) })
       qc.invalidateQueries({ queryKey: chavesTutor.todasAsLicoes })
+      qc.invalidateQueries({ queryKey: chavesCreditos.todos })
     }
   }
 
@@ -143,6 +149,9 @@ export function PainelAudios({
           {progresso ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
           {progresso ? `Gravando ${progresso.feitas} de ${progresso.total}…` : `Gerar os ${faltam.length} que faltam`}
         </button>
+      )}
+      {podeGravar && faltam.length > 0 && !progresso && (
+        <AvisoDeSaldo reserva={Math.min(LEVA, faltam.length) * RESERVA_POR_FALA_REAIS} acao="gravar uma leva de falas" />
       )}
       {progresso?.aviso && <p className="text-xs text-neutral-500">{progresso.aviso}</p>}
       {(erro ?? gerador.erro) && (

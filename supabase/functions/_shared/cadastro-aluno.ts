@@ -65,6 +65,7 @@ export async function limiteDeAlunosAtingido(db: Db, professorId: string): Promi
     .select('*', { count: 'exact', head: true })
     .eq('professor_id', professorId)
     .eq('status', 'ativo')
+    .neq('origem', 'loja') // quem comprou um plano não conta no limite (0033)
   return (count ?? 0) >= limite ? limite : null
 }
 

@@ -1,5 +1,6 @@
 // `?url` resolve para uma string no build — não puxa o worker para o bundle.
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import workerLegadoUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url'
 
 const LADO_MAXIMO_IMAGEM = 1500 // docs/PROMPT-GERACAO.md §4 — acima disso o custo sobe sem ganho de leitura
 const QUALIDADE_JPEG = 0.85
@@ -9,12 +10,45 @@ export const PAGINAS_MAX = 20
 /**
  * pdf.js pesa ~500kB e não entra no bundle que todo professor baixa: carrega
  * sob demanda, e só em quem precisa dele — o fallback de geração
- * (`pdfParaPaginas`) e o material no palco da sala (`MaterialNoPalco`).
+ * (`pdfParaPaginas`), o material no palco da sala (`MaterialNoPalco`) e o
+ * leitor de material do aluno (`LeitorMaterialPage`).
+ *
+ * ── Build moderna ou legada ────────────────────────────────────────────────
+ *
+ * A build normal do pdf.js 6 usa recursos recentes sem polyfill: lê
+ * `Iterator.prototype` logo ao carregar, e chama `Promise.withResolvers`,
+ * `URL.parse`, `Math.sumPrecise` e `Uint8Array.fromBase64`. Num Safari de
+ * iPhone com um ou dois anos, ou num WebView de Android antigo (o navegador
+ * de dentro do WhatsApp), ela quebra antes de abrir a primeira página. A
+ * build `legacy` traz os polyfills e funciona em todos: custa ~60 kB a mais,
+ * e só para quem precisa dela.
  */
-export async function carregarPdfjs() {
+export async function carregarPdfjs(): Promise<typeof import('pdfjs-dist')> {
+  if (precisaDoPdfjsLegado()) {
+    const legado = (await import('pdfjs-dist/legacy/build/pdf.mjs')) as typeof import('pdfjs-dist')
+    legado.GlobalWorkerOptions.workerSrc = workerLegadoUrl
+    return legado
+  }
   const pdfjs = await import('pdfjs-dist')
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl
   return pdfjs
+}
+
+function precisaDoPdfjsLegado(): boolean {
+  const g = globalThis as unknown as {
+    Iterator?: { prototype?: unknown }
+    Promise: { withResolvers?: unknown }
+    URL: { parse?: unknown }
+    Math: { sumPrecise?: unknown }
+    Uint8Array: { fromBase64?: unknown }
+  }
+  return (
+    typeof g.Iterator?.prototype !== 'object' ||
+    typeof g.Promise.withResolvers !== 'function' ||
+    typeof g.URL.parse !== 'function' ||
+    typeof g.Math.sumPrecise !== 'function' ||
+    typeof g.Uint8Array.fromBase64 !== 'function'
+  )
 }
 
 export type MaterialArquivo = { conteudo: string; mimeType: string }

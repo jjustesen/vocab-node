@@ -74,7 +74,7 @@ function canvasDoTamanho(largura: number, altura: number) {
 async function miniaturaDePdf(fonte: { data: Uint8Array } | { url: string }): Promise<Blob> {
   const pdfjs = await carregarPdfjs()
   // Sem auto-fetch e sem stream: o pdf.js pede ao Storage só os pedaços que a
-  // página 1 precisa (o Storage aceita Range). Um livro de 25 MB não é baixado
+  // página 1 precisa (o Storage aceita Range). Um livro de 200 MB não é baixado
   // inteiro para virar um quadradinho de 48px.
   const tarefa = pdfjs.getDocument({ ...fonte, disableAutoFetch: true, disableStream: true })
   try {
@@ -112,6 +112,14 @@ async function subirMiniatura(storagePath: string, jpeg: Blob): Promise<void> {
 }
 
 /**
+ * Acima disto o PDF não é lido na memória no upload: `arrayBuffer()` de um
+ * livro de 200 MB, mais a cópia que o pdf.js faz, derruba a aba no celular.
+ * A lista gera a miniatura depois por `garantirMiniatura`, que pede ao
+ * Storage só os pedaços da página 1.
+ */
+const PDF_MAX_MINIATURA_NO_UPLOAD = 25 * 1024 * 1024
+
+/**
  * No upload: o arquivo já está na memória, então a miniatura sai dele mesmo,
  * sem ir buscar nada no Storage. Melhor esforço — quem chama não espera por
  * isto e nem fica sabendo se falhar.
@@ -122,6 +130,7 @@ export async function criarMiniaturaDoArquivo(
   arquivo: Blob,
 ): Promise<void> {
   if (tipo !== 'pdf' && tipo !== 'imagem') return
+  if (tipo === 'pdf' && arquivo.size > PDF_MAX_MINIATURA_NO_UPLOAD) return
   try {
     const jpeg =
       tipo === 'pdf'

@@ -55,6 +55,8 @@ export type Assinatura = {
 }
 
 export type Aluno = {
+  /** 'loja': entrou comprando um plano (0033) e fica fora do limite de alunos. */
+  origem?: 'professor' | 'loja'
   id: string
   professor_id: string
   nome: string
@@ -317,13 +319,55 @@ export type Trilha = {
   nivel: NivelCefr
   descricao: string | null
   criada_em: string
+  /** Como o aluno percorre os passos de um módulo (0030). */
+  navegacao: TrilhaNavegacao
+  /** Numa trilha em sequência, o aluno pode trocar para a visão por abas. */
+  permite_abas: boolean
+  /** Quando cada módulo abre (0030). */
+  liberacao: TrilhaLiberacao
+  liberacao_dias: number
+  /** Nota mínima (0–100) para a atividade contar como concluída; null = basta terminar. */
+  nota_minima: number | null
 }
 
+export type TrilhaNavegacao = 'sequencia' | 'sugerida' | 'abas'
+export type TrilhaLiberacao = 'tudo' | 'progresso' | 'periodo' | 'progresso_e_periodo'
+
+export type TrilhaModulo = {
+  id: string
+  trilha_id: string
+  ordem: number
+  titulo: string
+  criado_em: string
+}
+
+/**
+ * Um PASSO da trilha (o nome da tabela ficou de antes da 0030). Exatamente um
+ * de `atividade_id`, `material_id` e `licao_tutor_id` vem preenchido.
+ */
 export type TrilhaEtapa = {
   id: string
   trilha_id: string
-  atividade_id: string
+  modulo_id: string
+  atividade_id: string | null
+  material_id: string | null
+  licao_tutor_id: string | null
+  opcional: boolean
   ordem: number
+}
+
+export type TipoDePasso = 'atividade' | 'material' | 'tutor'
+
+export function tipoDoPasso(e: Pick<TrilhaEtapa, 'atividade_id' | 'material_id'>): TipoDePasso {
+  return e.atividade_id ? 'atividade' : e.material_id ? 'material' : 'tutor'
+}
+
+export type PassoConcluido = {
+  aluno_id: string
+  etapa_id: string
+  trilha_id: string
+  concluida_em: string
+  percentual: number | null
 }
 
 export type TrilhaAlunoStatus = 'ativa' | 'pausada' | 'concluida'
@@ -457,6 +501,96 @@ export type AlunoUpdate = Partial<Omit<Aluno, 'id' | 'professor_id' | 'criado_em
  */
 type Tabela<Row, Ins, Upd> = { Row: Row; Insert: Ins; Update: Upd; Relationships: [] }
 
+// ── Créditos e plano do aluno (0031) ────────────────────────────────────────
+
+export type Creditos = { professor_id: string; saldo: number; atualizado_em: string }
+
+export type TipoDeMovimento = 'compra' | 'bonus' | 'reserva' | 'consumo' | 'estorno' | 'ajuste'
+export type OrigemDoMovimento = 'stripe' | 'sessao' | 'teste' | 'falas' | 'licao' | 'manual'
+
+export type CreditoMovimento = {
+  id: string
+  professor_id: string
+  tipo: TipoDeMovimento
+  origem: OrigemDoMovimento
+  /** + entrou, - saiu (reais). */
+  valor: number
+  saldo_depois: number
+  reservado: number | null
+  ref: string | null
+  descricao: string
+  criado_em: string
+  acertado_em: string | null
+}
+
+export type PlanoAluno = {
+  id: string
+  professor_id: string
+  nome: string
+  descricao: string | null
+  preco_centavos: number
+  praticas_mes: number
+  aceitando: boolean
+  stripe_product_id: string | null
+  stripe_price_id: string | null
+  criado_em: string
+  atualizado_em: string
+  /** O link de venda: /p/:slug (0033). */
+  slug: string
+  mostrar_no_painel: boolean
+}
+
+export type AssinaturaAluno = {
+  id: string
+  plano_id: string
+  professor_id: string
+  aluno_id: string
+  status: 'ativa' | 'encerrada'
+  cancela_no_fim: boolean
+  motivo_cancelamento: string | null
+  periodo_inicio: string
+  periodo_fim: string
+  preco_centavos: number
+  praticas_mes: number
+  praticas_extra: number
+  pago_por: 'aluno' | 'professor'
+  forma: 'stripe' | 'creditos'
+  encerrada_em: string | null
+  motivo_encerramento: 'cancelada' | 'pagamento_recusado' | 'sem_creditos' | 'professor' | null
+  criado_em: string
+}
+
+export type CobrancaAluno = {
+  id: string
+  assinatura_id: string
+  professor_id: string
+  aluno_id: string
+  periodo_inicio: string
+  periodo_fim: string
+  valor_centavos: number
+  tarifa_centavos: number | null
+  taxa_centavos: number | null
+  custo_ia_centavos: number | null
+  estorno_centavos: number
+  repasse_centavos: number | null
+  status: 'aguardando' | 'transferido' | 'sem_conta' | 'negativo' | 'estornado'
+  repassado_em: string | null
+}
+
+export type PlanoAlunoTrilha = { plano_id: string; trilha_id: string }
+
+/** Linha de `tutor_custo_das_licoes`: estimativa por sessão, em dólar. */
+export type CustoDaLicao = {
+  licao_id: string
+  itens: number
+  sessoes: number
+  mediana_usd: number | null
+  p90_usd: number | null
+  estimativa_usd: number
+  /** 'sessoes': média de 5+ sessões reais em 30 dias. 'inicial': pelo tamanho da lição. */
+  fonte: 'sessoes' | 'inicial'
+}
+
 /** O que `copiar_dados_do_aluno` devolve: quantas linhas entraram no destino. */
 export type ResumoDaCopia = {
   tarefas: number
@@ -544,8 +678,13 @@ export type Database = {
       trilhas: Tabela<Trilha, Insert<Trilha, 'professor_id' | 'nome' | 'nivel'>, Partial<Trilha>>
       trilha_etapas: Tabela<
         TrilhaEtapa,
-        Insert<TrilhaEtapa, 'trilha_id' | 'atividade_id' | 'ordem'>,
+        Insert<TrilhaEtapa, 'trilha_id' | 'ordem'>,
         Partial<TrilhaEtapa>
+      >
+      trilha_modulos: Tabela<
+        TrilhaModulo,
+        Insert<TrilhaModulo, 'trilha_id' | 'ordem' | 'titulo'>,
+        Partial<TrilhaModulo>
       >
       trilha_alunos: Tabela<
         TrilhaAluno,
@@ -560,7 +699,16 @@ export type Database = {
       >
       tutor_licoes_alunos: Tabela<TutorLicaoAluno, Insert<TutorLicaoAluno, 'aluno_id' | 'licao_id'>, never>
       tutor_sessoes: Tabela<TutorSessao, never, never>
+      creditos: Tabela<Creditos, never, never>
+      creditos_movimentos: Tabela<CreditoMovimento, never, never>
+      planos_aluno: Tabela<PlanoAluno, never, never>
+      planos_aluno_trilhas: Tabela<PlanoAlunoTrilha, never, never>
+      assinaturas_aluno: Tabela<AssinaturaAluno, never, never>
+      cobrancas_aluno: Tabela<CobrancaAluno, never, never>
     }
+    // Sem tipar views aqui: `from()` de tabela ainda não registrada cai neste
+    // Record e devolve `never` (planos/api.ts depende disso). A view
+    // trilha_passos_concluidos é lida com cast para `PassoConcluido`.
     Views: Record<string, never>
     Functions: {
       cadastrar_perfil_professor: { Args: { p_nome: string }; Returns: undefined }
@@ -580,6 +728,23 @@ export type Database = {
       copiar_dados_do_aluno: {
         Args: { p_origem: string; p_destino: string }
         Returns: ResumoDaCopia
+      }
+      /** Acerta reservas vencidas e devolve o saldo do professor logado (0031). */
+      meus_creditos: { Args: Record<string, never>; Returns: number }
+      tutor_custo_das_licoes: { Args: { p_licoes: string[] }; Returns: CustoDaLicao[] }
+      custo_medio_por_pratica_usd: { Args: { p_trilhas: string[] }; Returns: number }
+      /** Cria (p_id null) ou edita; recusa preço abaixo do mínimo ('preco_abaixo_do_minimo', DETAIL = mínimo em centavos). */
+      salvar_plano_aluno: {
+        Args: {
+          p_id: string | null
+          p_nome: string
+          p_descricao: string
+          p_preco_centavos: number
+          p_praticas_mes: number
+          p_aceitando: boolean
+          p_trilhas: string[]
+        }
+        Returns: string
       }
     }
     Enums: Record<string, never>

@@ -136,14 +136,26 @@ export function PlanoPage() {
                 {info.descricao}
               </p>
               <p className="mt-3">
+                {/* Na promoção, o cheio riscado ao lado: a âncora é o que faz
+                    os R$ 160 parecerem o que são. */}
+                {info.precoLancamento !== undefined && (
+                  <span className={`mr-1.5 text-sm font-bold line-through ${escuro ? 'text-neutral-500' : 'text-neutral-400'}`}>
+                    R$ {info.precoMensal}
+                  </span>
+                )}
                 <span className="text-2xl font-extrabold">
-                  {info.precoMensal === 0 ? 'R$ 0' : `R$ ${info.precoMensal}`}
+                  {info.precoMensal === 0 ? 'R$ 0' : `R$ ${info.precoLancamento ?? info.precoMensal}`}
                 </span>
                 <span className={`text-xs font-semibold ${escuro ? 'text-neutral-400' : 'text-neutral-400'}`}>
                   {' '}
                   /mês
                 </span>
               </p>
+              {info.precoLancamento !== undefined && (
+                <span className="mt-1 self-start rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-extrabold text-amber-800">
+                  Preço de lançamento
+                </span>
+              )}
               <ul className={`mt-3 flex-1 space-y-1.5 text-xs font-medium ${escuro ? 'text-neutral-200' : 'text-neutral-700'}`}>
                 <Item escuro={escuro}>
                   {info.limiteAlunos === null ? 'Alunos sem limite' : `Até ${info.limiteAlunos} alunos ativos`}

@@ -204,9 +204,11 @@ export function EditorLicaoPage() {
           ) : (
             <Link
               to={`/tutor/licoes/${licao.id}/experimentar`}
+              title="Sai dos seus créditos: ~R$ 0,40 por teste, no máximo R$ 2,75"
               className="inline-flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-4 py-2 text-sm font-bold"
             >
               <Play className="h-4 w-4" /> Experimentar
+              <span className="text-xs font-semibold text-neutral-400">· até R$ 2,75</span>
             </Link>
           )}
           {!somenteLeitura && (

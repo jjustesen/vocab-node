@@ -85,6 +85,7 @@ export function useCriarAluno() {
           .from('alunos')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'ativo')
+          .neq('origem', 'loja') // quem comprou um plano não conta no limite (0033)
         if (erroContagem) throw erroContagem
         if ((count ?? 0) >= limite) {
           throw new Error(

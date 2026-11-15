@@ -6,7 +6,9 @@ import { SeletorDeOrdem } from '@/components/SeletorDeOrdem'
 import { ordenar, useOrdem } from '@/lib/ordenar'
 import { useAlunos } from '@/features/alunos/api'
 import { useTurmasComMembros } from '@/features/turmas/api'
-import { type LicaoNaLista, useLiberacoesTutor, useTodasAsLicoes, useTurmasDasLicoes } from './api'
+import { type LicaoNaLista, useCustoDasLicoes, useLiberacoesTutor, useTodasAsLicoes, useTurmasDasLicoes } from './api'
+import { reais, REAIS_POR_DOLAR } from '@/lib/custo-ia'
+import type { CustoDaLicao } from '@/types/db'
 import { LiberarLicaoModal } from './LiberarLicaoModal'
 
 const GRUPOS_NIVEL = [
@@ -36,6 +38,7 @@ export function AbaLicoes() {
   const { data: turmasDasLicoes } = useTurmasDasLicoes()
   const { data: turmas } = useTurmasComMembros()
   const { data: alunos } = useAlunos('ativo')
+  const { data: custos } = useCustoDasLicoes((licoes ?? []).map((l) => l.id))
   const [liberando, setLiberando] = useState<LicaoNaLista | null>(null)
   const [busca, setBusca] = useState('')
   const [grupoNivel, setGrupoNivel] = useState(0)
@@ -138,7 +141,7 @@ export function AbaLicoes() {
       ) : minhas.length === 0 ? null : (
         <ul className="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
           {minhas.map((l) => (
-            <LinhaDaLicao key={l.id} licao={l} paraQuem={paraQuem(l.id)} aoLiberar={() => setLiberando(l)} />
+            <LinhaDaLicao key={l.id} licao={l} custo={custos?.get(l.id)} paraQuem={paraQuem(l.id)} aoLiberar={() => setLiberando(l)} />
           ))}
         </ul>
       )}
@@ -149,7 +152,7 @@ export function AbaLicoes() {
           <p className="mt-1 text-xs text-neutral-500">Lições prontas do Vocab Node. Dá para abrir, ouvir, experimentar e liberar.</p>
           <ul className="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-3xl bg-white">
             {biblioteca.map((l) => (
-              <LinhaDaLicao key={l.id} licao={l} paraQuem={paraQuem(l.id)} aoLiberar={() => setLiberando(l)} />
+              <LinhaDaLicao key={l.id} licao={l} custo={custos?.get(l.id)} paraQuem={paraQuem(l.id)} aoLiberar={() => setLiberando(l)} />
             ))}
           </ul>
         </>
@@ -162,10 +165,12 @@ export function AbaLicoes() {
 
 function LinhaDaLicao({
   licao,
+  custo,
   paraQuem,
   aoLiberar,
 }: {
   licao: LicaoNaLista
+  custo: CustoDaLicao | undefined
   paraQuem: { turmas: string[]; avulsos: string[] }
   aoLiberar: () => void
 }) {
@@ -186,6 +191,7 @@ function LinhaDaLicao({
           {licao.professor_id && !licao.publicada && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">rascunho</span>
           )}
+          {custo && <EtiquetaDeCusto custo={custo} />}
         </span>
         <span className="mt-0.5 flex items-center gap-1 truncate text-xs text-neutral-500">
           {paraQuem.turmas.length > 0 && <UsersRound className="h-3 w-3 shrink-0" />}
@@ -203,5 +209,18 @@ function LinhaDaLicao({
         Liberar
       </button>
     </li>
+  )
+}
+
+/** ~R$ por prática, com a origem do número no título (passar o mouse). */
+export function EtiquetaDeCusto({ custo }: { custo: CustoDaLicao }) {
+  const titulo =
+    custo.fonte === 'sessoes'
+      ? `Média de ${custo.sessoes} sessões reais nos últimos 30 dias. 9 em cada 10 custaram até ${reais((custo.p90_usd ?? 0) * REAIS_POR_DOLAR)}.`
+      : `Estimativa inicial pelo tamanho da lição (${custo.itens} itens). Fica mais precisa depois de 5 sessões de alunos.`
+  return (
+    <span title={titulo} className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-bold text-neutral-600">
+      ~{reais(custo.estimativa_usd * REAIS_POR_DOLAR)} por prática{custo.fonte === 'inicial' && ' · estimativa inicial'}
+    </span>
   )
 }

@@ -6,8 +6,9 @@
 // como RASCUNHO do professor em tutor_licoes. O editor abre em seguida: é lá
 // que ele revisa, corrige o que o validarRoteiro acusar e publica.
 //
-// Não gasta a cota de geração de atividades do plano: no beta o tutor é por
-// nossa conta, com teto próprio de lições geradas por dia.
+// Não gasta a cota de geração de atividades do plano: sai dos créditos do
+// professor (0031), com teto próprio de lições geradas por dia. Reserva
+// RESERVA_USD antes de chamar a IA e acerta pelo custo real (uso.custoUsd).
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
@@ -15,12 +16,15 @@ import { GeminiProvider } from '../_shared/ia/gemini.ts'
 import { validarMaterial } from '../_shared/ia/material.ts'
 import { mensagemUsuarioDoErro, type MaterialGeracao } from '../_shared/ia/tipos.ts'
 import { blocoDoPedido, INSTRUCAO_LICAO, LICAO_GERADA_SCHEMA, paraRoteiro } from '../_shared/tutor/licao-ia.ts'
+import { acertarCreditos, REAIS_POR_DOLAR, reservarCreditos, respostaSemCreditos, SemCreditos } from '../_shared/creditos.ts'
 
 const LICOES_POR_DIA = 20
 const NIVEIS = ['A1', 'A2', 'B1', 'B2', 'C1']
 /** A lição inteira sai bem maior que uma atividade: uma tentativa longa, e repetir só erro rápido. */
 const TIMEOUT_MS = 120_000
 const ORCAMENTO_MS = 125_000
+/** Uma lição gerada custa ~US$ 0,03 (material + roteiro); reserva com folga para PDF de várias páginas. */
+const RESERVA_USD = 0.15
 
 type Pedido = { material?: unknown; nivel?: string; titulo?: string }
 
@@ -66,6 +70,15 @@ Deno.serve(async (req) => {
     return respostaErro(`Você já gerou ${LICOES_POR_DIA} lições nas últimas 24 horas. Tente de novo amanhã.`, 429)
   }
 
+  const id = crypto.randomUUID()
+  let reserva: string
+  try {
+    reserva = await reservarCreditos(db, professorId, RESERVA_USD * REAIS_POR_DOLAR, 'licao', id, `Gerar lição${titulo ? `: ${titulo}` : ''}`)
+  } catch (e) {
+    if (e instanceof SemCreditos) return respostaSemCreditos(e, 'Gerar uma lição')
+    throw e
+  }
+
   let dados: unknown
   try {
     const gemini = new GeminiProvider()
@@ -78,12 +91,14 @@ Deno.serve(async (req) => {
     })
     dados = r.dados
     console.log('tutor-gerar-licao uso:', JSON.stringify(r.uso))
+    await acertarCreditos(db, reserva, r.uso.custoUsd)
   } catch (e) {
+    // A IA falhou: o Gemini não cobra resposta com erro, então devolve tudo.
+    await acertarCreditos(db, reserva, 0)
     console.error('tutor-gerar-licao:', e)
     return respostaErro(mensagemUsuarioDoErro(e).replace('a atividade', 'a lição'), 502)
   }
 
-  const id = crypto.randomUUID()
   const roteiro = paraRoteiro(dados, id)
   if (!roteiro.blocos.length) {
     return respostaErro('A IA não encontrou exercícios neste material. Confira se a foto está legível e tente de novo.', 422)

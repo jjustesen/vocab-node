@@ -9,8 +9,10 @@
  * Segredos esperados (supabase secrets set):
  *   STRIPE_SECRET_KEY       chave sk_... (test ou live)
  *   STRIPE_WEBHOOK_SECRET   whsec_... do endpoint do webhook
- *   STRIPE_PRICE_PRO        price_... do plano Pro (R$ 100/mês)
- *   STRIPE_PRICE_ILIMITADO  price_... do plano Ilimitado (R$ 300/mês)
+ *   STRIPE_PRICE_PRO        price_... do plano Pro (R$ 200/mês, preço cheio)
+ *   STRIPE_PRICE_ILIMITADO  price_... do plano Ilimitado (R$ 400/mês)
+ *   STRIPE_CUPOM_LANCAMENTO id do cupom de lançamento do Pro (opcional — ver
+ *                           `cupomDoPlano`); sem ele, o Pro sai pelo preço cheio
  *   APP_URL                 origem do app (ex.: https://app.vocabnode.com)
  */
 import Stripe from 'npm:stripe@18'
@@ -31,6 +33,24 @@ export function priceDoPlano(plano: PlanoPago): string {
   const price = Deno.env.get(plano === 'pro' ? 'STRIPE_PRICE_PRO' : 'STRIPE_PRICE_ILIMITADO')
   if (!price) throw new Error(`Secret STRIPE_PRICE_${plano.toUpperCase()} não configurado.`)
   return price
+}
+
+/**
+ * O cupom aplicado AUTOMATICAMENTE no checkout — hoje, a promoção de
+ * lançamento do Pro (R$ 200 → R$ 160).
+ *
+ * É um cupom, e não um preço de R$ 160, de propósito: o desconto aparece no
+ * checkout e em toda fatura ("R$ 200 − R$ 40"), a âncora do preço cheio fica
+ * visível, e encerrar a promoção é só apagar a secret — quem assinar depois
+ * paga o preço cheio, sem migrar ninguém de preço. Quanto o desconto dura para
+ * quem já entrou (para sempre, N meses) é configuração do cupom no Stripe.
+ *
+ * Mora numa secret, e não no código, porque o cupom do modo test e o do live
+ * têm ids diferentes.
+ */
+export function cupomDoPlano(plano: PlanoPago): string | null {
+  if (plano !== 'pro') return null
+  return Deno.env.get('STRIPE_CUPOM_LANCAMENTO') || null
 }
 
 /** Inverso de priceDoPlano — usado pelo webhook para saber que plano foi pago. */

@@ -7,7 +7,14 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
-import { appUrlDaRequisicao, clienteStripe, priceDoPlano, PLANOS_PAGOS, type PlanoPago } from '../_shared/stripe.ts'
+import {
+  appUrlDaRequisicao,
+  clienteStripe,
+  cupomDoPlano,
+  priceDoPlano,
+  PLANOS_PAGOS,
+  type PlanoPago,
+} from '../_shared/stripe.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -82,13 +89,17 @@ Deno.serve(async (req) => {
     }
 
     const base = appUrlDaRequisicao(req)
+    const cupom = cupomDoPlano(plano as PlanoPago)
     const sessaoCheckout = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceDoPlano(plano as PlanoPago), quantity: 1 }],
       success_url: `${base}/plano?checkout=sucesso`,
       cancel_url: `${base}/plano`,
-      allow_promotion_codes: true,
+      // Com a promoção de lançamento, o cupom já vai aplicado. O Stripe não
+      // aceita `discounts` junto com `allow_promotion_codes` na mesma sessão,
+      // então o campo de código só aparece quando não há desconto automático.
+      ...(cupom ? { discounts: [{ coupon: cupom }] } : { allow_promotion_codes: true }),
       // O webhook lê este metadata para saber de quem é a assinatura — é o elo
       // entre o mundo Stripe e o professor, então vai nos dois lugares.
       subscription_data: { metadata: { professor_id: professorId, plano } },

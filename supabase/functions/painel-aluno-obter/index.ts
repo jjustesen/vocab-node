@@ -7,6 +7,8 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { clienteAdmin } from '../_shared/cliente-admin.ts'
 import { CORS_HEADERS, respostaErro, respostaJson } from '../_shared/cors.ts'
+import { calcularLiberacoes } from '../_shared/trilha-liberacao.ts'
+import { contasDoLogin } from '../_shared/conta-aluno.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
@@ -24,11 +26,10 @@ Deno.serve(async (req) => {
 
   const db = clienteAdmin()
 
-  const { data: conta } = await db
-    .from('contas_aluno')
-    .select('aluno_id, professor_id')
-    .eq('user_id', sessao.user.id)
-    .maybeSingle()
+  // Um login pode ter um professor por conta (§6.1). O cabeçalho x-professor
+  // diz qual o aluno escolheu; sem ele, a conta mais antiga.
+  const contas = await contasDoLogin(db, sessao.user.id)
+  const conta = contas.find((c) => c.professor_id === req.headers.get('x-professor')) ?? contas[0]
   if (!conta) return respostaErro('Conta não encontrada.', 404)
 
   await db.from('contas_aluno').update({ ultimo_login: new Date().toISOString() }).eq('user_id', sessao.user.id)
@@ -49,22 +50,14 @@ Deno.serve(async (req) => {
     .order('enviada_em', { ascending: false })
 
   const lista = atribuicoes ?? []
-  if (lista.length === 0) {
-    return respostaJson({
-      alunoNome: aluno?.nome ?? 'aluno',
-      professorNome: professor?.nome ?? 'seu professor',
-      tutorAtivo,
-      trilhas: [],
-      pendentes: [],
-      concluidas: [],
-    })
-  }
 
   const idsAtividades = [...new Set(lista.map((a) => a.atividade_id))]
-  const [{ data: atividades }, { data: questoes }] = await Promise.all([
-    db.from('atividades').select('id, titulo, nivel').in('id', idsAtividades),
-    db.from('questoes').select('atividade_id').in('atividade_id', idsAtividades),
-  ])
+  const [{ data: atividades }, { data: questoes }] = idsAtividades.length
+    ? await Promise.all([
+        db.from('atividades').select('id, titulo, nivel').in('id', idsAtividades),
+        db.from('questoes').select('atividade_id').in('atividade_id', idsAtividades),
+      ])
+    : [{ data: [] as { id: string; titulo: string; nivel: string }[] }, { data: [] as { atividade_id: string }[] }]
 
   const atividadePorId = new Map((atividades ?? []).map((a) => [a.id, a]))
   const totalQuestoesPorAtividade = new Map<string, number>()
@@ -93,84 +86,159 @@ Deno.serve(async (req) => {
   // ---------------------------------------------------------------------------
   const { data: vinculos } = await db
     .from('trilha_alunos')
-    .select('trilha_id, status')
+    .select('trilha_id, status, iniciada_em, assinatura_id')
     .eq('aluno_id', conta.aluno_id)
 
   const trilhas: unknown[] = []
   const idsEtapasMostradas = new Set<string>()
 
+  // Toda atribuição de etapa sai das listas soltas — inclusive as tentativas
+  // antigas, que senão reapareceriam como tarefa avulsa.
+  for (const a of lista) if (a.trilha_etapa_id) idsEtapasMostradas.add(a.id)
+
   if (vinculos && vinculos.length > 0) {
     const idsTrilhas = vinculos.map((v) => v.trilha_id)
-    const [{ data: dadosTrilhas }, { data: etapas }] = await Promise.all([
-      db.from('trilhas').select('id, nome, nivel, descricao').in('id', idsTrilhas),
-      db.from('trilha_etapas').select('id, trilha_id, atividade_id, ordem').in('trilha_id', idsTrilhas),
+    const [{ data: dadosTrilhas }, { data: etapas }, { data: modulos }, { data: concluidos }] = await Promise.all([
+      db
+        .from('trilhas')
+        .select('id, nome, nivel, descricao, navegacao, permite_abas, liberacao, liberacao_dias, nota_minima')
+        .in('id', idsTrilhas),
+      db
+        .from('trilha_etapas')
+        .select('id, trilha_id, modulo_id, atividade_id, material_id, licao_tutor_id, opcional, ordem')
+        .in('trilha_id', idsTrilhas),
+      db.from('trilha_modulos').select('id, trilha_id, ordem, titulo').in('trilha_id', idsTrilhas),
+      // Conclusão de qualquer tipo de passo, com a nota mínima já aplicada (0030).
+      db.from('trilha_passos_concluidos').select('etapa_id, concluida_em').eq('aluno_id', conta.aluno_id).in('trilha_id', idsTrilhas),
     ])
 
     const trilhaPorId = new Map((dadosTrilhas ?? []).map((t) => [t.id, t]))
+    const idsAssinaturas = vinculos.flatMap((v) => (v.assinatura_id ? [v.assinatura_id] : []))
+    const { data: assinaturas } = idsAssinaturas.length
+      ? await db.from('assinaturas_aluno').select('id, status, planos_aluno(slug)').in('id', idsAssinaturas)
+      : { data: [] }
+    const assinaturaPorId = new Map(
+      (assinaturas ?? []).map((a) => [a.id as string, { status: a.status as string, slug: (a.planos_aluno as unknown as { slug: string } | null)?.slug ?? null }]),
+    )
+    const conclusaoPorEtapa = new Map((concluidos ?? []).map((c) => [c.etapa_id, c.concluida_em as string]))
 
-    // Reatribuir a trilha cria uma tentativa nova por etapa (RF-127), então a
-    // mesma etapa pode ter várias atribuições. Vale a MAIS RECENTE: `lista` já
-    // vem por `enviada_em` decrescente, então só gravamos a primeira que
-    // aparecer de cada etapa. As antigas continuam no histórico do professor.
+    // Reatribuir a trilha cria uma tentativa nova por etapa (RF-127). Vale a
+    // MAIS RECENTE: `lista` já vem por `enviada_em` decrescente.
     const atribuicaoPorEtapa = new Map<string, (typeof lista)[number]>()
     for (const a of lista) {
-      if (!a.trilha_etapa_id) continue
-      if (!atribuicaoPorEtapa.has(a.trilha_etapa_id)) {
-        atribuicaoPorEtapa.set(a.trilha_etapa_id, a)
-      }
-      // Toda atribuição de etapa sai das listas soltas — inclusive as
-      // tentativas antigas, que senão reapareceriam como tarefa avulsa.
-      idsEtapasMostradas.add(a.id)
+      if (a.trilha_etapa_id && !atribuicaoPorEtapa.has(a.trilha_etapa_id)) atribuicaoPorEtapa.set(a.trilha_etapa_id, a)
     }
 
-    // Etapas de atividades que ainda não estavam no lote inicial de títulos.
-    const idsExtras = [...new Set((etapas ?? []).map((e) => e.atividade_id))].filter(
+    // Títulos do que não veio no lote das atribuições: atividades ainda sem
+    // atribuição, materiais e lições.
+    const todas = etapas ?? []
+    const idsExtras = [...new Set(todas.flatMap((e) => (e.atividade_id ? [e.atividade_id] : [])))].filter(
       (id) => !atividadePorId.has(id),
     )
-    // As questões delas também: sem isto, uma etapa ainda sem atribuição para
-    // o aluno aparecia com "0 questões".
-    if (idsExtras.length > 0) {
-      const [{ data: extras }, { data: questoesExtras }] = await Promise.all([
-        db.from('atividades').select('id, titulo, nivel').in('id', idsExtras),
-        db.from('questoes').select('atividade_id').in('atividade_id', idsExtras),
-      ])
-      for (const a of extras ?? []) atividadePorId.set(a.id, a)
-      for (const q of questoesExtras ?? []) {
-        totalQuestoesPorAtividade.set(q.atividade_id, (totalQuestoesPorAtividade.get(q.atividade_id) ?? 0) + 1)
-      }
+    const idsMateriais = [...new Set(todas.flatMap((e) => (e.material_id ? [e.material_id] : [])))]
+    const idsLicoes = [...new Set(todas.flatMap((e) => (e.licao_tutor_id ? [e.licao_tutor_id] : [])))]
+    const [{ data: extras }, { data: questoesExtras }, { data: materiais }, { data: licoes }] = await Promise.all([
+      idsExtras.length ? db.from('atividades').select('id, titulo, nivel').in('id', idsExtras) : { data: [] },
+      idsExtras.length ? db.from('questoes').select('atividade_id').in('atividade_id', idsExtras) : { data: [] },
+      idsMateriais.length ? db.from('materiais').select('id, nome, tipo').in('id', idsMateriais) : { data: [] },
+      idsLicoes.length ? db.from('tutor_licoes').select('id, titulo, nivel_cefr').in('id', idsLicoes) : { data: [] },
+    ])
+    for (const a of (extras ?? []) as { id: string; titulo: string; nivel: string }[]) atividadePorId.set(a.id, a)
+    for (const q of (questoesExtras ?? []) as { atividade_id: string }[]) {
+      totalQuestoesPorAtividade.set(q.atividade_id, (totalQuestoesPorAtividade.get(q.atividade_id) ?? 0) + 1)
     }
+    const materialPorId = new Map(((materiais ?? []) as { id: string; nome: string; tipo: string }[]).map((m) => [m.id, m]))
+    const licaoPorId = new Map(
+      ((licoes ?? []) as { id: string; titulo: string; nivel_cefr: string | null }[]).map((l) => [l.id, l]),
+    )
+    const agora = new Date()
 
     for (const vinculo of vinculos) {
       const trilha = trilhaPorId.get(vinculo.trilha_id)
       if (!trilha) continue
 
-      const daTrilha = (etapas ?? [])
-        .filter((e) => e.trilha_id === vinculo.trilha_id)
-        .sort((a, b) => a.ordem - b.ordem)
+      const modulosDaTrilha = (modulos ?? []).filter((m) => m.trilha_id === trilha.id).sort((a, b) => a.ordem - b.ordem)
+      const ordemDoModulo = new Map(modulosDaTrilha.map((m) => [m.id, m.ordem]))
+      const daTrilha = todas
+        .filter((e) => e.trilha_id === trilha.id)
+        .sort((a, b) => (ordemDoModulo.get(a.modulo_id) ?? 0) - (ordemDoModulo.get(b.modulo_id) ?? 0) || a.ordem - b.ordem)
 
-      const etapasSaida = daTrilha.map((e) => {
-        const atribuicao = atribuicaoPorEtapa.get(e.id)
-        if (atribuicao) idsEtapasMostradas.add(atribuicao.id)
-        const atividade = atividadePorId.get(e.atividade_id)
-        const contagem = atribuicao ? contagemPorAtribuicao.get(atribuicao.id) : undefined
-        return {
+      const liberacoes = calcularLiberacoes(
+        {
+          navegacao: trilha.navegacao,
+          liberacao: trilha.liberacao,
+          liberacaoDias: trilha.liberacao_dias,
+          iniciadaEm: vinculo.iniciada_em,
+          agora,
+        },
+        modulosDaTrilha,
+        daTrilha.map((e) => ({
+          id: e.id,
+          moduloId: e.modulo_id,
           ordem: e.ordem,
-          titulo: atividade?.titulo ?? 'Atividade',
-          nivel: atividade?.nivel ?? 'A1',
-          totalQuestoes: totalQuestoesPorAtividade.get(e.atividade_id) ?? 0,
-          atribuicaoId: atribuicao?.id ?? null,
-          concluidaEm: atribuicao?.concluida_em ?? null,
-          acertos: contagem?.acertos ?? null,
-          total: contagem?.total ?? null,
+          opcional: e.opcional,
+          concluido: conclusaoPorEtapa.has(e.id),
+        })),
+      )
+
+      const etapasSaida = daTrilha.map((e, i) => {
+        const atribuicao = atribuicaoPorEtapa.get(e.id)
+        const contagem = atribuicao ? contagemPorAtribuicao.get(atribuicao.id) : undefined
+        const base = {
+          etapaId: e.id,
+          ordem: i + 1,
+          moduloId: e.modulo_id,
+          opcional: e.opcional,
+          estado: liberacoes.estadoPorPasso.get(e.id) ?? 'aberto',
+          concluidaEm: conclusaoPorEtapa.get(e.id) ?? null,
+        }
+        if (e.atividade_id) {
+          const atividade = atividadePorId.get(e.atividade_id)
+          return {
+            ...base,
+            tipo: 'atividade',
+            titulo: atividade?.titulo ?? 'Atividade',
+            nivel: atividade?.nivel ?? 'A1',
+            totalQuestoes: totalQuestoesPorAtividade.get(e.atividade_id) ?? 0,
+            atribuicaoId: atribuicao?.id ?? null,
+            materialId: null,
+            licaoId: null,
+            detalhe: null,
+            acertos: contagem?.acertos ?? null,
+            total: contagem?.total ?? null,
+          }
+        }
+        const material = e.material_id ? materialPorId.get(e.material_id) : undefined
+        const licao = e.licao_tutor_id ? licaoPorId.get(e.licao_tutor_id) : undefined
+        return {
+          ...base,
+          tipo: e.material_id ? 'material' : 'tutor',
+          titulo: material?.nome ?? licao?.titulo ?? (e.material_id ? 'Material' : 'Lição do tutor'),
+          nivel: licao?.nivel_cefr ?? null,
+          totalQuestoes: 0,
+          atribuicaoId: null,
+          materialId: e.material_id,
+          licaoId: e.licao_tutor_id,
+          detalhe: material ? material.tipo : null,
+          acertos: null,
+          total: null,
         }
       })
 
+      const assinatura = vinculo.assinatura_id ? assinaturaPorId.get(vinculo.assinatura_id) : undefined
       trilhas.push({
+        // Pausada porque a assinatura terminou: o aluno vê "Assinar de novo".
+        assinaturaEncerrada: vinculo.status === 'pausada' && assinatura?.status === 'encerrada',
+        slugDoPlano: assinatura?.slug ?? null,
         id: trilha.id,
         nome: trilha.nome,
         nivel: trilha.nivel,
         descricao: trilha.descricao,
         status: vinculo.status,
+        navegacao: trilha.navegacao,
+        permiteAbas: trilha.permite_abas,
+        modulos: liberacoes.modulos,
+        atualId: liberacoes.atualId,
         etapas: etapasSaida,
         concluidas: etapasSaida.filter((e) => e.concluidaEm).length,
       })
@@ -208,6 +276,8 @@ Deno.serve(async (req) => {
   return respostaJson({
     alunoNome: aluno?.nome ?? 'aluno',
     professorNome: professor?.nome ?? 'seu professor',
+    professorId: conta.professor_id,
+    professores: contas.map((c) => ({ id: c.professor_id, nome: c.professores?.nome ?? 'Professor' })),
     tutorAtivo,
     trilhas,
     pendentes,
