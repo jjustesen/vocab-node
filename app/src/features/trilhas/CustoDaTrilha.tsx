@@ -4,6 +4,7 @@ import {
   DATA_AUMENTO,
   estimarPorAluno,
   reais,
+  COTACAO_DOLAR,
   REAIS_POR_DOLAR,
   reaisDeCentavos,
   TETO_POR_SESSAO_USD,
@@ -176,7 +177,8 @@ function ComoCalculamos({
             <p className="font-bold text-neutral-900">4. Limites e câmbio</p>
             <p className="mt-0.5">
               Uma prática nunca passa de {reais(TETO_POR_SESSAO_USD * REAIS_POR_DOLAR)}: acima disso o tutor encerra a
-              sessão. A IA é cobrada em dólar; usamos {reais(REAIS_POR_DOLAR)} por dólar. Em 01/01/2027 o Google aumenta o
+              sessão. A IA é cobrada em dólar; usamos {reais(COTACAO_DOLAR)} por dólar, mais 10% para cobrir a taxa do pagamento
+              ({reais(REAIS_POR_DOLAR)} por dólar). Em 01/01/2027 o Google aumenta o
               preço do Gemini, e a estimativa sobe junto.
             </p>
           </li>

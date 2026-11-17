@@ -16,8 +16,18 @@ import { respostaJson } from './cors.ts'
 
 type Db = ReturnType<typeof clienteAdmin>
 
-/** A mesma de `cotacao_dolar()` no banco e de REAIS_POR_DOLAR no app. */
-export const REAIS_POR_DOLAR = 5.5
+/** Cotação do dólar usada nas contas (fixa por enquanto). */
+export const COTACAO_DOLAR = 5.5
+
+/**
+ * O pagamento leva cerca de 10% do que o professor paga: dos R$ 20 de
+ * créditos chegam uns R$ 18. Por isso a IA é cobrada 10% acima do preço do
+ * modelo (US$ 1,00 vira US$ 1,10) em tudo: créditos, preço mínimo e repasse.
+ */
+export const ACRESCIMO_PAGAMENTO = 1.1
+
+/** Reais cobrados por dólar de IA. A mesma de `cotacao_dolar()` no banco e de REAIS_POR_DOLAR no app. */
+export const REAIS_POR_DOLAR = Math.round(COTACAO_DOLAR * ACRESCIMO_PAGAMENTO * 100) / 100
 
 export type OrigemDoGasto = 'sessao' | 'teste' | 'falas' | 'licao' | 'assinatura'
 

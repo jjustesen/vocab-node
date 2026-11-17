@@ -7,8 +7,17 @@
  * Sem React e sem Supabase, para ser testada sozinha (custo-ia.test.mts).
  */
 
-/** A mesma de `cotacao_dolar()` no banco e de _shared/creditos.ts. */
-export const REAIS_POR_DOLAR = 5.5
+/** Cotação do dólar usada nas contas (fixa por enquanto). */
+export const COTACAO_DOLAR = 5.5
+
+/**
+ * O pagamento leva cerca de 10% do que entra, então a IA é cobrada 10% acima
+ * do preço do modelo. Mesmo valor de _shared/creditos.ts.
+ */
+export const ACRESCIMO_PAGAMENTO = 1.1
+
+/** Reais cobrados por dólar de IA (cotação + 10%). A mesma de `cotacao_dolar()` no banco e de _shared/creditos.ts. */
+export const REAIS_POR_DOLAR = Math.round(COTACAO_DOLAR * ACRESCIMO_PAGAMENTO * 100) / 100
 
 /** Teto de uma sessão do tutor (TETO_POR_SESSAO_USD em tutor-aluno): o pior caso por prática. */
 export const TETO_POR_SESSAO_USD = 0.5
