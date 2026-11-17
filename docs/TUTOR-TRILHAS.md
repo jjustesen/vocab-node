@@ -134,7 +134,7 @@ O professor paga o custo **real**, nunca a estimativa. A estimativa serve para e
 - Com histórico: média das sessões reais dos alunos daquela lição nos últimos 30 dias, a partir de 5 sessões. Mostra a faixa típica (mediana e o valor que 9 em cada 10 sessões não passam).
 - Sem histórico: estimativa pelo tamanho da lição (nº de itens) × o custo médio por item medido em todas as lições do tutor. A tela diz "estimativa inicial".
 - **Teto:** uma sessão nunca passa de US$ 0,50 (`TETO_POR_SESSAO_USD` no `tutor-aluno`). Esse é o pior caso por prática.
-- Em reais, com a cotação do dólar do dia, usada também no extrato. Hoje o app usa R$ 5,50 fixo (`REAIS_POR_DOLAR`); isso passa a ser uma cotação atualizada.
+- Em reais, com a cotação do dólar do dia, usada também no extrato. Hoje o app usa R$ 5,50 fixo, mais 10% para cobrir a taxa do pagamento: R$ 6,05 por dólar (`REAIS_POR_DOLAR`, `cotacao_dolar()`, migration 0034). A cotação passa a ser atualizada; o acréscimo de 10% continua.
 - **Mudança de preço:** a tabela de `precos.ts` dobra os preços do Gemini em 01/01/2027. Enquanto a data não chegar, a estimativa mostra também o valor a partir dela.
 
 **Estimativa por aluno na trilha** (painel de custo no editor da trilha e na tela do plano)

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Coins, Loader2 } from 'lucide-react'
-import { reais, REAIS_POR_DOLAR, TETO_POR_SESSAO_USD } from '@/lib/custo-ia'
+import { COTACAO_DOLAR, reais, REAIS_POR_DOLAR, TETO_POR_SESSAO_USD } from '@/lib/custo-ia'
 import type { CreditoMovimento } from '@/types/db'
 import { chavesCreditos, useComprarCreditos, useExtratoDeCreditos, useSaldoDeCreditos } from './api'
 
@@ -157,13 +157,13 @@ export function CreditosPage() {
           ao saldo.
         </p>
         <ul className="mt-3 divide-y divide-neutral-100 text-sm">
-          <LinhaDeCusto acao="Testar uma lição (Experimentar como aluno)" custo={`~R$ 0,40 · reserva ${reais(teto)}`} />
-          <LinhaDeCusto acao="Prática de um aluno particular" custo={`~R$ 0,40 · reserva ${reais(teto)}`} />
-          <LinhaDeCusto acao="Gerar uma lição com IA" custo="~R$ 0,20 · reserva R$ 0,83" />
+          <LinhaDeCusto acao="Testar uma lição (Experimentar como aluno)" custo={`~R$ 0,44 · reserva ${reais(teto)}`} />
+          <LinhaDeCusto acao="Prática de um aluno particular" custo={`~R$ 0,44 · reserva ${reais(teto)}`} />
+          <LinhaDeCusto acao="Gerar uma lição com IA" custo={`~R$ 0,22 · reserva ${reais(0.15 * REAIS_POR_DOLAR)}`} />
           <LinhaDeCusto acao="Gravar as falas de uma lição" custo="~R$ 0,01 por fala" />
         </ul>
         <p className="mt-2 text-xs text-neutral-400">
-          Valores típicos, com o dólar a {reais(REAIS_POR_DOLAR)}. Alunos que assinam uma trilha não usam seus créditos: a
+          Valores típicos, com o dólar a {reais(COTACAO_DOLAR)} mais 10% da taxa do pagamento. Alunos que assinam uma trilha não usam seus créditos: a
           IA deles sai do repasse.
         </p>
       </div>

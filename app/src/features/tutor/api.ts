@@ -1,3 +1,4 @@
+import { REAIS_POR_DOLAR } from '@/lib/custo-ia'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FunctionRegion } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
@@ -456,11 +457,10 @@ export function inicioDoMesNoBrasil(): string {
 }
 
 /**
- * Cotação para mostrar o custo em reais. Estimativa: o Gemini e o Jev cobram
- * em dólar, e o valor exato está no faturamento de cada um.
+ * Para mostrar o custo em reais, a mesma conta dos créditos (cotação + 10% do
+ * pagamento). O Gemini e o Jev cobram em dólar; o valor exato está no
+ * faturamento de cada um.
  */
-const REAIS_POR_DOLAR = 5.5
-
 export function emReais(usd: number): string {
   return (usd * REAIS_POR_DOLAR).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
