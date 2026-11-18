@@ -667,11 +667,16 @@ export function useReenviarEtapa(trilhaId: string, alunoId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (etapa: { etapaId: string; atividadeId: string }): Promise<string> => {
-      const { count } = await supabase
+      // Maior tentativa, não contagem: a numeração pode ter buracos.
+      const { data: ultima, error: erroUltima } = await supabase
         .from('atribuicoes')
-        .select('*', { count: 'exact', head: true })
+        .select('tentativa')
         .eq('atividade_id', etapa.atividadeId)
         .eq('aluno_id', alunoId)
+        .order('tentativa', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (erroUltima) throw erroUltima
 
       const { token, hash } = await gerarTokenDeAcesso()
       const { data: criada, error } = await supabase
@@ -681,7 +686,7 @@ export function useReenviarEtapa(trilhaId: string, alunoId: string) {
           aluno_id: alunoId,
           trilha_etapa_id: etapa.etapaId,
           token_hash: hash,
-          tentativa: (count ?? 0) + 1,
+          tentativa: (ultima?.tentativa ?? 0) + 1,
         })
         .select('id')
         .single()
@@ -1011,7 +1016,7 @@ export async function atribuirTrilha(trilhaId: string, alunos: Aluno[]): Promise
     await Promise.all([
       supabase
         .from('atribuicoes')
-        .select('atividade_id, aluno_id')
+        .select('atividade_id, aluno_id, tentativa')
         .in('atividade_id', idsAtividades)
         .in('aluno_id', idsAlunos),
       supabase.from('atividades').select('id, titulo').in('id', idsAtividades),
@@ -1022,10 +1027,12 @@ export async function atribuirTrilha(trilhaId: string, alunos: Aluno[]): Promise
   const tituloPorAtividade = new Map(atividades.map((a) => [a.id, a.titulo]))
   // Reenviar a mesma atividade ao mesmo aluno vira nova tentativa (RF-127),
   // então a numeração continua de onde parou em vez de colidir no unique.
+  // Pelo MAIOR número, não pela contagem: tirar o aluno da trilha apaga as
+  // etapas pendentes e deixa buraco (1, 3), e contar dava 3 de novo.
   const tentativaPorPar = new Map<string, number>()
   for (const a of anteriores) {
     const chave = `${a.atividade_id}|${a.aluno_id}`
-    tentativaPorPar.set(chave, (tentativaPorPar.get(chave) ?? 0) + 1)
+    tentativaPorPar.set(chave, Math.max(tentativaPorPar.get(chave) ?? 0, a.tentativa))
   }
 
   const links: LinkDaEtapa[] = []
