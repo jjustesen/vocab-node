@@ -470,11 +470,17 @@ export async function enviarAtividade(
   const resultados: EnvioResultado[] = []
 
   for (const aluno of alunos) {
-    const { count } = await supabase
+    // Maior tentativa, não contagem: tirar o aluno de uma trilha apaga as
+    // tentativas pendentes e deixa buraco na numeração (1, 3).
+    const { data: ultima, error: erroUltima } = await supabase
       .from('atribuicoes')
-      .select('*', { count: 'exact', head: true })
+      .select('tentativa')
       .eq('atividade_id', atividadeId)
       .eq('aluno_id', aluno.id)
+      .order('tentativa', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (erroUltima) throw erroUltima
 
     const { token, hash } = await gerarTokenDeAcesso()
 
@@ -484,7 +490,7 @@ export async function enviarAtividade(
         atividade_id: atividadeId,
         aluno_id: aluno.id,
         token_hash: hash,
-        tentativa: (count ?? 0) + 1,
+        tentativa: (ultima?.tentativa ?? 0) + 1,
         prazo: prazo || null,
       })
       .select('id')

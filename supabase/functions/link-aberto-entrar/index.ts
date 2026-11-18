@@ -125,11 +125,16 @@ Deno.serve(async (req) => {
 
   let atribuicaoId = existente?.id ?? null
   if (!atribuicaoId) {
-    const { count } = await db
+    // Maior tentativa (inclusive revogadas), não contagem: a numeração pode
+    // ter buracos e contar colidia no unique.
+    const { data: ultima } = await db
       .from('atribuicoes')
-      .select('*', { count: 'exact', head: true })
+      .select('tentativa')
       .eq('atividade_id', link.atividade_id)
       .eq('aluno_id', alunoId)
+      .order('tentativa', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
     const { hash: hashAtribuicao } = await gerarTokenDeAcesso()
     const { data: criada, error: erroAtribuicao } = await db
@@ -138,7 +143,7 @@ Deno.serve(async (req) => {
         atividade_id: link.atividade_id,
         aluno_id: alunoId,
         token_hash: hashAtribuicao,
-        tentativa: (count ?? 0) + 1,
+        tentativa: (ultima?.tentativa ?? 0) + 1,
         link_aberto_id: link.id,
       })
       .select('id')
